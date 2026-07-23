@@ -57,8 +57,37 @@ And receive a structured answer based on the user's semantic fitness state, incl
 
 ```bash
 npm test
+npm run demo:mcp
 npm run demo:semantic-state
 npm run demo:strava
+```
+
+## MCP Server MVP
+
+The first MCP server MVP lives in `apps/mcp-server`.
+
+It currently supports JSON-RPC over stdio-compatible line messages:
+
+- `initialize`
+- `tools/list`
+- `tools/call`
+
+Core tools:
+
+- `get_semantic_fitness_state`
+- `recommend_today_workout`
+- `get_training_context`
+
+Run a local tool demo:
+
+```bash
+npm run demo:mcp
+```
+
+Run the stdio server directly:
+
+```bash
+node apps/mcp-server/src/stdio.js
 ```
 
 ## Repository Status
