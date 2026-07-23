@@ -53,6 +53,14 @@ The first MVP should allow an MCP client to ask:
 
 And receive a structured answer based on the user's semantic fitness state, including readiness, fatigue, training load, constraints, recommendation, and reasoning.
 
+## Local Demo Commands
+
+```bash
+npm test
+npm run demo:semantic-state
+npm run demo:strava
+```
+
 ## Repository Status
 
 This repository is currently in planning and foundation setup.

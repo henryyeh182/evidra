@@ -36,9 +36,18 @@ These fields can be normalized later if query patterns demand it.
 
 ## Future Migrations
 
-- Add connector accounts.
-- Add raw provider events.
-- Add normalized provider events.
 - Add plan and planned workout tables.
 - Add exercise prescription tables.
 - Add audit logs and consent records.
+
+## Connector Events
+
+The second migration adds the connector ingestion tables:
+
+```text
+connector_accounts
+raw_provider_events
+normalized_events
+```
+
+Raw events preserve provider payloads. Normalized events preserve the canonical event emitted by connector-specific normalizers before the data is materialized into `workouts` or `health_metrics`.

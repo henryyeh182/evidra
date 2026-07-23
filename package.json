@@ -6,6 +6,7 @@
   "description": "Semantic Fitness Layer exposed through MCP for model-agnostic AI fitness coaching.",
   "scripts": {
     "demo:semantic-state": "node scripts/generate-semantic-state.js",
+    "demo:strava": "node scripts/demo-strava-normalization.js",
     "test": "node --test"
   },
   "engines": {

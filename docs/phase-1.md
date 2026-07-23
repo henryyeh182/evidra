@@ -43,6 +43,7 @@ Excluded for now:
 ```bash
 npm test
 npm run demo:semantic-state
+npm run demo:strava
 ```
 
 ## Next Phase 1 Tasks
@@ -50,7 +51,7 @@ npm run demo:semantic-state
 - Add a real PostgreSQL adapter.
 - Split seed data by entity type.
 - Add Apple Health export import prototype.
-- Add Strava normalized activity fixture.
+- Add Strava OAuth sync prototype.
 - Add MCP server in Phase 2.
 
 ## Data Layer Progress
