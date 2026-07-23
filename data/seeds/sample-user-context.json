@@ -1,0 +1,150 @@
+{
+  "user": {
+    "id": "user_henry_demo",
+    "name": "Henry",
+    "timezone": "Asia/Taipei",
+    "heightCm": 175,
+    "weightKg": 74,
+    "fitnessLevel": "intermediate"
+  },
+  "goals": [
+    {
+      "id": "goal_half_marathon",
+      "type": "half_marathon",
+      "label": "Build toward a half marathon while maintaining strength",
+      "priority": 1,
+      "targetDate": "2026-11-15"
+    },
+    {
+      "id": "goal_general_strength",
+      "type": "build_muscle",
+      "label": "Maintain upper and lower body strength",
+      "priority": 2
+    }
+  ],
+  "preferences": [
+    {
+      "category": "schedule",
+      "key": "weekday_available_minutes",
+      "value": 45,
+      "strength": 0.9
+    },
+    {
+      "category": "training",
+      "key": "preferred_focus",
+      "value": ["running", "strength", "mobility"],
+      "strength": 0.8
+    },
+    {
+      "category": "avoid",
+      "key": "movements",
+      "value": ["burpees", "high-impact jumping"],
+      "strength": 1
+    }
+  ],
+  "injuries": [
+    {
+      "id": "injury_left_knee",
+      "bodyRegion": "left_knee",
+      "severity": "moderate",
+      "restrictions": ["avoid high-impact jumping", "avoid heavy lower body when fatigued"],
+      "status": "active"
+    }
+  ],
+  "equipment": [
+    {
+      "type": "dumbbell",
+      "location": "home",
+      "available": true
+    },
+    {
+      "type": "treadmill",
+      "location": "gym",
+      "available": true
+    },
+    {
+      "type": "barbell",
+      "location": "gym",
+      "available": true
+    }
+  ],
+  "workouts": [
+    {
+      "id": "workout_2026_07_22_lower_strength",
+      "type": "strength",
+      "name": "Lower Body Strength",
+      "startedAt": "2026-07-22T07:30:00+08:00",
+      "durationMinutes": 52,
+      "rpe": 8,
+      "trainingLoad": 82,
+      "muscleGroups": ["legs", "glutes", "core"],
+      "source": "manual"
+    },
+    {
+      "id": "workout_2026_07_21_easy_run",
+      "type": "run",
+      "name": "Easy Zone 2 Run",
+      "startedAt": "2026-07-21T18:20:00+08:00",
+      "durationMinutes": 38,
+      "rpe": 5,
+      "trainingLoad": 54,
+      "muscleGroups": ["legs"],
+      "source": "strava"
+    },
+    {
+      "id": "workout_2026_07_19_upper_strength",
+      "type": "strength",
+      "name": "Upper Body Strength",
+      "startedAt": "2026-07-19T09:00:00+08:00",
+      "durationMinutes": 45,
+      "rpe": 7,
+      "trainingLoad": 62,
+      "muscleGroups": ["chest", "back", "shoulders", "arms"],
+      "source": "manual"
+    }
+  ],
+  "healthMetrics": [
+    {
+      "type": "sleep_duration_hours",
+      "value": 7.8,
+      "unit": "hours",
+      "recordedAt": "2026-07-23T06:30:00+08:00",
+      "source": "oura"
+    },
+    {
+      "type": "sleep_quality",
+      "value": 84,
+      "unit": "score",
+      "recordedAt": "2026-07-23T06:30:00+08:00",
+      "source": "oura"
+    },
+    {
+      "type": "hrv_ms",
+      "value": 48,
+      "unit": "ms",
+      "recordedAt": "2026-07-23T06:30:00+08:00",
+      "source": "oura"
+    },
+    {
+      "type": "resting_hr_bpm",
+      "value": 58,
+      "unit": "bpm",
+      "recordedAt": "2026-07-23T06:30:00+08:00",
+      "source": "oura"
+    },
+    {
+      "type": "steps",
+      "value": 9200,
+      "unit": "count",
+      "recordedAt": "2026-07-22T23:59:00+08:00",
+      "source": "apple_health"
+    },
+    {
+      "type": "stress",
+      "value": 38,
+      "unit": "score",
+      "recordedAt": "2026-07-22T23:59:00+08:00",
+      "source": "garmin"
+    }
+  ]
+}

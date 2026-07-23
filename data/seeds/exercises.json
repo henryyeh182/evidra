@@ -1,0 +1,38 @@
+[
+  {
+    "id": "exercise_zone_2_run",
+    "name": "Zone 2 Run",
+    "movementPattern": "cyclical_cardio",
+    "primaryMuscles": ["legs"],
+    "equipment": ["treadmill", "outdoor"],
+    "impactLevel": "moderate",
+    "goalFit": ["half_marathon", "general_fitness"]
+  },
+  {
+    "id": "exercise_recovery_walk",
+    "name": "Recovery Walk",
+    "movementPattern": "cyclical_cardio",
+    "primaryMuscles": ["legs"],
+    "equipment": ["outdoor", "treadmill"],
+    "impactLevel": "low",
+    "goalFit": ["recovery", "general_fitness"]
+  },
+  {
+    "id": "exercise_goblet_squat",
+    "name": "Goblet Squat",
+    "movementPattern": "squat",
+    "primaryMuscles": ["legs", "glutes", "core"],
+    "equipment": ["dumbbell"],
+    "impactLevel": "low",
+    "goalFit": ["build_muscle", "general_fitness"]
+  },
+  {
+    "id": "exercise_mobility_flow",
+    "name": "Lower Body Mobility Flow",
+    "movementPattern": "mobility",
+    "primaryMuscles": ["hips", "legs", "core"],
+    "equipment": ["none"],
+    "impactLevel": "low",
+    "goalFit": ["recovery", "general_fitness"]
+  }
+]

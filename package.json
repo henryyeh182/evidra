@@ -1,0 +1,14 @@
+{
+  "name": "fitness-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Semantic Fitness Layer exposed through MCP for model-agnostic AI fitness coaching.",
+  "scripts": {
+    "demo:semantic-state": "node scripts/generate-semantic-state.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
