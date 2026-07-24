@@ -41,7 +41,7 @@ The long-term goal is to connect fragmented health and training sources into one
 
 ## Documentation
 
-- [Implementation Plan (v2, active roadmap)](docs/fitness-mcp-implementation-plan.md)
+- [Implementation Plan (v3, active roadmap)](docs/fitness-mcp-implementation-plan.md)
 - [Implementation Plan (v1)](docs/implementation-plan.md)
 - [v2 Phase 1: Workout Knowledge Base](docs/v2-phase-1-knowledge-base.md)
 - [Planning Engine](docs/phase-5.md)
@@ -80,16 +80,21 @@ It currently supports JSON-RPC over stdio-compatible line messages:
 Core tools:
 
 - `get_semantic_fitness_state`
-- `recommend_today_workout`
+- `recommend_workout`
 - `get_training_context`
 
 Planning tools (Phase 5):
 
-- `generate_training_plan`
-- `get_training_plan`
-- `list_training_plans`
-- `preview_plan_change`
-- `commit_plan_change`
+- `generate_plan`
+- `get_plan`
+- `list_plans`
+- `preview_adjust_plan`
+- `commit_adjust_plan`
+
+> The pre-rename names (`recommend_today_workout`, `generate_training_plan`,
+> `get_training_plan`, `list_training_plans`, `preview_plan_change`,
+> `commit_plan_change`) still work as deprecated aliases for one release;
+> `tools/list` advertises only the canonical names above.
 
 Run a local tool demo:
 
