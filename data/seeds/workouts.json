@@ -1,0 +1,39 @@
+[
+  {
+    "id": "workout_zone2_base_run",
+    "name": "Zone 2 Base Run",
+    "durationMinutes": 30,
+    "blocks": [
+      { "kind": "warmup", "sets": [{ "exerciseId": "exercise_recovery_walk", "durationSeconds": 300, "intensity": { "type": "hr_zone", "value": 2 } }] },
+      { "kind": "main", "sets": [{ "exerciseId": "exercise_zone2_run", "durationSeconds": 1200, "intensity": { "type": "hr_zone", "value": 2 } }] },
+      { "kind": "cooldown", "sets": [{ "exerciseId": "exercise_recovery_walk", "durationSeconds": 300, "intensity": { "type": "hr_zone", "value": 2 } }] }
+    ]
+  },
+  {
+    "id": "workout_full_body_strength",
+    "name": "Full-body Strength",
+    "durationMinutes": 45,
+    "blocks": [
+      { "kind": "warmup", "sets": [{ "exerciseId": "exercise_lower_body_mobility", "durationSeconds": 300, "intensity": { "type": "rpe", "value": 3 } }] },
+      { "kind": "main", "sets": [
+        { "exerciseId": "exercise_goblet_squat", "reps": 8, "intensity": { "type": "rpe", "value": 7 }, "restSeconds": 90, "tempo": "3-1-1" },
+        { "exerciseId": "exercise_dumbbell_bench_press", "reps": 8, "intensity": { "type": "rpe", "value": 7 }, "restSeconds": 90 }
+      ] },
+      { "kind": "accessory", "sets": [{ "exerciseId": "exercise_dumbbell_row", "reps": 10, "intensity": { "type": "rpe", "value": 6 }, "restSeconds": 60 }] },
+      { "kind": "cooldown", "sets": [{ "exerciseId": "exercise_recovery_walk", "durationSeconds": 300, "intensity": { "type": "hr_zone", "value": 1 } }] }
+    ]
+  },
+  {
+    "id": "workout_no_equipment_20",
+    "name": "No-equipment 20 min",
+    "durationMinutes": 20,
+    "blocks": [
+      { "kind": "warmup", "sets": [{ "exerciseId": "exercise_lower_body_mobility", "durationSeconds": 180, "intensity": { "type": "rpe", "value": 3 } }] },
+      { "kind": "main", "sets": [
+        { "exerciseId": "exercise_bodyweight_squat", "reps": 15, "intensity": { "type": "rpe", "value": 6 }, "restSeconds": 45 },
+        { "exerciseId": "exercise_pushup", "reps": 12, "intensity": { "type": "rpe", "value": 6 }, "restSeconds": 45 },
+        { "exerciseId": "exercise_glute_bridge", "reps": 15, "intensity": { "type": "rpe", "value": 5 }, "restSeconds": 45 }
+      ] }
+    ]
+  }
+]

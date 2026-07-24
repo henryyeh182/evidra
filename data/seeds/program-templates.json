@@ -1,0 +1,35 @@
+[
+  {
+    "id": "template_full_body",
+    "name": "Full-body Beginner",
+    "periodization": "linear",
+    "daysPerWeek": 3,
+    "days": [
+      { "label": "Full Body A", "movementPatterns": ["squat", "horizontal_push", "horizontal_pull"] },
+      { "label": "Full Body B", "movementPatterns": ["hinge", "vertical_push", "vertical_pull"] },
+      { "label": "Full Body C", "movementPatterns": ["squat", "horizontal_push", "horizontal_pull"] }
+    ]
+  },
+  {
+    "id": "template_ppl",
+    "name": "Push / Pull / Legs",
+    "periodization": "undulating",
+    "daysPerWeek": 3,
+    "days": [
+      { "label": "Push", "movementPatterns": ["horizontal_push", "vertical_push"] },
+      { "label": "Pull", "movementPatterns": ["horizontal_pull", "vertical_pull"] },
+      { "label": "Legs", "movementPatterns": ["squat", "hinge"] }
+    ]
+  },
+  {
+    "id": "template_zone2_base",
+    "name": "Zone 2 Base Building",
+    "periodization": "linear",
+    "daysPerWeek": 3,
+    "days": [
+      { "label": "Easy Aerobic", "movementPatterns": ["locomotion"] },
+      { "label": "Mobility", "movementPatterns": ["mobility"] },
+      { "label": "Long Aerobic", "movementPatterns": ["locomotion"] }
+    ]
+  }
+]

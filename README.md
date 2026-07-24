@@ -41,9 +41,10 @@ The long-term goal is to connect fragmented health and training sources into one
 
 ## Documentation
 
-- [Implementation Plan](docs/implementation-plan.md)
-- [Phase 1: Core Domain](docs/phase-1.md)
-- [Phase 5: Planning Engine](docs/phase-5.md)
+- [Implementation Plan (v2, active roadmap)](docs/fitness-mcp-implementation-plan.md)
+- [Implementation Plan (v1)](docs/implementation-plan.md)
+- [v2 Phase 1: Workout Knowledge Base](docs/v2-phase-1-knowledge-base.md)
+- [Planning Engine](docs/phase-5.md)
 - [GitHub Project](https://github.com/users/henryyeh182/projects/1)
 - [Issue Backlog](https://github.com/henryyeh182/fitness-mcp/issues)
 
@@ -60,6 +61,7 @@ And receive a structured answer based on the user's semantic fitness state, incl
 ```bash
 npm test
 npm run demo:mcp
+npm run demo:knowledge
 npm run demo:planning
 npm run demo:semantic-state
 npm run demo:strava
