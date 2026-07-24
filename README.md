@@ -42,6 +42,8 @@ The long-term goal is to connect fragmented health and training sources into one
 ## Documentation
 
 - [Implementation Plan](docs/implementation-plan.md)
+- [Phase 1: Core Domain](docs/phase-1.md)
+- [Phase 5: Planning Engine](docs/phase-5.md)
 - [GitHub Project](https://github.com/users/henryyeh182/projects/1)
 - [Issue Backlog](https://github.com/henryyeh182/fitness-mcp/issues)
 
@@ -58,6 +60,7 @@ And receive a structured answer based on the user's semantic fitness state, incl
 ```bash
 npm test
 npm run demo:mcp
+npm run demo:planning
 npm run demo:semantic-state
 npm run demo:strava
 ```
@@ -78,10 +81,19 @@ Core tools:
 - `recommend_today_workout`
 - `get_training_context`
 
+Planning tools (Phase 5):
+
+- `generate_training_plan`
+- `get_training_plan`
+- `list_training_plans`
+- `preview_plan_change`
+- `commit_plan_change`
+
 Run a local tool demo:
 
 ```bash
 npm run demo:mcp
+npm run demo:planning
 ```
 
 Run the stdio server directly:
