@@ -18,7 +18,7 @@ const requests = [
     id: 3,
     method: "tools/call",
     params: {
-      name: "recommend_today_workout",
+      name: "recommend_workout",
       arguments: {
         userId: "user_henry_demo",
         date: "2026-07-23",

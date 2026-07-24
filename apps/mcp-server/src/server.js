@@ -1,4 +1,4 @@
-import { getToolDefinition, toolDefinitions } from "./toolDefinitions.js";
+import { getToolDefinition, toolDefinitions, resolveToolName } from "./toolDefinitions.js";
 import { parseJsonRpcMessage, jsonRpcError, jsonRpcResult } from "./jsonRpc.js";
 import { toolHandlers } from "./toolHandlers.js";
 
@@ -31,12 +31,12 @@ export async function handleJsonRpcMessage(rawMessage) {
     }
 
     if (method === "tools/call") {
-      const toolName = params.name;
+      const toolName = resolveToolName(params.name);
       const tool = getToolDefinition(toolName);
       const handler = toolHandlers[toolName];
 
       if (!tool || !handler) {
-        return jsonRpcError(id, -32602, `Unknown tool: ${toolName}`);
+        return jsonRpcError(id, -32602, `Unknown tool: ${params.name}`);
       }
 
       const result = await handler(params.arguments || {});

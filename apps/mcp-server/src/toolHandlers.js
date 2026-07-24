@@ -145,11 +145,11 @@ export async function commitPlanChangeTool(args = {}) {
 
 export const toolHandlers = {
   get_semantic_fitness_state: getSemanticFitnessState,
-  recommend_today_workout: recommendTodayWorkout,
+  recommend_workout: recommendTodayWorkout,
   get_training_context: getTrainingContext,
-  generate_training_plan: generateTrainingPlanTool,
-  get_training_plan: getTrainingPlanTool,
-  list_training_plans: listTrainingPlansTool,
-  preview_plan_change: previewPlanChangeTool,
-  commit_plan_change: commitPlanChangeTool
+  generate_plan: generateTrainingPlanTool,
+  get_plan: getTrainingPlanTool,
+  list_plans: listTrainingPlansTool,
+  preview_adjust_plan: previewPlanChangeTool,
+  commit_adjust_plan: commitPlanChangeTool
 };

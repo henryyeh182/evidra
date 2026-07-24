@@ -18,7 +18,7 @@ export const toolDefinitions = [
     }
   },
   {
-    name: "recommend_today_workout",
+    name: "recommend_workout",
     description: "Return today's recommended workout focus and reasoning from the Semantic Fitness Layer.",
     inputSchema: {
       type: "object",
@@ -58,7 +58,7 @@ export const toolDefinitions = [
     }
   },
   {
-    name: "generate_training_plan",
+    name: "generate_plan",
     description: "Generate and store a deterministic periodized multi-week training plan from the user's goals and constraints.",
     inputSchema: {
       type: "object",
@@ -72,18 +72,18 @@ export const toolDefinitions = [
     }
   },
   {
-    name: "get_training_plan",
+    name: "get_plan",
     description: "Return a stored training plan by id, including weeks, sessions, and version history.",
     inputSchema: {
       type: "object",
       properties: {
-        planId: { type: "string", description: "Plan identifier returned by generate_training_plan." }
+        planId: { type: "string", description: "Plan identifier returned by generate_plan." }
       },
       required: ["planId"]
     }
   },
   {
-    name: "list_training_plans",
+    name: "list_plans",
     description: "List stored training plan summaries for a user.",
     inputSchema: {
       type: "object",
@@ -94,8 +94,8 @@ export const toolDefinitions = [
     }
   },
   {
-    name: "preview_plan_change",
-    description: "Preview a non-destructive change to a stored plan (reduce availability, add injury, or deload a week) and return the diff. Nothing is committed until commit_plan_change is called.",
+    name: "preview_adjust_plan",
+    description: "Preview a non-destructive change to a stored plan (reduce availability, add injury, or deload a week) and return the diff. Nothing is committed until commit_adjust_plan is called.",
     inputSchema: {
       type: "object",
       properties: {
@@ -113,18 +113,36 @@ export const toolDefinitions = [
     }
   },
   {
-    name: "commit_plan_change",
-    description: "Commit a previously previewed plan change. Requires the previewId from preview_plan_change and bumps the plan version.",
+    name: "commit_adjust_plan",
+    description: "Commit a previously previewed plan change. Requires the previewId from preview_adjust_plan and bumps the plan version.",
     inputSchema: {
       type: "object",
       properties: {
-        previewId: { type: "string", description: "Preview identifier returned by preview_plan_change." }
+        previewId: { type: "string", description: "Preview identifier returned by preview_adjust_plan." }
       },
       required: ["previewId"]
     }
   }
 ];
 
+// Deprecated tool names kept as aliases for one version so already-connected
+// clients that cached the old names keep working after the D-TOOL rename to the
+// canonical surface. New clients discover only the canonical names via
+// tools/list. Remove after the next release.
+export const deprecatedToolAliases = {
+  recommend_today_workout: "recommend_workout",
+  generate_training_plan: "generate_plan",
+  get_training_plan: "get_plan",
+  list_training_plans: "list_plans",
+  preview_plan_change: "preview_adjust_plan",
+  commit_plan_change: "commit_adjust_plan"
+};
+
+export function resolveToolName(name) {
+  return deprecatedToolAliases[name] || name;
+}
+
 export function getToolDefinition(name) {
-  return toolDefinitions.find((tool) => tool.name === name);
+  const canonical = resolveToolName(name);
+  return toolDefinitions.find((tool) => tool.name === canonical);
 }

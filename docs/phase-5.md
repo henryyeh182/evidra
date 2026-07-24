@@ -43,8 +43,8 @@ same plan, which keeps it golden-testable.
 
 ## Change Requests
 
-`preview_plan_change` supports three change kinds and never mutates the stored
-plan; it returns a diff plus the resulting plan. `commit_plan_change` applies a
+`preview_adjust_plan` supports three change kinds and never mutates the stored
+plan; it returns a diff plus the resulting plan. `commit_adjust_plan` applies a
 preview as a new version.
 
 - `reduce_availability` — cap sessions to fewer minutes/day (e.g. a travel week).
@@ -59,11 +59,11 @@ preview is rejected instead of silently overwriting newer changes.
 
 The MCP server exposes the planning engine through five tools:
 
-- `generate_training_plan`
-- `get_training_plan`
-- `list_training_plans`
-- `preview_plan_change`
-- `commit_plan_change`
+- `generate_plan`
+- `get_plan`
+- `list_plans`
+- `preview_adjust_plan`
+- `commit_adjust_plan`
 
 Read and write tools are separated, and destructive changes require an explicit
 `preview -> commit` step, matching the plan's MCP safety principles.

@@ -27,7 +27,7 @@ Arguments:
 }
 ```
 
-### `recommend_today_workout`
+### `recommend_workout`
 
 Returns today's recommended focus, scores, constraints, and reasoning.
 

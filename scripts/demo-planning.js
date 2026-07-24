@@ -24,11 +24,11 @@ function printPlanSummary(plan) {
 const userId = "user_henry_demo";
 
 console.log("=== 1. Generate a 4-week plan ===");
-const plan = await callTool(1, "generate_training_plan", { userId, startDate: "2026-07-27", weeks: 4 });
+const plan = await callTool(1, "generate_plan", { userId, startDate: "2026-07-27", weeks: 4 });
 printPlanSummary(plan);
 
 console.log("\n=== 2. Preview a travel week (reduce week 1 to 25 min/day) ===");
-const preview = await callTool(2, "preview_plan_change", {
+const preview = await callTool(2, "preview_adjust_plan", {
   planId: plan.id,
   changeRequest: { kind: "reduce_availability", weekdayAvailableMinutes: 25, weekIndexes: [1], reason: "Business travel" }
 });
@@ -38,7 +38,7 @@ for (const entry of preview.diff) {
 }
 
 console.log("\n=== 3. Commit the change ===");
-const committed = await callTool(3, "commit_plan_change", { previewId: preview.previewId });
+const committed = await callTool(3, "commit_adjust_plan", { previewId: preview.previewId });
 console.log(`Committed plan is now version ${committed.version}.`);
 console.log(`Version history: ${committed.versionHistory.map((entry) => `v${entry.version}(${entry.weekdayAvailableMinutes}m)`).join(", ")}`);
 printPlanSummary(committed.plan);

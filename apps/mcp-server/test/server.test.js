@@ -31,24 +31,24 @@ test("MCP server lists core fitness tools", async () => {
   const toolNames = response.result.tools.map((tool) => tool.name);
   assert.deepEqual(toolNames, [
     "get_semantic_fitness_state",
-    "recommend_today_workout",
+    "recommend_workout",
     "get_training_context",
-    "generate_training_plan",
-    "get_training_plan",
-    "list_training_plans",
-    "preview_plan_change",
-    "commit_plan_change"
+    "generate_plan",
+    "get_plan",
+    "list_plans",
+    "preview_adjust_plan",
+    "commit_adjust_plan"
   ]);
 });
 
-test("MCP server calls recommend_today_workout", async () => {
+test("MCP server calls recommend_workout", async () => {
   const response = await handleJsonRpcMessage(
     JSON.stringify({
       jsonrpc: "2.0",
       id: 3,
       method: "tools/call",
       params: {
-        name: "recommend_today_workout",
+        name: "recommend_workout",
         arguments: {
           userId: "user_henry_demo",
           date: "2026-07-23",
@@ -65,6 +65,25 @@ test("MCP server calls recommend_today_workout", async () => {
   assert.ok(payload.reasoning.some((line) => line.includes("Leg fatigue is elevated")));
 });
 
+test("MCP server still routes a deprecated tool alias to its canonical handler", async () => {
+  const response = await handleJsonRpcMessage(
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: 30,
+      method: "tools/call",
+      params: {
+        name: "recommend_today_workout", // deprecated alias for recommend_workout
+        arguments: { userId: "user_henry_demo", date: "2026-07-23" }
+      }
+    })
+  );
+
+  assert.equal(response.error, undefined);
+  const payload = JSON.parse(response.result.content[0].text);
+  assert.equal(payload.userId, "user_henry_demo");
+  assert.ok(payload.recommendedFocus.length > 0);
+});
+
 async function callTool(id, name, args) {
   const response = await handleJsonRpcMessage(
     JSON.stringify({ jsonrpc: "2.0", id, method: "tools/call", params: { name, arguments: args } })
@@ -73,7 +92,7 @@ async function callTool(id, name, args) {
 }
 
 test("MCP server runs the generate -> preview -> commit planning flow", async () => {
-  const plan = await callTool(10, "generate_training_plan", {
+  const plan = await callTool(10, "generate_plan", {
     userId: "user_henry_demo",
     startDate: "2026-07-27",
     weeks: 4
@@ -81,21 +100,21 @@ test("MCP server runs the generate -> preview -> commit planning flow", async ()
   assert.equal(plan.version, 1);
   assert.equal(plan.weeks.length, 4);
 
-  const preview = await callTool(11, "preview_plan_change", {
+  const preview = await callTool(11, "preview_adjust_plan", {
     planId: plan.id,
     changeRequest: { kind: "reduce_availability", weekdayAvailableMinutes: 25, weekIndexes: [1] }
   });
   assert.ok(preview.previewId);
   assert.ok(preview.diff.length > 0);
 
-  const committed = await callTool(12, "commit_plan_change", { previewId: preview.previewId });
+  const committed = await callTool(12, "commit_adjust_plan", { previewId: preview.previewId });
   assert.equal(committed.version, 2);
   assert.deepEqual(
     committed.versionHistory.map((entry) => entry.version),
     [1, 2]
   );
 
-  const fetched = await callTool(13, "get_training_plan", { planId: plan.id });
+  const fetched = await callTool(13, "get_plan", { planId: plan.id });
   assert.equal(fetched.version, 2);
 });
 
