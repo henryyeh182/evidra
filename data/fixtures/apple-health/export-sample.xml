@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HealthData [<!ELEMENT HealthData (Record|Workout)*>]>
+<!--
+  De-identified SYNTHETIC Apple Health export sample for tests only.
+  Not real data. Do not put real exports in data/fixtures/ — they belong in
+  the git-ignored data/private/ directory.
+-->
+<HealthData locale="en_US">
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="Watch" unit="ms" startDate="2026-07-21 07:30:00 +0800" endDate="2026-07-21 07:30:00 +0800" value="49"/>
+  <Record type="HKQuantityTypeIdentifierHeartRateVariabilitySDNN" sourceName="Watch" unit="ms" startDate="2026-07-22 07:32:00 +0800" endDate="2026-07-22 07:32:00 +0800" value="54"/>
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="Watch" unit="count/min" startDate="2026-07-21 07:30:00 +0800" endDate="2026-07-21 07:30:00 +0800" value="58"/>
+  <Record type="HKQuantityTypeIdentifierRestingHeartRate" sourceName="Watch" unit="count/min" startDate="2026-07-22 07:32:00 +0800" endDate="2026-07-22 07:32:00 +0800" value="56"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Phone" unit="count" startDate="2026-07-22 09:00:00 +0800" endDate="2026-07-22 09:30:00 +0800" value="1200"/>
+  <Record type="HKQuantityTypeIdentifierStepCount" sourceName="Phone" unit="count" startDate="2026-07-22 18:00:00 +0800" endDate="2026-07-22 18:40:00 +0800" value="3300"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Watch" value="HKCategoryValueSleepAnalysisAsleepCore" startDate="2026-07-21 23:40:00 +0800" endDate="2026-07-22 03:10:00 +0800"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Watch" value="HKCategoryValueSleepAnalysisAsleepREM" startDate="2026-07-22 03:10:00 +0800" endDate="2026-07-22 06:50:00 +0800"/>
+  <Record type="HKCategoryTypeIdentifierSleepAnalysis" sourceName="Watch" value="HKCategoryValueSleepAnalysisInBed" startDate="2026-07-22 06:50:00 +0800" endDate="2026-07-22 07:10:00 +0800"/>
+  <Workout workoutActivityType="HKWorkoutActivityTypeRunning" duration="34" durationUnit="min" totalDistance="6.2" totalDistanceUnit="km" totalEnergyBurned="410" totalEnergyBurnedUnit="kcal" sourceName="Watch" startDate="2026-07-21 18:05:00 +0800" endDate="2026-07-21 18:39:00 +0800"/>
+</HealthData>

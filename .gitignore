@@ -7,3 +7,16 @@ build/
 coverage/
 tmp/
 *.log
+
+# Office temp / lock files (e.g. ~$Something.pptx while open in PowerPoint)
+~$*
+
+# Private personal data — real Apple Health / wearable exports and anything
+# derived from them stay local and MUST NOT be committed. Only the README here
+# is tracked; everything else under data/private/ is ignored.
+data/private/*
+!data/private/README.md
+# Belt-and-suspenders: never commit a raw Apple Health export anywhere.
+export.xml
+apple_health_export/
+apple_health_export.zip

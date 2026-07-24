@@ -4,3 +4,9 @@ export {
   normalizedHealthMetricToHealthMetric,
   applyNormalizedEventsToContext
 } from "./normalization.js";
+export { normalizeStravaActivity } from "./providers/strava/index.js";
+export {
+  parseAppleHealthExport,
+  parseAppleHealthExportString,
+  normalizeAppleHealthExport
+} from "./providers/apple-health/index.js";
