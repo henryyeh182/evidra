@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/recommend_workout.output",
+  "title": "recommend_workout output",
+  "type": "object",
+  "properties": {
+    "userId": { "type": "string" },
+    "date": { "type": "string" },
+    "recommendedFocus": { "type": "string" },
+    "availableTimeMinutes": { "type": "number" },
+    "readinessScore": { "type": "number" },
+    "recoveryScore": { "type": "number" },
+    "fatigueScore": { "type": "number" },
+    "avoid": { "type": "array", "items": { "type": "string" } },
+    "reasoning": { "type": "array", "items": { "type": "string" } },
+    "confidence": { "type": "string", "enum": ["low", "medium", "high"] }
+  },
+  "required": [
+    "userId", "date", "recommendedFocus", "availableTimeMinutes", "readinessScore",
+    "recoveryScore", "fatigueScore", "avoid", "reasoning", "confidence"
+  ]
+}

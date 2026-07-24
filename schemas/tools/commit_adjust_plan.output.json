@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/commit_adjust_plan.output",
+  "title": "commit_adjust_plan output",
+  "type": "object",
+  "properties": {
+    "planId": { "type": "string" },
+    "version": { "type": "number" },
+    "status": { "type": "string" },
+    "versionHistory": { "type": "array" },
+    "plan": { "type": "object" }
+  },
+  "required": ["planId", "version", "status", "versionHistory", "plan"]
+}

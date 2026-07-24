@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/get_training_context.input",
+  "title": "get_training_context input",
+  "type": "object",
+  "properties": {
+    "userId": { "type": "string", "description": "User identifier." },
+    "includeStravaFixture": { "type": "boolean", "description": "Include the local Strava fixture in the returned context." }
+  },
+  "required": ["userId"]
+}

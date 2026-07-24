@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/list_plans.output",
+  "title": "list_plans output",
+  "type": "object",
+  "properties": {
+    "userId": { "type": "string" },
+    "plans": { "type": "array" }
+  },
+  "required": ["userId", "plans"]
+}

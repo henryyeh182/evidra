@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/get_semantic_fitness_state.input",
+  "title": "get_semantic_fitness_state input",
+  "type": "object",
+  "properties": {
+    "userId": { "type": "string", "description": "User identifier." },
+    "date": { "type": "string", "description": "Date in YYYY-MM-DD format. Defaults to today's demo date." }
+  },
+  "required": ["userId"]
+}

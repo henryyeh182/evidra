@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/commit_adjust_plan.input",
+  "title": "commit_adjust_plan input",
+  "type": "object",
+  "properties": {
+    "previewId": { "type": "string", "description": "Preview identifier returned by preview_plan_change." }
+  },
+  "required": ["previewId"]
+}

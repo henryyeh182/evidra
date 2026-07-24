@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/generate_plan.input",
+  "title": "generate_plan input",
+  "type": "object",
+  "properties": {
+    "userId": { "type": "string", "description": "User identifier." },
+    "goalId": { "type": "string", "description": "Goal to build the plan around. Defaults to the highest-priority goal." },
+    "weeks": { "type": "number", "description": "Number of weeks to plan. Defaults to 4." },
+    "startDate": { "type": "string", "description": "Plan start date in YYYY-MM-DD format (ideally a Monday)." }
+  },
+  "required": ["userId"]
+}

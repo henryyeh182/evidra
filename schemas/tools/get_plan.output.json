@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/get_plan.output",
+  "title": "get_plan output (TrainingPlan + version history)",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "userId": { "type": "string" },
+    "goalId": { "type": "string" },
+    "name": { "type": "string" },
+    "startDate": { "type": "string" },
+    "endDate": { "type": "string" },
+    "periodizationType": { "type": "string" },
+    "status": { "type": "string" },
+    "version": { "type": "number" },
+    "constraints": { "type": "object" },
+    "reasoning": { "type": "array", "items": { "type": "string" } },
+    "createdAt": { "type": "string" },
+    "weeks": { "type": "array", "minItems": 1, "items": { "type": "object" } },
+    "versionHistory": { "type": "array" }
+  },
+  "required": [
+    "id", "userId", "goalId", "startDate", "endDate", "status", "version",
+    "weeks", "versionHistory"
+  ]
+}

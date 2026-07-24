@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/preview_adjust_plan.input",
+  "title": "preview_adjust_plan input",
+  "type": "object",
+  "properties": {
+    "planId": { "type": "string", "description": "Plan identifier to modify." },
+    "changeRequest": {
+      "type": "object",
+      "description": "One of: {kind:'reduce_availability', weekdayAvailableMinutes, weekIndexes?}, {kind:'add_injury', bodyRegion, restrictions?, avoidMovements?}, or {kind:'deload_week', weekIndex}.",
+      "properties": {
+        "kind": { "type": "string", "enum": ["reduce_availability", "add_injury", "deload_week"] }
+      },
+      "required": ["kind"]
+    }
+  },
+  "required": ["planId", "changeRequest"]
+}

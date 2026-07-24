@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/preview_adjust_plan.output",
+  "title": "preview_adjust_plan output",
+  "type": "object",
+  "properties": {
+    "previewId": { "type": "string" },
+    "planId": { "type": "string" },
+    "baseVersion": { "type": "number" },
+    "summary": { "type": "string" },
+    "diff": { "type": "array" },
+    "note": { "type": "string" }
+  },
+  "required": ["previewId", "planId", "baseVersion", "summary", "diff"]
+}

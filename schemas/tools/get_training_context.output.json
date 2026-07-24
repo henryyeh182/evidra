@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/get_training_context.output",
+  "title": "get_training_context output",
+  "type": "object",
+  "properties": {
+    "user": { "type": "object" },
+    "goals": { "type": "array" },
+    "preferences": { "type": "array" },
+    "activeInjuries": { "type": "array" },
+    "availableEquipment": { "type": "array" },
+    "workoutCount": { "type": "number" },
+    "healthMetricCount": { "type": "number" },
+    "exerciseCatalogCount": { "type": "number" },
+    "latestWorkout": { "type": ["object", "null"] }
+  },
+  "required": [
+    "user", "goals", "preferences", "activeInjuries", "availableEquipment",
+    "workoutCount", "healthMetricCount", "exerciseCatalogCount"
+  ]
+}

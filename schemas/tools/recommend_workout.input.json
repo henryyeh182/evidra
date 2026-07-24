@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/recommend_workout.input",
+  "title": "recommend_workout input",
+  "type": "object",
+  "properties": {
+    "userId": { "type": "string", "description": "User identifier." },
+    "date": { "type": "string", "description": "Date in YYYY-MM-DD format. Defaults to today's demo date." },
+    "includeStravaFixture": { "type": "boolean", "description": "Include the local Strava fixture before generating the recommendation." }
+  },
+  "required": ["userId"]
+}
