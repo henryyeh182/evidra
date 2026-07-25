@@ -6,6 +6,19 @@ const DEFAULT_BASELINES = {
   weeklyTrainingLoadTarget: 360
 };
 
+// A recovery signal only counts if its latest reading is recent enough to
+// describe *today*. Sparse wearers (e.g. no watch overnight) otherwise get a
+// years-old HRV/sleep reading treated as current. Stale signals are dropped and
+// the remaining weights are renormalized, so the score reflects what we can
+// actually observe instead of neutral filler.
+const SIGNAL_STALENESS_DAYS = {
+  sleep_duration_hours: 3,
+  sleep_quality: 3,
+  hrv_ms: 7,
+  resting_hr_bpm: 14,
+  stress: 7
+};
+
 function clamp(value, min = 0, max = 100) {
   return Math.min(max, Math.max(min, Math.round(value)));
 }
@@ -19,6 +32,15 @@ function getLatestMetric(metrics, type) {
 function daysBetween(dateA, dateB) {
   const msPerDay = 24 * 60 * 60 * 1000;
   return Math.max(0, (dateA.getTime() - dateB.getTime()) / msPerDay);
+}
+
+// Latest value for a metric type, but only if it is fresh relative to the
+// anchor date. Returns undefined when missing or stale.
+function getFreshMetricValue(metrics, type, anchorDate) {
+  const latest = getLatestMetric(metrics, type);
+  if (!latest) return undefined;
+  const ageDays = daysBetween(anchorDate, new Date(latest.recordedAt));
+  return ageDays <= SIGNAL_STALENESS_DAYS[type] ? latest.value : undefined;
 }
 
 function workoutsWithinDays(workouts, anchorDate, days) {
@@ -62,46 +84,68 @@ function calculateMuscleFatigue(workouts, anchorDate) {
   );
 }
 
-function calculateSleepScore(metrics) {
-  const duration = getLatestMetric(metrics, "sleep_duration_hours")?.value;
-  const quality = getLatestMetric(metrics, "sleep_quality")?.value;
+// Sleep score from the freshest available duration/quality readings. Weights
+// renormalize over whichever of the two are present, so a duration-only night
+// is not dragged toward the middle by an assumed quality of 50.
+function calculateSleepScore(metrics, anchorDate) {
+  const duration = getFreshMetricValue(metrics, "sleep_duration_hours", anchorDate);
+  const quality = getFreshMetricValue(metrics, "sleep_quality", anchorDate);
 
   if (duration === undefined && quality === undefined) {
-    return { score: 50, reason: "No recent sleep data is available." };
+    return { score: undefined, present: false };
   }
 
-  const durationScore = duration === undefined ? 50 : clamp((duration / 8) * 100);
-  const qualityScore = quality === undefined ? 50 : clamp(quality);
-  const score = clamp(durationScore * 0.45 + qualityScore * 0.55);
+  const parts = [];
+  if (duration !== undefined) parts.push({ score: clamp((duration / 8) * 100), weight: 0.45 });
+  if (quality !== undefined) parts.push({ score: clamp(quality), weight: 0.55 });
+  const totalWeight = parts.reduce((sum, part) => sum + part.weight, 0);
+  const score = clamp(parts.reduce((sum, part) => sum + part.score * part.weight, 0) / totalWeight);
 
-  return {
-    score,
-    reason: `Sleep score is based on ${duration ?? "unknown"}h duration and ${quality ?? "unknown"} quality.`
-  };
+  return { score, present: true };
 }
 
-function calculateRecoveryScore(metrics, baselines = DEFAULT_BASELINES) {
-  const hrv = getLatestMetric(metrics, "hrv_ms")?.value;
-  const restingHr = getLatestMetric(metrics, "resting_hr_bpm")?.value;
-  const stress = getLatestMetric(metrics, "stress")?.value;
-  const sleep = calculateSleepScore(metrics);
+// Recovery = weighted blend of the fresh signals only. When all four are
+// present and fresh the weights are exactly the original {sleep .35, hrv .35,
+// resting .2, stress .1}, so well-instrumented users are unchanged; sparse
+// users get an honest, renormalized score plus coverage metadata.
+function calculateRecoveryScore(metrics, anchorDate, baselines = DEFAULT_BASELINES) {
+  const sleep = calculateSleepScore(metrics, anchorDate);
+  const hrv = getFreshMetricValue(metrics, "hrv_ms", anchorDate);
+  const restingHr = getFreshMetricValue(metrics, "resting_hr_bpm", anchorDate);
+  const stress = getFreshMetricValue(metrics, "stress", anchorDate);
 
-  const hrvScore = hrv === undefined ? 50 : clamp((hrv / baselines.hrvMs) * 100);
-  const restingHrScore =
-    restingHr === undefined ? 50 : clamp(100 - Math.max(0, restingHr - baselines.restingHrBpm) * 5);
-  const stressScore = stress === undefined ? 65 : clamp(100 - stress);
+  const signals = { sleep: null, hrv: null, restingHeartRate: null, stress: null };
+  const parts = [];
 
-  const score = clamp(sleep.score * 0.35 + hrvScore * 0.35 + restingHrScore * 0.2 + stressScore * 0.1);
+  if (sleep.present) {
+    signals.sleep = sleep.score;
+    parts.push({ name: "sleep", score: sleep.score, weight: 0.35 });
+  }
+  if (hrv !== undefined) {
+    signals.hrv = clamp((hrv / baselines.hrvMs) * 100);
+    parts.push({ name: "hrv", score: signals.hrv, weight: 0.35 });
+  }
+  if (restingHr !== undefined) {
+    signals.restingHeartRate = clamp(100 - Math.max(0, restingHr - baselines.restingHrBpm) * 5);
+    parts.push({ name: "restingHeartRate", score: signals.restingHeartRate, weight: 0.2 });
+  }
+  if (stress !== undefined) {
+    signals.stress = clamp(100 - stress);
+    parts.push({ name: "stress", score: signals.stress, weight: 0.1 });
+  }
 
-  return {
-    score,
-    signals: {
-      sleep: sleep.score,
-      hrv: hrvScore,
-      restingHeartRate: restingHrScore,
-      stress: stressScore
-    }
-  };
+  const usable = parts.map((part) => part.name);
+  const missing = ["sleep", "hrv", "restingHeartRate", "stress"].filter((name) => !usable.includes(name));
+
+  if (parts.length === 0) {
+    // No fresh recovery signal at all: neutral score, but say so via coverage.
+    return { score: 50, signals, coverage: { usable, missing } };
+  }
+
+  const totalWeight = parts.reduce((sum, part) => sum + part.weight, 0);
+  const score = clamp(parts.reduce((sum, part) => sum + part.score * part.weight, 0) / totalWeight);
+
+  return { score, signals, coverage: { usable, missing } };
 }
 
 function calculateReadinessScore(recoveryScore, trainingLoad, muscleFatigue) {
@@ -158,12 +202,35 @@ function chooseRecommendedFocus({ readinessScore, muscleFatigue, restrictions, i
   return "General fitness session";
 }
 
+// Confidence reflects how well we can actually see today: fresh recovery
+// signals plus recent training history. Sparse wearers get an honest "low".
+function assessConfidence(coverage, recentWorkoutCount) {
+  const hasHrv = coverage.usable.includes("hrv");
+  const hasSleep = coverage.usable.includes("sleep");
+  if (hasHrv && hasSleep && coverage.usable.length >= 3 && recentWorkoutCount >= 2) {
+    return "high";
+  }
+  if (coverage.usable.length >= 2 && recentWorkoutCount >= 1) {
+    return "medium";
+  }
+  return "low";
+}
+
 function buildReasoning({ recovery, readinessScore, trainingLoad, muscleFatigue, restrictions, recommendedFocus }) {
+  const usableSignals = recovery.coverage.usable
+    .map((name) => `${name} ${recovery.signals[name]}`)
+    .join(", ");
   const reasoning = [
-    `Recovery score is ${recovery.score}, with sleep ${recovery.signals.sleep}, HRV ${recovery.signals.hrv}, resting HR ${recovery.signals.restingHeartRate}, and stress ${recovery.signals.stress}.`,
+    usableSignals
+      ? `Recovery score is ${recovery.score}, based on ${usableSignals}.`
+      : `Recovery score defaults to ${recovery.score} — no fresh recovery signal is available.`,
     `Readiness score is ${readinessScore} after accounting for training load and recent muscle fatigue.`,
     `7-day training load is ${trainingLoad.trainingLoad7d}; 28-day training load is ${trainingLoad.trainingLoad28d}; acute/chronic ratio is ${trainingLoad.acuteChronicWorkloadRatio}.`
   ];
+
+  if (recovery.coverage.missing.length > 0) {
+    reasoning.push(`No fresh reading for: ${recovery.coverage.missing.join(", ")}; those signals were excluded and confidence lowered.`);
+  }
 
   if ((muscleFatigue.legs || 0) > 60) {
     reasoning.push(`Leg fatigue is elevated at ${muscleFatigue.legs}, so heavy lower-body work should be limited today.`);
@@ -186,7 +253,7 @@ export function generateSemanticFitnessState(context, options = {}) {
   const anchorDate = new Date(`${date}T23:59:59${timezone === "Asia/Taipei" ? "+08:00" : "Z"}`);
   const trainingLoad = calculateTrainingLoad(context.workouts, anchorDate, options.baselines);
   const muscleFatigue = calculateMuscleFatigue(context.workouts, anchorDate);
-  const recovery = calculateRecoveryScore(context.healthMetrics, options.baselines);
+  const recovery = calculateRecoveryScore(context.healthMetrics, anchorDate, options.baselines);
   const readinessScore = calculateReadinessScore(recovery.score, trainingLoad, muscleFatigue);
   const restrictions = getActiveRestrictions(context.injuries, context.preferences);
   const recommendedFocus = chooseRecommendedFocus({
@@ -196,6 +263,7 @@ export function generateSemanticFitnessState(context, options = {}) {
     injuries: context.injuries,
     goals: [...context.goals]
   });
+  const recentWorkoutCount = workoutsWithinDays(context.workouts, anchorDate, 14).length;
 
   return {
     userId: context.user.id,
@@ -216,7 +284,8 @@ export function generateSemanticFitnessState(context, options = {}) {
       primaryGoal: context.goals.sort((a, b) => a.priority - b.priority)[0]?.type || "general_fitness",
       score: readinessScore >= 55 ? 0.76 : 0.52
     },
-    confidence: context.healthMetrics.length >= 4 && context.workouts.length >= 2 ? "medium" : "low",
+    signalCoverage: recovery.coverage,
+    confidence: assessConfidence(recovery.coverage, recentWorkoutCount),
     reasoning: buildReasoning({
       recovery,
       readinessScore,

@@ -10,7 +10,7 @@
     "recoveryScore": { "type": "number" },
     "readinessScore": { "type": "number" },
     "fatigueScore": { "type": "number" },
-    "sleepQuality": { "type": "number" },
+    "sleepQuality": { "type": ["number", "null"] },
     "trainingLoad7d": { "type": "number" },
     "trainingLoad28d": { "type": "number" },
     "acuteChronicWorkloadRatio": { "type": "number" },
@@ -27,6 +27,14 @@
       "required": ["primaryGoal", "score"]
     },
     "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+    "signalCoverage": {
+      "type": "object",
+      "properties": {
+        "usable": { "type": "array", "items": { "type": "string" } },
+        "missing": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["usable", "missing"]
+    },
     "reasoning": { "type": "array", "items": { "type": "string" } }
   },
   "required": [

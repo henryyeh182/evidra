@@ -16,6 +16,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, "..");
 const exportPath = join(rootDir, "data/private/apple-health/export.xml");
 const outputPath = join(rootDir, "data/private/apple-health/normalized.json");
+const privateProfilePath = join(rootDir, "data/private/my-user-context.json");
+const demoProfilePath = join(rootDir, "data/seeds/sample-user-context.json");
 
 async function exists(path) {
   try {
@@ -46,7 +48,12 @@ async function main() {
   await writeFile(outputPath, JSON.stringify(events, null, 2));
   console.log(`  wrote ${outputPath} (git-ignored)`);
 
-  const context = JSON.parse(await readFile(join(rootDir, "data/seeds/sample-user-context.json"), "utf8"));
+  // Prefer your real, git-ignored profile; fall back to the demo seed so the
+  // script still works out of the box.
+  const usingRealProfile = await exists(privateProfilePath);
+  const profilePath = usingRealProfile ? privateProfilePath : demoProfilePath;
+  const context = JSON.parse(await readFile(profilePath, "utf8"));
+  console.log(`  profile: ${usingRealProfile ? "data/private/my-user-context.json (yours)" : "demo seed"}`);
   const merged = applyNormalizedEventsToContext(context, events);
 
   const latest = metrics.map((m) => m.recordedAt).sort().at(-1);

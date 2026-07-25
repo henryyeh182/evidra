@@ -143,10 +143,15 @@ function inferMuscleGroups(type) {
 export function normalizeAppleHealthWorkout(workout) {
   const type = WORKOUT_TYPE_MAP[workout.workoutActivityType] || "recovery";
   const durationMinutes = Math.max(1, Math.round(Number(workout.duration || 0)));
-  // Apple Health has no RPE; derive a training load from duration and a
-  // per-type intensity proxy, and flag it as estimated in metadata.
+  // Apple Health has no RPE. Prefer the workout's measured active energy as the
+  // training load (real signal); fall back to a duration x per-type-intensity
+  // estimate when energy is missing. Energy-based load can underweight strength
+  // (mechanical load isn't captured by kcal) — flagged via loadSource.
+  const kcal = workout.totalEnergyBurned ? Number(workout.totalEnergyBurned) : null;
   const rpe = Math.round(TYPE_INTENSITY[type] ?? 5);
-  const trainingLoad = Math.round(durationMinutes * (rpe / 10) * 2);
+  const durationLoad = Math.round(durationMinutes * (rpe / 10) * 2);
+  const trainingLoad = kcal ? Math.round(kcal / 10) : durationLoad;
+  const loadSource = kcal ? "active_energy" : "duration_estimate";
   const startedAt = appleDateToIso(workout.startDate);
 
   return {
@@ -163,9 +168,10 @@ export function normalizeAppleHealthWorkout(workout) {
     muscleGroups: inferMuscleGroups(type),
     metadata: {
       totalDistanceKm: workout.totalDistance ? Number(workout.totalDistance) : null,
-      totalEnergyKcal: workout.totalEnergyBurned ? Number(workout.totalEnergyBurned) : null,
+      totalEnergyKcal: kcal,
       sourceName: workout.sourceName ?? null,
-      rpeEstimated: true
+      rpeEstimated: true,
+      loadSource
     }
   };
 }

@@ -62,3 +62,57 @@ test("generateSemanticFitnessState is deterministic for the golden sample user",
     }
   );
 });
+
+function minimalContext(healthMetrics) {
+  return {
+    user: { id: "u", name: "U", timezone: "Asia/Taipei", heightCm: 175, weightKg: 74, fitnessLevel: "intermediate" },
+    goals: [{ id: "g", type: "build_muscle", priority: 1, label: "strength" }],
+    preferences: [{ category: "schedule", key: "weekday_available_minutes", value: 30 }],
+    injuries: [],
+    equipment: [{ type: "dumbbell", available: true }],
+    workouts: [],
+    healthMetrics
+  };
+}
+
+test("stale recovery signals are excluded and confidence drops to low", () => {
+  const context = minimalContext([
+    // fresh resting HR only; HRV is years old (stale)
+    { type: "resting_hr_bpm", value: 55, unit: "bpm", recordedAt: "2026-07-24T07:00:00+08:00", source: "apple_health" },
+    { type: "hrv_ms", value: 40, unit: "ms", recordedAt: "2019-01-01T07:00:00+08:00", source: "apple_health" }
+  ]);
+
+  const state = generateSemanticFitnessState(context, { date: "2026-07-25", timezone: "Asia/Taipei" });
+
+  assert.deepEqual(state.signalCoverage.usable, ["restingHeartRate"]);
+  assert.ok(state.signalCoverage.missing.includes("hrv"));
+  assert.ok(state.signalCoverage.missing.includes("sleep"));
+  assert.equal(state.confidence, "low");
+  assert.equal(state.sleepQuality, null);
+  assert.ok(state.reasoning.some((line) => line.includes("No fresh reading")));
+});
+
+test("recovery renormalizes over present signals instead of using neutral filler", () => {
+  // resting HR only, value at baseline -> score 100; recovery should equal it,
+  // not be dragged toward 50 by absent hrv/sleep/stress.
+  const context = minimalContext([
+    { type: "resting_hr_bpm", value: 57, unit: "bpm", recordedAt: "2026-07-25T07:00:00+08:00", source: "apple_health" }
+  ]);
+
+  const state = generateSemanticFitnessState(context, { date: "2026-07-25", timezone: "Asia/Taipei" });
+
+  assert.deepEqual(state.signalCoverage.usable, ["restingHeartRate"]);
+  assert.equal(state.recoveryScore, 100);
+});
+
+test("no fresh recovery signal falls back to a neutral score with empty coverage", () => {
+  const context = minimalContext([
+    { type: "hrv_ms", value: 40, unit: "ms", recordedAt: "2019-01-01T07:00:00+08:00", source: "apple_health" }
+  ]);
+
+  const state = generateSemanticFitnessState(context, { date: "2026-07-25", timezone: "Asia/Taipei" });
+
+  assert.deepEqual(state.signalCoverage.usable, []);
+  assert.equal(state.recoveryScore, 50);
+  assert.equal(state.confidence, "low");
+});
