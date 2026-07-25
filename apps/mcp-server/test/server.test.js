@@ -30,25 +30,21 @@ test("MCP server lists core fitness tools", async () => {
 
   const toolNames = response.result.tools.map((tool) => tool.name);
   assert.deepEqual(toolNames, [
-    "get_semantic_fitness_state",
-    "recommend_workout",
+    "assess_fitness_state",
     "decide_session",
-    "search_exercises",
-    "get_exercise",
-    "search_workouts",
-    "get_workout",
-    "get_user_profile",
-    "get_training_history",
+    "decide_exercise_substitution",
     "generate_plan",
-    "get_plan",
-    "list_plans",
     "preview_adjust_plan",
     "commit_adjust_plan"
   ]);
-  // R2: the tool budget must stay inside the window every client handles well.
-  assert.ok(toolNames.length <= 20, `tool surface grew to ${toolNames.length}`);
-  // Deprecated tools are hidden from discovery but remain callable.
-  assert.ok(!toolNames.includes("get_training_context"));
+  // Every exposed tool must be a decision or the substrate one operates on.
+  assert.ok(toolNames.length <= 10, `tool surface grew to ${toolNames.length}`);
+  // Content endpoints are hidden from discovery but stay callable for one release.
+  for (const retired of ["search_exercises", "get_exercise", "search_workouts", "get_workout",
+                         "get_user_profile", "get_training_history", "get_plan", "list_plans",
+                         "recommend_workout", "get_training_context"]) {
+    assert.ok(!toolNames.includes(retired), `${retired} should no longer be advertised`);
+  }
 });
 
 test("MCP server calls recommend_workout", async () => {

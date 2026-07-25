@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/decide_exercise_substitution.input",
+  "title": "decide_exercise_substitution input",
+  "type": "object",
+  "properties": {
+    "exerciseId": {
+      "type": "string",
+      "description": "The exercise being replaced."
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Situation, e.g. ['knee_injury', 'no_equipment']."
+    },
+    "availableEquipment": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Equipment the user actually has."
+    },
+    "avoidContraindications": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Joints to protect, e.g. ['knee']."
+    }
+  },
+  "required": [
+    "exerciseId"
+  ]
+}

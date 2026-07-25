@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "fitness-mcp/tools/get_semantic_fitness_state.input",
-  "title": "get_semantic_fitness_state input",
+  "$id": "fitness-mcp/tools/assess_fitness_state.input",
+  "title": "assess_fitness_state input",
   "type": "object",
   "properties": {
     "evidence": {

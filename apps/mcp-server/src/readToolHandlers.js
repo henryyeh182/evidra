@@ -196,3 +196,70 @@ export async function getTrainingHistoryTool(args = {}) {
     }))
   });
 }
+
+/**
+ * Exercise-level decision: given a movement the user cannot do today, decide
+ * what it becomes. The knowledge graph is the evidence behind that call, not a
+ * catalogue to browse — hence from -> to rather than a list of options.
+ */
+export async function decideExerciseSubstitutionTool(args = {}) {
+  const { graph } = await loadKnowledgeBase();
+  const original = graph.getExercise(args.exerciseId);
+  if (!original) {
+    throw new Error(`Unknown exercise: ${args.exerciseId}`);
+  }
+
+  const conditions = args.conditions || [];
+  const avoid = args.avoidContraindications || [];
+  const candidates = graph.findSubstitutes(original.id, {
+    conditions,
+    availableEquipment: args.availableEquipment,
+    avoidContraindications: avoid,
+    limit: 3
+  });
+
+  const evidence = [
+    { signal: "exercise.contraindications", value: original.contraindications, source: "knowledge_graph" },
+    { signal: "exercise.movement_pattern", value: original.movementPattern, source: "knowledge_graph" },
+    ...(conditions.length ? [{ signal: "reported_conditions", value: conditions, source: "caller" }] : []),
+    ...(avoid.length ? [{ signal: "protected_joints", value: avoid, source: "caller" }] : [])
+  ];
+
+  if (candidates.length === 0) {
+    const payload = {
+      evidence,
+      decision: { type: "keep", intent: "no_safe_substitute_found" },
+      action: { from: { exercise_id: original.id, name: original.name }, to: null, changed: [] },
+      reason: [
+        `找不到同時滿足條件（${conditions.join("、") || "無"}）與器材限制的替代動作，維持原動作並建議降低負荷。`
+      ],
+      confidence: "low",
+      limits: ["替代選項不足，建議由教練人工判斷。"]
+    };
+    return jsonContent(assertGrounded(payload, graph));
+  }
+
+  const chosen = candidates[0];
+  const payload = {
+    evidence,
+    decision: { type: "substitute", intent: "replace_contraindicated_exercise" },
+    action: {
+      from: { exercise_id: original.id, name: original.name, equipment: original.equipment },
+      to: { exercise_id: chosen.id, name: chosen.name, equipment: chosen.equipment },
+      changed: ["exercise"]
+    },
+    alternatives: candidates.slice(1).map((item) => ({
+      exercise_id: item.id,
+      name: item.name,
+      reason: item.reason
+    })),
+    reason: [
+      chosen.reason,
+      ...(avoid.length ? [`已硬性排除對 ${avoid.join("、")} 有禁忌的動作。`] : [])
+    ],
+    confidence: original.confidence >= 0.9 ? "high" : "medium",
+    limits: []
+  };
+
+  return jsonContent(assertGrounded(payload, graph));
+}

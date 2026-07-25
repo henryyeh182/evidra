@@ -51,9 +51,19 @@ Claude / ChatGPT 回覆使用者
 
 ## Status
 
-目前：13 個 MCP tool（stdio）、896 節點知識圖譜、Apple Health／Strava 證據正規化、73 tests pass。
+目前：**6 個決策 tool**（stdio）、896 節點知識圖譜、Apple Health／Strava 證據正規化、95 tests pass。
 
-**已知架構級偏差 5 項待修**，詳見 [Implementation Plan](docs/fitness-mcp-implementation-plan.md) 第 2 節。
+對外工具面全部是決策或決策基底：
+
+| Tool | 產出 |
+|---|---|
+| `assess_fitness_state` | 恢復／準備度判定 |
+| `decide_session` | 今日課表 from → to |
+| `decide_exercise_substitution` | 動作替代 from → to |
+| `generate_plan` | 計畫（決策的基底） |
+| `preview_adjust_plan` / `commit_adjust_plan` | 兩階段寫入 |
+
+偏差 D1–D4 已修；**剩 D5（證明增益）**，詳見 [Implementation Plan](docs/fitness-mcp-implementation-plan.md)。
 
 ## Documentation
 

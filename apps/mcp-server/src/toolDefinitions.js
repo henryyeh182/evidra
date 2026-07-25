@@ -1,6 +1,6 @@
 export const toolDefinitions = [
   {
-    name: "get_semantic_fitness_state",
+    name: "assess_fitness_state",
     description: "Return the user's computed Semantic Fitness State for a date.",
     inputSchema: {
       type: "object",
@@ -42,6 +42,7 @@ export const toolDefinitions = [
   },
   {
     name: "recommend_workout",
+    deprecated: true,
     description: "Return today's recommended workout focus and reasoning from the Semantic Fitness Layer.",
     inputSchema: {
       type: "object",
@@ -102,7 +103,23 @@ export const toolDefinitions = [
     }
   },
   {
+    name: "decide_exercise_substitution",
+    description:
+      "Decide what a movement the user cannot do today should be replaced with. Returns a decision with from -> to: the original exercise and the one it becomes, plus the evidence behind the swap. Injury contraindications are a hard filter applied server-side — do NOT override or reason past the result. Use this when a specific exercise hurts or the equipment is unavailable. Do NOT use it to browse exercises.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        exerciseId: { type: "string", description: "The exercise being replaced." },
+        conditions: { type: "array", items: { type: "string" }, description: "Situation, e.g. ['knee_injury', 'no_equipment']." },
+        availableEquipment: { type: "array", items: { type: "string" }, description: "Equipment the user actually has." },
+        avoidContraindications: { type: "array", items: { type: "string" }, description: "Joints to protect, e.g. ['knee']." }
+      },
+      required: ["exerciseId"]
+    }
+  },
+  {
     name: "search_exercises",
+    deprecated: true,
     description:
       "Search the exercise library by muscle, movement pattern, equipment, skill, and impact. Returns exercise_id for every hit, so results can be passed to get_exercise. Use this to answer 'what exercises can I do for X'. Do NOT use this to pick what to train today (use recommend_workout, which accounts for fatigue and recovery), and do NOT use it to look up a single exercise you already have an id for (use get_exercise).",
     inputSchema: {
@@ -133,6 +150,7 @@ export const toolDefinitions = [
   },
   {
     name: "get_exercise",
+    deprecated: true,
     description:
       "Return full detail for one exercise plus its graph neighbours: variants, progressions, regressions, and safe substitutes. Use this when the user asks about a specific exercise or wants an alternative to it. Do NOT use this to browse or filter the library (use search_exercises).",
     inputSchema: {
@@ -152,6 +170,7 @@ export const toolDefinitions = [
   },
   {
     name: "search_workouts",
+    deprecated: true,
     description:
       "Search the structured workout library by intensity zone, duration, equipment, and body region. Answers queries the underlying data supports exactly, such as 'a session entirely in Zone 2' or 'upper body only, no equipment, under 30 minutes'. Do NOT use this for the user's completed training history (use get_training_history).",
     inputSchema: {
@@ -168,6 +187,7 @@ export const toolDefinitions = [
   },
   {
     name: "get_workout",
+    deprecated: true,
     description:
       "Return the complete Block/Set structure of one workout, with every set resolved to a real exercise. Returns structured data, never a prose description. Use this before describing what a session actually contains.",
     inputSchema: {
@@ -180,6 +200,7 @@ export const toolDefinitions = [
   },
   {
     name: "get_user_profile",
+    deprecated: true,
     description:
       "Return the user's goals, preferences, active injuries, and available equipment. Use this to learn the constraints that apply to any recommendation. Do NOT use this for past sessions (use get_training_history) or for today's readiness (use get_semantic_fitness_state).",
     inputSchema: {
@@ -192,6 +213,7 @@ export const toolDefinitions = [
   },
   {
     name: "get_training_history",
+    deprecated: true,
     description:
       "Return the user's completed workouts, always sorted newest-first by the server. Use this for questions about what the user actually did. Do NOT re-sort or re-rank the results, and do NOT use this to browse the workout library (use search_workouts).",
     inputSchema: {
@@ -265,6 +287,7 @@ export const toolDefinitions = [
   },
   {
     name: "get_plan",
+    deprecated: true,
     description: "Return a stored training plan by id, including weeks, sessions, and version history.",
     inputSchema: {
       type: "object",
@@ -276,6 +299,7 @@ export const toolDefinitions = [
   },
   {
     name: "list_plans",
+    deprecated: true,
     description: "List stored training plan summaries for a user.",
     inputSchema: {
       type: "object",
@@ -322,6 +346,7 @@ export const toolDefinitions = [
 // canonical surface. New clients discover only the canonical names via
 // tools/list. Remove after the next release.
 export const deprecatedToolAliases = {
+  get_semantic_fitness_state: "assess_fitness_state",
   recommend_today_workout: "recommend_workout",
   generate_training_plan: "generate_plan",
   get_training_plan: "get_plan",

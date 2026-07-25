@@ -11,7 +11,7 @@
 
 ## 1. 已實作元件
 
-73 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+95 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
@@ -19,11 +19,13 @@
 | `packages/semantic-engine` | `generateSemanticFitnessState`：recovery / readiness / fatigue / 分肌群疲勞 / 負荷。**訊號可得性自適應**——訊號過期即排除並重新正規化權重，如實下調 confidence，輸出 `signalCoverage` |
 | `packages/knowledge-graph` | 896 節點 / 5,839 邊。`graph.js`（替代／進退階／結構化檢索遍歷）、`workoutSchema.js`（Block/Set 結構與驗證）、`programTemplates.js`（參數化課表模板） |
 | `packages/planning` | `generatePlan`（週期化 base→build→peak→deload）、`adaptPlan`（非破壞式 diff 預覽）、`planStore`（版本化 preview→commit） |
-| `packages/connectors` | Apple Health（`export.xml` 串流解析）、Strava 的格式正規化，共用 `applyNormalizedEventsToContext` |
+| `packages/connectors` | Apple Health（`export.xml` 串流解析）、Strava 的格式正規化 |
+| `packages/evidence` | **Fitness Evidence Model**：跨來源證據契約 ＋ 轉內部 context |
+| `packages/decision-engine` | **`decideSession`**：計畫 × 證據 → Decision/Action/Reason，結構性拒絕退化成推薦 |
 | `packages/db` | PostgreSQL schema 與 row mappers（尚未接 runtime） |
-| `apps/mcp-server` | 13 個 tool，JSON-RPC over stdio，含 `assertGrounded` 存在性驗證與 4KB payload 預算 |
+| `apps/mcp-server` | **6 個對外決策 tool**（另 10 個 Content 端點已下架、仍可呼叫一版），JSON-RPC over stdio，含 `assertGrounded` 與 4KB payload 預算 |
 | `/schemas` | 各 tool 的 input/output JSON Schema 契約 ＋ drift guard |
-| `/eval` | 19 golden cases，4 個 gate（case pass／schema／grounding／plan validity）全綠 |
+| `/eval` | 20 golden cases，4 個 gate（case pass／schema／grounding／plan validity）全綠 |
 
 **工具腳本**：`npm run build:graph`（重建知識圖譜）、`audit:graph`（品質稽核）、`import:apple-health`（本機匯入真實資料）、`eval`（評測計分）
 
@@ -35,7 +37,7 @@
 
 > v4 的核心工作項。修完才繼續開發新功能。
 
-### D1 — 證據是自己讀檔，不是傳進來的 🔴 架構級
+### ~~D1 — 證據是自己讀檔~~ ✅ 已修
 
 ```
 tool input:  userId, date                 ← 只有識別碼
@@ -45,9 +47,9 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 架構圖是 `使用者授權 → AI → tool call 帶證據進來`，實作是 `userId → 我們的檔案`。
 等於我們是資料保管者，違反原則 1，且「permissioned」失去意義（沒有授權動作，只有查表）。
 
-**修**：tool 契約接受 `evidence` 參數；server 對原始資料無狀態。
+**已修**：`packages/evidence` 定義 Fitness Evidence Model；決策 tool 接受 `evidence` 參數，回應帶 `provenance` 標明來源。demo seed 降為明確標示的本機 fallback。
 
-### D2 — 沒有任何 tool 產出決策 🔴 產品級
+### ~~D2 — 沒有任何 tool 產出決策~~ ✅ 已修
 
 | 欄位 | 13 個 tool 中有的 |
 |---|---|
@@ -57,19 +59,19 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 五層模型（Evidence→State→Decision→Action→Reason）**沒有一個實作到 Decision 層**，全部停在 State 或 Content。
 
-**修**：決策 tool 輸出五層契約。
+**已修**：`packages/decision-engine` 產出 Evidence→State→Decision→Action→Reason；`assertValidDecision` 結構性拒絕「沒改動的非 keep 決策」與「沒有理由的決策」。
 
-### D3 — 13 個 tool，其中 8 個是 Content 🟠
+### ~~D3 — 13 個 tool，其中 8 個是 Content~~ ✅ 已修
 
 `search_exercises` `get_exercise` `search_workouts` `get_workout` `get_user_profile` `get_training_history` `get_plan` `list_plans` — 回傳清單／詳情，違反原則 5，且超出 ≤10 上限。
 
-**修**：砍出工具面，程式留作內部證據來源（**能力保留，端點取消**）。
+**已修**：對外 **14 → 6**。Content 端點下架但仍可呼叫一個版本；新增 `decide_exercise_substitution` 承接替代能力，避免空窗。
 
-### D4 — `recommend_workout` 是 Recommendation 不是 Decision 🟠
+### ~~D4 — recommend_workout 是 Recommendation~~ ✅ 已修
 
 現況回「今天適合低衝擊 Zone 2」——憑空發出、無 from→to、無 prior state。GPT-6 也做得到。
 
-**修**：改為 `decide_session`：讀今天排定的課表 → 依證據調整 → 回 from→to。
+**已修**：`decide_session` 上線，`recommend_workout` 下架為 deprecated。
 
 ### D5 — eval 零外部增益 🟠
 
@@ -85,8 +87,8 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 | # | 能力 | 現況 | 缺口 |
 |---|---|---|---|
-| 1 | Semantic Fitness Layer | 🟡 | 只有 2/6 來源；證據自己讀檔（D1） |
-| 2 | Fitness Intelligence Engine | 🟡 | 確定性 ✅ 但不產出決策（D2） |
+| 1 | Semantic Fitness Layer | 🟡 | 證據契約已就位（D1 已修）；仍只有 **2/6** 來源解析器 |
+| 2 | Fitness Intelligence Engine | 🟢 | 確定性且產出五層決策（D2 已修）；深度待補 ATL/CTL/TSB |
 | 3 | Fitness Knowledge Graph | 🟡 | 只連動作/肌群/器材/替代；**缺恢復、訓練目標連結**。5,242/5,839 邊是自動生成的 SIMILAR_TO，**進退階關係幾乎不存在**（僅 7 條） |
 | 4 | Feedback Learning | 🔴 | **零**。無「狀態→決策→結果」記錄與閉環 |
 | 5 | Multi-LLM Interface | 🔴 | 只有 MCP stdio，**無 REST API、無 SDK** |
@@ -95,15 +97,11 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 ## 4. Phase 順序
 
-### Phase 1 — 修架構級偏差（D1 + D2）
-- Tool 契約改為接受 `evidence` 參數，server 不持有使用者資料
-- 決策 tool 輸出五層契約：`evidence` / `state` / `decision` / `action{from,to}` / `reason` / `confidence` / `signalCoverage` / `limits`
-- **驗收**：至少一個 tool 端到端產出真正的 Decision（含 from→to）
+### ~~Phase 1 — 修架構級偏差（D1 + D2）~~ ✅ 完成
+證據經 tool call 傳入、五層決策契約上線。外部使用者（server 檔案中不存在）可純靠傳入證據取得完整決策。
 
-### Phase 2 — 工具面收斂（D3 + D4）
-- 13 → 7；Content 端點下架，能力保留為內部
-- `recommend_workout` → `decide_session`
-- **驗收**：對外 tool ≤ 10；每個都過 GPT-6 判準
+### ~~Phase 2 — 工具面收斂（D3 + D4）~~ ✅ 完成
+對外 6 個 tool：`assess_fitness_state`、`decide_session`、`decide_exercise_substitution`、`generate_plan`、`preview_adjust_plan`、`commit_adjust_plan`。
 
 ### Phase 3 — 證明增益（D5）
 - 決策品質評分標準：事實正確性／證據紮實度／安全性／可執行性／誠實度
@@ -149,7 +147,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 | **D-DATA** | 只存衍生指標（負荷曲線、基線、決策紀錄），不存原始讀數 |
 | **D-LLM** | **系統內不含 LLM**，腦袋來自 host（Claude / ChatGPT） |
 | **D-NUTRITION** | 從架構圖移除，暫不提供營養決策 |
-| **D-TOOL** | 13 → 7，依 GPT-6 判準；砍端點不砍能力 |
+| **D-TOOL** | **14 → 6**，依 GPT-6 判準；砍端點不砍能力（已執行）|
 | **D-INTERFACE** | 不只 MCP，還要 REST API ＋ SDK（Phase 7） |
 | **D-GRAPHDB** | 未觸發，in-memory 足夠，不導入 Neo4j |
 
@@ -158,7 +156,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 | 風險 | 現況 |
 |---|---|
 | **R1 增益無法證明** | 🔴 未測。若 lift 不顯著，定位崩塌。**最大商業風險** |
-| **R2 定位滑回內容庫** | 🟡 已發生一次（早期蓋出檢索層），靠 D3 收回 |
+| **R2 定位滑回內容庫** | 🟢 已發生一次（早期蓋出檢索層），D3 已收回；靠 GPT-6 判準持續守 |
 | **R3 健康建議責任邊界** | 🟡 B2B 讓責任鏈更長，需 tool description ＋ 合約兩層聲明非醫療用途 |
 | **R4 KG 關係品質** | 🟡 90% 邊是自動生成的相似度，語意關係稀疏 |
 

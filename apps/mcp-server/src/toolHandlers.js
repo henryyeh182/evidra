@@ -17,7 +17,8 @@ import {
   searchWorkoutsTool,
   getWorkoutTool,
   getUserProfileTool,
-  getTrainingHistoryTool
+  getTrainingHistoryTool,
+  decideExerciseSubstitutionTool
 } from "./readToolHandlers.js";
 
 const DEFAULT_DATE = "2026-07-23";
@@ -179,9 +180,10 @@ export async function commitPlanChangeTool(args = {}) {
 }
 
 export const toolHandlers = {
-  get_semantic_fitness_state: getSemanticFitnessState,
+  assess_fitness_state: getSemanticFitnessState,
   recommend_workout: recommendTodayWorkout,
   decide_session: decideSessionTool,
+  decide_exercise_substitution: decideExerciseSubstitutionTool,
   get_training_context: getTrainingContext,
   search_exercises: searchExercisesTool,
   get_exercise: getExerciseTool,
