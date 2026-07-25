@@ -95,7 +95,20 @@ export const toolDefinitions = [
         },
         userId: { type: "string", description: "User identifier." },
         date: { type: "string", description: "Date in YYYY-MM-DD. Defaults to today's demo date." },
-        planId: { type: "string", description: "Restrict the lookup to one plan. Defaults to searching the user's plans." },
+        scheduledSession: {
+          type: "object",
+          description:
+            "Today's session as already planned — the prior state this decision acts on. Supply it from the agent's own memory of the user's plan; without it there is nothing to decide, only to suggest. Shape: {focus, type, durationMinutes, intensity, targetMuscleGroups[], exercises[]}.",
+          properties: {
+            focus: { type: "string" },
+            type: { type: "string" },
+            durationMinutes: { type: "number" },
+            intensity: { type: "string", enum: ["low", "moderate", "high"] },
+            targetMuscleGroups: { type: "array", items: { type: "string" } },
+            exercises: { type: "array", items: { type: "string" } }
+          }
+        },
+        planId: { type: "string", description: "Local demo only: look up the session in a stored plan instead of supplying it." },
         availableMinutes: { type: "number", description: "Override today's available time, e.g. when the user says they are busy." },
         includeStravaFixture: { type: "boolean", description: "Include the local Strava fixture as extra evidence." }
       },

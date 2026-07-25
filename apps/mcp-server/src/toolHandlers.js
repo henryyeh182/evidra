@@ -8,6 +8,10 @@ import { loadDemoUserContext, loadExerciseCatalog } from "./demoData.js";
 import { jsonContent } from "./content.js";
 import { decideSession } from "../../../packages/decision-engine/src/index.js";
 import {
+  computeTrainingLoad,
+  computePersonalBaselines
+} from "../../../packages/training-load/src/index.js";
+import {
   evidenceToUserContext,
   describeEvidence
 } from "../../../packages/evidence/src/index.js";
@@ -62,12 +66,29 @@ async function resolveContext(args) {
 export async function getSemanticFitnessState(args = {}) {
   const { context, provenance } = await resolveContext(args);
 
-  const state = generateSemanticFitnessState(context, {
-    date: args.date || DEFAULT_DATE,
-    timezone: context.user.timezone
-  });
+  const date = args.date || DEFAULT_DATE;
+  const state = generateSemanticFitnessState(context, { date, timezone: context.user.timezone });
 
-  return jsonContent({ ...state, provenance });
+  // Impulse-response load curves and personal baselines, computed from the
+  // supplied evidence. Returned so the caller can remember and re-inspect them;
+  // nothing is retained here.
+  const trainingLoad = computeTrainingLoad(context.workouts, { asOf: date });
+  const { baselines } = computePersonalBaselines(context.healthMetrics, { asOf: date });
+
+  return jsonContent({
+    ...state,
+    trainingLoad: {
+      ctl: trainingLoad.ctl,
+      atl: trainingLoad.atl,
+      tsb: trainingLoad.tsb,
+      acwr: trainingLoad.acwr,
+      zone: trainingLoad.zone,
+      zoneNote: trainingLoad.zoneNote,
+      coverage: trainingLoad.coverage
+    },
+    baselines,
+    provenance
+  });
 }
 
 export async function recommendTodayWorkout(args = {}) {
@@ -214,29 +235,50 @@ export async function decideSessionTool(args = {}) {
     timezone: context.user.timezone
   });
 
-  // Find the session scheduled for this date in the user's stored plan.
-  let scheduledSession = null;
+  // The caller supplies what was scheduled. The AI agent is the one holding the
+  // user's memory — the knee injury, last week's leg day, yesterday's tabata —
+  // so it passes today's session in rather than us keeping a copy of the plan.
+  let scheduledSession = args.scheduledSession || null;
   let planId = args.planId || null;
-  const plans = planId ? [planStore.getPlan(planId)].filter(Boolean) : planStore.listPlans(args.userId);
-  for (const summary of plans) {
-    const plan = planStore.getPlan(summary.id || summary);
-    if (!plan) continue;
-    for (const week of plan.weeks) {
-      const match = week.sessions.find((session) => session.date === date);
-      if (match) {
-        scheduledSession = match;
-        planId = plan.id;
-        break;
+
+  if (!scheduledSession) {
+    // Local demo fallback only: look in the process-lifetime plan store.
+    const plans = planId ? [planStore.getPlan(planId)].filter(Boolean) : planStore.listPlans(args.userId);
+    for (const summary of plans) {
+      const plan = planStore.getPlan(summary.id || summary);
+      if (!plan) continue;
+      for (const week of plan.weeks) {
+        const match = week.sessions.find((session) => session.date === date);
+        if (match) {
+          scheduledSession = match;
+          planId = plan.id;
+          break;
+        }
       }
+      if (scheduledSession) break;
     }
-    if (scheduledSession) break;
   }
+
+  const trainingLoad = computeTrainingLoad(context.workouts, { asOf: date });
 
   const decision = decideSession({
     scheduledSession,
-    state,
+    // The impulse-response ACWR supersedes the crude 7d/28d ratio when the
+    // history is long enough to have converged.
+    state: trainingLoad.coverage.sufficient
+      ? { ...state, acuteChronicWorkloadRatio: trainingLoad.acwr, trainingLoad }
+      : { ...state, trainingLoad },
     availableMinutes: args.availableMinutes
   });
 
-  return jsonContent({ userId: context.user.id, date, planId, ...decision, provenance });
+  return jsonContent({
+    userId: context.user.id,
+    date,
+    planId,
+    ...decision,
+    provenance: {
+      ...provenance,
+      scheduledSessionSource: args.scheduledSession ? "provided" : "demo_plan_store"
+    }
+  });
 }
