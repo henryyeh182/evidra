@@ -73,11 +73,14 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 **已修**：`decide_session` 上線，`recommend_workout` 下架為 deprecated。
 
-### D5 — eval 零外部增益 🟠
+### ~~D5 — eval 零外部增益~~ ⛔ 已取消（決策）
 
-四個 gate 全測內部正確性。承諾 B 說價值以決策品質提升衡量，目前**沒有任何數字**。
+原本規劃裸模型 vs 模型＋MCP 的 A/B 評測。**取消，理由有二**：
+1. 那是在測 Claude / ChatGPT 的腦，不是測我們的產品。
+2. 執行它必須呼叫 LLM API，與 **D-LLM「系統內不含 LLM」** 相衝突。
 
-**修**：建裸模型 vs 模型＋MCP 的 A/B 評測。
+**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 98 個測試）。
+另補上 **MCP client 相容性驗證**（見下）取代連通性層面的疑慮。
 
 > **D1 與 D2 同一個根因**：系統是照「我們有使用者資料庫，AI 來查」設計的（傳統 SaaS），不是照「AI 帶授權證據來，我們回決策」設計的（intelligence layer）。**架構圖畫的是後者，程式蓋的是前者。**
 
@@ -103,11 +106,17 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 ### ~~Phase 2 — 工具面收斂（D3 + D4）~~ ✅ 完成
 對外 6 個 tool：`assess_fitness_state`、`decide_session`、`decide_exercise_substitution`、`generate_plan`、`preview_adjust_plan`、`commit_adjust_plan`。
 
-### Phase 3 — 證明增益（D5）
-- 決策品質評分標準：事實正確性／證據紮實度／安全性／可執行性／誠實度
-- A/B runner：裸模型 vs 模型＋MCP，三家模型分開記分
-- **驗收**：lift 顯著且可重現；裸模型失敗模式成清單
-- ⚠️ 若 lift 不顯著 → **定位需重新檢視**，這是最大的商業風險
+### ~~Phase 3 — 證明增益~~ ✅ 改為 client 相容性驗證（已完成）
+
+不做模型評測（見 D5）。改為確認 MCP client 接得上，實測後修掉三個協定問題：
+
+| 問題 | 影響 | 已修 |
+|---|---|---|
+| 對 notification 回應 | 每個 client 握手後都送 `notifications/initialized`，回它違反 JSON-RPC | 無 id 一律不回應 |
+| 不支援 `ping` | client 保活失敗 | 回空 result |
+| protocolVersion 寫死 | 新版 client 被靜默降級 | 協商，支援 2025-06-18 / 2025-03-26 / 2024-11-05 |
+
+**驗收（已通過）**：以子行程模擬 Claude Desktop 完整流程——handshake → initialized 通知 → tools/list → generate_plan → decide_session，取得帶 from→to 的決策。
 
 ### Phase 4 — 決策深度（護城河 #2 #3）
 - Training Load Model：ATL / CTL / TSB（指數移動平均）
@@ -155,7 +164,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 | 風險 | 現況 |
 |---|---|
-| **R1 增益無法證明** | 🔴 未測。若 lift 不顯著，定位崩塌。**最大商業風險** |
+| **R1 增益無法證明** | ⛔ 評測已取消（測 LLM 腦非產品，且違反 D-LLM）。改以決策可驗證性衡量。**殘留風險：對外仍缺一個量化說法** |
 | **R2 定位滑回內容庫** | 🟢 已發生一次（早期蓋出檢索層），D3 已收回；靠 GPT-6 判準持續守 |
 | **R3 健康建議責任邊界** | 🟡 B2B 讓責任鏈更長，需 tool description ＋ 合約兩層聲明非醫療用途 |
 | **R4 KG 關係品質** | 🟡 90% 邊是自動生成的相似度，語意關係稀疏 |

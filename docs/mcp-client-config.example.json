@@ -2,9 +2,7 @@
   "mcpServers": {
     "fitness-mcp": {
       "command": "node",
-      "args": [
-        "/absolute/path/to/fitness-mcp/apps/mcp-server/src/stdio.js"
-      ]
+      "args": ["/absolute/path/to/fitness-mcp/apps/mcp-server/src/stdio.js"]
     }
   }
 }

@@ -2,6 +2,10 @@ import { getToolDefinition, listedToolDefinitions, resolveToolName } from "./too
 import { parseJsonRpcMessage, jsonRpcError, jsonRpcResult } from "./jsonRpc.js";
 import { toolHandlers } from "./toolHandlers.js";
 
+// Newest first: index 0 is what we offer when the client asks for something
+// we do not recognise.
+const SUPPORTED_PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"];
+
 export async function handleJsonRpcMessage(rawMessage) {
   const parsed = parseJsonRpcMessage(rawMessage);
   if (!parsed.ok) {
@@ -10,10 +14,24 @@ export async function handleJsonRpcMessage(rawMessage) {
 
   const { id, method, params = {} } = parsed.message;
 
+  // A JSON-RPC notification carries no id and must not be answered. Every real
+  // MCP client sends `notifications/initialized` right after the handshake, so
+  // replying here breaks the very first exchange of a session.
+  const isNotification = id === undefined || id === null;
+  if (isNotification) {
+    return null;
+  }
+
   try {
     if (method === "initialize") {
+      // Echo the client's protocol version when we support it, so a newer
+      // client is not silently downgraded; otherwise offer our latest.
+      const requested = params.protocolVersion;
+      const negotiated = SUPPORTED_PROTOCOL_VERSIONS.includes(requested)
+        ? requested
+        : SUPPORTED_PROTOCOL_VERSIONS[0];
       return jsonRpcResult(id, {
-        protocolVersion: "2024-11-05",
+        protocolVersion: negotiated,
         serverInfo: {
           name: "fitness-mcp",
           version: "0.1.0"
@@ -22,6 +40,11 @@ export async function handleJsonRpcMessage(rawMessage) {
           tools: {}
         }
       });
+    }
+
+    // Keepalive: the spec defines ping as an empty-result round trip.
+    if (method === "ping") {
+      return jsonRpcResult(id, {});
     }
 
     if (method === "tools/list") {

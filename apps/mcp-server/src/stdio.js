@@ -13,5 +13,8 @@ for await (const line of lines) {
   }
 
   const response = await handleJsonRpcMessage(line);
-  stdout.write(`${JSON.stringify(response)}\n`);
+  // Notifications resolve to null: stay silent rather than emitting a frame.
+  if (response !== null) {
+    stdout.write(`${JSON.stringify(response)}\n`);
+  }
 }

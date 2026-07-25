@@ -140,3 +140,31 @@ test("MCP server returns JSON-RPC error for unknown tools", async () => {
   assert.equal(response.error.code, -32602);
   assert.match(response.error.message, /Unknown tool/);
 });
+
+test("a notification is never answered", async () => {
+  // Real clients send notifications/initialized right after the handshake.
+  // Replying to something with no id is a JSON-RPC violation.
+  const response = await handleJsonRpcMessage(
+    JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })
+  );
+  assert.equal(response, null);
+});
+
+test("initialize echoes a protocol version the client asked for", async () => {
+  const negotiate = async (protocolVersion) => {
+    const response = await handleJsonRpcMessage(
+      JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion } })
+    );
+    return response.result.protocolVersion;
+  };
+
+  assert.equal(await negotiate("2025-06-18"), "2025-06-18");
+  assert.equal(await negotiate("2024-11-05"), "2024-11-05");
+  // An unknown version falls back to our newest rather than failing.
+  assert.equal(await negotiate("1999-01-01"), "2025-06-18");
+});
+
+test("ping answers with an empty result", async () => {
+  const response = await handleJsonRpcMessage(JSON.stringify({ jsonrpc: "2.0", id: 9, method: "ping" }));
+  assert.deepEqual(response.result, {});
+});
