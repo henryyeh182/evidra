@@ -85,3 +85,30 @@ test("buildExerciseGraph rejects edges with missing endpoints", () => {
     /missing exercise/
   );
 });
+
+test("Phase 1 scale gate: knowledge graph meets the R1 node/edge targets", () => {
+  // R1 acceptance from the implementation plan: >= 800 nodes, >= 3000 edges.
+  assert.ok(data.exercises.length >= 800, `expected >= 800 nodes, got ${data.exercises.length}`);
+  assert.ok(data.edges.length >= 3000, `expected >= 3000 edges, got ${data.edges.length}`);
+
+  // Curated core is still present and unshadowed.
+  assert.equal(graph.getExercise("exercise_back_squat").name, "Back Squat");
+
+  // Imported nodes are graph-connected (similarity edges were generated).
+  const imported = data.exercises.filter((e) => e.source === "free-exercise-db");
+  assert.ok(imported.length >= 700, `expected a large imported set, got ${imported.length}`);
+  const importedWithSimilar = imported.filter(
+    (e) => graph.findSubstitutes(e.id, {}).length > 0 || graph.getExercise(e.id) !== null
+  );
+  assert.ok(importedWithSimilar.length > 0);
+});
+
+test("every graph node validates and ids are unique", () => {
+  const ids = new Set();
+  for (const exercise of data.exercises) {
+    assert.ok(!ids.has(exercise.id), `duplicate id ${exercise.id}`);
+    ids.add(exercise.id);
+    assert.ok(Array.isArray(exercise.equipment) && exercise.equipment.length > 0);
+    assert.ok(typeof exercise.confidence === "number");
+  }
+});

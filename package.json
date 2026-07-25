@@ -11,6 +11,7 @@
     "demo:planning": "node scripts/demo-planning.js",
     "demo:strava": "node scripts/demo-strava-normalization.js",
     "import:apple-health": "node scripts/import-apple-health.js",
+    "build:graph": "node scripts/build-exercise-graph.js",
     "eval": "node eval/runner.js",
     "test": "node --test"
   },
