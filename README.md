@@ -1,6 +1,8 @@
 # Fitness MCP
 
-Fitness MCP is a model-agnostic personal fitness intelligence layer exposed through MCP.
+Fitness MCP is **a permissioned Fitness Decision Engine that transforms user-owned health evidence into explainable training decisions for AI agents**.
+
+It is not a fitness app, a community, or a chat interface. See the [Design Manifesto](docs/design-manifesto.md).
 
 It normalizes data from Apple Health, Garmin Connect, Strava, Oura, WHOOP, and other fitness platforms into a unified Semantic Fitness Layer that ChatGPT, Claude, Gemini, Cursor, VS Code, and future AI clients can query consistently.
 
@@ -33,15 +35,19 @@ The long-term goal is to connect fragmented health and training sources into one
 - MCP server
 - Semantic Fitness Layer
 - Fitness Knowledge Graph
-- Connector framework
-- Workout recommendation engine
-- Adaptive planning engine
-- Web dashboard
+- Connector framework (OAuth, per-source normalization)
+- Fitness Decision Engine (recovery, readiness, workout adjustment)
+- Training load model (ATL / CTL / TSB)
 - Security, consent, and audit layer
+
+Explicitly **not** planned: a fitness app, a dashboard, a community, or a chat
+interface. The conversation belongs to the AI client; we own domain
+intelligence. See the [Design Manifesto](docs/design-manifesto.md).
 
 ## Documentation
 
-- [Implementation Plan (v3, active roadmap)](docs/fitness-mcp-implementation-plan.md)
+- [**Design Manifesto**](docs/design-manifesto.md) — 定位與治理，位階最高
+- [Implementation Plan (v4, active roadmap)](docs/fitness-mcp-implementation-plan.md)
 - [Implementation Plan (v1)](docs/implementation-plan.md)
 - [v2 Phase 1: Workout Knowledge Base](docs/v2-phase-1-knowledge-base.md)
 - [Planning Engine](docs/phase-5.md)
