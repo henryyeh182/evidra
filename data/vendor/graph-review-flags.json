@@ -1,0 +1,143 @@
+{
+  "classificationAccuracy": 0.9411764705882353,
+  "misclassified": [
+    {
+      "id": "exercise_fedb_band_assisted_pull_up",
+      "name": "Band Assisted Pull-Up",
+      "assigned": "isolation",
+      "expected": "vertical_pull"
+    },
+    {
+      "id": "exercise_fedb_barbell_rear_delt_row",
+      "name": "Barbell Rear Delt Row",
+      "assigned": "isolation",
+      "expected": "horizontal_pull"
+    },
+    {
+      "id": "exercise_fedb_bench_press_powerlifting",
+      "name": "Bench Press - Powerlifting",
+      "assigned": "isolation",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_bench_press_with_chains",
+      "name": "Bench Press with Chains",
+      "assigned": "isolation",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_bench_sprint",
+      "name": "Bench Sprint",
+      "assigned": "plyometric",
+      "expected": "locomotion"
+    },
+    {
+      "id": "exercise_fedb_chest_push_with_run_release",
+      "name": "Chest Push with Run Release",
+      "assigned": "plyometric",
+      "expected": "locomotion"
+    },
+    {
+      "id": "exercise_fedb_close_grip_barbell_bench_press",
+      "name": "Close-Grip Barbell Bench Press",
+      "assigned": "isolation",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_close_grip_push_up_off_of_a_dumbbell",
+      "name": "Close-Grip Push-Up off of a Dumbbell",
+      "assigned": "isolation",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_handstand_push_ups",
+      "name": "Handstand Push-Ups",
+      "assigned": "vertical_push",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_incline_push_up_close_grip",
+      "name": "Incline Push-Up Close-Grip",
+      "assigned": "isolation",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_incline_push_up_depth_jump",
+      "name": "Incline Push-Up Depth Jump",
+      "assigned": "plyometric",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_plyo_push_up",
+      "name": "Plyo Push-up",
+      "assigned": "plyometric",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_push_up_wide",
+      "name": "Push-Up Wide",
+      "assigned": "isolation",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_push_ups_close_triceps_position",
+      "name": "Push-Ups - Close Triceps Position",
+      "assigned": "isolation",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_reverse_band_bench_press",
+      "name": "Reverse Band Bench Press",
+      "assigned": "isolation",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_reverse_triceps_bench_press",
+      "name": "Reverse Triceps Bench Press",
+      "assigned": "isolation",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_side_hop_sprint",
+      "name": "Side Hop-Sprint",
+      "assigned": "plyometric",
+      "expected": "locomotion"
+    },
+    {
+      "id": "exercise_fedb_single_cone_sprint_drill",
+      "name": "Single-Cone Sprint Drill",
+      "assigned": "plyometric",
+      "expected": "locomotion"
+    },
+    {
+      "id": "exercise_fedb_smith_machine_close_grip_bench_press",
+      "name": "Smith Machine Close-Grip Bench Press",
+      "assigned": "isolation",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_smith_machine_decline_press",
+      "name": "Smith Machine Decline Press",
+      "assigned": "isolation",
+      "expected": "horizontal_push"
+    },
+    {
+      "id": "exercise_fedb_tricep_side_stretch",
+      "name": "Tricep Side Stretch",
+      "assigned": "mobility",
+      "expected": "isolation"
+    },
+    {
+      "id": "exercise_fedb_triceps_stretch",
+      "name": "Triceps Stretch",
+      "assigned": "mobility",
+      "expected": "isolation"
+    },
+    {
+      "id": "exercise_fedb_wind_sprints",
+      "name": "Wind Sprints",
+      "assigned": "core",
+      "expected": "locomotion"
+    }
+  ]
+}

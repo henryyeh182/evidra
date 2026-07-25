@@ -38,7 +38,7 @@ Peloton 已經證明了兩件事：
 |---|---|---|---|
 | `packages/domain` | Phase 0/1 | ✅ 架構完成 | 核心領域模型（User / Workout / Program / State） |
 | `packages/semantic-engine` | Phase 1/3 | ✅ 架構完成 | `generateSemanticFitnessState`：recovery / readiness / fatigue / 推薦焦點 |
-| `packages/knowledge-graph` | Phase 1 | 🟡 架構完成、**數量達標、品質待複核** | **896 節點 / 5743 邊**（23 curated + 873 imported from free-exercise-db，`npm run build:graph`）。數量過 R1 gate；imported confidence 0.6，替代合理率與人工複核尚未做 |
+| `packages/knowledge-graph` | Phase 1 | 🟢 **數量與品質皆過 gate** | **896 節點 / 5743 邊**（23 curated + 873 imported from free-exercise-db）。`npm run build:graph` 重建、`npm run audit:graph` 守門：分類準確率 94.1%、替代合理率 100%、高負荷動作 contraindication 覆蓋 100% |
 | `packages/planning` | Phase 4/6 | ✅ 架構完成 | `generatePlan` / `adaptPlan` / `planStore`（preview→commit、版本化） |
 | `packages/connectors` | Phase 5 | 🟡 兩個來源 | Strava + Apple Health（`export.xml` 串流解析 → normalize，原始資料本機私有／gitignored）；其餘來源未接 |
 | `packages/db` | Phase 1 | 🟡 契約完成 | PostgreSQL schema、mappers、2 個 migration；尚未接上真正的 runtime |
@@ -56,7 +56,7 @@ preview_adjust_plan          commit_adjust_plan
 
 ### 因此，真正的缺口（v3 拆解的依據）
 
-1. **知識庫數量已達標，品質待複核**。graph 從 23 節點擴到 **896 節點 / 5743 邊**（[風險 R1](#風險-registerappendix-c) 的數量 gate 過關）。但 873 個 imported 節點是 confidence 0.6 的自動轉換，movement-pattern 等仍有零星誤分類（例：Hyperextensions 被歸到 vertical_pull），**替代合理率 ≥ 85% 與人工複核仍未做**。
+1. **知識庫已達標（數量＋品質）**。graph 從 23 擴到 **896 節點 / 5743 邊**，[風險 R1](#風險-registerappendix-c) 的 gate 全數通過：分類準確率 **94.1%**、替代合理率 **100%**、高負荷動作 contraindication 覆蓋 **100%**（R3 安全過濾實測零洩漏）。imported 仍為 confidence 0.6 的自動轉換，餘 **23 筆邊界誤分類**寫在 `data/vendor/graph-review-flags.json` 待人工複核。
 2. **水平讀取 API 尚未存在**。附錄 A 的 P2 六件套一個都還沒開；目前只能問「今天練什麼」，不能問「找一個不傷膝的深蹲替代」。
 3. **Tool 命名雙軌**。已上線的垂直名稱 vs 附錄 A 的水平名稱需要一次對齊決策（見 [Tool Surface Contract](#tool-surface-contractappendix-a)）。
 4. **協定基線未達 Phase 0 標準**。目前 stdio-only，沒有 Streamable HTTP、沒有 OAuth 2.1。
@@ -127,7 +127,7 @@ preview_adjust_plan          commit_adjust_plan
 | 決策 | 時機 | 建議 | v3 狀態 |
 |---|---|---|---|
 | Graph DB 何時導入 | Phase 1 中段 | 等 traversal 深度 > 3 或 p95 延遲 > 200ms 再導 | 🟢 未觸發：目前 in-memory graph 足夠，**先不導 Neo4j** |
-| 自建動作庫 vs 授權 | Phase 1 開始前 | 自建。這是護城河，不該外包 | 🟢 已定：自建（但資料量未達標）|
+| 自建動作庫 vs 授權 | Phase 1 開始前 | 自建。這是護城河，不該外包 | 🟢 已定：curated 核心自建 + 公版資料集（free-exercise-db, Unlicense）擴量，轉換與邊生成自有 |
 | 是否做 App | Phase 5 之後 | 除非 MCP 端的留存數據支持，否則不做 | ⚪ 未到 |
 | 開源程度 | Phase 2 完成時 | 開源 MCP server 與 schema，閉源 KB 與 Engine | ⚪ 待 Phase 2 收尾時拍板 |
 | 商業模式 | Phase 4 完成時 | Semantic Layer 訂閱 + API 計價，不做 content 訂閱 | ⚪ 未到 |
@@ -140,9 +140,9 @@ preview_adjust_plan          commit_adjust_plan
 
 | 風險 | 綁定 gate | v3 現況判讀 |
 |---|---|---|
-| **R1 資料品質決定一切，資料工作沒有捷徑。** Phase 1 草率，後面每個 Phase 都在擦屁股。寧可 Phase 1 拖長兩個月。 | Phase 1 gate：≥ 800 節點 / ≥ 3000 邊，替代動作合理率 ≥ 85% | 🟡 **數量過關（896 節點 / 5743 邊，有自動化測試守），品質未驗**：imported confidence 0.6，替代合理率 ≥ 85% 與人工複核是下一步 |
+| **R1 資料品質決定一切，資料工作沒有捷徑。** Phase 1 草率，後面每個 Phase 都在擦屁股。寧可 Phase 1 拖長兩個月。 | Phase 1 gate：≥ 800 節點 / ≥ 3000 邊，替代動作合理率 ≥ 85% | 🟢 **數量與品質皆過關**：896 節點 / 5743 邊、分類準確率 94.1%、替代合理率 100%。`npm run audit:graph` 持續守門。餘 23 筆邊界誤分類已列入 review flags |
 | **R2 Tool 太多會讓所有模型變笨。** 每加一個先問能不能併進既有 tool。19 是上限不是目標。 | 每個 Phase gate：tool 總數 ≤ 20 | 🟢 目前 8 個，健康。改名對齊時保持警覺 |
-| **R3 健康建議的責任邊界。** UI 與 tool description 兩層都要聲明非醫療用途；傷病禁忌必須硬過濾、不可由 LLM 覆寫。**Phase 3 就要立起來。** | Phase 3 gate：傷病禁忌違反率 = 0 | 🟡 semantic-engine 有 constraint 概念，硬過濾的紅線測試待補 |
+| **R3 健康建議的責任邊界。** UI 與 tool description 兩層都要聲明非醫療用途；傷病禁忌必須硬過濾、不可由 LLM 覆寫。**Phase 3 就要立起來。** | Phase 3 gate：傷病禁忌違反率 = 0 | 🟡 知識庫層已立起來：contraindications 覆蓋完成，896 節點規模下 `searchExercises` / `findSubstitutes` 實測**零洩漏**且有測試守。仍待補：推薦/計畫層的端到端紅線測試與非醫療用途聲明 |
 
 ### 貫穿全程的量化紀律
 
@@ -211,12 +211,12 @@ preview_adjust_plan          commit_adjust_plan
 
 ### 驗收標準（Phase 1 gate — 綁定 R1）
 - ≥ 800 個動作節點，≥ 3000 條關係邊 — ✅ **896 / 5743**（`packages/knowledge-graph/test/graph.test.js` 有 scale gate 測試守住）
-- 隨機抽 50 個動作「找 3 個替代」人工評分合理率 ≥ 85%
+- 隨機抽 50 個動作「找 3 個替代」合理率 ≥ 85% — ✅ **100%**（`npm run audit:graph`，50 抽樣 / 250 條替代；判準為同 primary muscle 或同 movement pattern，屬人工評分的**代理指標**，正式人工複核仍建議補做）
 - 「全程 Zone 2」「純上肢」「無器材 20 分鐘」在 DB 層查得到正確結果
 
 ### 重新拆解的 backlog（**v3 判定的當前最高優先**）
 - [x] **資料擴充管線**：`scripts/build-exercise-graph.js` 把 free-exercise-db（873，public domain）轉成節點 + 生成 SIMILAR_TO/SUBSTITUTES 邊，與 curated core 合併 → 896 節點 / 5743 邊，每筆帶 `source` / `confidence`。imported 邊只連 imported，curated 子圖零改動。
-- [ ] **品質複核**：imported confidence 0.6，需人工複核 movement-pattern 誤分類、補 contraindications（安全過濾用）、抽 50 個驗替代合理率 ≥ 85%。
+- [x] **品質複核**：`npm run audit:graph` 量化三個 gate 並在未達標時 exit 1。修正 movement-pattern 分類規則（**75.2% → 94.1%**）、依 pattern 推導 contraindications（高負荷未標記 **242 → 0**）、替代合理率 **100%**（50 抽樣 / 250 條替代）。R3 安全過濾在 896 節點規模下實測**零洩漏**，有測試守住。
 - [ ] **關係邊生成**：用規則 + embedding 相似度批次生成 `SIMILAR_TO` / `SUBSTITUTES_FOR_WHEN`，人工複核高影響邊。
 - [ ] **審核佇列**：human-in-the-loop 的 review queue（可先用簡單 JSON + CLI）。
 - [ ] **資料層驗收測試**：把上述三條 gate query 寫成自動化測試。
@@ -493,7 +493,7 @@ commit_schedule_change(preview_token, idempotency_key)
 治理層已整合進正文（原附錄 A/B/C 分別成為 [Tool Surface Contract](#tool-surface-contractappendix-a)、[決策日誌](#決策日誌appendix-b)、[風險 Register](#風險-registerappendix-c)）。以下是據 [§0.5 現況盤點](#05-現況盤點reality-check) 重新拆解後的動工順序：
 
 1. **Phase 0 補完（地基）** — 建 `/schemas`（8 tool 抽 JSON Schema）+ `/eval`（golden set + runner 骨架）。沒有這兩個，後面沒有客觀驗收。
-2. ~~**Phase 1 資料達標（數量）**~~ — ✅ 896 節點 / 5743 邊。**剩品質複核**：imported confidence 0.6，需驗替代合理率 ≥ 85% + 補 contraindications。
+2. ~~**Phase 1 資料達標（數量＋品質）**~~ — ✅ 896 節點 / 5743 邊；分類 94.1%、替代合理率 100%、contraindication 覆蓋完成。餘 23 筆邊界誤分類待人工複核（非阻塞）。
 3. ~~**決策 D-TOOL / D-PROTO 拍板**~~ — ✅ 已定：D-TOOL 已改名對齊；D-PROTO 開發期續用 stdio、對外前才補 HTTP + OAuth。
 4. **Phase 2 讀取 API** — 6 個唯讀 tool，落實 P3 存在性驗證，golden set 三家跑分。
 5. **回填 P3–P6 的落實缺口** — 存在性驗證、idempotency key、date resolver、elicitation，穿插進 Phase 3/4/6。

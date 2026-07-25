@@ -112,3 +112,34 @@ test("every graph node validates and ids are unique", () => {
     assert.ok(typeof exercise.confidence === "number");
   }
 });
+
+test("R3 safety: contraindication filter never leaks, at full graph scale", () => {
+  for (const joint of ["knee", "shoulder", "lower_back"]) {
+    const results = graph.searchExercises({ excludeContraindications: [joint] });
+    assert.ok(results.length > 0, `expected results when excluding ${joint}`);
+    const leaked = results.filter((e) => e.contraindications.includes(joint));
+    assert.deepEqual(leaked, [], `${joint}-contraindicated exercises leaked through the filter`);
+  }
+
+  // Substitutions must honor it too — this is the path a coach recommendation takes.
+  const subs = graph.findSubstitutes("exercise_back_squat", {
+    conditions: ["knee_injury"],
+    avoidContraindications: ["knee"]
+  });
+  assert.ok(subs.length > 0);
+  for (const sub of subs) {
+    assert.ok(!graph.getExercise(sub.id).contraindications.includes("knee"));
+  }
+});
+
+test("high-load imported movements all carry a contraindication flag", () => {
+  // Squat / hinge / overhead press load joints; leaving them unflagged would
+  // silently disable the R3 hard-filter for most of the library.
+  const unflagged = data.exercises.filter(
+    (e) =>
+      e.source === "free-exercise-db" &&
+      ["squat", "hinge", "vertical_push"].includes(e.movementPattern) &&
+      e.contraindications.length === 0
+  );
+  assert.deepEqual(unflagged.map((e) => e.name), []);
+});

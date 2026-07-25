@@ -75,23 +75,40 @@ function includesAny(haystack, needles) {
   return needles.some((needle) => haystack.includes(needle));
 }
 
+const ISOLATION_MUSCLES = new Set(["triceps", "biceps", "forearms", "calves"]);
+
 function mapMovementPattern(exercise, primaryMuscle) {
   const name = `${exercise.name} ${exercise.id}`.toLowerCase();
+
+  // 0. A "stretch" is always mobility, regardless of the muscle it targets.
+  if (/\bstretch\b/.test(name)) return "mobility";
+
+  // 1. Name keywords a coach would recognize take precedence over the coarse
+  //    force/category signals (a "deadlift" is a hinge no matter how it's tagged).
+  if (includesAny(name, ["deadlift", "good morning", "romanian", "rdl", "hip thrust", "hyperextension", "back extension", "hip hinge", "kettlebell swing"])) {
+    return "hinge";
+  }
+  if (includesAny(name, ["tricep", "bicep", "curl", "leg extension", "leg curl", "calf raise", "lateral raise", "front raise", "rear delt", "pec deck", "cable fly", "cable crossover", "wrist", "reverse fly", "flye"])) {
+    return "isolation";
+  }
+  if (includesAny(name, ["squat", "lunge", "step-up", "step up", "leg press", "split squat", "pistol"])) return "squat";
+
+  // 2. Core (incl. static holds like planks) before the generic static->mobility.
+  if (primaryMuscle === "core" || includesAny(name, ["plank", "sit-up", "situp", "crunch", "russian twist", "leg raise", "hollow", "dead bug", "ab wheel"])) {
+    return "core";
+  }
 
   if (exercise.category === "stretching" || exercise.force === "static") return "mobility";
   if (exercise.category === "cardio") return "locomotion";
   if (exercise.category === "plyometrics") return "plyometric";
-  if (primaryMuscle === "core") return "core";
+
+  // 3. Single-joint muscles default to isolation unless a keyword above claimed them.
+  if (ISOLATION_MUSCLES.has(primaryMuscle)) return "isolation";
 
   if (LEG_MUSCLES.has(primaryMuscle)) {
-    if (includesAny(name, ["deadlift", "hip thrust", "good morning", "swing", "rdl", "hinge", "romanian"])) {
-      return "hinge";
-    }
-    if (includesAny(name, ["squat", "lunge", "step", "leg press", "leg extension", "pistol"])) return "squat";
     if (primaryMuscle === "glutes" || primaryMuscle === "hamstrings") return "hinge";
     return "squat";
   }
-  if (primaryMuscle === "calves") return "isolation";
 
   if (exercise.force === "push") {
     if (primaryMuscle === "shoulders" || primaryMuscle === "traps" || includesAny(name, ["overhead", "military"])) {
@@ -100,13 +117,26 @@ function mapMovementPattern(exercise, primaryMuscle) {
     return "horizontal_push";
   }
   if (exercise.force === "pull") {
-    if (primaryMuscle === "biceps" || primaryMuscle === "forearms") return "isolation";
     if (includesAny(name, ["row"])) return "horizontal_pull";
     if (primaryMuscle === "lats" || includesAny(name, ["pulldown", "pull-up", "pullup", "chin"])) return "vertical_pull";
     if (primaryMuscle === "back" || primaryMuscle === "traps") return "horizontal_pull";
     return "vertical_pull";
   }
   return "isolation";
+}
+
+// Joint-based contraindication flags, matching the curated seed's convention
+// (e.g. back squat -> ["knee","lower_back"]). These feed the R3 safety
+// hard-filter; they are conservative joint flags, not medical advice.
+function deriveContraindications(movementPattern, impactLevel) {
+  const set = new Set();
+  if (movementPattern === "squat") set.add("knee");
+  if (movementPattern === "hinge") set.add("lower_back");
+  if (movementPattern === "vertical_push") { set.add("shoulder"); set.add("lower_back"); }
+  if (movementPattern === "horizontal_push") set.add("shoulder");
+  if (movementPattern === "vertical_pull" || movementPattern === "horizontal_pull") set.add("shoulder");
+  if (movementPattern === "locomotion" || impactLevel === "high") { set.add("knee"); set.add("ankle"); }
+  return [...set];
 }
 
 const PLANE_BY_PATTERN = {
@@ -168,7 +198,7 @@ function toNode(exercise) {
     skillLevel: LEVEL_MAP[exercise.level] || "intermediate",
     impactLevel,
     loadsJoints: LOADS_BY_PATTERN[movementPattern] || [],
-    contraindications: [],
+    contraindications: deriveContraindications(movementPattern, impactLevel),
     source: "free-exercise-db",
     confidence: 0.6
   };
