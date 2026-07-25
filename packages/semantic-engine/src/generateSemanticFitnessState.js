@@ -16,7 +16,13 @@ const SIGNAL_STALENESS_DAYS = {
   sleep_quality: 3,
   hrv_ms: 7,
   resting_hr_bpm: 14,
-  stress: 7
+  stress: 7,
+  // Vendor composites. Where the device maker had the sensor on the wrist, its
+  // own assessment beats anything we can re-derive — so these carry real weight
+  // rather than being logged and ignored.
+  body_battery: 2,
+  recovery_time_minutes: 2,
+  vendor_readiness: 2
 };
 
 function clamp(value, min = 0, max = 100) {
@@ -108,13 +114,26 @@ function calculateSleepScore(metrics, anchorDate) {
 // present and fresh the weights are exactly the original {sleep .35, hrv .35,
 // resting .2, stress .1}, so well-instrumented users are unchanged; sparse
 // users get an honest, renormalized score plus coverage metadata.
-function calculateRecoveryScore(metrics, anchorDate, baselines = DEFAULT_BASELINES) {
+function calculateRecoveryScore(metrics, anchorDate, baselines = DEFAULT_BASELINES, vendorAssessments = []) {
   const sleep = calculateSleepScore(metrics, anchorDate);
   const hrv = getFreshMetricValue(metrics, "hrv_ms", anchorDate);
   const restingHr = getFreshMetricValue(metrics, "resting_hr_bpm", anchorDate);
   const stress = getFreshMetricValue(metrics, "stress", anchorDate);
 
-  const signals = { sleep: null, hrv: null, restingHeartRate: null, stress: null };
+  // Vendor composites arrive already integrated over signals we may not see.
+  const vendorReadiness = getFreshMetricValue(vendorAssessments, "vendor_readiness", anchorDate);
+  const bodyBattery = getFreshMetricValue(vendorAssessments, "body_battery", anchorDate);
+  const recoveryMinutes = getFreshMetricValue(vendorAssessments, "recovery_time_minutes", anchorDate);
+
+  const signals = {
+    sleep: null,
+    hrv: null,
+    restingHeartRate: null,
+    stress: null,
+    vendorReadiness: null,
+    bodyBattery: null,
+    recoveryTime: null
+  };
   const parts = [];
 
   if (sleep.present) {
@@ -132,6 +151,23 @@ function calculateRecoveryScore(metrics, anchorDate, baselines = DEFAULT_BASELIN
   if (stress !== undefined) {
     signals.stress = clamp(100 - stress);
     parts.push({ name: "stress", score: signals.stress, weight: 0.1 });
+  }
+
+  // A vendor's own composite is weighted above our raw signals: it was computed
+  // with the device on the wrist and integrates inputs we never receive.
+  if (vendorReadiness !== undefined) {
+    signals.vendorReadiness = clamp(vendorReadiness);
+    parts.push({ name: "vendorReadiness", score: signals.vendorReadiness, weight: 0.4 });
+  }
+  if (bodyBattery !== undefined) {
+    signals.bodyBattery = clamp(bodyBattery);
+    parts.push({ name: "bodyBattery", score: signals.bodyBattery, weight: 0.3 });
+  }
+  if (recoveryMinutes !== undefined) {
+    // Hours the vendor says are still owed. 24h+ outstanding reads as fully
+    // depleted; zero as fully recovered.
+    signals.recoveryTime = clamp(100 - Math.min(100, (recoveryMinutes / 1440) * 100));
+    parts.push({ name: "recoveryTime", score: signals.recoveryTime, weight: 0.25 });
   }
 
   const usable = parts.map((part) => part.name);
@@ -207,6 +243,12 @@ function chooseRecommendedFocus({ readinessScore, muscleFatigue, restrictions, i
 function assessConfidence(coverage, recentWorkoutCount) {
   const hasHrv = coverage.usable.includes("hrv");
   const hasSleep = coverage.usable.includes("sleep");
+  const hasVendorComposite =
+    coverage.usable.includes("vendorReadiness") || coverage.usable.includes("bodyBattery");
+  if (hasVendorComposite && coverage.usable.length >= 2 && recentWorkoutCount >= 1) {
+    // The device maker already integrated the signals we cannot see.
+    return "high";
+  }
   if (hasHrv && hasSleep && coverage.usable.length >= 3 && recentWorkoutCount >= 2) {
     return "high";
   }
@@ -253,7 +295,12 @@ export function generateSemanticFitnessState(context, options = {}) {
   const anchorDate = new Date(`${date}T23:59:59${timezone === "Asia/Taipei" ? "+08:00" : "Z"}`);
   const trainingLoad = calculateTrainingLoad(context.workouts, anchorDate, options.baselines);
   const muscleFatigue = calculateMuscleFatigue(context.workouts, anchorDate);
-  const recovery = calculateRecoveryScore(context.healthMetrics, anchorDate, options.baselines);
+  const recovery = calculateRecoveryScore(
+    context.healthMetrics,
+    anchorDate,
+    options.baselines,
+    context.vendorAssessments || []
+  );
   const readinessScore = calculateReadinessScore(recovery.score, trainingLoad, muscleFatigue);
   const restrictions = getActiveRestrictions(context.injuries, context.preferences);
   const recommendedFocus = chooseRecommendedFocus({

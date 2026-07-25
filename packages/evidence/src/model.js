@@ -42,6 +42,20 @@
  * @property {Object} [constraints]
  * @property {EvidenceMetric[]} [healthMetrics]
  * @property {EvidenceWorkout[]} [workouts]
+ * @property {VendorAssessment[]} [vendorAssessments]
+ */
+
+/**
+ * A score the source device already computed. Where a vendor had the sensor on
+ * the wrist, its own assessment is better evidence than our re-derivation — so
+ * these are carried through rather than discarded.
+ *
+ * @typedef {Object} VendorAssessment
+ * @property {string} source            garmin | oura | whoop | apple_health
+ * @property {"vendor_readiness"|"body_battery"|"recovery_time_minutes"|"vendor_acute_load"} type
+ * @property {number} value
+ * @property {string} [unit]
+ * @property {string} recordedAt
  */
 
 const METRIC_TYPES = new Set([
@@ -57,7 +71,7 @@ export function assertValidEvidence(evidence) {
   if (!evidence || typeof evidence !== "object") {
     throw new Error("Evidence must be an object.");
   }
-  for (const field of ["healthMetrics", "workouts"]) {
+  for (const field of ["healthMetrics", "workouts", "vendorAssessments"]) {
     if (evidence[field] !== undefined && !Array.isArray(evidence[field])) {
       throw new Error(`Evidence.${field} must be an array.`);
     }
@@ -141,6 +155,13 @@ export function evidenceToUserContext(evidence, options = {}) {
       trainingLoad: workout.trainingLoad ?? Math.round(workout.durationMinutes * 1.0),
       muscleGroups: workout.muscleGroups || [],
       source: workout.source || "manual"
+    })),
+    vendorAssessments: (evidence.vendorAssessments || []).map((item) => ({
+      source: item.source || "unknown",
+      type: item.type,
+      value: item.value,
+      unit: item.unit || "",
+      recordedAt: item.recordedAt
     })),
     healthMetrics: (evidence.healthMetrics || []).map((metric) => ({
       type: metric.type,
