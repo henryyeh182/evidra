@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/decide_session.output",
+  "title": "decide_session output (five-layer decision)",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string"
+    },
+    "planId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "signal": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "signal"
+        ]
+      }
+    },
+    "state": {
+      "type": "object"
+    },
+    "decision": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "keep",
+            "adjust",
+            "substitute",
+            "defer",
+            "advance"
+          ]
+        },
+        "intent": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "intent"
+      ]
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "object",
+          "properties": {
+            "sessionId": {
+              "type": "string"
+            },
+            "focus": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "durationMinutes": {
+              "type": "number"
+            },
+            "intensity": {
+              "type": "string"
+            },
+            "exercises": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "focus",
+            "type",
+            "durationMinutes",
+            "intensity",
+            "exercises"
+          ],
+          "nullable": true
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "sessionId": {
+              "type": "string"
+            },
+            "focus": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "durationMinutes": {
+              "type": "number"
+            },
+            "intensity": {
+              "type": "string"
+            },
+            "exercises": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "focus",
+            "type",
+            "durationMinutes",
+            "intensity",
+            "exercises"
+          ],
+          "nullable": true
+        },
+        "changed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "changed"
+      ]
+    },
+    "reason": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "signalCoverage": {
+      "type": "object"
+    },
+    "limits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "evidence",
+    "state",
+    "decision",
+    "action",
+    "reason",
+    "confidence",
+    "signalCoverage",
+    "limits"
+  ]
+}

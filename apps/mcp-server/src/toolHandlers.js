@@ -6,6 +6,7 @@ import {
 } from "../../../packages/planning/src/index.js";
 import { loadDemoUserContext, loadExerciseCatalog } from "./demoData.js";
 import { jsonContent } from "./content.js";
+import { decideSession } from "../../../packages/decision-engine/src/index.js";
 import {
   searchExercisesTool,
   getExerciseTool,
@@ -154,6 +155,7 @@ export async function commitPlanChangeTool(args = {}) {
 export const toolHandlers = {
   get_semantic_fitness_state: getSemanticFitnessState,
   recommend_workout: recommendTodayWorkout,
+  decide_session: decideSessionTool,
   get_training_context: getTrainingContext,
   search_exercises: searchExercisesTool,
   get_exercise: getExerciseTool,
@@ -167,3 +169,49 @@ export const toolHandlers = {
   preview_adjust_plan: previewPlanChangeTool,
   commit_adjust_plan: commitPlanChangeTool
 };
+
+/**
+ * The product's core decision primitive: take today's scheduled session, weigh
+ * it against today's evidence, and return what it should become (from -> to).
+ *
+ * Deliberately not a recommendation — if nothing is scheduled, it says so
+ * rather than inventing a suggestion.
+ */
+export async function decideSessionTool(args = {}) {
+  const context = await loadDemoUserContext({
+    includeStravaFixture: Boolean(args.includeStravaFixture)
+  });
+  assertUserId(context, args.userId);
+
+  const date = args.date || DEFAULT_DATE;
+  const state = generateSemanticFitnessState(context, {
+    date,
+    timezone: context.user.timezone
+  });
+
+  // Find the session scheduled for this date in the user's stored plan.
+  let scheduledSession = null;
+  let planId = args.planId || null;
+  const plans = planId ? [planStore.getPlan(planId)].filter(Boolean) : planStore.listPlans(args.userId);
+  for (const summary of plans) {
+    const plan = planStore.getPlan(summary.id || summary);
+    if (!plan) continue;
+    for (const week of plan.weeks) {
+      const match = week.sessions.find((session) => session.date === date);
+      if (match) {
+        scheduledSession = match;
+        planId = plan.id;
+        break;
+      }
+    }
+    if (scheduledSession) break;
+  }
+
+  const decision = decideSession({
+    scheduledSession,
+    state,
+    availableMinutes: args.availableMinutes
+  });
+
+  return jsonContent({ userId: context.user.id, date, planId, ...decision });
+}

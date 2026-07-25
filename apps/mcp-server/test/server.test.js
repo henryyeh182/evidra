@@ -32,6 +32,7 @@ test("MCP server lists core fitness tools", async () => {
   assert.deepEqual(toolNames, [
     "get_semantic_fitness_state",
     "recommend_workout",
+    "decide_session",
     "search_exercises",
     "get_exercise",
     "search_workouts",

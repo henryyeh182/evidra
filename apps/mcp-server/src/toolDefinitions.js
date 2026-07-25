@@ -40,6 +40,22 @@ export const toolDefinitions = [
     }
   },
   {
+    name: "decide_session",
+    description:
+      "Decide what today's SCHEDULED session should become, given today's evidence. Returns a decision with from -> to: the session as planned, and what it should be changed to, with the evidence and reasoning behind it. Use this for 'what should I train today', 'am I ready for today's session', or 'should I adjust today's workout'. This is a decision, not a suggestion — it requires a stored plan. Do NOT use this to look up state alone (use get_semantic_fitness_state), and do NOT re-derive or override the intensity it returns: injury filtering is a hard safety rule.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        userId: { type: "string", description: "User identifier." },
+        date: { type: "string", description: "Date in YYYY-MM-DD. Defaults to today's demo date." },
+        planId: { type: "string", description: "Restrict the lookup to one plan. Defaults to searching the user's plans." },
+        availableMinutes: { type: "number", description: "Override today's available time, e.g. when the user says they are busy." },
+        includeStravaFixture: { type: "boolean", description: "Include the local Strava fixture as extra evidence." }
+      },
+      required: ["userId"]
+    }
+  },
+  {
     name: "search_exercises",
     description:
       "Search the exercise library by muscle, movement pattern, equipment, skill, and impact. Returns exercise_id for every hit, so results can be passed to get_exercise. Use this to answer 'what exercises can I do for X'. Do NOT use this to pick what to train today (use recommend_workout, which accounts for fatigue and recovery), and do NOT use it to look up a single exercise you already have an id for (use get_exercise).",

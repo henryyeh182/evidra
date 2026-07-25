@@ -6,13 +6,30 @@
       "id": "semantic_state_demo_user",
       "query": "What's my fitness state today?",
       "expectedTool": "get_semantic_fitness_state",
-      "call": { "tool": "get_semantic_fitness_state", "arguments": { "userId": "user_henry_demo", "date": "2026-07-23" } },
+      "call": {
+        "tool": "get_semantic_fitness_state",
+        "arguments": {
+          "userId": "user_henry_demo",
+          "date": "2026-07-23"
+        }
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.userId", "op": "equals", "value": "user_henry_demo" },
-          { "path": "$.recommendedFocus", "op": "nonEmpty" },
-          { "path": "$.reasoning", "op": "minLength", "value": 1 }
+          {
+            "path": "$.userId",
+            "op": "equals",
+            "value": "user_henry_demo"
+          },
+          {
+            "path": "$.recommendedFocus",
+            "op": "nonEmpty"
+          },
+          {
+            "path": "$.reasoning",
+            "op": "minLength",
+            "value": 1
+          }
         ]
       }
     },
@@ -20,12 +37,25 @@
       "id": "recommend_today_with_strava",
       "query": "What should I do today?",
       "expectedTool": "recommend_workout",
-      "call": { "tool": "recommend_workout", "arguments": { "userId": "user_henry_demo", "date": "2026-07-23", "includeStravaFixture": true } },
+      "call": {
+        "tool": "recommend_workout",
+        "arguments": {
+          "userId": "user_henry_demo",
+          "date": "2026-07-23",
+          "includeStravaFixture": true
+        }
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.recommendedFocus", "op": "nonEmpty" },
-          { "path": "$.availableTimeMinutes", "op": "isNumber" }
+          {
+            "path": "$.recommendedFocus",
+            "op": "nonEmpty"
+          },
+          {
+            "path": "$.availableTimeMinutes",
+            "op": "isNumber"
+          }
         ]
       }
     },
@@ -33,12 +63,23 @@
       "id": "training_context",
       "query": "Show my profile, goals, and equipment.",
       "expectedTool": "get_training_context",
-      "call": { "tool": "get_training_context", "arguments": { "userId": "user_henry_demo" } },
+      "call": {
+        "tool": "get_training_context",
+        "arguments": {
+          "userId": "user_henry_demo"
+        }
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.exerciseCatalogCount", "op": "isNumber" },
-          { "path": "$.goals", "op": "isArray" }
+          {
+            "path": "$.exerciseCatalogCount",
+            "op": "isNumber"
+          },
+          {
+            "path": "$.goals",
+            "op": "isArray"
+          }
         ]
       }
     },
@@ -46,13 +87,74 @@
       "id": "generate_plan_4wk",
       "query": "Build me a 4-week plan.",
       "expectedTool": "generate_plan",
-      "call": { "tool": "generate_plan", "arguments": { "userId": "user_henry_demo", "weeks": 4, "startDate": "2026-07-27" } },
-      "capture": { "planId": "$.id" },
+      "call": {
+        "tool": "generate_plan",
+        "arguments": {
+          "userId": "user_henry_demo",
+          "weeks": 4,
+          "startDate": "2026-07-27"
+        }
+      },
+      "capture": {
+        "planId": "$.id"
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.weeks", "op": "minLength", "value": 4 },
-          { "path": "$.goalId", "op": "nonEmpty" }
+          {
+            "path": "$.weeks",
+            "op": "minLength",
+            "value": 4
+          },
+          {
+            "path": "$.goalId",
+            "op": "nonEmpty"
+          }
+        ]
+      }
+    },
+    {
+      "id": "decide_session_from_to",
+      "query": "我今天該練什麼？（依排定課表與今日證據決策）",
+      "expectedTool": "decide_session",
+      "call": {
+        "tool": "decide_session",
+        "arguments": {
+          "userId": "user_henry_demo",
+          "date": "2026-07-27",
+          "availableMinutes": 25
+        }
+      },
+      "expect": {
+        "ok": true,
+        "assertions": [
+          {
+            "path": "$.decision.type",
+            "op": "nonEmpty"
+          },
+          {
+            "path": "$.action.from",
+            "op": "nonEmpty"
+          },
+          {
+            "path": "$.action.to",
+            "op": "nonEmpty"
+          },
+          {
+            "path": "$.action.changed",
+            "op": "minLength",
+            "value": 1
+          },
+          {
+            "path": "$.reason",
+            "op": "minLength",
+            "value": 1
+          },
+          {
+            "path": "$.evidence",
+            "op": "minLength",
+            "value": 1
+          }
         ]
       }
     },
@@ -60,12 +162,24 @@
       "id": "get_plan_by_id",
       "query": "Show that plan again.",
       "expectedTool": "get_plan",
-      "call": { "tool": "get_plan", "arguments": { "planId": "{{planId}}" } },
+      "call": {
+        "tool": "get_plan",
+        "arguments": {
+          "planId": "{{planId}}"
+        }
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.id", "op": "equals", "value": "{{planId}}" },
-          { "path": "$.versionHistory", "op": "isArray" }
+          {
+            "path": "$.id",
+            "op": "equals",
+            "value": "{{planId}}"
+          },
+          {
+            "path": "$.versionHistory",
+            "op": "isArray"
+          }
         ]
       }
     },
@@ -73,23 +187,51 @@
       "id": "list_plans",
       "query": "List my plans.",
       "expectedTool": "list_plans",
-      "call": { "tool": "list_plans", "arguments": { "userId": "user_henry_demo" } },
+      "call": {
+        "tool": "list_plans",
+        "arguments": {
+          "userId": "user_henry_demo"
+        }
+      },
       "expect": {
         "ok": true,
-        "assertions": [ { "path": "$.plans", "op": "minLength", "value": 1 } ]
+        "assertions": [
+          {
+            "path": "$.plans",
+            "op": "minLength",
+            "value": 1
+          }
+        ]
       }
     },
     {
       "id": "preview_deload",
       "query": "Preview deloading week 2 of my plan.",
       "expectedTool": "preview_adjust_plan",
-      "call": { "tool": "preview_adjust_plan", "arguments": { "planId": "{{planId}}", "changeRequest": { "kind": "deload_week", "weekIndex": 1 } } },
-      "capture": { "previewId": "$.previewId" },
+      "call": {
+        "tool": "preview_adjust_plan",
+        "arguments": {
+          "planId": "{{planId}}",
+          "changeRequest": {
+            "kind": "deload_week",
+            "weekIndex": 1
+          }
+        }
+      },
+      "capture": {
+        "previewId": "$.previewId"
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.previewId", "op": "nonEmpty" },
-          { "path": "$.diff", "op": "isArray" }
+          {
+            "path": "$.previewId",
+            "op": "nonEmpty"
+          },
+          {
+            "path": "$.diff",
+            "op": "isArray"
+          }
         ]
       }
     },
@@ -97,12 +239,23 @@
       "id": "commit_deload",
       "query": "Apply that change.",
       "expectedTool": "commit_adjust_plan",
-      "call": { "tool": "commit_adjust_plan", "arguments": { "previewId": "{{previewId}}" } },
+      "call": {
+        "tool": "commit_adjust_plan",
+        "arguments": {
+          "previewId": "{{previewId}}"
+        }
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.version", "op": "isNumber" },
-          { "path": "$.plan", "op": "nonEmpty" }
+          {
+            "path": "$.version",
+            "op": "isNumber"
+          },
+          {
+            "path": "$.plan",
+            "op": "nonEmpty"
+          }
         ]
       }
     },
@@ -110,12 +263,31 @@
       "id": "peloton_knee_friendly_squat_substitute",
       "query": "Find me a squat alternative that won't hurt my knee.",
       "expectedTool": "get_exercise",
-      "call": { "tool": "get_exercise", "arguments": { "exerciseId": "exercise_back_squat", "conditions": ["knee_injury"], "avoidContraindications": ["knee"] } },
+      "call": {
+        "tool": "get_exercise",
+        "arguments": {
+          "exerciseId": "exercise_back_squat",
+          "conditions": [
+            "knee_injury"
+          ],
+          "avoidContraindications": [
+            "knee"
+          ]
+        }
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.substitutes", "op": "minLength", "value": 1 },
-          { "path": "$.exercise_id", "op": "equals", "value": "exercise_back_squat" }
+          {
+            "path": "$.substitutes",
+            "op": "minLength",
+            "value": 1
+          },
+          {
+            "path": "$.exercise_id",
+            "op": "equals",
+            "value": "exercise_back_squat"
+          }
         ]
       }
     },
@@ -123,12 +295,26 @@
       "id": "peloton_upper_body_no_equipment",
       "query": "Upper body only, no equipment.",
       "expectedTool": "search_exercises",
-      "call": { "tool": "search_exercises", "arguments": { "muscleGroup": "upper", "availableEquipment": [], "limit": 5 } },
+      "call": {
+        "tool": "search_exercises",
+        "arguments": {
+          "muscleGroup": "upper",
+          "availableEquipment": [],
+          "limit": 5
+        }
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.results", "op": "minLength", "value": 1 },
-          { "path": "$.total", "op": "isNumber" }
+          {
+            "path": "$.results",
+            "op": "minLength",
+            "value": 1
+          },
+          {
+            "path": "$.total",
+            "op": "isNumber"
+          }
         ]
       }
     },
@@ -136,22 +322,46 @@
       "id": "peloton_all_zone2_workout",
       "query": "Find a session that stays in Zone 2 the whole way through.",
       "expectedTool": "search_workouts",
-      "call": { "tool": "search_workouts", "arguments": { "inZone": 2 } },
+      "call": {
+        "tool": "search_workouts",
+        "arguments": {
+          "inZone": 2
+        }
+      },
       "expect": {
         "ok": true,
-        "assertions": [ { "path": "$.results", "op": "minLength", "value": 1 } ]
+        "assertions": [
+          {
+            "path": "$.results",
+            "op": "minLength",
+            "value": 1
+          }
+        ]
       }
     },
     {
       "id": "workout_structure_not_prose",
       "query": "What's actually in that Zone 2 session?",
       "expectedTool": "get_workout",
-      "call": { "tool": "get_workout", "arguments": { "workoutId": "workout_zone2_base_run" } },
+      "call": {
+        "tool": "get_workout",
+        "arguments": {
+          "workoutId": "workout_zone2_base_run"
+        }
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.blocks", "op": "minLength", "value": 1 },
-          { "path": "$.workout_id", "op": "equals", "value": "workout_zone2_base_run" }
+          {
+            "path": "$.blocks",
+            "op": "minLength",
+            "value": 1
+          },
+          {
+            "path": "$.workout_id",
+            "op": "equals",
+            "value": "workout_zone2_base_run"
+          }
         ]
       }
     },
@@ -159,12 +369,25 @@
       "id": "user_profile_constraints",
       "query": "What equipment and injuries do I have on file?",
       "expectedTool": "get_user_profile",
-      "call": { "tool": "get_user_profile", "arguments": { "userId": "user_henry_demo" } },
+      "call": {
+        "tool": "get_user_profile",
+        "arguments": {
+          "userId": "user_henry_demo"
+        }
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.goals", "op": "minLength", "value": 1 },
-          { "path": "$.availableEquipment", "op": "minLength", "value": 1 }
+          {
+            "path": "$.goals",
+            "op": "minLength",
+            "value": 1
+          },
+          {
+            "path": "$.availableEquipment",
+            "op": "minLength",
+            "value": 1
+          }
         ]
       }
     },
@@ -172,12 +395,26 @@
       "id": "training_history_server_sorted",
       "query": "What did I train recently?",
       "expectedTool": "get_training_history",
-      "call": { "tool": "get_training_history", "arguments": { "userId": "user_henry_demo", "limit": 5 } },
+      "call": {
+        "tool": "get_training_history",
+        "arguments": {
+          "userId": "user_henry_demo",
+          "limit": 5
+        }
+      },
       "expect": {
         "ok": true,
         "assertions": [
-          { "path": "$.sort", "op": "equals", "value": "startedAt_desc" },
-          { "path": "$.results", "op": "minLength", "value": 1 }
+          {
+            "path": "$.sort",
+            "op": "equals",
+            "value": "startedAt_desc"
+          },
+          {
+            "path": "$.results",
+            "op": "minLength",
+            "value": 1
+          }
         ]
       }
     },
@@ -185,39 +422,82 @@
       "id": "trap_unknown_exercise",
       "query": "Tell me about an exercise that does not exist.",
       "expectedTool": "get_exercise",
-      "call": { "tool": "get_exercise", "arguments": { "exerciseId": "exercise_totally_made_up" } },
-      "expect": { "ok": false, "errorContains": "Unknown exercise" }
+      "call": {
+        "tool": "get_exercise",
+        "arguments": {
+          "exerciseId": "exercise_totally_made_up"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "errorContains": "Unknown exercise"
+      }
     },
     {
       "id": "trap_unknown_workout",
       "query": "Show a workout id that does not exist.",
       "expectedTool": "get_workout",
-      "call": { "tool": "get_workout", "arguments": { "workoutId": "workout_made_up" } },
-      "expect": { "ok": false, "errorContains": "Unknown workout" }
+      "call": {
+        "tool": "get_workout",
+        "arguments": {
+          "workoutId": "workout_made_up"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "errorContains": "Unknown workout"
+      }
     },
     {
       "id": "deprecated_alias_routes",
       "query": "A client that cached the old tool name still works after the D-TOOL rename.",
       "expectedTool": "recommend_workout",
-      "call": { "tool": "recommend_today_workout", "arguments": { "userId": "user_henry_demo", "date": "2026-07-23" } },
+      "call": {
+        "tool": "recommend_today_workout",
+        "arguments": {
+          "userId": "user_henry_demo",
+          "date": "2026-07-23"
+        }
+      },
       "expect": {
         "ok": true,
-        "assertions": [ { "path": "$.recommendedFocus", "op": "nonEmpty" } ]
+        "assertions": [
+          {
+            "path": "$.recommendedFocus",
+            "op": "nonEmpty"
+          }
+        ]
       }
     },
     {
       "id": "trap_unknown_user",
       "query": "State for a user that does not exist.",
       "expectedTool": "get_semantic_fitness_state",
-      "call": { "tool": "get_semantic_fitness_state", "arguments": { "userId": "user_does_not_exist" } },
-      "expect": { "ok": false, "errorContains": "Unknown demo user" }
+      "call": {
+        "tool": "get_semantic_fitness_state",
+        "arguments": {
+          "userId": "user_does_not_exist"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "errorContains": "Unknown demo user"
+      }
     },
     {
       "id": "trap_unknown_plan",
       "query": "Fetch a plan id that does not exist.",
       "expectedTool": "get_plan",
-      "call": { "tool": "get_plan", "arguments": { "planId": "plan_does_not_exist" } },
-      "expect": { "ok": false, "errorContains": "Unknown plan" }
+      "call": {
+        "tool": "get_plan",
+        "arguments": {
+          "planId": "plan_does_not_exist"
+        }
+      },
+      "expect": {
+        "ok": false,
+        "errorContains": "Unknown plan"
+      }
     }
   ]
 }
