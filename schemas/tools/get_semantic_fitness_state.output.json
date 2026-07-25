@@ -4,42 +4,136 @@
   "title": "get_semantic_fitness_state output",
   "type": "object",
   "properties": {
-    "userId": { "type": "string" },
-    "date": { "type": "string" },
-    "timezone": { "type": "string" },
-    "recoveryScore": { "type": "number" },
-    "readinessScore": { "type": "number" },
-    "fatigueScore": { "type": "number" },
-    "sleepQuality": { "type": ["number", "null"] },
-    "trainingLoad7d": { "type": "number" },
-    "trainingLoad28d": { "type": "number" },
-    "acuteChronicWorkloadRatio": { "type": "number" },
-    "muscleFatigue": { "type": "object", "additionalProperties": { "type": "number" } },
-    "recommendedFocus": { "type": "string" },
-    "avoid": { "type": "array", "items": { "type": "string" } },
-    "availableTimeMinutes": { "type": "number" },
+    "userId": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string"
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "recoveryScore": {
+      "type": "number"
+    },
+    "readinessScore": {
+      "type": "number"
+    },
+    "fatigueScore": {
+      "type": "number"
+    },
+    "sleepQuality": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "trainingLoad7d": {
+      "type": "number"
+    },
+    "trainingLoad28d": {
+      "type": "number"
+    },
+    "acuteChronicWorkloadRatio": {
+      "type": "number"
+    },
+    "muscleFatigue": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "recommendedFocus": {
+      "type": "string"
+    },
+    "avoid": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "availableTimeMinutes": {
+      "type": "number"
+    },
     "goalAlignment": {
       "type": "object",
       "properties": {
-        "primaryGoal": { "type": "string" },
-        "score": { "type": "number" }
+        "primaryGoal": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        }
       },
-      "required": ["primaryGoal", "score"]
+      "required": [
+        "primaryGoal",
+        "score"
+      ]
     },
-    "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
     "signalCoverage": {
       "type": "object",
       "properties": {
-        "usable": { "type": "array", "items": { "type": "string" } },
-        "missing": { "type": "array", "items": { "type": "string" } }
+        "usable": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       },
-      "required": ["usable", "missing"]
+      "required": [
+        "usable",
+        "missing"
+      ]
     },
-    "reasoning": { "type": "array", "items": { "type": "string" } }
+    "reasoning": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "evidenceSource": {
+          "type": "string",
+          "enum": [
+            "provided",
+            "demo_fallback"
+          ]
+        }
+      },
+      "required": [
+        "evidenceSource"
+      ]
+    }
   },
   "required": [
-    "userId", "date", "timezone", "recoveryScore", "readinessScore", "fatigueScore",
-    "muscleFatigue", "recommendedFocus", "avoid", "availableTimeMinutes",
-    "goalAlignment", "confidence", "reasoning"
+    "userId",
+    "date",
+    "timezone",
+    "recoveryScore",
+    "readinessScore",
+    "fatigueScore",
+    "muscleFatigue",
+    "recommendedFocus",
+    "avoid",
+    "availableTimeMinutes",
+    "goalAlignment",
+    "confidence",
+    "reasoning"
   ]
 }

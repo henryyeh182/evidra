@@ -5,6 +5,29 @@ export const toolDefinitions = [
     inputSchema: {
       type: "object",
       properties: {
+        evidence: {
+          type: "object",
+          description:
+            "The user's health evidence, passed in by the AI layer that holds their authorization. Source-neutral: normalize Apple Health / Garmin / Oura / Whoop / Strava into this shape. The server does not fetch or store evidence. Omit only for local demo runs.",
+          properties: {
+            profile: { type: "object", description: "timezone, fitnessLevel." },
+            goals: { type: "array", items: { type: "object" }, description: "Training goals, highest priority first." },
+            constraints: {
+              type: "object",
+              description: "injuries[], equipment[], availableMinutes, avoidMovements[]."
+            },
+            healthMetrics: {
+              type: "array",
+              items: { type: "object" },
+              description: "Recent readings: sleep_duration_hours, sleep_quality, hrv_ms, resting_hr_bpm, steps, stress — each with value, recordedAt, source."
+            },
+            workouts: {
+              type: "array",
+              items: { type: "object" },
+              description: "Completed sessions with startedAt, durationMinutes, type, rpe, trainingLoad, muscleGroups."
+            }
+          }
+        },
         userId: {
           type: "string",
           description: "User identifier."
@@ -46,6 +69,29 @@ export const toolDefinitions = [
     inputSchema: {
       type: "object",
       properties: {
+        evidence: {
+          type: "object",
+          description:
+            "The user's health evidence, passed in by the AI layer that holds their authorization. Source-neutral: normalize Apple Health / Garmin / Oura / Whoop / Strava into this shape. The server does not fetch or store evidence. Omit only for local demo runs.",
+          properties: {
+            profile: { type: "object", description: "timezone, fitnessLevel." },
+            goals: { type: "array", items: { type: "object" }, description: "Training goals, highest priority first." },
+            constraints: {
+              type: "object",
+              description: "injuries[], equipment[], availableMinutes, avoidMovements[]."
+            },
+            healthMetrics: {
+              type: "array",
+              items: { type: "object" },
+              description: "Recent readings: sleep_duration_hours, sleep_quality, hrv_ms, resting_hr_bpm, steps, stress — each with value, recordedAt, source."
+            },
+            workouts: {
+              type: "array",
+              items: { type: "object" },
+              description: "Completed sessions with startedAt, durationMinutes, type, rpe, trainingLoad, muscleGroups."
+            }
+          }
+        },
         userId: { type: "string", description: "User identifier." },
         date: { type: "string", description: "Date in YYYY-MM-DD. Defaults to today's demo date." },
         planId: { type: "string", description: "Restrict the lookup to one plan. Defaults to searching the user's plans." },
@@ -186,6 +232,29 @@ export const toolDefinitions = [
     inputSchema: {
       type: "object",
       properties: {
+        evidence: {
+          type: "object",
+          description:
+            "The user's health evidence, passed in by the AI layer that holds their authorization. Source-neutral: normalize Apple Health / Garmin / Oura / Whoop / Strava into this shape. The server does not fetch or store evidence. Omit only for local demo runs.",
+          properties: {
+            profile: { type: "object", description: "timezone, fitnessLevel." },
+            goals: { type: "array", items: { type: "object" }, description: "Training goals, highest priority first." },
+            constraints: {
+              type: "object",
+              description: "injuries[], equipment[], availableMinutes, avoidMovements[]."
+            },
+            healthMetrics: {
+              type: "array",
+              items: { type: "object" },
+              description: "Recent readings: sleep_duration_hours, sleep_quality, hrv_ms, resting_hr_bpm, steps, stress — each with value, recordedAt, source."
+            },
+            workouts: {
+              type: "array",
+              items: { type: "object" },
+              description: "Completed sessions with startedAt, durationMinutes, type, rpe, trainingLoad, muscleGroups."
+            }
+          }
+        },
         userId: { type: "string", description: "User identifier." },
         goalId: { type: "string", description: "Goal to build the plan around. Defaults to the highest-priority goal." },
         weeks: { type: "number", description: "Number of weeks to plan. Defaults to 4." },

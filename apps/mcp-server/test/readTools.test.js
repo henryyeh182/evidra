@@ -125,3 +125,53 @@ test("assertGrounded rejects a payload that references a missing exercise (P3)",
     /Ungrounded exercise reference/
   );
 });
+
+test("evidence passed in drives the decision for a user the server has never seen", async () => {
+  const evidence = {
+    profile: { timezone: "Asia/Taipei", fitnessLevel: "advanced" },
+    goals: [{ id: "g1", type: "half_marathon", priority: 1 }],
+    constraints: { availableMinutes: 60, equipment: ["treadmill"] },
+    healthMetrics: [
+      { type: "hrv_ms", value: 38, recordedAt: "2026-07-27T06:00:00+08:00", source: "garmin" },
+      { type: "sleep_duration_hours", value: 5.2, recordedAt: "2026-07-27T07:00:00+08:00", source: "garmin" }
+    ],
+    workouts: [
+      {
+        type: "run",
+        startedAt: "2026-07-26T18:00:00+08:00",
+        durationMinutes: 70,
+        rpe: 8,
+        trainingLoad: 112,
+        muscleGroups: ["legs"],
+        source: "garmin"
+      }
+    ]
+  };
+
+  // This id exists nowhere in the server's own files.
+  const state = await call("get_semantic_fitness_state", {
+    userId: "external_user_42",
+    date: "2026-07-27",
+    evidence
+  });
+  assert.equal(state.payload.provenance.evidenceSource, "provided");
+  assert.equal(state.payload.userId, "external_user_42");
+  assert.equal(typeof state.payload.readinessScore, "number");
+
+  await call("generate_plan", { userId: "external_user_42", weeks: 2, startDate: "2026-07-27", evidence });
+  const decision = await call("decide_session", { userId: "external_user_42", date: "2026-07-27", evidence });
+
+  assert.equal(decision.payload.provenance.evidenceSource, "provided");
+  assert.ok(decision.payload.action.from, "a scheduled session was found for the external user");
+  assert.ok(decision.payload.reason.length > 0);
+});
+
+test("without evidence the server says it fell back to demo data", async () => {
+  const { payload } = await call("get_semantic_fitness_state", {
+    userId: "user_henry_demo",
+    date: "2026-07-23"
+  });
+
+  assert.equal(payload.provenance.evidenceSource, "demo_fallback");
+  assert.match(payload.provenance.note, /must pass evidence/);
+});

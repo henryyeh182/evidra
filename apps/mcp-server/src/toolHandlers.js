@@ -8,6 +8,10 @@ import { loadDemoUserContext, loadExerciseCatalog } from "./demoData.js";
 import { jsonContent } from "./content.js";
 import { decideSession } from "../../../packages/decision-engine/src/index.js";
 import {
+  evidenceToUserContext,
+  describeEvidence
+} from "../../../packages/evidence/src/index.js";
+import {
   searchExercisesTool,
   getExerciseTool,
   searchWorkoutsTool,
@@ -28,18 +32,41 @@ function assertUserId(context, userId) {
   }
 }
 
-export async function getSemanticFitnessState(args = {}) {
+/**
+ * Resolve the context a call should reason over.
+ *
+ * The architecture has the AI layer hold the user's authorization and pass
+ * evidence in as tool arguments, so inbound `evidence` always wins and nothing
+ * is persisted. The demo seed remains only as a fallback for local runs, and
+ * the caller is told which one was used rather than left to assume.
+ */
+async function resolveContext(args) {
+  if (args.evidence) {
+    const context = evidenceToUserContext(args.evidence, { userId: args.userId });
+    return { context, provenance: { evidenceSource: "provided", ...describeEvidence(args.evidence) } };
+  }
   const context = await loadDemoUserContext({
     includeStravaFixture: Boolean(args.includeStravaFixture)
   });
   assertUserId(context, args.userId);
+  return {
+    context,
+    provenance: {
+      evidenceSource: "demo_fallback",
+      note: "No evidence was supplied; used the local demo seed. Production callers must pass evidence."
+    }
+  };
+}
+
+export async function getSemanticFitnessState(args = {}) {
+  const { context, provenance } = await resolveContext(args);
 
   const state = generateSemanticFitnessState(context, {
     date: args.date || DEFAULT_DATE,
     timezone: context.user.timezone
   });
 
-  return jsonContent(state);
+  return jsonContent({ ...state, provenance });
 }
 
 export async function recommendTodayWorkout(args = {}) {
@@ -89,8 +116,7 @@ export async function getTrainingContext(args = {}) {
 }
 
 export async function generateTrainingPlanTool(args = {}) {
-  const context = await loadDemoUserContext();
-  assertUserId(context, args.userId);
+  const { context } = await resolveContext(args);
 
   const plan = generateTrainingPlan(context, {
     goalId: args.goalId,
@@ -178,10 +204,7 @@ export const toolHandlers = {
  * rather than inventing a suggestion.
  */
 export async function decideSessionTool(args = {}) {
-  const context = await loadDemoUserContext({
-    includeStravaFixture: Boolean(args.includeStravaFixture)
-  });
-  assertUserId(context, args.userId);
+  const { context, provenance } = await resolveContext(args);
 
   const date = args.date || DEFAULT_DATE;
   const state = generateSemanticFitnessState(context, {
@@ -213,5 +236,5 @@ export async function decideSessionTool(args = {}) {
     availableMinutes: args.availableMinutes
   });
 
-  return jsonContent({ userId: context.user.id, date, planId, ...decision });
+  return jsonContent({ userId: context.user.id, date, planId, ...decision, provenance });
 }

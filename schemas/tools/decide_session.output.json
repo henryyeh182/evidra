@@ -162,6 +162,21 @@
       "items": {
         "type": "string"
       }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "evidenceSource": {
+          "type": "string",
+          "enum": [
+            "provided",
+            "demo_fallback"
+          ]
+        }
+      },
+      "required": [
+        "evidenceSource"
+      ]
     }
   },
   "required": [
