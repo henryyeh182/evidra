@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/search_exercises.output",
+  "title": "search_exercises output",
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "object"
+    },
+    "total": {
+      "type": "number"
+    },
+    "offset": {
+      "type": "number"
+    },
+    "limit": {
+      "type": "number"
+    },
+    "hasMore": {
+      "type": "boolean"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "exercise_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "primaryMuscle": {
+            "type": "string"
+          },
+          "movementPattern": {
+            "type": "string"
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "skillLevel": {
+            "type": "string"
+          },
+          "impactLevel": {
+            "type": "string"
+          },
+          "contraindications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "exercise_id",
+          "name",
+          "primaryMuscle",
+          "movementPattern",
+          "equipment"
+        ]
+      }
+    }
+  },
+  "required": [
+    "query",
+    "total",
+    "offset",
+    "limit",
+    "hasMore",
+    "results"
+  ]
+}

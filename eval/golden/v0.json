@@ -107,6 +107,95 @@
       }
     },
     {
+      "id": "peloton_knee_friendly_squat_substitute",
+      "query": "Find me a squat alternative that won't hurt my knee.",
+      "expectedTool": "get_exercise",
+      "call": { "tool": "get_exercise", "arguments": { "exerciseId": "exercise_back_squat", "conditions": ["knee_injury"], "avoidContraindications": ["knee"] } },
+      "expect": {
+        "ok": true,
+        "assertions": [
+          { "path": "$.substitutes", "op": "minLength", "value": 1 },
+          { "path": "$.exercise_id", "op": "equals", "value": "exercise_back_squat" }
+        ]
+      }
+    },
+    {
+      "id": "peloton_upper_body_no_equipment",
+      "query": "Upper body only, no equipment.",
+      "expectedTool": "search_exercises",
+      "call": { "tool": "search_exercises", "arguments": { "muscleGroup": "upper", "availableEquipment": [], "limit": 5 } },
+      "expect": {
+        "ok": true,
+        "assertions": [
+          { "path": "$.results", "op": "minLength", "value": 1 },
+          { "path": "$.total", "op": "isNumber" }
+        ]
+      }
+    },
+    {
+      "id": "peloton_all_zone2_workout",
+      "query": "Find a session that stays in Zone 2 the whole way through.",
+      "expectedTool": "search_workouts",
+      "call": { "tool": "search_workouts", "arguments": { "inZone": 2 } },
+      "expect": {
+        "ok": true,
+        "assertions": [ { "path": "$.results", "op": "minLength", "value": 1 } ]
+      }
+    },
+    {
+      "id": "workout_structure_not_prose",
+      "query": "What's actually in that Zone 2 session?",
+      "expectedTool": "get_workout",
+      "call": { "tool": "get_workout", "arguments": { "workoutId": "workout_zone2_base_run" } },
+      "expect": {
+        "ok": true,
+        "assertions": [
+          { "path": "$.blocks", "op": "minLength", "value": 1 },
+          { "path": "$.workout_id", "op": "equals", "value": "workout_zone2_base_run" }
+        ]
+      }
+    },
+    {
+      "id": "user_profile_constraints",
+      "query": "What equipment and injuries do I have on file?",
+      "expectedTool": "get_user_profile",
+      "call": { "tool": "get_user_profile", "arguments": { "userId": "user_henry_demo" } },
+      "expect": {
+        "ok": true,
+        "assertions": [
+          { "path": "$.goals", "op": "minLength", "value": 1 },
+          { "path": "$.availableEquipment", "op": "minLength", "value": 1 }
+        ]
+      }
+    },
+    {
+      "id": "training_history_server_sorted",
+      "query": "What did I train recently?",
+      "expectedTool": "get_training_history",
+      "call": { "tool": "get_training_history", "arguments": { "userId": "user_henry_demo", "limit": 5 } },
+      "expect": {
+        "ok": true,
+        "assertions": [
+          { "path": "$.sort", "op": "equals", "value": "startedAt_desc" },
+          { "path": "$.results", "op": "minLength", "value": 1 }
+        ]
+      }
+    },
+    {
+      "id": "trap_unknown_exercise",
+      "query": "Tell me about an exercise that does not exist.",
+      "expectedTool": "get_exercise",
+      "call": { "tool": "get_exercise", "arguments": { "exerciseId": "exercise_totally_made_up" } },
+      "expect": { "ok": false, "errorContains": "Unknown exercise" }
+    },
+    {
+      "id": "trap_unknown_workout",
+      "query": "Show a workout id that does not exist.",
+      "expectedTool": "get_workout",
+      "call": { "tool": "get_workout", "arguments": { "workoutId": "workout_made_up" } },
+      "expect": { "ok": false, "errorContains": "Unknown workout" }
+    },
+    {
       "id": "deprecated_alias_routes",
       "query": "A client that cached the old tool name still works after the D-TOOL rename.",
       "expectedTool": "recommend_workout",

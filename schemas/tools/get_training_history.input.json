@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/get_training_history.input",
+  "title": "get_training_history input",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "User identifier."
+    },
+    "since": {
+      "type": "string",
+      "description": "Only include workouts on/after this ISO date, e.g. '2026-07-01'."
+    },
+    "type": {
+      "type": "string",
+      "description": "Filter by workout type, e.g. 'run', 'strength'."
+    },
+    "includeStravaFixture": {
+      "type": "boolean",
+      "description": "Include the local Strava fixture."
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1-50. Defaults to 20."
+    },
+    "offset": {
+      "type": "number",
+      "description": "Pagination offset. Defaults to 0."
+    }
+  },
+  "required": [
+    "userId"
+  ]
+}

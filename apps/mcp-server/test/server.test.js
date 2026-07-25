@@ -32,13 +32,22 @@ test("MCP server lists core fitness tools", async () => {
   assert.deepEqual(toolNames, [
     "get_semantic_fitness_state",
     "recommend_workout",
-    "get_training_context",
+    "search_exercises",
+    "get_exercise",
+    "search_workouts",
+    "get_workout",
+    "get_user_profile",
+    "get_training_history",
     "generate_plan",
     "get_plan",
     "list_plans",
     "preview_adjust_plan",
     "commit_adjust_plan"
   ]);
+  // R2: the tool budget must stay inside the window every client handles well.
+  assert.ok(toolNames.length <= 20, `tool surface grew to ${toolNames.length}`);
+  // Deprecated tools are hidden from discovery but remain callable.
+  assert.ok(!toolNames.includes("get_training_context"));
 });
 
 test("MCP server calls recommend_workout", async () => {

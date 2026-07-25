@@ -42,23 +42,25 @@ Peloton 已經證明了兩件事：
 | `packages/planning` | Phase 4/6 | ✅ 架構完成 | `generatePlan` / `adaptPlan` / `planStore`（preview→commit、版本化） |
 | `packages/connectors` | Phase 5 | 🟡 兩個來源 | Strava + Apple Health（`export.xml` 串流解析 → normalize，原始資料本機私有／gitignored）；其餘來源未接 |
 | `packages/db` | Phase 1 | 🟡 契約完成 | PostgreSQL schema、mappers、2 個 migration；尚未接上真正的 runtime |
-| `apps/mcp-server` | Phase 2/4/6 | 🟡 垂直切片 | 8 個 tool，走 stdio；**沒有 Streamable HTTP / OAuth** |
+| `apps/mcp-server` | Phase 2/4/6 | 🟢 讀取 API 已上線 | **13 個 tool**（含 Phase 2 六件套），走 stdio；deprecated tool 隱藏於 `tools/list` 但仍可呼叫。**尚無 Streamable HTTP / OAuth（D-PROTO 已決定延後）** |
 
 ### 已上線的 Tool Surface（實際 8 個，垂直切法）
 
 ```
-get_semantic_fitness_state   recommend_workout         get_training_context
+get_semantic_fitness_state   recommend_workout
+search_exercises             get_exercise              search_workouts
+get_workout                  get_user_profile          get_training_history
 generate_plan                get_plan                  list_plans
 preview_adjust_plan          commit_adjust_plan
 ```
 
-這 8 個 tool 是為了最快兌現 README 的 MVP 問句「**What should I do today?**」而做的垂直切片：直接跳到 semantic state + 計畫生成 + preview/commit，**跳過了 v2 附錄 A 規劃的水平讀取 API**（`search_exercises` / `get_exercise` / `search_workouts` / `get_workout` …）。
+原本 8 個是為了最快兌現 README 的 MVP 問句「**What should I do today?**」而做的垂直切片。Phase 2 補上附錄 A 的水平讀取 API 六件套後為 **13 個**（≤ 20，R2 有測試守）。`get_training_context` 被 `get_user_profile` + `get_training_history` 取代，標記 deprecated：`tools/list` 不再曝光，但舊 client 仍可呼叫。
 
 ### 因此，真正的缺口（v3 拆解的依據）
 
 1. **知識庫已達標（數量＋品質）**。graph 從 23 擴到 **896 節點 / 5743 邊**，[風險 R1](#風險-registerappendix-c) 的 gate 全數通過：分類準確率 **94.1%**、替代合理率 **100%**、高負荷動作 contraindication 覆蓋 **100%**（R3 安全過濾實測零洩漏）。imported 仍為 confidence 0.6 的自動轉換，餘 **23 筆邊界誤分類**寫在 `data/vendor/graph-review-flags.json` 待人工複核。
-2. **水平讀取 API 尚未存在**。附錄 A 的 P2 六件套一個都還沒開；目前只能問「今天練什麼」，不能問「找一個不傷膝的深蹲替代」。
-3. **Tool 命名雙軌**。已上線的垂直名稱 vs 附錄 A 的水平名稱需要一次對齊決策（見 [Tool Surface Contract](#tool-surface-contractappendix-a)）。
+2. ~~**水平讀取 API 尚未存在**~~ — ✅ **Phase 2 已完成**。六件套上線，「找一個不傷膝的深蹲替代」「純上肢無器材」「全程 Zone 2」都是一次結構化查詢。
+3. ~~**Tool 命名雙軌**~~ — ✅ D-TOOL 已執行，全部對齊 canonical，舊名留 deprecated alias。
 4. **協定基線未達 Phase 0 標準**。目前 stdio-only，沒有 Streamable HTTP、沒有 OAuth 2.1。
 5. **量化紀律的骨架已建立（v3 補上）**。`/eval` golden set v0 + runner 已就緒，能對現有 8 tool 客觀評分（schema validity / grounding / plan validity）；仍待把 golden set 擴到 30 條並接上跨模型 tool-selection 評分。
 
@@ -74,7 +76,7 @@ preview_adjust_plan          commit_adjust_plan
 |---|---|---|---|
 | P1 | Tool 回傳結構化資料，不回傳自然語言敘述 | 課程結構被 LLM 編造 | ✅ 現有 8 tool 皆回結構化 |
 | P2 | Plan 由 Planning Engine 產生，LLM 只做編排與說明 | 18 週計畫出現不存在的課 | ✅ `packages/planning` |
-| P3 | 所有輸出 item 必須帶可驗證 ID，server 端在回傳前做存在性驗證 | 幻覺課名 | 🟡 有 ID，回傳前存在性驗證待補 |
+| P3 | 所有輸出 item 必須帶可驗證 ID，server 端在回傳前做存在性驗證 | 幻覺課名 | 🟢 讀取 API 全數經 `assertGrounded` 在回傳前驗證；計畫層仍待補 |
 | P4 | 寫入動作一律 two-phase：`preview_*` → `commit_*`，帶 idempotency key | 加錯課、加到過去 | 🟡 preview/commit 有，idempotency key 待補 |
 | P5 | 日期、時區、相對時間（「下週一」）一律由 server 解析，不交給 LLM | 排到上週一 | ❌ 尚未實作 date resolver |
 | P6 | 用 MCP elicitation 一次收齊參數，不靠多輪追問 | 免費帳號撞額度 | ❌ 尚未實作 elicitation |
@@ -228,7 +230,7 @@ preview_adjust_plan          commit_adjust_plan
 
 ## Phase 2 — MCP Read API（第一次能被三家模型連上）
 
-**時間**：3 週 · **狀態**：❌ 未開始（現有 8 tool 是垂直切片，非此處的水平讀取 API）
+**時間**：3 週 · **狀態**：✅ **已完成**（六件套上線，唯讀零副作用）
 
 **目標**：讓 GPT / Claude / Gemini 都能查到 Phase 1 的知識庫。**唯讀，零副作用。**
 
@@ -254,10 +256,17 @@ preview_adjust_plan          commit_adjust_plan
 - 針對 Peloton 失敗的那七題，全數通過
 
 ### 重新拆解的 backlog
-- [ ] **前置**：Phase 1 資料達標 + Phase 0 的 `/eval` 骨架就緒。
-- [x] **前置 D-TOOL**：改名對齊已完成（`recommend_today_workout → recommend_workout` 等，見 Tool Surface Contract）。
-- [ ] 實作 6 個讀取 tool，全部接到 knowledge-graph，回傳帶 `exercise_id` / `workout_id` 並在回傳前做**存在性驗證（落實 P3）**。
-- [ ] 把 golden set 補到 50 條並在三家模型跑分。
+- [x] **前置**：Phase 1 資料達標（896 節點）+ Phase 0 `/eval` 骨架就緒。
+- [x] **前置 D-TOOL**：改名對齊已完成。
+- [x] 實作 6 個讀取 tool，全部接到 knowledge-graph，回傳帶 `exercise_id` / `workout_id`，並在回傳前經 `assertGrounded` 做**存在性驗證（落實 P3）**——ungrounded 參照直接拋錯，不讓 LLM 有幻覺素材。
+- [x] **payload 預算由 server 強制**：`paginate` 以實際序列化位元組（含縮排）為準裁切分頁，任何 `limit` 都不可能超過 ~4KB（`limit=50` 實測回 11 筆 / 3846 bytes）。
+- [x] **tool description 寫「什麼時候不要用」**：六個 tool 皆有，降低跨模型誤選率。
+- [ ] 把 golden set 補到 50 條並在三家模型跑分（目前 19 條，跨模型 tool-selection 仍需 model runner）。
+
+### 實測結果
+- golden set **19/19 通過**，四個 gate 全綠（schema 100% / grounding 100%，32 個 id 參照 / plan validity 100%）。
+- Peloton 失敗題已覆蓋：**膝友善深蹲替代**、**純上肢無器材**、**全程 Zone 2**、**課表結構非散文**、**歷史排序由 server 決定**。
+- 副作用：plan→catalog 覆蓋率診斷 **37.5% → 62.5%**（知識庫變大，planner 的自由文字動作名更多能對上）。
 
 > 這個 Phase 結束時，你會有一個能公開、且在「結構化查詢」維度明確優於現有產品的 demo。
 
@@ -495,7 +504,7 @@ commit_schedule_change(preview_token, idempotency_key)
 1. **Phase 0 補完（地基）** — 建 `/schemas`（8 tool 抽 JSON Schema）+ `/eval`（golden set + runner 骨架）。沒有這兩個，後面沒有客觀驗收。
 2. ~~**Phase 1 資料達標（數量＋品質）**~~ — ✅ 896 節點 / 5743 邊；分類 94.1%、替代合理率 100%、contraindication 覆蓋完成。餘 23 筆邊界誤分類待人工複核（非阻塞）。
 3. ~~**決策 D-TOOL / D-PROTO 拍板**~~ — ✅ 已定：D-TOOL 已改名對齊；D-PROTO 開發期續用 stdio、對外前才補 HTTP + OAuth。
-4. **Phase 2 讀取 API** — 6 個唯讀 tool，落實 P3 存在性驗證，golden set 三家跑分。
-5. **回填 P3–P6 的落實缺口** — 存在性驗證、idempotency key、date resolver、elicitation，穿插進 Phase 3/4/6。
+4. ~~**Phase 2 讀取 API**~~ — ✅ 六件套上線、P3 落實、golden set 19/19。餘：跨模型跑分需 model runner。
+5. **回填 P4–P6 的落實缺口** — idempotency key、date resolver、elicitation，穿插進 Phase 3/4/6。（P3 存在性驗證已於讀取 API 落實，計畫層待補。）
 
 > 一句話：**先把地基（schema + eval）與護城河（知識庫資料）補起來，再往水平讀取 API 展開。** 垂直切片已經證明「今天該練什麼」跑得通，但整個計畫的價值壓在還沒灌的那 800 個動作節點上。

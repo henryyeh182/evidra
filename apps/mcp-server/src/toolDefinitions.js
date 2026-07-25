@@ -40,8 +40,115 @@ export const toolDefinitions = [
     }
   },
   {
+    name: "search_exercises",
+    description:
+      "Search the exercise library by muscle, movement pattern, equipment, skill, and impact. Returns exercise_id for every hit, so results can be passed to get_exercise. Use this to answer 'what exercises can I do for X'. Do NOT use this to pick what to train today (use recommend_workout, which accounts for fatigue and recovery), and do NOT use it to look up a single exercise you already have an id for (use get_exercise).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        muscle: { type: "string", description: "Specific muscle, e.g. 'quads', 'chest', 'glutes'." },
+        muscleGroup: { type: "string", enum: ["upper", "lower", "core"], description: "Coarse body region." },
+        movementPattern: {
+          type: "string",
+          description: "One of: squat, hinge, horizontal_push, vertical_push, horizontal_pull, vertical_pull, locomotion, mobility, core, isolation, plyometric."
+        },
+        availableEquipment: {
+          type: "array",
+          items: { type: "string" },
+          description: "Equipment the user has. Pass [] for bodyweight-only. Omit to ignore equipment."
+        },
+        excludeContraindications: {
+          type: "array",
+          items: { type: "string" },
+          description: "Joints to protect, e.g. ['knee']. Matching exercises are hard-filtered out."
+        },
+        maxImpact: { type: "string", enum: ["low", "moderate", "high"], description: "Highest acceptable joint impact." },
+        skillLevel: { type: "string", enum: ["beginner", "intermediate", "advanced"] },
+        limit: { type: "number", description: "Page size, 1-50. Defaults to 20." },
+        offset: { type: "number", description: "Pagination offset. Defaults to 0." }
+      }
+    }
+  },
+  {
+    name: "get_exercise",
+    description:
+      "Return full detail for one exercise plus its graph neighbours: variants, progressions, regressions, and safe substitutes. Use this when the user asks about a specific exercise or wants an alternative to it. Do NOT use this to browse or filter the library (use search_exercises).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        exerciseId: { type: "string", description: "Exercise identifier returned by search_exercises." },
+        conditions: {
+          type: "array",
+          items: { type: "string" },
+          description: "Situational filters for substitutes, e.g. ['knee_injury', 'no_equipment']."
+        },
+        availableEquipment: { type: "array", items: { type: "string" }, description: "Restrict substitutes to usable equipment." },
+        avoidContraindications: { type: "array", items: { type: "string" }, description: "Joints to protect in substitutes, e.g. ['knee']." }
+      },
+      required: ["exerciseId"]
+    }
+  },
+  {
+    name: "search_workouts",
+    description:
+      "Search the structured workout library by intensity zone, duration, equipment, and body region. Answers queries the underlying data supports exactly, such as 'a session entirely in Zone 2' or 'upper body only, no equipment, under 30 minutes'. Do NOT use this for the user's completed training history (use get_training_history).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inZone: { type: "number", description: "Require every set to sit in this HR zone, e.g. 2." },
+        maxDurationMinutes: { type: "number", description: "Longest acceptable session length." },
+        availableEquipment: { type: "array", items: { type: "string" }, description: "Equipment the user has. Pass [] for bodyweight-only." },
+        muscleGroup: { type: "string", enum: ["upper", "lower", "core"] },
+        limit: { type: "number", description: "Page size, 1-50. Defaults to 20." },
+        offset: { type: "number", description: "Pagination offset. Defaults to 0." }
+      }
+    }
+  },
+  {
+    name: "get_workout",
+    description:
+      "Return the complete Block/Set structure of one workout, with every set resolved to a real exercise. Returns structured data, never a prose description. Use this before describing what a session actually contains.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        workoutId: { type: "string", description: "Workout identifier returned by search_workouts." }
+      },
+      required: ["workoutId"]
+    }
+  },
+  {
+    name: "get_user_profile",
+    description:
+      "Return the user's goals, preferences, active injuries, and available equipment. Use this to learn the constraints that apply to any recommendation. Do NOT use this for past sessions (use get_training_history) or for today's readiness (use get_semantic_fitness_state).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        userId: { type: "string", description: "User identifier." }
+      },
+      required: ["userId"]
+    }
+  },
+  {
+    name: "get_training_history",
+    description:
+      "Return the user's completed workouts, always sorted newest-first by the server. Use this for questions about what the user actually did. Do NOT re-sort or re-rank the results, and do NOT use this to browse the workout library (use search_workouts).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        userId: { type: "string", description: "User identifier." },
+        since: { type: "string", description: "Only include workouts on/after this ISO date, e.g. '2026-07-01'." },
+        type: { type: "string", description: "Filter by workout type, e.g. 'run', 'strength'." },
+        includeStravaFixture: { type: "boolean", description: "Include the local Strava fixture." },
+        limit: { type: "number", description: "Page size, 1-50. Defaults to 20." },
+        offset: { type: "number", description: "Pagination offset. Defaults to 0." }
+      },
+      required: ["userId"]
+    }
+  },
+  {
     name: "get_training_context",
-    description: "Return normalized profile, goals, workouts, health metric counts, and available tools context.",
+    deprecated: true,
+    description: "Deprecated: use get_user_profile and get_training_history instead. Returns normalized profile, goals, workouts, health metric counts, and available tools context.",
     inputSchema: {
       type: "object",
       properties: {
@@ -140,6 +247,17 @@ export const deprecatedToolAliases = {
 
 export function resolveToolName(name) {
   return deprecatedToolAliases[name] || name;
+}
+
+/**
+ * Tools advertised to clients. Deprecated tools stay callable for one release
+ * but are hidden from discovery, so new conversations only see the canonical
+ * surface and the tool budget (R2) reflects what models actually choose from.
+ */
+export function listedToolDefinitions() {
+  return toolDefinitions
+    .filter((tool) => !tool.deprecated)
+    .map(({ deprecated, ...tool }) => tool);
 }
 
 export function getToolDefinition(name) {

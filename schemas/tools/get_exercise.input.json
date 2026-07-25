@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/get_exercise.input",
+  "title": "get_exercise input",
+  "type": "object",
+  "properties": {
+    "exerciseId": {
+      "type": "string",
+      "description": "Exercise identifier returned by search_exercises."
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Situational filters for substitutes, e.g. ['knee_injury', 'no_equipment']."
+    },
+    "availableEquipment": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Restrict substitutes to usable equipment."
+    },
+    "avoidContraindications": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Joints to protect in substitutes, e.g. ['knee']."
+    }
+  },
+  "required": [
+    "exerciseId"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/get_workout.input",
+  "title": "get_workout input",
+  "type": "object",
+  "properties": {
+    "workoutId": {
+      "type": "string",
+      "description": "Workout identifier returned by search_workouts."
+    }
+  },
+  "required": [
+    "workoutId"
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/get_training_history.output",
+  "title": "get_training_history output",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "sort": {
+      "type": "string"
+    },
+    "total": {
+      "type": "number"
+    },
+    "offset": {
+      "type": "number"
+    },
+    "limit": {
+      "type": "number"
+    },
+    "hasMore": {
+      "type": "boolean"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "workout_log_id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "number"
+          },
+          "rpe": {
+            "type": "number"
+          },
+          "trainingLoad": {
+            "type": "number"
+          },
+          "muscleGroups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "workout_log_id",
+          "type",
+          "startedAt",
+          "durationMinutes"
+        ]
+      }
+    }
+  },
+  "required": [
+    "userId",
+    "sort",
+    "total",
+    "offset",
+    "limit",
+    "hasMore",
+    "results"
+  ]
+}

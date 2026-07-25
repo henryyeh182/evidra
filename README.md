@@ -81,7 +81,15 @@ Core tools:
 
 - `get_semantic_fitness_state`
 - `recommend_workout`
-- `get_training_context`
+
+Read API (Phase 2, read-only and side-effect free):
+
+- `search_exercises`
+- `get_exercise`
+- `search_workouts`
+- `get_workout`
+- `get_user_profile`
+- `get_training_history`
 
 Planning tools (Phase 5):
 
@@ -93,8 +101,9 @@ Planning tools (Phase 5):
 
 > The pre-rename names (`recommend_today_workout`, `generate_training_plan`,
 > `get_training_plan`, `list_training_plans`, `preview_plan_change`,
-> `commit_plan_change`) still work as deprecated aliases for one release;
-> `tools/list` advertises only the canonical names above.
+> `commit_plan_change`) still work as deprecated aliases for one release, as
+> does `get_training_context` (superseded by `get_user_profile` +
+> `get_training_history`). `tools/list` advertises only the canonical names above.
 
 Run a local tool demo:
 

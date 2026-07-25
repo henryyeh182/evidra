@@ -6,6 +6,14 @@ import {
 } from "../../../packages/planning/src/index.js";
 import { loadDemoUserContext, loadExerciseCatalog } from "./demoData.js";
 import { jsonContent } from "./content.js";
+import {
+  searchExercisesTool,
+  getExerciseTool,
+  searchWorkoutsTool,
+  getWorkoutTool,
+  getUserProfileTool,
+  getTrainingHistoryTool
+} from "./readToolHandlers.js";
 
 const DEFAULT_DATE = "2026-07-23";
 
@@ -147,6 +155,12 @@ export const toolHandlers = {
   get_semantic_fitness_state: getSemanticFitnessState,
   recommend_workout: recommendTodayWorkout,
   get_training_context: getTrainingContext,
+  search_exercises: searchExercisesTool,
+  get_exercise: getExerciseTool,
+  search_workouts: searchWorkoutsTool,
+  get_workout: getWorkoutTool,
+  get_user_profile: getUserProfileTool,
+  get_training_history: getTrainingHistoryTool,
   generate_plan: generateTrainingPlanTool,
   get_plan: getTrainingPlanTool,
   list_plans: listTrainingPlansTool,

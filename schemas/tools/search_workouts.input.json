@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/search_workouts.input",
+  "title": "search_workouts input",
+  "type": "object",
+  "properties": {
+    "inZone": {
+      "type": "number",
+      "description": "Require every set to sit in this HR zone, e.g. 2."
+    },
+    "maxDurationMinutes": {
+      "type": "number",
+      "description": "Longest acceptable session length."
+    },
+    "availableEquipment": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Equipment the user has. Pass [] for bodyweight-only."
+    },
+    "muscleGroup": {
+      "type": "string",
+      "enum": [
+        "upper",
+        "lower",
+        "core"
+      ]
+    },
+    "limit": {
+      "type": "number",
+      "description": "Page size, 1-50. Defaults to 20."
+    },
+    "offset": {
+      "type": "number",
+      "description": "Pagination offset. Defaults to 0."
+    }
+  }
+}

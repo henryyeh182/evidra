@@ -1,4 +1,4 @@
-import { getToolDefinition, toolDefinitions, resolveToolName } from "./toolDefinitions.js";
+import { getToolDefinition, listedToolDefinitions, resolveToolName } from "./toolDefinitions.js";
 import { parseJsonRpcMessage, jsonRpcError, jsonRpcResult } from "./jsonRpc.js";
 import { toolHandlers } from "./toolHandlers.js";
 
@@ -26,7 +26,7 @@ export async function handleJsonRpcMessage(rawMessage) {
 
     if (method === "tools/list") {
       return jsonRpcResult(id, {
-        tools: toolDefinitions
+        tools: listedToolDefinitions()
       });
     }
 

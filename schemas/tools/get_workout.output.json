@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/get_workout.output",
+  "title": "get_workout output",
+  "type": "object",
+  "properties": {
+    "workout_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "durationMinutes": {
+      "type": "number"
+    },
+    "workingSets": {
+      "type": "number"
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "sets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "exercise_id": {
+                  "type": "string"
+                },
+                "exerciseName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "reps": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "durationSeconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "intensity": {
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
+                "restSeconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "tempo": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "exercise_id"
+              ]
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "sets"
+        ]
+      }
+    }
+  },
+  "required": [
+    "workout_id",
+    "name",
+    "durationMinutes",
+    "blocks"
+  ]
+}

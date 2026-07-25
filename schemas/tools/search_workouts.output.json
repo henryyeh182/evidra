@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/search_workouts.output",
+  "title": "search_workouts output",
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "object"
+    },
+    "total": {
+      "type": "number"
+    },
+    "offset": {
+      "type": "number"
+    },
+    "limit": {
+      "type": "number"
+    },
+    "hasMore": {
+      "type": "boolean"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "workout_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "number"
+          },
+          "blockCount": {
+            "type": "number"
+          },
+          "workingSets": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "workout_id",
+          "name",
+          "durationMinutes"
+        ]
+      }
+    }
+  },
+  "required": [
+    "query",
+    "total",
+    "offset",
+    "limit",
+    "hasMore",
+    "results"
+  ]
+}

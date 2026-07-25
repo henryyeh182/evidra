@@ -21,13 +21,28 @@ async function readJson(relativePath) {
 export async function loadKnownIds() {
   const context = await readJson("data/seeds/sample-user-context.json");
   const exercises = await readJson("data/seeds/exercises.json");
+  const graph = await readJson("data/seeds/exercises-graph.json");
+  const workoutLibrary = await readJson("data/seeds/workouts.json");
+
+  // The knowledge graph is the authority on which exercises exist; the small
+  // demo catalog is a subset kept for the legacy context tool.
+  const exerciseIds = new Set([
+    ...exercises.map((exercise) => exercise.id),
+    ...graph.exercises.map((exercise) => exercise.id)
+  ]);
 
   return {
     users: new Set([context.user.id]),
     goals: new Set((context.goals || []).map((goal) => goal.id)),
-    workouts: new Set((context.workouts || []).map((workout) => workout.id)),
-    exercises: new Set(exercises.map((exercise) => exercise.id)),
-    exerciseNames: new Set(exercises.map((exercise) => exercise.name.toLowerCase()))
+    workouts: new Set([
+      ...(context.workouts || []).map((workout) => workout.id),
+      ...workoutLibrary.map((workout) => workout.id)
+    ]),
+    exercises: exerciseIds,
+    exerciseNames: new Set([
+      ...exercises.map((exercise) => exercise.name.toLowerCase()),
+      ...graph.exercises.map((exercise) => exercise.name.toLowerCase())
+    ])
   };
 }
 
@@ -38,7 +53,9 @@ const ID_FIELDS = {
   planId: "plans",
   previewId: "previews",
   exercise_id: "exercises",
-  exerciseId: "exercises"
+  exerciseId: "exercises",
+  workout_id: "workouts",
+  workout_log_id: "workouts"
 };
 
 /**

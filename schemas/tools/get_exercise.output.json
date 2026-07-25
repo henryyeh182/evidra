@@ -1,0 +1,237 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/get_exercise.output",
+  "title": "get_exercise output",
+  "type": "object",
+  "properties": {
+    "exercise_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "movementPattern": {
+      "type": "string"
+    },
+    "primaryMuscle": {
+      "type": "string"
+    },
+    "secondaryMuscles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "equipment": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "planeOfMotion": {
+      "type": "string"
+    },
+    "unilateral": {
+      "type": "boolean"
+    },
+    "skillLevel": {
+      "type": "string"
+    },
+    "impactLevel": {
+      "type": "string"
+    },
+    "loadsJoints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contraindications": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "number"
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "exercise_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "primaryMuscle": {
+            "type": "string"
+          },
+          "movementPattern": {
+            "type": "string"
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "skillLevel": {
+            "type": "string"
+          },
+          "impactLevel": {
+            "type": "string"
+          },
+          "contraindications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "exercise_id",
+          "name",
+          "primaryMuscle",
+          "movementPattern",
+          "equipment"
+        ]
+      }
+    },
+    "progressions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "exercise_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "primaryMuscle": {
+            "type": "string"
+          },
+          "movementPattern": {
+            "type": "string"
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "skillLevel": {
+            "type": "string"
+          },
+          "impactLevel": {
+            "type": "string"
+          },
+          "contraindications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "exercise_id",
+          "name",
+          "primaryMuscle",
+          "movementPattern",
+          "equipment"
+        ]
+      }
+    },
+    "regressions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "exercise_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "primaryMuscle": {
+            "type": "string"
+          },
+          "movementPattern": {
+            "type": "string"
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "skillLevel": {
+            "type": "string"
+          },
+          "impactLevel": {
+            "type": "string"
+          },
+          "contraindications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "exercise_id",
+          "name",
+          "primaryMuscle",
+          "movementPattern",
+          "equipment"
+        ]
+      }
+    },
+    "substitutes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "reason"
+        ]
+      }
+    }
+  },
+  "required": [
+    "exercise_id",
+    "name",
+    "movementPattern",
+    "primaryMuscle",
+    "equipment",
+    "contraindications",
+    "variants",
+    "progressions",
+    "regressions",
+    "substitutes"
+  ]
+}
