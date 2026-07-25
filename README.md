@@ -1,129 +1,74 @@
 # Fitness MCP
 
-Fitness MCP is **a permissioned Fitness Decision Engine that transforms user-owned health evidence into explainable training decisions for AI agents**.
+> **A permissioned Fitness Decision Engine that turns fragmented, user-owned health evidence into explainable training decisions for AI agents.**
 
-It is not a fitness app, a community, or a chat interface. See the [Design Manifesto](docs/design-manifesto.md).
+一個以使用者資料主權為前提的 Fitness Decision Engine，把分散在各家穿戴裝置、且屬於使用者的健康證據，轉換成 AI Agent 可採用、可解釋的訓練決策。
 
-It normalizes data from Apple Health, Garmin Connect, Strava, Oura, WHOOP, and other fitness platforms into a unified Semantic Fitness Layer that ChatGPT, Claude, Gemini, Cursor, VS Code, and future AI clients can query consistently.
+**不提供健康資料，不提供健身內容；提供的是基於證據與運動科學的決策。**
 
-## Core Idea
+## Architecture
 
-LLMs should not each re-analyze raw wearable and workout data.
+```
+User Device / User Accounts
+  Apple Health · Garmin · Oura · Whoop · Strava · MyFitnessPal
+        │ User OAuth 授權
+        ▼
+Claude / ChatGPT  (Conversation + Reasoning Layer)
+        │ MCP Tool Call
+        ▼
+Fitness MCP  (Data Access + Fitness Intelligence Interface)
+        ▼
+Fitness Decision Engine
+  Recovery · Training Readiness · Workout Adjustment
+        ▼
+Claude / ChatGPT 回覆使用者
+```
 
-Fitness MCP computes durable semantic state:
+證據由 AI 那層經 tool call 傳入 — **Fitness MCP 不去廠商雲端拉資料，也不持有原始健康資料**。
+系統內**不含 LLM**：語言與推理來自 host，我們提供確定性的領域智慧。
 
-- Recovery score
-- Readiness score
-- Training load
-- Muscle fatigue
-- Injury constraints
-- Goal alignment
-- Recommended workout focus
-- Recommendation reasoning
-- Plan adaptation decisions
+## Design Principles
 
-AI clients then query this state through stable MCP tools.
+1. **Data stays with the user** — 不建資料湖、不保存原始健康資料
+2. **Permissioned** — 授權是取得證據的唯一途徑
+3. **Intelligence Layer** — 提供運動科學與決策，不是 App、社群、資料庫
+4. **AI Agent First** — 第一使用者是程式，不做 UI、不搶對話
+5. **Decision, not Content** — 賣判斷，不賣素材
 
-## Product Direction
+**Decision ≠ Recommendation**：推薦是憑空發出的建議（任何模型都會）；決策是對既有狀態的變更，帶 `from → to`，需要知道「今天原本該做什麼」。
 
-Fitness MCP is not just a workout planner. It is the foundation for a cross-platform AI fitness operating layer.
+## Moat
 
-The long-term goal is to connect fragmented health and training sources into one trusted semantic model, then expose that model to any AI assistant or app.
+1. **Semantic Fitness Layer** — 異質資料 → 統一 AI 語意狀態
+2. **Fitness Intelligence Engine** — 運動科學模型產生可重現、可解釋的決策
+3. **Fitness Knowledge Graph** — 連結動作、肌群、恢復、訓練目標
+4. **Feedback Learning** — 「狀態 → 決策 → 結果」閉環
+5. **Multi-LLM Interface** — MCP / REST / SDK，共用同一套 Fitness Intelligence
 
-## Planned Components
+## Not Building
 
-- MCP server
-- Semantic Fitness Layer
-- Fitness Knowledge Graph
-- Connector framework (OAuth, per-source normalization)
-- Fitness Decision Engine (recovery, readiness, workout adjustment)
-- Training load model (ATL / CTL / TSB)
-- Security, consent, and audit layer
+健身 App · 健身社群 · 聊天介面 · 內容資料庫 · 資料湖
 
-Explicitly **not** planned: a fitness app, a dashboard, a community, or a chat
-interface. The conversation belongs to the AI client; we own domain
-intelligence. See the [Design Manifesto](docs/design-manifesto.md).
+## Status
+
+目前：13 個 MCP tool（stdio）、896 節點知識圖譜、Apple Health／Strava 證據正規化、73 tests pass。
+
+**已知架構級偏差 5 項待修**，詳見 [Implementation Plan](docs/fitness-mcp-implementation-plan.md) 第 2 節。
 
 ## Documentation
 
 - [**Design Manifesto**](docs/design-manifesto.md) — 定位與治理，位階最高
-- [Implementation Plan (v4, active roadmap)](docs/fitness-mcp-implementation-plan.md)
-- [Implementation Plan (v1)](docs/implementation-plan.md)
-- [v2 Phase 1: Workout Knowledge Base](docs/v2-phase-1-knowledge-base.md)
-- [Planning Engine](docs/phase-5.md)
-- [GitHub Project](https://github.com/users/henryyeh182/projects/1)
-- [Issue Backlog](https://github.com/henryyeh182/fitness-mcp/issues)
+- [Implementation Plan](docs/fitness-mcp-implementation-plan.md) — 現況、偏差、Phase 順序
+- [MCP Server](docs/mcp-server.md) — server 與 tool 說明
+- [Schemas](schemas/README.md) · [Eval](eval/README.md)
 
-## MVP Target
-
-The first MVP should allow an MCP client to ask:
-
-> What should I do today?
-
-And receive a structured answer based on the user's semantic fitness state, including readiness, fatigue, training load, constraints, recommendation, and reasoning.
-
-## Local Demo Commands
+## Local Commands
 
 ```bash
-npm test
-npm run demo:mcp
-npm run demo:knowledge
-npm run demo:planning
-npm run demo:semantic-state
-npm run demo:strava
+npm test                    # 73 tests
+npm run eval                # golden set 計分
+npm run build:graph         # 重建知識圖譜
+npm run audit:graph         # 圖譜品質稽核
+npm run import:apple-health # 匯入本機真實資料（git-ignored）
+npm run demo:mcp            # tool 呼叫示範
 ```
-
-## MCP Server MVP
-
-The first MCP server MVP lives in `apps/mcp-server`.
-
-It currently supports JSON-RPC over stdio-compatible line messages:
-
-- `initialize`
-- `tools/list`
-- `tools/call`
-
-Core tools:
-
-- `get_semantic_fitness_state`
-- `recommend_workout`
-
-Read API (Phase 2, read-only and side-effect free):
-
-- `search_exercises`
-- `get_exercise`
-- `search_workouts`
-- `get_workout`
-- `get_user_profile`
-- `get_training_history`
-
-Planning tools (Phase 5):
-
-- `generate_plan`
-- `get_plan`
-- `list_plans`
-- `preview_adjust_plan`
-- `commit_adjust_plan`
-
-> The pre-rename names (`recommend_today_workout`, `generate_training_plan`,
-> `get_training_plan`, `list_training_plans`, `preview_plan_change`,
-> `commit_plan_change`) still work as deprecated aliases for one release, as
-> does `get_training_context` (superseded by `get_user_profile` +
-> `get_training_history`). `tools/list` advertises only the canonical names above.
-
-Run a local tool demo:
-
-```bash
-npm run demo:mcp
-npm run demo:planning
-```
-
-Run the stdio server directly:
-
-```bash
-node apps/mcp-server/src/stdio.js
-```
-
-## Repository Status
-
-This repository is currently in planning and foundation setup.

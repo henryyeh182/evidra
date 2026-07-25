@@ -1,351 +1,177 @@
 # Fitness MCP — Design Manifesto
 
-> **這份文件的位階高於一切。**
-> 當它與 [implementation plan](fitness-mcp-implementation-plan.md)、既有程式、或任何先前決策衝突時，**以本文件為準**。
-> 實作計畫回答「怎麼蓋」；這份文件回答「蓋什麼、不蓋什麼、為什麼」。
+> 位階最高。與 [implementation plan](fitness-mcp-implementation-plan.md) 或既有程式衝突時，以本文件為準。
 
----
+## Mission
 
-## 0. 一句話定位
+> **A permissioned Fitness Decision Engine that turns fragmented, user-owned health evidence into explainable training decisions for AI agents.**
 
-> **A permissioned Fitness Decision Engine that transforms user-owned health evidence into explainable training decisions for AI agents.**
+一個以使用者資料主權為前提的 Fitness Decision Engine，把分散在各家穿戴裝置、且屬於使用者的健康證據，轉換成 AI Agent 可採用、可解釋的訓練決策。
 
-**一個以使用者資料主權為前提的 Fitness Decision Engine**，將使用者持有的健康證據，轉換為 AI 可採用、可解釋的專業訓練決策。
+**不提供健康資料，不提供健身內容；提供的是基於證據與運動科學的決策。**
 
-不是提供健康資料，也不是提供健身內容；**我們提供的是基於證據與運動科學的決策。**
+## 五個設計原則
 
-> 這句話裡每個字都是承重的：
-> **permissioned**（原則 2，沒有授權就沒有能力）·
-> **user-owned evidence**（原則 1，資料不屬於我們）·
-> **explainable**（承諾 A，決策必須自我解釋）·
-> **decisions**（原則 5，不是內容也不是推薦）·
-> **for AI agents**（原則 4，第一使用者是程式）
+1. **Data stays with the user** — 不建資料湖、不保存原始健康資料。
+2. **Permissioned** — 授權是取得證據的唯一途徑；撤銷授權即撤銷能力。
+3. **Intelligence Layer** — 提供運動科學與決策，不是 App、社群、資料庫。
+4. **AI Agent First** — 第一使用者是程式，不是人。不做 UI、不搶對話。
+5. **Decision, not Content** — 賣判斷，不賣素材。
 
-### 明確不做
+## 兩條操作承諾
 
-| 不做 | 為什麼 |
+- **A. 決策自我解釋** — 每個輸出帶 confidence、evidence、signal coverage、limits。
+- **B. 價值以決策品質提升衡量** — 不是 connector 數、tool 數、動作數。
+
+## 腦袋來自 host：系統內不含 LLM
+
+**Fitness MCP 不內含 LLM、不呼叫 LLM API、不訓練語言模型。**
+語言理解、對話、意圖推理一律用 **Claude / ChatGPT 的腦袋**（host 那層）。
+
+我們提供的是**確定性的領域智慧**——運動科學模型、知識圖譜、決策規則，可重現、可解釋、不依賴 LLM 推測（護城河 #2）。
+
+| 誰做 | 做什麼 |
 |---|---|
-| **不做健身 App** | 入口永遠是使用者已經在用的模型 |
-| **不做健身社群** | 社交不是智慧層 |
-| **不做聊天介面** | 對話歸 Claude / ChatGPT，我們不搶 |
-| **不做內容資料庫** | 動作庫、課表庫是可被複製的內容，不是護城河 |
-| **不建資料湖** | 見原則 1「Data stays with the user」 |
+| **Host LLM**（Claude / ChatGPT） | 聽懂使用者、拆解意圖、把決策講成人話 |
+| **Fitness MCP** | 依證據與運動科學算出決策，回傳結構化的 Decision → Action → Reason |
 
-### 競爭對象
+**推論**
+- **零推論成本**：不付 token 費用，毛利結構乾淨。
+- **模型無關**：換模型、新模型出現，我們不受影響。
+- **Feedback Learning 學在確定性模型與圖譜裡**，不是 fine-tune LLM。
+- 例外：開發期的 lift 評測需要呼叫模型——那是**開發工具**，不是產品的一部分。
 
-不是 Garmin、不是 Strava、不是任何健身 App。
-是**其他提供 Fitness Intelligence 的 AI 能力供應商**。
+## 核心護城河（Moat）
 
----
+護城河不是 MCP，也不是單一 LLM，而是以下能力的組合：
 
-## 1. 五個設計原則（我們**是什麼**）
+1. **Semantic Fitness Layer** — 將 Apple Health、Garmin、Oura、WHOOP、Strava 等異質資料轉換為統一的 AI 語意狀態。
+2. **Fitness Intelligence Engine** — 以運動科學模型產生可重現、可解釋的決策，而非依賴 LLM 推測。
+3. **Fitness Knowledge Graph** — 以知識圖譜連結動作、肌群、恢復、訓練目標與營養知識。
+4. **Feedback Learning** — 持續學習「狀態 → 決策 → 結果」的閉環，改善未來決策品質。
+5. **Multi-LLM Interface** — 透過 MCP、REST API、SDK 等介面，讓 ChatGPT、Claude、Gemini 與未來 AI 共用同一套 Fitness Intelligence。
 
-這五條定義身份。任何提案先過這五條，再談怎麼做。
+> 知識圖譜是護城河**能力**，但價值透過決策兌現，不透過檢索端點對外曝光（見原則 5）。
+> Feedback Learning 需保存「狀態→決策→結果」三元組——那是決策紀錄，非原始健康資料，符合資料主權界線。
 
-### 1. Data stays with the user.
-資料留在原處：Apple Health 在手機、Garmin 在 Garmin Cloud、Oura 在 Oura Cloud。
-我們不建資料湖、不保存醫療資料、不管理大量個資。
+## 工具准入判準（GPT-6 Test）
 
-### 2. Permissioned.
-一切能力都建立在**使用者明確授權**之上。授權是取得證據的唯一途徑，撤銷授權即撤銷能力（含已衍生的指標）。
-沒有授權，我們什麼都不是——這也是護城河：GPT-6 再強，沒有授權就拿不到這個人的證據。
+> 「如果明天 GPT-6 已經知道所有運動知識，這個 Tool 還有存在價值嗎？」
 
-### 3. Intelligence Layer.
-我們提供運動科學、恢復模型、訓練負荷與決策能力。
-不是 App、不是社群、不是資料庫。**分工線：模型負責講話，我們負責判斷。**
+**否 → 砍掉或降為內部。** GPT-6 殺死「知識查詢」，殺不死三樣：
+**證據**（它沒有這個人的資料）、**計算**（它沒有執行縱向運算）、**保證**（確定性過濾器不會被說服繞過）。
 
-### 4. AI Agent First.
-第一使用者是 **AI Agent**，不是人類。
-介面設計、輸出格式、錯誤語意，全部以「被程式呼叫」為前提，而不是以「被人閱讀」為前提。
-對話與互動歸 Claude / ChatGPT，我們不搶敘事權，也不做 UI。
+## Decision ≠ Recommendation
 
-### 5. Decision, not Content.
-> **這是最鋒利的一條，也是最容易失守的一條。**
-
-我們賣**判斷**，不賣**素材**。
-
-| Content（不是我們的產品） | Decision（是我們的產品） |
-|---|---|
-| 動作庫、課表庫、教學文章 | 「以你今天的狀態，該練什麼」 |
-| 「有哪些深蹲替代動作」 | 「基於你的傷病與疲勞，這三個安全」 |
-| 可被複製、可被 GPT-6 內建 | 需要證據、計算與保證才成立 |
-
-推論：任何回傳「清單」「詳情」「目錄」的 tool 都違反這條。
-**已知失守紀錄**：Phase 1+2 蓋出的動作庫檢索工具面違反此條，v4 已重構收回。896 節點的圖是 Content，**它永遠不會是產品**——它只是產生 Decision 的燃料。
-
----
-
-## 1.2 什麼構成一個 Decision（不是 Recommendation）
-
-> **Recommendation 太弱了。Claude 本身就會推薦。**
-> 「今天睡不好，建議休息」——這是 Recommendation，而且不需要我們。
-
-| | Recommendation（推薦） | **Decision（決策）** |
+| | Recommendation | **Decision** |
 |---|---|---|
-| 範例 | 「建議今天跑 Zone 2」 | **「今天的課表由 VO₂max Intervals 調整為 45 分鐘 Zone 2」** |
-| 從哪來 | 憑空發出 | **對既有狀態的變更** |
-| 結構 | 一個建議 | **from → to** |
-| 前提 | 不需要前置狀態 | **必須有「原本要做什麼」** |
-| 效力 | 諮詢性，狀態不變 | **綁定性，計畫真的改了** |
-| 可稽核 | 事後無從查證 | **可回溯：改了什麼、依據什麼證據** |
-| GPT-6 做得到嗎 | ✅ 做得到 | ❌ **它不知道你今天原本該做什麼** |
+| 例 | 「建議今天跑 Zone 2」 | 「今天的 VO₂max Intervals → 45 分鐘 Zone 2」 |
+| 結構 | 憑空發出的建議 | **from → to，對既有狀態的變更** |
+| 前提 | 不需要 | **必須有「原本要做什麼」** |
+| GPT-6 | ✅ 做得到 | ❌ 它不知道你今天原本該做什麼 |
 
-### 一個 Decision 必須具備三件事
+**推論：計畫是決策的基底。** 沒有計畫只能推薦（弱）；有計畫才能決策（強）。
+決策類型：`keep`（也是決策）· `adjust` · `substitute` · `defer` · `advance`
 
-1. **前置狀態（prior state）** — 原本排定的課表。沒有它就只能推薦。
-2. **from → to** — 明確的變更，不是一句建議。
-3. **證據綁定（evidence binding）** — 為什麼改，依據哪些訊號。
-
-### Decision 的類型
-
-`keep`（照原定執行，**這也是決策**，且必須附證據）· `adjust`（改強度／時長）· `substitute`（換動作）· `defer`（延期）· `advance`（恢復超預期，加量）
-
-### 這條原則的結構性推論
-
-**計畫是決策的基底（substrate）。**
-沒有計畫 → 只能 Recommendation（弱，GPT-6 也會）。
-有計畫 → 才能 Decision（強，只有我們能）。
-
-所以 `generate_plan` 不是週邊功能，**它是讓決策成為可能的前提**。而決策引擎的核心動作不是「推薦今天練什麼」，是「**依今日證據，把今天排定的課表調整成什麼**」。
-
----
-
-## 1.3 五層決策模型（The Decision Pipeline）
-
-> 這是整個系統的骨架。每一層都有明確產出，且**不可跳層**。
+## 五層決策模型
 
 ```
-Evidence          HRV ↓ · Sleep 5h · Training Load ↑
-    ↓
-Fitness State     Recovery = Low
-    ↓
-Decision          Reduce today's intensity
-    ↓
-Action            Replace intervals with Zone 2
-    ↓
-Reason            HRV 低於 baseline · Sleep debt · High acute load
+Evidence        HRV ↓ · Sleep 5h · Load ↑
+  ↓
+Fitness State   Recovery = Low
+  ↓
+Decision        Reduce today's intensity        ← 意圖
+  ↓
+Action          Replace intervals with Zone 2   ← from → to
+  ↓
+Reason          HRV 低於 baseline · Sleep debt · High acute load
 ```
 
-| 層 | 是什麼 | 不是什麼 |
-|---|---|---|
-| **Evidence** | 授權下取得的訊號，帶來源與時間戳 | 不是我們擁有的資料 |
-| **Fitness State** | 對狀態的**判定**（recovery / readiness / load） | 不是原始讀數的轉貼 |
-| **Decision** | **意圖層**的判定：要做什麼調整 | 不是具體課表 |
-| **Action** | **執行層**的具體變更：from → to | 不是一句建議 |
-| **Reason** | 綁回 Evidence 的理由 | 不是事後編的說法 |
+Decision 與 Action 分開：同一個意圖可對應不同 Action（受器材／時間／傷病影響）。
+Reason 必須綁回 Evidence，不是事後編的說法。
 
-**Decision 與 Action 必須分開。**
-Decision 是「降低今天的強度」；Action 是「intervals → 45 分鐘 Zone 2」。
-分開的理由：同一個 Decision 可以對應不同 Action（受器材、時間、傷病影響），而 Action 沒有 Decision 就失去可解釋性。
-
-**Reason 必須綁回 Evidence。**
-不是「因為你看起來很累」，而是「HRV 低於個人 baseline、睡眠負債、急性負荷偏高」——每一條都指得回具體訊號。這是承諾 A 的落地形式。
-
----
-
-## 1.4 用詞：Input 叫 Evidence，不叫 Data
-
-因為原則 1 是 **Data stays with the user**——資料不屬於我們，我們沒有「輸入資料」，我們**在授權下取得證據**。
-
-> ❌ Data Access Layer / User Data / 資料湖
-> ✅ **Evidence Access** / **Fitness Evidence Model** / 證據
+## 架構（正式版，不得偏離）
 
 ```
-Evidence
-  Apple Health · Garmin · Oura · Whoop · Strava
-        ↓
-Fitness Evidence Model      ← 跨來源正規化（各家語言 → 統一證據語彙）
-        ↓
-Decision Engine
-        ↓
-Decision → Action → Reason
-```
+User Device / User Accounts
 
-用詞不是修辭問題：叫它 Data 會讓人開始想「怎麼存、存多久、存在哪」；叫它 Evidence 會讓人想「哪來的、多新、夠不夠、可不可信」——**後者才是這個產品該有的思考方式**。
+  Apple Health
+  Garmin
+  Oura
+  Whoop
+  Strava
+  MyFitnessPal
 
-> 命名沿革：先前文件中的「Fitness Language」「Semantic Fitness Layer」統一改稱 **Fitness Evidence Model**。
-
----
-
-## 1.5 兩條操作承諾（我們**怎麼做**）
-
-身份定了之後，這兩條規範執行品質。
-
-### A. Every decision must explain itself.
-每一個建議都必須包含：
-- **confidence** — 信心程度
-- **evidence** — 證據來源
-- **signal coverage** — 使用了哪些訊號、缺了哪些
-- **limits** — 適用範圍與限制（例如缺少睡眠資料時降低信心）
-
-這不只是為了 AI，也為了建立使用者與教練對結果的信任。
-
-### B. Value is measured by decision quality improvement.
-成功指標**不是**：有多少 Connector、有多少 Tool、有多少 Exercise。
-成功指標**是**：接入 Fitness MCP 後，AI 的運動決策品質提升了多少。
-
----
-
-## 2. 工具准入判準（The GPT-6 Test）
-
-每個 tool 都要通過這一問：
-
-> **「如果明天 GPT-6 已經知道所有運動知識，這個 Tool 還有存在價值嗎？」**
-
-- 答案是**沒有** → 它不是核心能力，砍掉或降為內部。
-- 答案是**仍然需要，因為它提供的是基於使用者當前證據與運動科學模型的專業決策** → 保留並持續投入。
-
-### 這個判準殺死什麼、留下什麼
-
-GPT-6 殺死 **知識查詢**。殺不死這三樣：
-
-| 存活的能力 | 為什麼 GPT-6 取代不了 |
-|---|---|
-| **證據（Evidence）** | 它沒有這位使用者的 HRV、睡眠、9 年訓練史。除非經過授權層，它永遠拿不到 |
-| **計算（Computation）** | 它知道 CTL 的公式，但沒有資料也沒有執行計算 |
-| **保證（Guarantee）** | 模型可以被說服、被繞過、被 prompt injection 影響；**確定性過濾器不會**。傷病禁忌硬過濾是保證，不是知識 |
-
-> **範例對照**
-> ❌「什麼是對膝蓋友善的深蹲替代？」→ GPT-6 自己就答得出來。純知識。
-> ✅「基於這位使用者的傷病紀錄、可用器材、48 小時內腿部疲勞，回傳通過硬安全過濾、且我無法被說服繞過的選項」→ 證據＋保證。
-
-這個判準會讓產品定位一直維持在 Permissioned Intelligence Layer，不會慢慢滑回「健身 App」或「內容資料庫」。
-
----
-
-## 3. 架構
-
-```
-Evidence Sources（資料留在原處，我們不持有）
-  Apple Health · Garmin · Oura · Whoop · Strava · MyFitnessPal
-        │
-        │  User OAuth 授權 —— 取得證據的唯一途徑
+        │ User OAuth 授權
         ▼
+
 Claude / ChatGPT
-  (Conversation + Reasoning Layer)
-        │
-        │  MCP Tool Call
+(Conversation + Reasoning Layer)
+
+        │ MCP Tool Call
         ▼
+
 Fitness MCP
-  (Evidence Access + Fitness Intelligence Interface)
-        │
+(Data Access + Fitness Intelligence Interface)
+  ※ Data Access = 使用者授權 AI 取用；data 所有權仍屬使用者
+
         ▼
-Fitness Evidence Model
-  跨來源正規化：各家語言 → 統一證據語彙
-        │
-        ▼
+
 Fitness Decision Engine
-  Recovery · Training Readiness · Workout Adjustment ·（Nutrition，暫緩）
-        │
+
+  Recovery
+  Training Readiness
+  Workout Adjustment
+
         ▼
-Decision → Action → Reason
-        │
-        ▼
+
 Claude / ChatGPT 回覆使用者
 ```
 
-### 一個必須誠實面對的架構限制
+**這張圖就是護城河**，也是與 Peloton MCP 的根本差異：Peloton 把既有的內容搜尋 API 包成 MCP tool，**MCP 之後直接就是回覆**；這裡在 MCP 與回覆之間有一個獨立的 **Fitness Decision Engine** 層，而它上游接的是使用者授權的多來源證據。
 
-**Apple Health 沒有伺服器端 API。** HealthKit 是裝置本機的，沒有 Garmin / Oura / Whoop / Strava 那種 OAuth 雲端授權。
+任何實作都不得改變這張圖的層次與名稱。實作進度另記於 [implementation plan](fitness-mcp-implementation-plan.md)，不反映在架構圖上。
 
-上圖把六個來源畫在同一層走 OAuth，**實際上做不到**：
+## 資料如何進來（重要）
 
-| 來源 | 取得方式 |
+架構圖上 `User OAuth 授權` 的箭頭指向 **Claude / ChatGPT**，不是指向 Fitness MCP。
+
+- **授權對象是 AI 那層**，不是我們。
+- 證據經由 **MCP Tool Call 以參數傳入**；**Fitness MCP 不去廠商雲端拉資料、不持有原始資料**。
+- 因此各來源有沒有伺服器端 API（例如 Apple Health 沒有）**與本架構無關**——我們從不 fetch。
+
+這是原則 1「Data stays with the user」的結構性保證：我們對原始資料無狀態，只收證據、回決策。
+
+> 用詞：內部討論 input 一律稱 **Evidence** 不稱 Data。架構圖層級名稱維持原文。
+> `Data Access` 的語意＝**使用者授權 AI 取用，資料所有權仍屬使用者**。
+
+## 資料主權界線
+
+**只存衍生指標，不存原始讀數。**
+
+| 可存 | 不可存 |
 |---|---|
-| Garmin · Oura · Whoop · Strava · MyFitnessPal | ✅ OAuth 雲端 API |
-| **Apple Health** | ❌ 無雲端 API。只能：使用者手動匯出，或做一個 iOS companion app 走 HealthKit 上傳 |
+| 負荷曲線（ATL/CTL/TSB）、個人基線、疲勞衰減狀態、訊號覆蓋率 | 原始 HRV／心率／睡眠分期，任何可視為醫療紀錄的原始值 |
 
-這對「AI Agent 開發者直接接你的 MCP」的商業模式是硬限制，需要在對外文件明講。
+撤銷授權時，衍生指標一併刪除。
 
----
+## 客戶
 
-## 4. 資料主權界線（已定案）
-
-原則 1「Data stays with the user」說不保存健康資料。但 ATL/CTL/TSB 這類負荷模型需要 42 天以上的縱向資料，每次呼叫都重拉數月原始資料在成本與延遲上不可行。
-
-**定案：只存衍生指標，不存原始讀數。**
-
-| 可以保存 | 不可保存 |
+| 客戶 | 計價 |
 |---|---|
-| 負荷曲線（ATL / CTL / TSB） | 原始 HRV 讀數 |
-| 個人基線（靜息心率基線、HRV 基線） | 原始心率序列 |
-| 分肌群疲勞衰減狀態 | 原始睡眠分期記錄 |
-| 訊號覆蓋率與時間戳 | 任何可視為醫療紀錄的原始值 |
+| AI Agent 開發者（Running / Cycling / PT coach） | API / Intelligence usage |
+| AI 平台 Marketplace | 平台分潤 |
+| 穿戴品牌 | Intelligence Layer 授權 |
 
-原則：**保存的必須是可重建的衍生值，且不構成醫療資料。** 使用者撤銷授權時，衍生指標一併刪除。
+商品名是 **Fitness Decision Engine**，不是「Garmin Connector」。
+**商業單位 = Decision Tools**，所以工具面的定義就是商業模型的定義。
 
----
+## 第一里程碑
 
-## 5. 客戶與商業單位
+> 不是建平台，而是證明：**沒有這個 MCP，Claude / ChatGPT 的 fitness decision quality 會明顯下降。**
 
-| 客戶 | 他們不想自己做的事 | 計價 |
-|---|---|---|
-| **AI Agent 開發者**（AI Running Coach / Cycling Coach / Personal Trainer） | Garmin API、Oura API、HRV 判讀、訓練科學 | API / Intelligence usage |
-| **AI 平台 Marketplace**（ChatGPT Apps、Claude Connectors） | — | 平台分潤 |
-| **穿戴品牌** | Training reasoning、Recovery interpretation | Intelligence Layer 授權 |
+現有 `/eval` 測的全是內部正確性，**零外部增益**。需要的是：同一組決策問題，裸模型 vs 模型＋MCP 的對照評分。
 
-上架的商品名稱不是「Garmin Connector」，而是 **Fitness Decision Engine, powered by Fitness MCP**。
+## 明確不做
 
-> **商業單位 = Decision Tools。** 每一個能被呼叫、被計價、被授權的，都是一個決策原語。所以工具面的定義就是商業模型的定義。
-
----
-
-## 6. 第一個里程碑
-
-> **不是建立平台，而是證明：沒有這個 MCP，Claude / ChatGPT 的 fitness decision quality 會明顯下降。**
-
-現況缺口：既有的 `/eval` 四個 gate（schema validity、grounding、plan validity、case pass）測的全是**內部正確性**——「我們自己的輸出格式對不對」。
-
-**它完全沒有測外部增益。** 要證明上述論點，需要的是另一種評測：同一組 fitness 決策問題，**裸模型 vs 模型＋MCP**，用決策品質評分標準對照，產出一個 lift 數字。
-
-那個數字才是拿去跟 marketplace、跟穿戴品牌談的東西。
-
----
-
-## 7. 工具面重構（13 → 7）
-
-依 GPT-6 判準與原則 5「Decision, not Content」重新檢驗現有 13 個 tool：
-
-### 保留（決策原語）
-
-| Tool | 通過理由 |
-|---|---|
-| `get_semantic_fitness_state` → **`assess_fitness_state`** | 五層模型的 **Fitness State** 層。證據＋計算，GPT-6 沒有本人的 HRV／睡眠／負荷史 |
-| `recommend_workout` → **`decide_session`** | **改名是概念性的**：不是推薦今天練什麼，而是依證據把排定課表調整成什麼。須輸出 Decision → Action → Reason |
-| `generate_plan` / `adjust_plan` | 基於本人約束與負荷的版本化計畫物件，非通用知識 |
-| `preview_*` / `commit_*` | 交易安全保證。模型自己給不了不可繞過的寫入保護 |
-
-### 要補
-
-| Tool | 為什麼 |
-|---|---|
-| **`get_training_load`** | ATL / CTL / TSB ＋ 分肌群疲勞。架構圖上的核心能力，目前只有粗糙的 7日/28日加總 |
-| **`decide_session`（核心）** | 架構圖的 **Workout Adjustment**。依今日證據調整**今天排定的**課表，回傳 from → to。目前只能調整整份計畫，不能調單次 |
-| **`decide_exercise_substitution`** | 從 `get_exercise` 抽出的**保證**部分：動作層級的 from → to 決策，非目錄查詢 |
-
-### 砍出 tool 面（程式保留為內部能力）
-
-| Tool | 砍的理由 |
-|---|---|
-| `search_exercises` / `get_exercise` | GPT-6 已知的知識查詢。違反原則 5（是 Content 不是 Decision） |
-| `search_workouts` / `get_workout` | 內容庫。明確在「不做」清單裡 |
-| `get_user_profile` / `get_training_history` | 回傳原始資料，違反原則 5。**折成其他工具輸出裡的 evidence 欄位** |
-| `get_plan` / `list_plans` | 狀態管理基礎設施，非決策。降為 MCP resource |
-
-> **重要：砍的是「對外的工具面」，不是程式。** 896 節點的動作圖從「產品功能」降為「決策引擎的內部證據來源」——它繼續支撐傷病硬過濾，只是不再是對外販售的能力。我們不賣動作庫。
-
-### Nutrition Guidance
-
-架構圖上有，程式目前 0 行。**狀態：先理解核心規格，暫不實作。** 先把 Recovery / Readiness / Workout Adjustment 三項訓練決策做深。
-
----
-
-## 8. 與實作計畫的關係
-
-[implementation plan](fitness-mcp-implementation-plan.md) 的六條工程原則（P1–P6）**仍然有效**，但它們是**工程原則**（防幻覺、防寫錯），位階低於本文件的**定位原則**。
-
-已知需要重新對齊的部分：
-
-- **v3 附錄 A 的 Tool Surface 演進表**是「從 Peloton 反推」時期的產物，隱含 to C 產品定位，與本文件衝突 → 以本文件第 7 節為準。
-- **Phase 1（知識庫）與 Phase 2（讀取 API）** 依當時計畫執行，蓋出的檢索工具面違反原則 5 → 依第 7 節重構。
-- **Phase 5 的成功標準**「至少 3 個 connector」與承諾 B 衝突（成功指標不是 connector 數量）→ 改以 decision quality lift 衡量。
+健身 App · 健身社群 · 聊天介面 · 內容資料庫 · 資料湖
