@@ -1,6 +1,13 @@
 export const toolDefinitions = [
   {
     name: "assess_fitness_state",
+    title: "Assess Fitness State",
+    annotations: {
+      title: "Assess Fitness State",
+      readOnlyHint: true,
+      idempotentHint: true,
+      openWorldHint: false
+    },
     description: "Return the user's computed Semantic Fitness State for a date.",
     inputSchema: {
       type: "object",
@@ -65,6 +72,13 @@ export const toolDefinitions = [
   },
   {
     name: "decide_session",
+    title: "Decide Today's Session",
+    annotations: {
+      title: "Decide Today's Session",
+      readOnlyHint: true,
+      idempotentHint: true,
+      openWorldHint: false
+    },
     description:
       "Decide what today's SCHEDULED session should become, given today's evidence. Returns a decision with from -> to: the session as planned, and what it should be changed to, with the evidence and reasoning behind it. Use this for 'what should I train today', 'am I ready for today's session', or 'should I adjust today's workout'. This is a decision, not a suggestion — it requires a stored plan. Do NOT use this to look up state alone (use get_semantic_fitness_state), and do NOT re-derive or override the intensity it returns: injury filtering is a hard safety rule.",
     inputSchema: {
@@ -117,6 +131,13 @@ export const toolDefinitions = [
   },
   {
     name: "decide_exercise_substitution",
+    title: "Decide Exercise Substitution",
+    annotations: {
+      title: "Decide Exercise Substitution",
+      readOnlyHint: true,
+      idempotentHint: true,
+      openWorldHint: false
+    },
     description:
       "Decide what a movement the user cannot do today should be replaced with. Returns a decision with from -> to: the original exercise and the one it becomes, plus the evidence behind the swap. Injury contraindications are a hard filter applied server-side — do NOT override or reason past the result. Use this when a specific exercise hurts or the equipment is unavailable. Do NOT use it to browse exercises.",
     inputSchema: {
@@ -263,6 +284,14 @@ export const toolDefinitions = [
   },
   {
     name: "generate_plan",
+    title: "Generate Training Plan",
+    annotations: {
+      title: "Generate Training Plan",
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: false
+    },
     description: "Generate and store a deterministic periodized multi-week training plan from the user's goals and constraints.",
     inputSchema: {
       type: "object",
@@ -324,6 +353,13 @@ export const toolDefinitions = [
   },
   {
     name: "preview_adjust_plan",
+    title: "Preview Plan Adjustment",
+    annotations: {
+      title: "Preview Plan Adjustment",
+      readOnlyHint: true,
+      idempotentHint: true,
+      openWorldHint: false
+    },
     description: "Preview a non-destructive change to a stored plan (reduce availability, add injury, or deload a week) and return the diff. Nothing is committed until commit_adjust_plan is called.",
     inputSchema: {
       type: "object",
@@ -343,6 +379,14 @@ export const toolDefinitions = [
   },
   {
     name: "commit_adjust_plan",
+    title: "Commit Plan Adjustment",
+    annotations: {
+      title: "Commit Plan Adjustment",
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false
+    },
     description: "Commit a previously previewed plan change. Requires the previewId from preview_adjust_plan and bumps the plan version.",
     inputSchema: {
       type: "object",
