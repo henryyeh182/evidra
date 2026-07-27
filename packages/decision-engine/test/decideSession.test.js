@@ -183,3 +183,32 @@ test("an active restriction blocks advancing, however good readiness looks", () 
   assert.equal(result.action.to.intensity, "moderate");
   assert.ok(result.reason.some((line) => line.includes("不提升強度")));
 });
+
+test("a maxed-out muscle group is acted on even when readiness already cut a step", () => {
+  // Regression, found driving the real MCP tool: rules ran in sequence, so the
+  // readiness cut to "moderate" made the fatigue rule's `intensity === "high"`
+  // test false. Legs at 100/100 the day after a 95-minute RPE-9 run went
+  // unmentioned in the reasoning and cost nothing in intensity.
+  const result = decideSession({
+    scheduledSession: session(), // high intensity, targets legs
+    state: state({ readinessScore: 49, muscleFatigue: { legs: 100 } })
+  });
+
+  assert.equal(result.action.to.intensity, "low", "two independent demands must both land");
+  assert.ok(
+    result.reason.some((line) => line.includes("100")),
+    "the athlete must be told their legs are the reason"
+  );
+});
+
+test("rule order does not change the outcome", () => {
+  const both = decideSession({
+    scheduledSession: session(),
+    state: state({ readinessScore: 49, muscleFatigue: { legs: 70 }, acuteChronicWorkloadRatio: 1.8 })
+  });
+
+  // Readiness, fatigue, and load each demand one step — the largest wins rather
+  // than three cuts stacking a hard session down to nothing.
+  assert.equal(both.action.to.intensity, "moderate");
+  assert.ok(both.reason.length >= 3, "every rule that fired explains itself");
+});

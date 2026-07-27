@@ -6,6 +6,7 @@ const RULES = {
   readinessRest: 40, // below this, train nothing hard
   readinessReduce: 60, // below this, pull intensity down
   readinessAdvance: 85, // above this (and fresh), allow a step up
+  muscleFatigueMaxed: 90, // target muscle fully loaded — two steps off
   muscleFatigueHigh: 65, // target muscle too fatigued for high intensity
   muscleFatigueModerate: 45,
   acwrHigh: 1.4 // acute:chronic ratio above this = spike
@@ -154,7 +155,21 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
     reason.push(`移除受限動作 ${blockedExercises.join("、")}（限制：${restrictions.join("；")}）`);
   }
 
-  // 2. Readiness gates the intensity.
+  // 2-4. Each safety rule states how many intensity steps it demands, judged
+  //    against the session AS PLANNED. Applying them in sequence instead let an
+  //    earlier rule's downgrade switch off a later one: a readiness drop to
+  //    moderate made the `intensity === "high"` fatigue check false, so legs at
+  //    100/100 the day after a hard run went unmentioned and unacted on. Rules
+  //    are now independent, the largest demand wins, and every rule that fires
+  //    contributes its reason.
+  let stepsDown = 0;
+  const demand = (steps, text) => {
+    stepsDown = Math.max(stepsDown, steps);
+    reason.push(text);
+    escalate("adjust", "reduce_today_intensity");
+  };
+
+  // 2. Readiness.
   if (readiness < RULES.readinessRest) {
     to.intensity = "low";
     to.type = "recovery";
@@ -162,26 +177,30 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
     to.durationMinutes = Math.min(to.durationMinutes, 30);
     escalate("defer", "swap_to_recovery");
     reason.push(`Readiness ${readiness} 低於 ${RULES.readinessRest}，今日不宜訓練負荷，改為恢復。`);
-  } else if (readiness < RULES.readinessReduce && from.intensity !== "low") {
-    to.intensity = lowerIntensity(to.intensity);
-    escalate("adjust", "reduce_today_intensity");
-    reason.push(`Readiness ${readiness} 低於 ${RULES.readinessReduce}，需調降強度。`);
-  }
+  } else {
+    if (readiness < RULES.readinessReduce && from.intensity !== "low") {
+      demand(1, `Readiness ${readiness} 低於 ${RULES.readinessReduce}，需調降強度。`);
+    }
 
-  // 3. Muscle-specific fatigue on the muscles this session targets.
-  if (fatigue.group && fatigue.value >= RULES.muscleFatigueHigh && to.intensity === "high") {
-    to.intensity = lowerIntensity(to.intensity);
-    escalate("adjust", "reduce_today_intensity");
-    reason.push(`${fatigue.group} 疲勞 ${fatigue.value} 偏高，避免今日高強度刺激同一肌群，再降一級。`);
-  } else if (fatigue.group && fatigue.value >= RULES.muscleFatigueModerate && to.intensity === "high") {
-    reason.push(`${fatigue.group} 疲勞 ${fatigue.value} 中等，保留強度但需留意主觀感受。`);
-  }
+    // 3. Fatigue in the muscles this session actually targets. A maxed-out
+    //    group warrants two steps: one notch off a hard day still leaves it
+    //    training the same fatigued tissue.
+    if (fatigue.group && fatigue.value >= RULES.muscleFatigueMaxed) {
+      demand(2, `${fatigue.group} 疲勞 ${fatigue.value} 已達上限，同一肌群今日不宜再受刺激。`);
+    } else if (fatigue.group && fatigue.value >= RULES.muscleFatigueHigh) {
+      demand(1, `${fatigue.group} 疲勞 ${fatigue.value} 偏高，避免今日高強度刺激同一肌群。`);
+    } else if (fatigue.group && fatigue.value >= RULES.muscleFatigueModerate && from.intensity === "high") {
+      reason.push(`${fatigue.group} 疲勞 ${fatigue.value} 中等，保留強度但需留意主觀感受。`);
+    }
 
-  // 4. Acute load spike.
-  if (state.acuteChronicWorkloadRatio > RULES.acwrHigh && to.intensity !== "low") {
-    to.intensity = lowerIntensity(to.intensity);
-    escalate("adjust", "reduce_today_intensity");
-    reason.push(`急慢性負荷比 ${state.acuteChronicWorkloadRatio} 高於 ${RULES.acwrHigh}，近期負荷上升過快，再降一級。`);
+    // 4. Acute load spike.
+    if (state.acuteChronicWorkloadRatio > RULES.acwrHigh) {
+      demand(1, `急慢性負荷比 ${state.acuteChronicWorkloadRatio} 高於 ${RULES.acwrHigh}，近期負荷上升過快。`);
+    }
+
+    for (let step = 0; step < stepsDown; step += 1) {
+      to.intensity = lowerIntensity(to.intensity);
+    }
   }
 
   // 5. Time budget.
