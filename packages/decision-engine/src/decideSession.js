@@ -15,6 +15,11 @@ const RULES = {
 
 const INTENSITY_ORDER = ["low", "moderate", "high"];
 
+// What a deferred session becomes. Deliberately equipment-free so the swap
+// holds whatever the athlete has, and low-impact so it stays valid under the
+// joint restrictions that often accompany a low-readiness day.
+const RECOVERY_MOVEMENTS = ["Easy walk", "Mobility flow"];
+
 // When several rules fire, the reported type is the most consequential one, not
 // the last one to run. Removing a contraindicated movement must never be masked
 // by a routine intensity tweak.
@@ -175,6 +180,10 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
     to.intensity = "low";
     to.type = "recovery";
     to.focus = "Recovery + mobility";
+    // The session's movements have to change with it. Leaving the planned
+    // exercises in place produced a record that contradicted itself — a "to"
+    // reading "Recovery + mobility" while still prescribing VO₂max intervals.
+    to.exercises = [...RECOVERY_MOVEMENTS];
     // The cap is the recovery rule's own, driven by readiness — not a claim
     // about how much time the athlete has.
     to.durationMinutes = Math.min(to.durationMinutes, RULES.recoveryCapMinutes);

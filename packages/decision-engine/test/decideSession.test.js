@@ -277,3 +277,43 @@ test("rule order does not change the outcome", () => {
   assert.equal(both.action.to.intensity, "moderate");
   assert.ok(both.reason.length >= 3, "every rule that fired explains itself");
 });
+
+test("deferring to recovery replaces the movements, not just the label", () => {
+  // Regression: the swap rewrote focus, type, duration, and intensity but left
+  // the planned exercises in place, so the record read "Recovery + mobility"
+  // while still prescribing VO₂max intervals.
+  const result = decideSession({
+    scheduledSession: session({ exercises: ["VO₂max Intervals"] }),
+    state: state({ readinessScore: 34, muscleFatigue: { legs: 100 } })
+  });
+
+  assert.equal(result.decision.type, "defer");
+  assert.ok(
+    !result.action.to.exercises.some((name) => /VO₂|interval|tempo/i.test(name)),
+    `hard work survived the swap: ${result.action.to.exercises.join(", ")}`
+  );
+  assert.ok(result.action.changed.includes("exercises"));
+});
+
+test("the recovery swap stays valid under an active restriction", () => {
+  // The contraindication filter runs before the readiness rule, so movements
+  // introduced by the swap are never filtered. They are chosen to be
+  // equipment-free and low-impact for that reason; this pins the property.
+  const restrictions = [
+    "avoid high-impact jumping",
+    "avoid heavy lower body when fatigued",
+    "avoid burpees"
+  ];
+  const result = decideSession({
+    scheduledSession: session(),
+    state: state({ readinessScore: 30, avoid: restrictions })
+  });
+
+  for (const movement of result.action.to.exercises) {
+    for (const restriction of restrictions) {
+      const words = restriction.toLowerCase().replace(/^avoid\s+/, "").split(/[\s-]+/);
+      const hit = words.some((word) => word.length > 3 && movement.toLowerCase().includes(word));
+      assert.ok(!hit, `recovery movement "${movement}" collides with "${restriction}"`);
+    }
+  }
+});
