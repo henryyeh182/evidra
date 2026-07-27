@@ -53,7 +53,8 @@
       }
     },
     "availableTimeMinutes": {
-      "type": "number"
+      "type": ["number", "null"],
+      "description": "Minutes the user stated they have. null when they never said — never guessed, so downstream reasons can cite it."
     },
     "goalAlignment": {
       "type": "object",

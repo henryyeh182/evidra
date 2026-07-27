@@ -9,7 +9,8 @@ const RULES = {
   muscleFatigueMaxed: 90, // target muscle fully loaded — two steps off
   muscleFatigueHigh: 65, // target muscle too fatigued for high intensity
   muscleFatigueModerate: 45,
-  acwrHigh: 1.4 // acute:chronic ratio above this = spike
+  acwrHigh: 1.4, // acute:chronic ratio above this = spike
+  recoveryCapMinutes: 30 // how long a swapped-in recovery session may run
 };
 
 const INTENSITY_ORDER = ["low", "moderate", "high"];
@@ -174,9 +175,13 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
     to.intensity = "low";
     to.type = "recovery";
     to.focus = "Recovery + mobility";
-    to.durationMinutes = Math.min(to.durationMinutes, 30);
+    // The cap is the recovery rule's own, driven by readiness — not a claim
+    // about how much time the athlete has.
+    to.durationMinutes = Math.min(to.durationMinutes, RULES.recoveryCapMinutes);
     escalate("defer", "swap_to_recovery");
-    reason.push(`Readiness ${readiness} 低於 ${RULES.readinessRest}，今日不宜訓練負荷，改為恢復。`);
+    reason.push(
+      `Readiness ${readiness} 低於 ${RULES.readinessRest}，今日不宜訓練負荷，改為 ${RULES.recoveryCapMinutes} 分鐘以內的恢復課表。`
+    );
   } else {
     if (readiness < RULES.readinessReduce && from.intensity !== "low") {
       demand(1, `Readiness ${readiness} 低於 ${RULES.readinessReduce}，需調降強度。`);
@@ -203,12 +208,33 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
     }
   }
 
-  // 5. Time budget.
-  const budget = availableMinutes ?? state.availableTimeMinutes;
-  if (typeof budget === "number" && to.durationMinutes > budget) {
-    reason.push(`可用時間僅 ${budget} 分鐘，時長需縮短。`);
-    to.durationMinutes = budget;
-    escalate("adjust", "fit_time_budget");
+  // 5. Time budget. Only a stated budget counts, and the one we act on is
+  //    recorded as evidence like every other signal. A cut we cannot cite is a
+  //    fabricated reason: an upstream default of 30 used to arrive here
+  //    indistinguishable from a real constraint, halving a 60-minute session and
+  //    telling the athlete their time was short on evidence nobody supplied.
+  //    Reason must trace back to evidence — no evidence entry, no cut.
+  const budget =
+    typeof availableMinutes === "number"
+      ? { minutes: availableMinutes, source: "session_override" }
+      : typeof state.availableTimeMinutes === "number"
+        ? { minutes: state.availableTimeMinutes, source: "user_constraint" }
+        : null;
+
+  if (budget) {
+    evidence.push({
+      signal: "available_minutes",
+      value: budget.minutes,
+      recordedAt: state.date,
+      source: budget.source
+    });
+    if (to.durationMinutes > budget.minutes) {
+      reason.push(`可用時間僅 ${budget.minutes} 分鐘，時長需縮短。`);
+      to.durationMinutes = budget.minutes;
+      escalate("adjust", "fit_time_budget");
+    }
+  } else {
+    limits.push("未取得今日可用時間，時長維持原定，未依時間裁切。");
   }
 
   // 6. Room to progress: only when nothing above pulled anything down, and only

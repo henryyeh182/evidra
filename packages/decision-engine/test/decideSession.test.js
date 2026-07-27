@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { decideSession } from "../src/index.js";
+import { decideSession, RULES } from "../src/index.js";
 import { assertValidDecision } from "../src/models.js";
 
 function session(overrides = {}) {
@@ -121,6 +121,71 @@ test("time budget shortens the session", () => {
 
   assert.equal(result.action.to.durationMinutes, 30);
   assert.ok(result.action.changed.includes("durationMinutes"));
+});
+
+test("a time cut cites the budget as evidence, not just in prose", () => {
+  const result = decideSession({
+    scheduledSession: session({ intensity: "moderate", durationMinutes: 60 }),
+    state: state({ availableTimeMinutes: 30 })
+  });
+
+  const budget = result.evidence.find((item) => item.signal === "available_minutes");
+  assert.ok(budget, "the number the reason quotes must appear in evidence");
+  assert.equal(budget.value, 30);
+  assert.equal(budget.source, "user_constraint");
+});
+
+test("a caller-supplied budget is marked as the override it is", () => {
+  const result = decideSession({
+    scheduledSession: session({ intensity: "moderate", durationMinutes: 60 }),
+    state: state({ availableTimeMinutes: 90 }),
+    availableMinutes: 25
+  });
+
+  const budget = result.evidence.find((item) => item.signal === "available_minutes");
+  assert.equal(budget.value, 25);
+  assert.equal(budget.source, "session_override");
+  assert.equal(result.action.to.durationMinutes, 25);
+});
+
+test("an unknown time budget never becomes a reason to shorten the session", () => {
+  // Regression: with no availableMinutes supplied, an upstream default of 30
+  // reached the engine as if it were a real constraint. A 60-minute session was
+  // cut to 30 and the athlete was told "可用時間僅 30 分鐘" — a reason bound to
+  // evidence they had never given. Unknown is unknown.
+  const result = decideSession({
+    scheduledSession: session({ intensity: "moderate", durationMinutes: 60 }),
+    state: state({ availableTimeMinutes: null })
+  });
+
+  assert.equal(result.action.to.durationMinutes, 60, "duration survives an unstated budget");
+  assert.ok(!result.action.changed.includes("durationMinutes"));
+  assert.ok(
+    !result.reason.some((line) => line.includes("可用時間")),
+    "nothing may be asserted about time we were never told"
+  );
+  assert.ok(!result.evidence.some((item) => item.signal === "available_minutes"));
+  assert.ok(
+    result.limits.some((line) => line.includes("可用時間")),
+    "what we did not know is surfaced, not hidden"
+  );
+});
+
+test("every quoted number in a reason traces back to an evidence entry", () => {
+  const result = decideSession({
+    scheduledSession: session({ intensity: "moderate", durationMinutes: 60 }),
+    state: state({ readinessScore: 52, muscleFatigue: { legs: 70 }, availableTimeMinutes: 45 })
+  });
+
+  const grounded = new Set(result.evidence.map((item) => String(item.value)));
+  for (const line of result.reason) {
+    for (const number of line.match(/\d+(\.\d+)?/g) || []) {
+      assert.ok(
+        grounded.has(number) || Object.values(RULES).map(String).includes(number),
+        `reason quotes ${number}, which is neither evidence nor a stated rule threshold: ${line}`
+      );
+    }
+  }
 });
 
 test("without a scheduled session there is no decision to make", () => {

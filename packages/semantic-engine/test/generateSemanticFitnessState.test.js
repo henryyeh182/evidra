@@ -116,3 +116,26 @@ test("no fresh recovery signal falls back to a neutral score with empty coverage
   assert.equal(state.recoveryScore, 50);
   assert.equal(state.confidence, "low");
 });
+
+test("an unstated time constraint is reported as unknown, not as 30 minutes", () => {
+  // A guessed number is indistinguishable from a real one downstream, and the
+  // decision layer quotes it back to the athlete as their own constraint.
+  const context = minimalContext([
+    { type: "resting_hr_bpm", value: 57, unit: "bpm", recordedAt: "2026-07-25T07:00:00+08:00", source: "apple_health" }
+  ]);
+  context.preferences = context.preferences.filter((item) => item.category !== "schedule");
+
+  const state = generateSemanticFitnessState(context, { date: "2026-07-25", timezone: "Asia/Taipei" });
+
+  assert.equal(state.availableTimeMinutes, null);
+});
+
+test("a stated time constraint is passed through untouched", () => {
+  const context = minimalContext([
+    { type: "resting_hr_bpm", value: 57, unit: "bpm", recordedAt: "2026-07-25T07:00:00+08:00", source: "apple_health" }
+  ]);
+
+  const state = generateSemanticFitnessState(context, { date: "2026-07-25", timezone: "Asia/Taipei" });
+
+  assert.equal(state.availableTimeMinutes, 30);
+});

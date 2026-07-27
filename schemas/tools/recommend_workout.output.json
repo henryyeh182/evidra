@@ -7,7 +7,7 @@
     "userId": { "type": "string" },
     "date": { "type": "string" },
     "recommendedFocus": { "type": "string" },
-    "availableTimeMinutes": { "type": "number" },
+    "availableTimeMinutes": { "type": ["number", "null"] },
     "readinessScore": { "type": "number" },
     "recoveryScore": { "type": "number" },
     "fatigueScore": { "type": "number" },
