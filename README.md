@@ -51,7 +51,11 @@ Claude / ChatGPT 回覆使用者
 
 ## Status
 
-目前：**6 個決策 tool**（stdio）、896 節點知識圖譜、Apple Health／Strava 證據正規化、95 tests pass。
+目前：**6 個決策 tool**（stdio）、896 節點知識圖譜、Apple Health／Strava／Garmin 證據正規化、138 tests pass。
+
+各家 schema 的解讀能力有獨立的驗證軸線：`/schemas/sources` 記錄各廠原始格式（含 sentinel 與缺洞），
+`/schemas/evidence` 是統一詞彙，`/eval/scenarios` 用五種匯出形狀（完整／sentinel／方言等價／有損／稀疏）
+確認「registry 宣告的訊號真的解析得出來、單位有換算、缺的誠實說缺」。**那是讀 schema 的能力，不是調參。**
 
 對外工具面全部是決策或決策基底：
 
@@ -75,8 +79,9 @@ Claude / ChatGPT 回覆使用者
 ## Local Commands
 
 ```bash
-npm test                    # 73 tests
+npm test                    # 138 tests
 npm run eval                # golden set 計分
+npm run simulate:garmin     # Garmin 各種匯出形狀的讀取報告
 npm run build:graph         # 重建知識圖譜
 npm run audit:graph         # 圖譜品質稽核
 npm run import:apple-health # 匯入本機真實資料（git-ignored）

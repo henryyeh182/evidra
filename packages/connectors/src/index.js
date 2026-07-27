@@ -10,4 +10,10 @@ export {
   parseAppleHealthExportString,
   normalizeAppleHealthExport
 } from "./providers/apple-health/index.js";
-export { buildGarminEvidence } from "./providers/garmin/index.js";
+export {
+  buildGarminEvidence,
+  normalizeGarminReadiness,
+  normalizeGarminDailySummary,
+  normalizeGarminSleep,
+  normalizeGarminActivities
+} from "./providers/garmin/index.js";

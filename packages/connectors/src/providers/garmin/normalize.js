@@ -80,6 +80,51 @@ export function normalizeGarminReadiness(records = []) {
   return events;
 }
 
+/**
+ * Overnight sleep records.
+ *
+ * Duration and Garmin's own sleep score are separate emissions on purpose: a
+ * night can be timed without being scored (Garmin withholds `sleepScores` when
+ * it judges the record too fragmentary), and the semantic engine renormalizes
+ * over whichever of the two arrive. Emitting a fabricated quality of 50 to keep
+ * the pair together would turn a missing measurement into a middling one.
+ */
+export function normalizeGarminSleep(records = []) {
+  const events = [];
+  for (const record of records) {
+    const recordedAt = toIsoDay(record.calendarDate ?? record.sleepStartTimestampGMT);
+    if (!recordedAt) continue;
+
+    // Naps are logged in their own list; only the main sleep window counts as
+    // a night, so a 20-minute nap never reads as a night's recovery.
+    if (record.napTimeSeconds !== undefined && record.sleepTimeSeconds === undefined) continue;
+
+    if (typeof record.sleepTimeSeconds === "number" && record.sleepTimeSeconds > 0) {
+      events.push({
+        kind: "health_metric",
+        type: "sleep_duration_hours",
+        value: Number((record.sleepTimeSeconds / 3600).toFixed(2)),
+        unit: "hours",
+        recordedAt,
+        source: "garmin"
+      });
+    }
+
+    const overall = record.sleepScores?.overall?.value;
+    if (typeof overall === "number" && overall > 0) {
+      events.push({
+        kind: "health_metric",
+        type: "sleep_quality",
+        value: overall,
+        unit: "score_0_100",
+        recordedAt,
+        source: "garmin"
+      });
+    }
+  }
+  return events;
+}
+
 /** Body Battery: Garmin's energy-reserve model, 0–100. */
 export function normalizeGarminDailySummary(records = []) {
   const events = [];
@@ -104,6 +149,20 @@ export function normalizeGarminDailySummary(records = []) {
         type: "steps",
         value: record.totalSteps,
         unit: "count",
+        recordedAt,
+        source: "garmin"
+      });
+    }
+
+    // Garmin reports -1 / -2 for "not measured" rather than omitting the field.
+    // Passing those through as a stress level would read as perfect calm on
+    // precisely the days the watch was off the wrist.
+    if (typeof record.averageStressLevel === "number" && record.averageStressLevel >= 0) {
+      events.push({
+        kind: "health_metric",
+        type: "stress",
+        value: record.averageStressLevel,
+        unit: "score_0_100",
         recordedAt,
         source: "garmin"
       });
@@ -200,15 +259,16 @@ export function normalizeGarminActivities(activities = []) {
 /**
  * Assemble a Garmin export into Fitness Evidence Model shape.
  *
- * @param {{ readiness?: object[], dailySummaries?: object[], activities?: object[] }} parts
+ * @param {{ readiness?: object[], dailySummaries?: object[], sleep?: object[], activities?: object[] }} parts
  * @param {{ sinceDays?: number, asOf?: string }} [options]
  */
 export function buildGarminEvidence(parts = {}, options = {}) {
   const readiness = normalizeGarminReadiness(parts.readiness);
   const daily = normalizeGarminDailySummary(parts.dailySummaries);
+  const sleep = normalizeGarminSleep(parts.sleep);
   const workouts = normalizeGarminActivities(parts.activities);
 
-  const all = [...readiness, ...daily];
+  const all = [...readiness, ...daily, ...sleep];
   const asOf = options.asOf ? new Date(options.asOf).getTime() : Date.now();
   const cutoff = options.sinceDays ? asOf - options.sinceDays * DAY : null;
   const inWindow = (iso) => !cutoff || new Date(iso).getTime() >= cutoff;

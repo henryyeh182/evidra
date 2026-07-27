@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/sources/garmin.export",
+  "title": "Garmin Connect export (raw)",
+  "description": "The subset of a Garmin Connect export that packages/connectors/src/providers/garmin reads. Field names are Garmin's, not ours — this schema documents the dialect we accept at the boundary, and every field is optional because a real export is full of holes: a night without the watch produces no sleep record, a readiness entry with level NONE and no score, averageStressLevel -1, and restingHeartRate 0. Availability measured over one real 328-record export: recoveryTime 99%, bodyBattery 76%, acuteLoad 70%, readiness score 5%.",
+  "type": "object",
+  "properties": {
+    "readiness": {
+      "type": "array",
+      "description": "Garmin's daily recovery assessments. The dependable field here is recoveryTime, not score.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "calendarDate": { "type": "string", "description": "YYYY-MM-DD, Garmin's local calendar day." },
+          "timestamp": { "type": ["string", "number"], "description": "Fallback when calendarDate is absent: ISO 8601 or epoch milliseconds." },
+          "score": { "type": "number", "nullable": true, "description": "Training Readiness 0-100. Null whenever Garmin could not compute it — most often no valid sleep record." },
+          "level": {
+            "type": "string",
+            "nullable": true,
+            "enum": ["NONE", "LOW", "MODERATE", "HIGH", "MAXIMUM", null],
+            "description": "Garmin's own qualifier. NONE means the score is not trustworthy and must not be read as evidence."
+          },
+          "recoveryTime": { "type": "number", "nullable": true, "minimum": 0, "description": "Minutes Garmin still considers owed before full recovery." },
+          "acuteLoad": { "type": "number", "nullable": true, "minimum": 0, "description": "Garmin's 7-day acute training load." },
+          "hrvWeeklyAverage": { "type": "number", "nullable": true, "description": "Present in most exports but frequently constant across weeks — stale, so not mapped to hrv_ms." }
+        }
+      }
+    },
+    "dailySummaries": {
+      "type": "array",
+      "description": "One wellness summary per calendar day.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "calendarDate": { "type": "string" },
+          "restingHeartRate": { "type": "number", "nullable": true, "minimum": 0, "description": "0 is Garmin's not-measured sentinel, not a heart rate." },
+          "totalSteps": { "type": "number", "nullable": true, "minimum": 0 },
+          "averageStressLevel": { "type": "number", "nullable": true, "description": "0-100. Negative values (-1, -2) are not-measured sentinels." },
+          "bodyBattery": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "bodyBatteryStatList": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "bodyBatteryStatType": { "type": "string", "enum": ["HIGHEST", "LOWEST"] },
+                    "statsValue": { "type": "number", "nullable": true, "minimum": 0 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sleep": {
+      "type": "array",
+      "description": "Overnight sleep records. Absent entirely for any night the watch was not worn — the single largest source of missing recovery evidence.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "calendarDate": { "type": "string" },
+          "sleepStartTimestampGMT": { "type": ["string", "number"], "nullable": true },
+          "sleepTimeSeconds": { "type": "number", "nullable": true, "minimum": 0 },
+          "napTimeSeconds": { "type": "number", "nullable": true, "minimum": 0, "description": "Naps are a separate window and are not counted as a night." },
+          "deepSleepSeconds": { "type": "number", "nullable": true, "minimum": 0 },
+          "lightSleepSeconds": { "type": "number", "nullable": true, "minimum": 0 },
+          "remSleepSeconds": { "type": "number", "nullable": true, "minimum": 0 },
+          "awakeSleepSeconds": { "type": "number", "nullable": true, "minimum": 0 },
+          "sleepScores": {
+            "type": "object",
+            "nullable": true,
+            "description": "Withheld by Garmin when the night was timed but judged too fragmentary to score.",
+            "properties": {
+              "overall": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "value": { "type": "number", "nullable": true, "minimum": 0 },
+                  "qualifierKey": { "type": "string", "nullable": true }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "activities": {
+      "type": "array",
+      "description": "Recorded sessions.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "activityId": { "type": ["number", "string"] },
+          "name": { "type": "string", "nullable": true },
+          "activityType": {
+            "type": ["object", "string"],
+            "description": "Either Garmin's {typeKey} object or the bare type key string.",
+            "properties": {
+              "typeKey": { "type": "string" }
+            }
+          },
+          "beginTimestamp": { "type": "number", "description": "Epoch milliseconds. Activities without it are skipped — an undated session cannot be placed on a load curve." },
+          "duration": { "type": "number", "nullable": true, "minimum": 0, "description": "Milliseconds." },
+          "distance": { "type": "number", "nullable": true, "minimum": 0, "description": "Meters." },
+          "avgHr": { "type": "number", "nullable": true, "minimum": 0 },
+          "maxHr": { "type": "number", "nullable": true, "minimum": 0 },
+          "activityTrainingLoad": { "type": "number", "nullable": true, "minimum": 0, "description": "Garmin's EPOC-derived load. When absent the connector falls back to a duration estimate and says so via metadata.loadSource." },
+          "aerobicTrainingEffect": { "type": "number", "nullable": true, "minimum": 0 },
+          "anaerobicTrainingEffect": { "type": "number", "nullable": true, "minimum": 0 }
+        }
+      }
+    }
+  }
+}

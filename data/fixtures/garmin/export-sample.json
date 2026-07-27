@@ -1,0 +1,175 @@
+{
+  "_note": "Five days of a Garmin Connect export, shaped like the real thing — including the holes. 2026-07-23 is a night the watch was off the wrist (no sleep record, readiness level NONE, stress sentinel -1, resting HR 0); 2026-07-24 is a strength session Garmin did not assign a training load to; 2026-07-25 is a night that was timed but not scored. Field names follow Garmin Connect's own export, not our vocabulary.",
+  "readiness": [
+    {
+      "calendarDate": "2026-07-22",
+      "score": 74,
+      "level": "MODERATE",
+      "recoveryTime": 620,
+      "acuteLoad": 342,
+      "hrvWeeklyAverage": 58
+    },
+    {
+      "calendarDate": "2026-07-23",
+      "score": null,
+      "level": "NONE",
+      "recoveryTime": 1180,
+      "acuteLoad": 388,
+      "hrvWeeklyAverage": 58
+    },
+    {
+      "calendarDate": "2026-07-24",
+      "score": 66,
+      "level": "MODERATE",
+      "recoveryTime": 740,
+      "acuteLoad": 401,
+      "hrvWeeklyAverage": 58
+    },
+    {
+      "calendarDate": "2026-07-25",
+      "score": 81,
+      "level": "HIGH",
+      "recoveryTime": 180,
+      "acuteLoad": 355,
+      "hrvWeeklyAverage": 58
+    },
+    {
+      "calendarDate": "2026-07-26",
+      "score": 41,
+      "level": "LOW",
+      "recoveryTime": 1420,
+      "acuteLoad": 430,
+      "hrvWeeklyAverage": 58
+    }
+  ],
+  "dailySummaries": [
+    {
+      "calendarDate": "2026-07-22",
+      "restingHeartRate": 54,
+      "totalSteps": 9840,
+      "averageStressLevel": 32,
+      "bodyBattery": {
+        "bodyBatteryStatList": [
+          { "bodyBatteryStatType": "HIGHEST", "statsValue": 88 },
+          { "bodyBatteryStatType": "LOWEST", "statsValue": 24 }
+        ]
+      }
+    },
+    {
+      "calendarDate": "2026-07-23",
+      "restingHeartRate": 0,
+      "totalSteps": 7420,
+      "averageStressLevel": -1,
+      "bodyBattery": {
+        "bodyBatteryStatList": [
+          { "bodyBatteryStatType": "HIGHEST", "statsValue": 61 },
+          { "bodyBatteryStatType": "LOWEST", "statsValue": 30 }
+        ]
+      }
+    },
+    {
+      "calendarDate": "2026-07-24",
+      "restingHeartRate": 57,
+      "totalSteps": 11230,
+      "averageStressLevel": 44,
+      "bodyBattery": {
+        "bodyBatteryStatList": [
+          { "bodyBatteryStatType": "HIGHEST", "statsValue": 72 },
+          { "bodyBatteryStatType": "LOWEST", "statsValue": 18 }
+        ]
+      }
+    },
+    {
+      "calendarDate": "2026-07-25",
+      "restingHeartRate": 53,
+      "totalSteps": 6110,
+      "averageStressLevel": 27,
+      "bodyBattery": {
+        "bodyBatteryStatList": [
+          { "bodyBatteryStatType": "HIGHEST", "statsValue": 93 },
+          { "bodyBatteryStatType": "LOWEST", "statsValue": 41 }
+        ]
+      }
+    },
+    {
+      "calendarDate": "2026-07-26",
+      "restingHeartRate": 61,
+      "totalSteps": 12960,
+      "averageStressLevel": 58,
+      "bodyBattery": {
+        "bodyBatteryStatList": [
+          { "bodyBatteryStatType": "HIGHEST", "statsValue": 49 },
+          { "bodyBatteryStatType": "LOWEST", "statsValue": 9 }
+        ]
+      }
+    }
+  ],
+  "sleep": [
+    {
+      "calendarDate": "2026-07-22",
+      "sleepTimeSeconds": 26280,
+      "deepSleepSeconds": 4560,
+      "remSleepSeconds": 5820,
+      "sleepScores": { "overall": { "value": 78, "qualifierKey": "GOOD" } }
+    },
+    {
+      "calendarDate": "2026-07-24",
+      "sleepTimeSeconds": 22140,
+      "deepSleepSeconds": 3180,
+      "remSleepSeconds": 4020,
+      "sleepScores": { "overall": { "value": 64, "qualifierKey": "FAIR" } }
+    },
+    {
+      "calendarDate": "2026-07-25",
+      "sleepTimeSeconds": 29160,
+      "deepSleepSeconds": 5040,
+      "remSleepSeconds": 6300
+    },
+    {
+      "calendarDate": "2026-07-26",
+      "sleepTimeSeconds": 16920,
+      "deepSleepSeconds": 2040,
+      "remSleepSeconds": 2760,
+      "sleepScores": { "overall": { "value": 43, "qualifierKey": "POOR" } }
+    }
+  ],
+  "activities": [
+    {
+      "activityId": 18220001,
+      "name": "Zone 2 Run",
+      "activityType": { "typeKey": "running" },
+      "beginTimestamp": 1784703600000,
+      "duration": 3120000,
+      "distance": 9100,
+      "avgHr": 141,
+      "maxHr": 163,
+      "activityTrainingLoad": 82,
+      "aerobicTrainingEffect": 3.1,
+      "anaerobicTrainingEffect": 0.4
+    },
+    {
+      "activityId": 18220002,
+      "name": "Upper Body Strength",
+      "activityType": { "typeKey": "strength_training" },
+      "beginTimestamp": 1784876400000,
+      "duration": 2700000,
+      "avgHr": 112,
+      "maxHr": 148,
+      "aerobicTrainingEffect": 1.6,
+      "anaerobicTrainingEffect": 1.1
+    },
+    {
+      "activityId": 18220003,
+      "name": "Threshold Intervals",
+      "activityType": { "typeKey": "running" },
+      "beginTimestamp": 1785049200000,
+      "duration": 3480000,
+      "distance": 11400,
+      "avgHr": 159,
+      "maxHr": 182,
+      "activityTrainingLoad": 168,
+      "aerobicTrainingEffect": 4.2,
+      "anaerobicTrainingEffect": 2.3
+    }
+  ]
+}

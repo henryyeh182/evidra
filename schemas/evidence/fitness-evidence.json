@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/evidence/fitness-evidence",
+  "title": "Fitness Evidence Model",
+  "description": "The vendor-neutral vocabulary every decision tool reasons over, and the output contract of every connector under packages/connectors. Apple Health, Garmin, Oura, Whoop and Strava each speak their own dialect; translating into this shape is the Semantic Fitness Layer's whole job, and nothing downstream ever sees anything else. Enums here mirror CANONICAL_SIGNALS in packages/evidence/src/schemaRegistry.js — adding a signal means adding it in both places. Additional properties are tolerated so a connector may carry vendor detail (Garmin's readiness level, a Body Battery overnight low) without breaking the contract.",
+  "type": "object",
+  "properties": {
+    "profile": {
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "timezone": { "type": "string" },
+        "fitnessLevel": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
+        "heightCm": { "type": "number", "minimum": 0 },
+        "weightKg": { "type": "number", "minimum": 0 }
+      }
+    },
+    "goals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string" },
+          "label": { "type": "string" },
+          "priority": { "type": "number" }
+        },
+        "required": ["type"]
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "availableMinutes": { "type": "number", "minimum": 0 },
+        "avoidMovements": { "type": "array", "items": { "type": "string" } },
+        "injuries": { "type": "array", "items": { "type": "object" } },
+        "equipment": { "type": "array", "items": { "type": ["string", "object"] } }
+      }
+    },
+    "healthMetrics": {
+      "type": "array",
+      "description": "Measured physiology. One reading per entry; the engines pick the freshest per type and drop stale ones rather than carrying them forward.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "sleep_duration_hours",
+              "sleep_quality",
+              "hrv_ms",
+              "resting_hr_bpm",
+              "steps",
+              "stress"
+            ]
+          },
+          "value": { "type": "number" },
+          "unit": { "type": "string" },
+          "recordedAt": { "type": "string", "description": "ISO 8601." },
+          "source": {
+            "type": "string",
+            "enum": ["apple_health", "garmin", "google_health_connect", "oura", "whoop", "strava", "manual"]
+          }
+        },
+        "required": ["type", "value", "recordedAt"]
+      }
+    },
+    "vendorAssessments": {
+      "type": "array",
+      "description": "Composites the source device already computed. Where a vendor had the sensor on the wrist its own assessment beats our re-derivation, so these are carried through labelled as theirs rather than discarded.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["vendor_readiness", "body_battery", "recovery_time_minutes", "vendor_acute_load"]
+          },
+          "value": { "type": "number" },
+          "unit": { "type": "string" },
+          "recordedAt": { "type": "string" },
+          "source": {
+            "type": "string",
+            "enum": ["apple_health", "garmin", "google_health_connect", "oura", "whoop", "manual"]
+          }
+        },
+        "required": ["type", "value", "recordedAt", "source"]
+      }
+    },
+    "workouts": {
+      "type": "array",
+      "description": "Completed sessions. trainingLoad drives the ATL/CTL curves; when the vendor supplies its own (Garmin's EPOC-derived load) it is preferred over a duration estimate.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string", "enum": ["strength", "run", "ride", "walk", "mobility", "recovery", "other"] },
+          "name": { "type": "string" },
+          "startedAt": { "type": "string" },
+          "durationMinutes": { "type": "number", "minimum": 0 },
+          "rpe": { "type": "number", "nullable": true, "minimum": 0 },
+          "trainingLoad": { "type": "number", "nullable": true, "minimum": 0 },
+          "muscleGroups": { "type": "array", "items": { "type": "string" } },
+          "source": {
+            "type": "string",
+            "enum": ["apple_health", "garmin", "google_health_connect", "oura", "whoop", "strava", "manual"]
+          },
+          "metadata": { "type": "object" }
+        },
+        "required": ["startedAt", "durationMinutes"]
+      }
+    }
+  }
+}

@@ -11,7 +11,7 @@
 
 ## 1. 已實作元件
 
-95 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+138 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
@@ -19,7 +19,7 @@
 | `packages/semantic-engine` | `generateSemanticFitnessState`：recovery / readiness / fatigue / 分肌群疲勞 / 負荷。**訊號可得性自適應**——訊號過期即排除並重新正規化權重，如實下調 confidence，輸出 `signalCoverage` |
 | `packages/knowledge-graph` | 896 節點 / 5,839 邊。`graph.js`（替代／進退階／結構化檢索遍歷）、`workoutSchema.js`（Block/Set 結構與驗證）、`programTemplates.js`（參數化課表模板） |
 | `packages/planning` | `generatePlan`（週期化 base→build→peak→deload）、`adaptPlan`（非破壞式 diff 預覽）、`planStore`（版本化 preview→commit） |
-| `packages/connectors` | Apple Health（`export.xml` 串流解析）、Strava 的格式正規化 |
+| `packages/connectors` | Apple Health（`export.xml` 串流解析）、Strava、**Garmin**（readiness／daily summary／sleep／activities，含 sentinel 處理）的格式正規化 |
 | `packages/evidence` | **Fitness Evidence Model**：跨來源證據契約 ＋ 轉內部 context |
 | `packages/decision-engine` | **`decideSession`**：計畫 × 證據 → Decision/Action/Reason，結構性拒絕退化成推薦 |
 | `packages/db` | PostgreSQL schema 與 row mappers（尚未接 runtime） |
@@ -79,7 +79,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 1. 那是在測 Claude / ChatGPT 的腦，不是測我們的產品。
 2. 執行它必須呼叫 LLM API，與 **D-LLM「系統內不含 LLM」** 相衝突。
 
-**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 98 個測試）。
+**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 138 個測試）。
 另補上 **MCP client 相容性驗證**（見下）取代連通性層面的疑慮。
 
 > **D1 與 D2 同一個根因**：系統是照「我們有使用者資料庫，AI 來查」設計的（傳統 SaaS），不是照「AI 帶授權證據來，我們回決策」設計的（intelligence layer）。**架構圖畫的是後者，程式蓋的是前者。**
@@ -90,7 +90,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 | # | 能力 | 現況 | 缺口 |
 |---|---|---|---|
-| 1 | Semantic Fitness Layer | 🟡 | 證據契約已就位（D1 已修）；仍只有 **2/6** 來源解析器 |
+| 1 | Semantic Fitness Layer | 🟡 | 證據契約已就位（D1 已修）；**3/6** 來源解析器（＋Garmin），來源格式與統一詞彙已有 schema 與方言等價驗證 |
 | 2 | Fitness Intelligence Engine | 🟢 | 確定性且產出五層決策（D2 已修）；深度待補 ATL/CTL/TSB |
 | 3 | Fitness Knowledge Graph | 🟡 | 只連動作/肌群/器材/替代；**缺恢復、訓練目標連結**。5,242/5,839 邊是自動生成的 SIMILAR_TO，**進退階關係幾乎不存在**（僅 7 條） |
 | 4 | Feedback Learning | 🔴 | **零**。無「狀態→決策→結果」記錄與閉環 |
@@ -124,11 +124,30 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 - KG 補上恢復、訓練目標的連結；補真實的進退階關係
 - **驗收**：lift 相對 Phase 3 基準再提升
 
-### Phase 5 — 多來源正規化（護城河 #1）
-- Garmin / Oura / Whoop / MyFitnessPal 格式解析
+### Phase 5 — 多來源正規化（護城河 #1）🟡 進行中
+- Garmin / Oura / Whoop / MyFitnessPal 格式解析 —— **Garmin 已完成**（3/6 來源）
 - 跨來源語意對齊（同一個 HRV，各家名稱／單位／取樣頻率統一）
 - **證據由 tool call 傳入，不做 OAuth 拉取**
 - **驗收**：同一使用者接不同來源，決策語意一致；訊號衝突有明確優先序
+
+**已完成（Garmin）**：
+
+| 產出 | 位置 |
+|---|---|
+| 原始格式契約（含 sentinel／缺洞與實測可得率） | `schemas/sources/garmin.export.json` |
+| 統一詞彙契約（connector 的輸出＝decision tool 的輸入） | `schemas/evidence/fitness-evidence.json` |
+| 解析器補齊 sleep／stress，與 registry 宣告一致 | `packages/connectors/src/providers/garmin/` |
+| 匯出樣本（含真實缺洞） | `data/fixtures/garmin/export-sample.json` |
+| 五種匯出形狀的模擬場景 ＋ `npm run simulate:garmin` | `eval/scenarios/` |
+
+**這一層的驗收是「讀得懂」，不是「調得準」**：斷言只有命名／單位／source 標籤／
+sentinel 不外洩／缺的誠實列在 `missing`／registry ↔ parser 一致，外加「決策仍成立且
+自我解釋」。模擬出來的生理數值不是 ground truth，不得用來校準門檻——否則就是拿捏造
+的人去 fit 引擎。詳見 [`eval/scenarios/README.md`](../eval/scenarios/README.md)。
+
+**方言等價**是這層真正的護城河證據：同一天用 `{typeKey}` 或裸字串、`calendarDate` 或
+epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的 canonical evidence。
+做得到，這層才是翻譯；做不到，就只是一堆各格式的特例。
 
 ### Phase 6 — Feedback Learning（護城河 #4）
 > ⚠️ 受 D-DATA「不保存」約束，閉環設計需重新定義：**我們這端不留三元組**。
