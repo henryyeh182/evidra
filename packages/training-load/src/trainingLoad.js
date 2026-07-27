@@ -21,11 +21,30 @@ const ATL_DAYS = 7;
 
 /** Ramp-rate guidance. ACWR outside ~0.8–1.3 is where injury risk climbs. */
 export const LOAD_ZONES = {
-  detraining: { maxTsb: Infinity, minTsb: 25, label: "detraining", note: "負荷不足，體能開始流失" },
-  fresh: { maxTsb: 25, minTsb: 5, label: "fresh", note: "恢復充分，可承受高強度" },
+  fresh: { maxTsb: Infinity, minTsb: 5, label: "fresh", note: "恢復充分，可承受高強度" },
   neutral: { maxTsb: 5, minTsb: -10, label: "neutral", note: "負荷與恢復平衡" },
   productive: { maxTsb: -10, minTsb: -30, label: "productive", note: "有效訓練壓力，需留意恢復" },
   overreaching: { maxTsb: -30, minTsb: -Infinity, label: "overreaching", note: "過度負荷，建議減量" }
+};
+
+// Detraining is not a TSB band, and treating it as one inverted the reading.
+// TSB is a difference (CTL - ATL): across a layoff ATL collapses within about a
+// fortnight and then CTL keeps bleeding, so TSB peaks near week two and falls
+// back toward zero. Under the old `TSB >= 25` rule a two-week break scored
+// "fresh — 可承受高強度" and a six-month break scored "neutral — 負荷與恢復平衡";
+// the longer someone had been away, the healthier they looked.
+//
+// Fitness lost is a question about CTL's own level, so it is measured against
+// this athlete's recent peak. Both conditions must hold: idle time alone would
+// flag a planned taper, and a CTL drop alone would flag a deload week.
+//
+// The two thresholds describe one event from two directions. With a 42-day
+// time constant, twelve days of zero load costs 1 - e^(-12/42) ≈ 25% of CTL,
+// so `minIdleDays` and `minCtlLossPct` land at roughly the same moment rather
+// than being tuned independently.
+const DETRAINING = {
+  minIdleDays: 14,
+  minCtlLossPct: 25
 };
 
 function dayKey(iso) {
@@ -113,6 +132,35 @@ export function computeTrainingLoad(workouts = [], options = {}) {
 
   const zone = Object.values(LOAD_ZONES).find((z) => tsb < z.maxTsb && tsb >= z.minTsb) || LOAD_ZONES.neutral;
 
+  // How far fitness has fallen from its own recent high, and how long the
+  // athlete has been away. Recovery signals cannot answer this: two months off
+  // leaves someone rested and unfit at the same time, and only this pair tells
+  // the two apart.
+  const lastSessionDate = observed.length > 0 ? observed[observed.length - 1] : null;
+  const daysSinceLastSession = lastSessionDate
+    ? Math.round((new Date(`${asOf}T00:00:00Z`) - new Date(`${lastSessionDate}T00:00:00Z`)) / 86400000)
+    : null;
+  const ctlPeak = series.reduce((peak, point) => Math.max(peak, point.ctl), 0);
+  const ctlLossPct = ctlPeak > 0 ? Math.round(((ctlPeak - (today?.ctl ?? 0)) / ctlPeak) * 100) : 0;
+
+  const detrainingActive =
+    daysSinceLastSession !== null &&
+    daysSinceLastSession >= DETRAINING.minIdleDays &&
+    ctlLossPct >= DETRAINING.minCtlLossPct;
+
+  const detraining = {
+    active: detrainingActive,
+    lastSessionDate,
+    daysSinceLastSession,
+    ctlPeak,
+    ctlLossPct,
+    note: detrainingActive
+      ? `距離上次訓練 ${daysSinceLastSession} 天，慢性負荷自近期高點 ${ctlPeak} 降至 ${today?.ctl ?? 0}（-${ctlLossPct}%），體能基礎已流失，回歸需降載。`
+      : daysSinceLastSession === null
+        ? "沒有訓練紀錄可判斷體能基礎，無法評估是否需要回歸降載。"
+        : `距離上次訓練 ${daysSinceLastSession} 天，慢性負荷自高點下降 ${ctlLossPct}%，未達回歸降載門檻。`
+  };
+
   // Days of evidence actually covering the chronic window drives confidence:
   // a 42-day curve built from a week of data is not a 42-day curve.
   const coveredDays = observed.filter((day) => day > addDays(asOf, -CTL_DAYS) && day <= asOf).length;
@@ -126,13 +174,21 @@ export function computeTrainingLoad(workouts = [], options = {}) {
     atl: today ? today.atl : 0,
     tsb,
     acwr,
-    // A 42-day curve built from two weeks is not a 42-day curve. Rather than
-    // hand back an authoritative-looking zone, say the history is too short —
-    // the caller can still see the raw numbers and judge for itself.
-    zone: sufficient ? zone.label : "insufficient_history",
-    zoneNote: sufficient
-      ? zone.note
-      : `僅 ${historyDays} 天訓練史（需 ≥ ${Math.round(CTL_DAYS * 0.5)} 天），負荷曲線尚未收斂，此區間判定不可靠。`,
+    // Detraining outranks both the TSB band and the short-history caveat. "You
+    // have not trained in two months" holds however thin the curve is, and it is
+    // the more consequential thing to say: the TSB band underneath it would read
+    // "fresh", which is true about recovery and dangerous about fitness.
+    //
+    // A 42-day curve built from two weeks is otherwise not a 42-day curve.
+    // Rather than hand back an authoritative-looking zone, say the history is
+    // too short — the caller can still see the raw numbers and judge for itself.
+    zone: detraining.active ? "detraining" : sufficient ? zone.label : "insufficient_history",
+    zoneNote: detraining.active
+      ? detraining.note
+      : sufficient
+        ? zone.note
+        : `僅 ${historyDays} 天訓練史（需 ≥ ${Math.round(CTL_DAYS * 0.5)} 天），負荷曲線尚未收斂，此區間判定不可靠。`,
+    detraining,
     coverage: {
       historyDays,
       workoutDays: coveredDays,

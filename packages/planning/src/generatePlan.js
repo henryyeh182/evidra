@@ -1,4 +1,5 @@
 import { assertValidUserContext } from "../../domain/src/models.js";
+import { computeTrainingLoad } from "../../training-load/src/trainingLoad.js";
 
 const UNIVERSAL_EQUIPMENT = new Set(["none", "bodyweight", "outdoor"]);
 
@@ -9,6 +10,15 @@ const PHASE_MULTIPLIERS = {
   peak: 1.2,
   deload: 0.65
 };
+
+// Load ratios for the first weeks back after a break. A "base" week is base
+// relative to a body that has been training; for someone returning from two
+// months off it is a step up, not a starting point. The ramp rebuilds toward
+// the normal template rather than opening there, and it caps intensity too —
+// volume alone would still put a detrained athlete in a tempo session in week
+// one. Same return-to-training convention the session engine applies to a
+// single day, expressed across weeks.
+const RETURN_RAMP = [0.6, 0.75, 0.9];
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -159,11 +169,18 @@ function buildSession(slot, constraints, availableSet, weekStartDate, phase, mul
   const durationMinutes = Math.max(15, Math.min(targetMinutes, resolved.cap));
   const date = addDays(weekStartDate, slot.dayOffset);
 
+  const notes = [...resolved.notes];
+  let intensity = resolved.intensity;
+  if (phase === "return" && intensity === "high") {
+    intensity = "moderate";
+    notes.push("Held intensity at moderate: this is a return-to-training week after a break.");
+  }
+
   const rationaleParts = [
     `${resolved.focus} scheduled on ${DAY_NAMES[slot.dayOffset]} (${phase} week).`,
     `Duration ${durationMinutes} min after applying ${phase} load factor ${multiplier} and a ${resolved.cap} min availability cap.`
   ];
-  rationaleParts.push(...resolved.notes);
+  rationaleParts.push(...notes);
 
   return {
     id: `session_${date}_${slot.type}`,
@@ -172,17 +189,21 @@ function buildSession(slot, constraints, availableSet, weekStartDate, phase, mul
     focus: resolved.focus,
     type: slot.type,
     durationMinutes,
-    intensity: resolved.intensity,
+    intensity,
     targetMuscleGroups: slot.muscleGroups,
     exercises: resolved.exercises,
     rationale: rationaleParts.join(" ")
   };
 }
 
-function phaseForWeek(weekIndex, totalWeeks) {
-  // Final week is always a deload; earlier weeks ramp base -> build -> peak.
+function phaseForWeek(weekIndex, totalWeeks, returning = false) {
+  // Final week is always a deload; earlier weeks ramp base -> build -> peak,
+  // or climb the return ramp first when the plan starts after a break.
   if (weekIndex === totalWeeks - 1) {
     return "deload";
+  }
+  if (returning && weekIndex < RETURN_RAMP.length) {
+    return "return";
   }
   return WEEK_PHASES[Math.min(weekIndex, WEEK_PHASES.length - 2)];
 }
@@ -209,10 +230,18 @@ export function generateTrainingPlan(context, options = {}) {
   const goalType = primaryGoal?.type || "general_fitness";
   const template = resolveTemplate(goalType);
 
+  // Training history is a plan input, not just a daily one. Built from the same
+  // workout evidence the caller already supplies, so this costs no new data:
+  // without it a plan opens at full base load for everyone, and the athlete who
+  // has been away for two months gets the identical week to one who trained
+  // yesterday. That is the case a plan most needs to get right.
+  const { detraining } = computeTrainingLoad(context.workouts, { asOf: startDate });
+  const returning = detraining.active;
+
   const weeks = [];
   for (let weekIndex = 0; weekIndex < totalWeeks; weekIndex += 1) {
-    const phase = phaseForWeek(weekIndex, totalWeeks);
-    const multiplier = PHASE_MULTIPLIERS[phase];
+    const phase = phaseForWeek(weekIndex, totalWeeks, returning);
+    const multiplier = phase === "return" ? RETURN_RAMP[weekIndex] : PHASE_MULTIPLIERS[phase];
     const weekStartDate = addDays(startDate, weekIndex * 7);
     const sessions = template.slots.map((slot) =>
       buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier)
@@ -234,6 +263,11 @@ export function generateTrainingPlan(context, options = {}) {
     `Weekly availability cap is ${constraints.weekdayAvailableMinutes} min (long sessions up to ${constraints.longSessionMinutes} min).`,
     `Periodization spans ${totalWeeks} weeks ending with a deload week.`
   ];
+  if (returning) {
+    reasoning.push(
+      `Return to training: last session was ${detraining.daysSinceLastSession} days ago and chronic load is down ${detraining.ctlLossPct}% from its recent peak, so the first ${Math.min(RETURN_RAMP.length, totalWeeks - 1)} week(s) run at reduced load and hold intensity at moderate.`
+    );
+  }
   if (constraints.restrictions.length > 0) {
     reasoning.push(`Active injury constraints applied: ${constraints.restrictions.join("; ")}.`);
   }

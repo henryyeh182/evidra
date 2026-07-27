@@ -58,3 +58,66 @@ test("generateTrainingPlan is deterministic for the golden sample user", () => {
   const b = generateTrainingPlan(context, { startDate: "2026-07-27", weeks: 4 });
   assert.deepEqual(a, b);
 });
+
+/** The same user, but their last session was `gapDays` before the plan starts. */
+function contextAfterBreak(gapDays, startDate = "2026-07-27") {
+  const workouts = [];
+  const start = new Date(`${startDate}T00:00:00Z`);
+  for (let i = 90 + gapDays; i > gapDays; i -= 2) {
+    const at = new Date(start);
+    at.setUTCDate(at.getUTCDate() - i);
+    workouts.push({
+      id: `w_${i}`,
+      startedAt: `${at.toISOString().slice(0, 10)}T07:00:00Z`,
+      type: "run",
+      durationMinutes: 45,
+      trainingLoad: 70,
+      rpe: 6
+    });
+  }
+  return { ...context, workouts };
+}
+
+test("a plan that starts after a long break opens on a return ramp, not a base week", () => {
+  // Without training history every plan opened at full base load, so someone
+  // two months off got the identical first week to someone who trained
+  // yesterday — including a high-intensity tempo run in week one.
+  const plan = generateTrainingPlan(contextAfterBreak(60), { startDate: "2026-07-27", weeks: 4 });
+
+  assert.deepEqual(
+    plan.weeks.map((week) => week.phase),
+    ["return", "return", "return", "deload"]
+  );
+  assert.ok(plan.weeks[0].loadMultiplier < 1, "the first week back must run under full load");
+  assert.ok(
+    plan.weeks[0].loadMultiplier < plan.weeks[1].loadMultiplier,
+    "the ramp has to climb, not sit flat"
+  );
+
+  for (const session of plan.weeks[0].sessions) {
+    assert.notEqual(session.intensity, "high", `${session.focus} should not be high intensity in week one back`);
+  }
+
+  assert.ok(
+    plan.reasoning.some((line) => /Return to training/.test(line)),
+    "the plan must say why it opened low"
+  );
+});
+
+test("an athlete who is still training keeps the normal periodization", () => {
+  const plan = generateTrainingPlan(contextAfterBreak(1), { startDate: "2026-07-27", weeks: 4 });
+
+  assert.deepEqual(
+    plan.weeks.map((week) => week.phase),
+    ["base", "build", "peak", "deload"]
+  );
+  assert.equal(plan.weeks[0].loadMultiplier, 1, "a base week runs at full template load");
+  assert.ok(
+    !plan.reasoning.some((line) => /Return to training/.test(line)),
+    "nobody who trained yesterday should be told to ease back"
+  );
+  assert.ok(
+    !JSON.stringify(plan).includes("return-to-training week"),
+    "no session should carry a return-to-training note"
+  );
+});

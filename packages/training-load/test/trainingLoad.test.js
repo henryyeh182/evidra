@@ -135,3 +135,49 @@ test("sessions after the as-of date never leak into the curve", () => {
   assert.ok(result.atl < 100, `future load leaked into ATL: ${result.atl}`);
   assert.ok(result.ctl < 100, `future load leaked into CTL: ${result.ctl}`);
 });
+
+/** Steady training that stops `gapDays` before the as-of date. */
+function trainingThenSilence(gapDays) {
+  const workouts = [];
+  for (let i = 0; i < 90; i += 2) workouts.push({ startedAt: day(i), trainingLoad: 70 });
+  const asOf = new Date("2026-05-01T00:00:00Z");
+  asOf.setUTCDate(asOf.getUTCDate() + 89 + gapDays);
+  return { workouts, asOf: asOf.toISOString().slice(0, 10) };
+}
+
+test("a long layoff reads as detraining rather than as balance", () => {
+  // Regression: detraining used to be a TSB band at `TSB >= 25`. TSB is a
+  // difference, so once ATL bottoms out it tracks CTL back down toward zero —
+  // six months off scored "neutral" (負荷與恢復平衡) and two weeks off scored
+  // "fresh". The longer someone had been away, the healthier they looked.
+  for (const gap of [30, 60, 90, 180]) {
+    const { workouts, asOf } = trainingThenSilence(gap);
+    const result = computeTrainingLoad(workouts, { asOf });
+
+    assert.equal(result.zone, "detraining", `${gap} days off should read as detraining`);
+    assert.equal(result.detraining.active, true);
+    assert.ok(
+      result.detraining.daysSinceLastSession >= gap,
+      `expected at least ${gap} idle days, got ${result.detraining.daysSinceLastSession}`
+    );
+  }
+});
+
+test("detraining needs both idle time and lost fitness, so a taper does not trigger it", () => {
+  // A week off mid-block is a taper: fitness is intact and the athlete is
+  // simply fresh. Flagging that as detraining would tell someone peaking for a
+  // race to ease back.
+  const { workouts, asOf } = trainingThenSilence(7);
+  const result = computeTrainingLoad(workouts, { asOf });
+
+  assert.equal(result.detraining.active, false);
+  assert.equal(result.zone, "fresh");
+});
+
+test("no workout history says so instead of reading as trained or detrained", () => {
+  const result = computeTrainingLoad([], { asOf: "2026-07-28" });
+
+  assert.equal(result.detraining.active, false);
+  assert.equal(result.detraining.daysSinceLastSession, null);
+  assert.match(result.detraining.note, /沒有訓練紀錄/);
+});

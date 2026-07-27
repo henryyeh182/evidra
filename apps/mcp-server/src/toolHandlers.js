@@ -84,6 +84,9 @@ export async function getSemanticFitnessState(args = {}) {
       acwr: trainingLoad.acwr,
       zone: trainingLoad.zone,
       zoneNote: trainingLoad.zoneNote,
+      // Structured, not just prose in zoneNote: the agent has to be able to act
+      // on "62 days off, chronic load down 78%" without parsing a sentence.
+      detraining: trainingLoad.detraining,
       coverage: trainingLoad.coverage
     },
     baselines,

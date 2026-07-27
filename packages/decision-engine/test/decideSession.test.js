@@ -317,3 +317,82 @@ test("the recovery swap stays valid under an active restriction", () => {
     }
   }
 });
+
+/** What computeTrainingLoad hands over for someone `days` past their last session. */
+function afterBreak(days, ctlLossPct = 78) {
+  return { detraining: { active: true, daysSinceLastSession: days, ctlLossPct, ctlPeak: 31, lastSessionDate: "2026-05-27" } };
+}
+
+test("a rested but detrained athlete is eased back, not sent into the planned hard session", () => {
+  // The gap this closes: recovery signals measure recovery, so two months off
+  // reads *excellent* — high readiness, no muscle fatigue, and ACWR at 0, which
+  // is the safest possible value to the ramp-rate rule. Every guard passed and
+  // the athlete got their original tempo run back unchanged.
+  const result = decideSession({
+    scheduledSession: session(),
+    state: state({
+      readinessScore: 82,
+      recoveryScore: 88,
+      fatigueScore: 12,
+      muscleFatigue: { legs: 5 },
+      acuteChronicWorkloadRatio: 0,
+      availableTimeMinutes: undefined,
+      trainingLoad: afterBreak(62)
+    })
+  });
+
+  assert.equal(result.decision.type, "adjust");
+  assert.equal(result.decision.intent, "ease_back_after_break");
+  assert.equal(result.action.to.intensity, "low", "62 days off is a reset, so two notches off high");
+  assert.ok(result.action.to.durationMinutes < 45, "volume must come down with intensity");
+  assert.ok(result.action.changed.includes("intensity"));
+  assert.ok(result.action.changed.includes("durationMinutes"));
+  assert.ok(
+    result.reason.some((line) => /62 天/.test(line)),
+    "the decision has to name the break it is reacting to"
+  );
+  assert.ok(
+    result.evidence.some((item) => item.signal === "days_since_last_session" && item.value === 62),
+    "the reason must trace back to cited evidence"
+  );
+  assertValidDecision(result);
+});
+
+test("a shorter break costs one notch, not two", () => {
+  const result = decideSession({
+    scheduledSession: session(),
+    state: state({ readinessScore: 82, muscleFatigue: { legs: 5 }, acuteChronicWorkloadRatio: 0, trainingLoad: afterBreak(20, 40) })
+  });
+
+  assert.equal(result.decision.intent, "ease_back_after_break");
+  assert.equal(result.action.to.intensity, "moderate");
+});
+
+const INTENSITY_NOT_RAISED = (result) =>
+  ["low", "moderate", "high"].indexOf(result.action.to.intensity) <=
+  ["low", "moderate", "high"].indexOf(result.action.from.intensity);
+
+test("excellent readiness does not advance a detrained athlete", () => {
+  // Being fresh is not the same as being ready to progress, and a returning
+  // athlete scores exactly the high-readiness / low-fatigue profile the
+  // progression rule looks for.
+  const result = decideSession({
+    scheduledSession: session({ intensity: "moderate" }),
+    state: state({ readinessScore: 92, muscleFatigue: { legs: 5 }, acuteChronicWorkloadRatio: 0, trainingLoad: afterBreak(70) })
+  });
+
+  assert.notEqual(result.decision.type, "advance");
+  assert.ok(
+    INTENSITY_NOT_RAISED(result),
+    `intensity went up for a detrained athlete: ${result.action.to.intensity}`
+  );
+});
+
+test("training load with no break leaves the existing rules untouched", () => {
+  const result = decideSession({
+    scheduledSession: session(),
+    state: state({ trainingLoad: { detraining: { active: false, daysSinceLastSession: 1, ctlLossPct: 2 } } })
+  });
+
+  assert.equal(result.decision.type, "keep");
+});

@@ -10,7 +10,15 @@ const RULES = {
   muscleFatigueHigh: 65, // target muscle too fatigued for high intensity
   muscleFatigueModerate: 45,
   acwrHigh: 1.4, // acute:chronic ratio above this = spike
-  recoveryCapMinutes: 30 // how long a swapped-in recovery session may run
+  recoveryCapMinutes: 30, // how long a swapped-in recovery session may run
+  // Coming back from a break. A returning athlete restarts at roughly half to
+  // two-thirds of prior volume; 0.6 sits inside that and is a cap, not a target,
+  // so a session already shorter than the cap is left alone.
+  returnDurationFactor: 0.6,
+  // Past either of these the break stopped being a pause and started being a
+  // reset — one notch off the planned intensity is not enough.
+  returnSevereIdleDays: 42,
+  returnSevereCtlLossPct: 60
 };
 
 const INTENSITY_ORDER = ["low", "moderate", "high"];
@@ -108,6 +116,23 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
     });
   }
 
+  // Time away and fitness lost. Cited as evidence in their own right because
+  // the rule below acts on them, and a reason we cannot trace to evidence is a
+  // fabricated reason.
+  const detraining = state.trainingLoad?.detraining;
+  if (detraining && typeof detraining.daysSinceLastSession === "number") {
+    evidence.push({
+      signal: "days_since_last_session",
+      value: detraining.daysSinceLastSession,
+      recordedAt: state.date
+    });
+    evidence.push({
+      signal: "chronic_load_loss_pct",
+      value: detraining.ctlLossPct,
+      recordedAt: state.date
+    });
+  }
+
   const stateSummary = {
     readiness,
     recovery: state.recoveryScore,
@@ -169,10 +194,10 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
   //    are now independent, the largest demand wins, and every rule that fires
   //    contributes its reason.
   let stepsDown = 0;
-  const demand = (steps, text) => {
+  const demand = (steps, text, asIntent = "reduce_today_intensity") => {
     stepsDown = Math.max(stepsDown, steps);
     reason.push(text);
-    escalate("adjust", "reduce_today_intensity");
+    escalate("adjust", asIntent);
   };
 
   // 2. Readiness.
@@ -212,12 +237,39 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
       demand(1, `急慢性負荷比 ${state.acuteChronicWorkloadRatio} 高於 ${RULES.acwrHigh}，近期負荷上升過快。`);
     }
 
+    // 5. Coming back from a break. Nothing above can see this. An athlete two
+    //    months off reads *rested*: readiness high, target-muscle fatigue near
+    //    zero, and ACWR at 0 — which is the safest possible value to the
+    //    ramp-rate check that just ran. Every guard passed, and the engine
+    //    handed a detrained athlete their original high-intensity session
+    //    unchanged. Recovery signals measure recovery; they say nothing about
+    //    the fitness that decayed while the athlete was resting, so lost
+    //    fitness gets its own rule rather than being inferred from readiness.
+    if (detraining?.active) {
+      const severe =
+        detraining.daysSinceLastSession >= RULES.returnSevereIdleDays ||
+        detraining.ctlLossPct >= RULES.returnSevereCtlLossPct;
+      demand(
+        severe ? 2 : 1,
+        `距離上次訓練 ${detraining.daysSinceLastSession} 天，慢性負荷較高點下降 ${detraining.ctlLossPct}%，體能基礎已流失，回歸首堂需降載。`,
+        "ease_back_after_break"
+      );
+
+      // Volume has to come down with intensity. Holding the planned duration
+      // would just move the overload from intensity to time.
+      const cap = Math.max(15, Math.round(from.durationMinutes * RULES.returnDurationFactor));
+      if (to.durationMinutes > cap) {
+        reason.push(`回歸首堂時長由 ${from.durationMinutes} 分鐘降至 ${cap} 分鐘（原定的 ${Math.round(RULES.returnDurationFactor * 100)}%）。`);
+        to.durationMinutes = cap;
+      }
+    }
+
     for (let step = 0; step < stepsDown; step += 1) {
       to.intensity = lowerIntensity(to.intensity);
     }
   }
 
-  // 5. Time budget. Only a stated budget counts, and the one we act on is
+  // 6. Time budget. Only a stated budget counts, and the one we act on is
   //    recorded as evidence like every other signal. A cut we cannot cite is a
   //    fabricated reason: an upstream default of 30 used to arrive here
   //    indistinguishable from a real constraint, halving a 60-minute session and
@@ -243,15 +295,24 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
       escalate("adjust", "fit_time_budget");
     }
   } else {
-    limits.push("未取得今日可用時間，時長維持原定，未依時間裁切。");
+    // Says only what it knows: no budget was supplied, so no time-based cut was
+    // made. It must not claim the duration is unchanged — another rule may have
+    // shortened it for reasons that have nothing to do with the clock.
+    limits.push("未取得今日可用時間，未依時間限制裁切時長。");
   }
 
-  // 6. Room to progress: only when nothing above pulled anything down, and only
+  // 7. Room to progress: only when nothing above pulled anything down, and only
   //    when no restriction is active. Pushing intensity on someone with a live
   //    injury constraint is exactly the failure mode a safety rule must prevent,
   //    so this stays conservative even when readiness looks excellent.
+  //
+  //    Detraining is named explicitly rather than left to the `type === "keep"`
+  //    guard: a well-rested returning athlete scores high readiness and low
+  //    fatigue, which is precisely this rule's entry condition. Being fresh is
+  //    not the same as being ready to progress.
   if (
     type === "keep" &&
+    !detraining?.active &&
     restrictions.length === 0 &&
     readiness >= RULES.readinessAdvance &&
     (fatigue.value || 0) < RULES.muscleFatigueModerate &&

@@ -99,7 +99,7 @@ Claude / ChatGPT 回覆使用者
 ## 現況（2026-07）
 
 - 對外 **6 個決策 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` · `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
-- 140 tests、eval 20 golden cases，全綠
+- 157 tests、eval 20 golden cases，全綠
 - schema registry 涵蓋 6 家；parser 實作 3 家（Apple Health／Garmin／Strava）
 - 知識圖譜 896 節點（**內部證據來源，不是對外產品**）
 - transport：stdio ✅ · Streamable HTTP ✅ · **OAuth ❌**（手機與 marketplace 上架的前提）
