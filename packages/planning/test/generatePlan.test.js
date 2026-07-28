@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { generateTrainingPlan, GOAL_TEMPLATES } from "../src/generatePlan.js";
+import { todayInTimezone } from "../../domain/src/dates.js";
 
 const context = JSON.parse(
   await readFile(new URL("../../../data/seeds/sample-user-context.json", import.meta.url), "utf8")
@@ -192,4 +193,13 @@ test("a slot's declared equipment matches the catalog entry it points at", () =>
       }
     }
   }
+});
+
+test("a plan with no start date starts today where the user lives", () => {
+  const plan = generateTrainingPlan(context, { weeks: 4 });
+
+  assert.equal(plan.startDate, todayInTimezone(context.user.timezone));
+  // The regression: a start date frozen into the source, which every plan
+  // generated after that day would silently backdate itself to.
+  assert.equal(plan.id, `plan_${context.user.id}_${todayInTimezone(context.user.timezone)}`);
 });

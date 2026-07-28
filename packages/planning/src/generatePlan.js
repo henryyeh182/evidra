@@ -1,4 +1,5 @@
 import { assertValidUserContext } from "../../domain/src/models.js";
+import { todayInTimezone } from "../../domain/src/dates.js";
 import { computeTrainingLoad } from "../../training-load/src/trainingLoad.js";
 
 const UNIVERSAL_EQUIPMENT = new Set(["none", "bodyweight", "outdoor"]);
@@ -248,7 +249,9 @@ function phaseForWeek(weekIndex, totalWeeks, returning = false) {
 export function generateTrainingPlan(context, options = {}) {
   assertValidUserContext(context);
 
-  const startDate = options.startDate || "2026-07-27";
+  // A plan with no start date starts today, where the user lives — not on a
+  // date frozen into the source at the time this was written.
+  const startDate = options.startDate || todayInTimezone(context.user.timezone);
   const totalWeeks = Math.max(1, options.weeks || 4);
   const constraints = deriveConstraints(context);
   const availableSet = new Set(constraints.availableEquipment);

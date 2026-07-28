@@ -4,7 +4,7 @@ import {
   previewPlanChange,
   createPlanStore
 } from "../../../packages/planning/src/index.js";
-import { loadDemoUserContext, loadExerciseCatalog } from "./demoData.js";
+import { loadDemoUserContext, loadExerciseCatalog, latestEvidenceDay } from "./demoData.js";
 import { loadKnowledgeBase } from "./knowledgeBase.js";
 import { jsonContent } from "./content.js";
 import { decideSession } from "../../../packages/decision-engine/src/index.js";
@@ -16,6 +16,7 @@ import {
   evidenceToUserContext,
   describeEvidence
 } from "../../../packages/evidence/src/index.js";
+import { todayInTimezone } from "../../../packages/domain/src/dates.js";
 import {
   searchExercisesTool,
   getExerciseTool,
@@ -25,8 +26,6 @@ import {
   getTrainingHistoryTool,
   decideExerciseSubstitutionTool
 } from "./readToolHandlers.js";
-
-const DEFAULT_DATE = "2026-07-23";
 
 // Process-lifetime store so preview -> commit and version history persist
 // across tool calls. Swap for a PostgreSQL-backed repository later.
@@ -45,29 +44,43 @@ function assertUserId(context, userId) {
  * evidence in as tool arguments, so inbound `evidence` always wins and nothing
  * is persisted. The demo seed remains only as a fallback for local runs, and
  * the caller is told which one was used rather than left to assume.
+ *
+ * Also resolves the day a call reasons about when the caller omits `date` — the
+ * server owns that (P5), and it is a calendar day in the user's timezone, never
+ * a UTC instant and never a literal frozen into this file.
  */
 async function resolveContext(args) {
   if (args.evidence) {
     const context = evidenceToUserContext(args.evidence, { userId: args.userId });
-    return { context, provenance: { evidenceSource: "provided", ...describeEvidence(args.evidence) } };
+    return {
+      context,
+      defaultDate: todayInTimezone(context.user.timezone),
+      provenance: { evidenceSource: "provided", ...describeEvidence(args.evidence) }
+    };
   }
   const context = await loadDemoUserContext({
     includeStravaFixture: Boolean(args.includeStravaFixture)
   });
   assertUserId(context, args.userId);
+
+  // The seed is a snapshot; answering it against the real calendar would only
+  // measure how long ago it was written.
+  const seedDay = latestEvidenceDay(context);
   return {
     context,
+    defaultDate: seedDay || todayInTimezone(context.user.timezone),
     provenance: {
       evidenceSource: "demo_fallback",
-      note: "No evidence was supplied; used the local demo seed. Production callers must pass evidence."
+      note: "No evidence was supplied; used the local demo seed. Production callers must pass evidence.",
+      ...(seedDay ? { dateAnchoredTo: seedDay, dateAnchorReason: "most recent day in the demo seed" } : {})
     }
   };
 }
 
 export async function getSemanticFitnessState(args = {}) {
-  const { context, provenance } = await resolveContext(args);
+  const { context, provenance, defaultDate } = await resolveContext(args);
 
-  const date = args.date || DEFAULT_DATE;
+  const date = args.date || defaultDate;
   const state = generateSemanticFitnessState(context, { date, timezone: context.user.timezone });
 
   // Impulse-response load curves and personal baselines, computed from the
@@ -101,8 +114,9 @@ export async function recommendTodayWorkout(args = {}) {
   });
   assertUserId(context, args.userId);
 
+  // Deprecated, and demo-seed only: anchor to the seed's own latest day.
   const state = generateSemanticFitnessState(context, {
-    date: args.date || DEFAULT_DATE,
+    date: args.date || latestEvidenceDay(context) || todayInTimezone(context.user.timezone),
     timezone: context.user.timezone
   });
 
@@ -250,9 +264,9 @@ export const toolHandlers = {
  * rather than inventing a suggestion.
  */
 export async function decideSessionTool(args = {}) {
-  const { context, provenance } = await resolveContext(args);
+  const { context, provenance, defaultDate } = await resolveContext(args);
 
-  const date = args.date || DEFAULT_DATE;
+  const date = args.date || defaultDate;
   const state = generateSemanticFitnessState(context, {
     date,
     timezone: context.user.timezone

@@ -41,7 +41,7 @@ export const toolDefinitions = [
         },
         date: {
           type: "string",
-          description: "Date in YYYY-MM-DD format. Defaults to today's demo date."
+          description: "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server (demo fallback anchors to the seed's latest day)."
         }
       },
       required: ["userId"]
@@ -60,7 +60,7 @@ export const toolDefinitions = [
         },
         date: {
           type: "string",
-          description: "Date in YYYY-MM-DD format. Defaults to today's demo date."
+          description: "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server (demo fallback anchors to the seed's latest day)."
         },
         includeStravaFixture: {
           type: "boolean",
@@ -108,7 +108,7 @@ export const toolDefinitions = [
           }
         },
         userId: { type: "string", description: "User identifier." },
-        date: { type: "string", description: "Date in YYYY-MM-DD. Defaults to today's demo date." },
+        date: { type: "string", description: "Date in YYYY-MM-DD. Defaults to today in the user's timezone, resolved by the server (demo fallback anchors to the seed's latest day)." },
         scheduledSession: {
           type: "object",
           description:
@@ -322,7 +322,7 @@ export const toolDefinitions = [
         userId: { type: "string", description: "User identifier." },
         goalId: { type: "string", description: "Goal to build the plan around. Defaults to the highest-priority goal." },
         weeks: { type: "number", description: "Number of weeks to plan. Defaults to 4." },
-        startDate: { type: "string", description: "Plan start date in YYYY-MM-DD format (ideally a Monday)." }
+        startDate: { type: "string", description: "Plan start date in YYYY-MM-DD format (ideally a Monday). Defaults to today in the user's timezone." }
       },
       required: ["userId"]
     }

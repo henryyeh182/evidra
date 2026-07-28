@@ -45,7 +45,7 @@
     },
     "date": {
       "type": "string",
-      "description": "Date in YYYY-MM-DD format. Defaults to today's demo date."
+      "description": "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server (demo fallback anchors to the seed's latest day)."
     }
   },
   "required": [

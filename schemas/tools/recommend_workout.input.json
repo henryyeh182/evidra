@@ -5,7 +5,7 @@
   "type": "object",
   "properties": {
     "userId": { "type": "string", "description": "User identifier." },
-    "date": { "type": "string", "description": "Date in YYYY-MM-DD format. Defaults to today's demo date." },
+    "date": { "type": "string", "description": "Date in YYYY-MM-DD format. Defaults to the demo seed's latest day (this tool is demo-seed only)." },
     "includeStravaFixture": { "type": "boolean", "description": "Include the local Strava fixture before generating the recommendation." }
   },
   "required": ["userId"]

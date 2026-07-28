@@ -53,7 +53,7 @@
     },
     "startDate": {
       "type": "string",
-      "description": "Plan start date in YYYY-MM-DD format (ideally a Monday)."
+      "description": "Plan start date in YYYY-MM-DD format (ideally a Monday). Defaults to today in the user's timezone."
     }
   },
   "required": [
