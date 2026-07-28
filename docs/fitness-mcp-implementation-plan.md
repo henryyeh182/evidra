@@ -11,7 +11,7 @@
 
 ## 1. 已實作元件
 
-173 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+184 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
@@ -30,7 +30,7 @@
 
 **工具腳本**：`npm run build:graph`（重建知識圖譜）、`audit:graph`（品質稽核）、`import:apple-health`（本機匯入真實資料）、`eval`（評測計分）
 
-**資料品質現況**：分類準確率 94.1%、替代合理率 100%（50 抽樣）、高負荷動作無禁忌 0 個、
+**資料品質現況**：分類準確率 94.0%、替代合理率 100%（50 抽樣）、高負荷動作無禁忌 0 個、
 策展核心進退階覆蓋率 82.1%（gate ≥ 70%）、plan → catalog 100%（gate）。
 
 ---
@@ -81,7 +81,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 1. 那是在測 Claude / ChatGPT 的腦，不是測我們的產品。
 2. 執行它必須呼叫 LLM API，與 **D-LLM「系統內不含 LLM」** 相衝突。
 
-**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 173 個測試）。
+**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 184 個測試）。
 另補上 **MCP client 相容性驗證**（見下）取代連通性層面的疑慮。
 
 > **D1 與 D2 同一個根因**：系統是照「我們有使用者資料庫，AI 來查」設計的（傳統 SaaS），不是照「AI 帶授權證據來，我們回決策」設計的（intelligence layer）。**架構圖畫的是後者，程式蓋的是前者。**
@@ -200,7 +200,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
   當時沒有反向邊。
 
 - `npm run audit:graph` 新增階梯覆蓋率並納入 gate。**覆蓋率只在策展核心上量**——
-  匯入節點依設計只帶相似度邊。現況 **23/27 = 85.2%**（gate ≥ 70%），
+  匯入節點依設計只帶相似度邊。現況 **23/28 = 82.1%**（gate ≥ 70%），
   未覆蓋的只有 `mobility`。
 
 ##### ✅ 已做：三層命名（規格化 / 對照 / 口語）
@@ -255,7 +255,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 | A2 | 每個非 `keep` 決策都帶 from→to 與可追溯的 reason | `assertValidDecision` 結構性拒絕 |
 | A3 | 證據不足時回退化標記，不猜數值 | `insufficient_history` ／ `signalCoverage` ／ `missing` |
 | A4 | 負荷指標所依據的每個訊號都出現在 `provenance` | eval grounding gate |
-| A5 | ✅ 進退階可從圖上走通，且每條階梯上下都通 | `audit:graph` 階梯覆蓋率 gate（≥ 70%，現 85.2%）＋ `assertValidProgressions` 四條不變量 |
+| A5 | ✅ 進退階可從圖上走通，且每條階梯上下都通 | `audit:graph` 階梯覆蓋率 gate（≥ 70%，現 82.1%）＋ `assertValidProgressions` 四條不變量 |
 | A6 | ✅ 退階請求回真實的退階動作，而非相似動作 | `graph.test.js`：`exercise_pullup` 的退階必須是 `exercise_assisted_pullup`（beginner／同 pattern） |
 | A7 | ✅ 決策與計畫排出的每個動作都指得到圖上節點 | eval `planExerciseCatalogCoverage` 已升為 gate（100%）＋「every movement a plan can prescribe exists in the catalog」測試 |
 
@@ -269,7 +269,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 > `graph.test.js` 的「generated nodes must not carry progression edges」直接把關。
 
 ### Phase 5 — 多來源正規化（護城河 #1）🟡 進行中
-- Garmin / Oura / Whoop / MyFitnessPal 格式解析 —— **Garmin 已完成**（3/6 來源）
+- Oura / Whoop / Google Health Connect 格式解析 —— **Apple Health／Garmin／Strava 已完成**（3/6 來源，其餘三家 registry 已宣告映射但無解析器）
 - 跨來源語意對齊（同一個 HRV，各家名稱／單位／取樣頻率統一）
 - **證據由 tool call 傳入，不做 OAuth 拉取**
 - **驗收**：同一使用者接不同來源，決策語意一致；訊號衝突有明確優先序
@@ -348,5 +348,13 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 | P2 | 決策由引擎產生，非 LLM 推測 | ✅ |
 | P3 | 輸出帶可驗證 ID，回傳前驗證存在性 | ✅ `assertGrounded` |
 | P4 | 寫入 two-phase + idempotency key | 🟡 缺 idempotency key |
-| P5 | 日期／時區由 server 解析 | ❌ |
+| P5 | 日期／時區由 server 解析 | 🟡 預設日期已改由 server 以使用者時區解析（`packages/domain/src/dates.js`）；**尚缺**自然語言相對日期（「明天」「上週三」）解析 |
 | P6 | elicitation 一次收齊參數 | ❌ |
+
+> **P5 訂正**：原本 `toolHandlers.js` 的 `DEFAULT_DATE = "2026-07-23"` 與
+> `generatePlan.js` 的 `startDate || "2026-07-27"` 是**寫死的日曆日**——沒帶 `date` 的
+> 呼叫一律當成撰寫當天，訊號新鮮度、detraining 與計畫起始日全部錯。改用
+> `todayInTimezone(user.timezone)`；時區那半同樣重要：`2026-07-23T22:30:00Z` 在
+> `Asia/Taipei` 已經是 **07-24**，用 UTC 取日會差一天。demo seed 沒有「今天」可言，
+> 因此改**由 seed 最新一筆證據推得**錨點並在 `provenance.dateAnchoredTo` 標明，
+> 而不是再寫死一個常數。

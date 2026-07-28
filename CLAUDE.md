@@ -51,7 +51,7 @@ Decision 與 Action 必須分開：同一意圖在不同器材／時間／傷病
 ## 架構（不得偏離）
 
 ```
-Sources（Apple Health · Garmin · Oura · Whoop · Strava · MyFitnessPal）
+Sources（Apple Health · Garmin · Oura · Whoop · Strava · Google Health Connect）
    │ User OAuth 授權 —— 授權對象是 AI 那層，不是我們
    ▼
 Claude / ChatGPT（Conversation + Reasoning）
@@ -99,9 +99,9 @@ Claude / ChatGPT 回覆使用者
 ## 現況（2026-07）
 
 - 對外 **6 個決策 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` · `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
-- 157 tests、eval 20 golden cases，全綠
+- 184 tests、eval 20 golden cases，全綠
 - schema registry 涵蓋 6 家；parser 實作 3 家（Apple Health／Garmin／Strava）
-- 知識圖譜 896 節點（**內部證據來源，不是對外產品**）
+- 知識圖譜 889 節點 / 5,785 邊（**內部證據來源，不是對外產品**）
 - transport：stdio ✅ · Streamable HTTP ✅ · **OAuth ❌**（手機與 marketplace 上架的前提）
 
 ## 常用指令

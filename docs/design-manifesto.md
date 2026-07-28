@@ -100,7 +100,7 @@ User Device / User Accounts
   Oura
   Whoop
   Strava
-  MyFitnessPal
+  Google Health Connect
 
         │ User OAuth 授權
         ▼
