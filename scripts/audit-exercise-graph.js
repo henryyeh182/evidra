@@ -135,6 +135,44 @@ async function main() {
   console.log(`  Patterns without a ladder: ${uncovered.length ? uncovered.join(", ") : "none"}`);
   console.log(`  SIMILAR_TO share of all edges: ${(similarShare * 100).toFixed(1)}%  (diagnostic — imported nodes carry similarity only, by design)`);
 
+  // Training goal coverage (Phase 4.3). What matters is not how many nodes
+  // carry a label but whether each goal can still answer "give me something
+  // that trains this" once equipment and injuries have filtered the catalog —
+  // that is the query the planner's fallback actually makes. A goal nothing
+  // serves means a slot silently degrades into whatever else was available.
+  const TRAINING_GOALS = ["strength", "hypertrophy", "power", "endurance", "mobility"];
+  const goalCounts = {};
+  const goalCuratedCounts = {};
+  let goalLabelTotal = 0;
+  for (const node of data.exercises) {
+    goalLabelTotal += node.trainingGoals.length;
+    for (const goal of node.trainingGoals) {
+      goalCounts[goal] = (goalCounts[goal] || 0) + 1;
+      if (!curatedIds.has(node.id)) continue;
+      goalCuratedCounts[goal] = (goalCuratedCounts[goal] || 0) + 1;
+    }
+  }
+
+  const bodyweightOnly = {};
+  for (const goal of TRAINING_GOALS) {
+    bodyweightOnly[goal] = graph.searchExercises({ trainingGoal: goal, availableEquipment: [] }).length;
+  }
+  const unservedGoals = TRAINING_GOALS.filter((goal) => !goalCounts[goal]);
+  const unreachableGoals = TRAINING_GOALS.filter((goal) => bodyweightOnly[goal] === 0);
+  const goalsPerNode = goalLabelTotal / data.exercises.length;
+
+  console.log(`\nTraining goals (${data.exercises.length} nodes):`);
+  for (const goal of TRAINING_GOALS) {
+    const total = goalCounts[goal] || 0;
+    const curatedTotal = goalCuratedCounts[goal] || 0;
+    console.log(
+      `  ${goal.padEnd(12)} ${String(total).padStart(4)} nodes  (curated ${curatedTotal}, no-equipment ${bodyweightOnly[goal]})`
+    );
+  }
+  console.log(`  Goals per node:            ${goalsPerNode.toFixed(2)}  (diagnostic — a label everything wears discriminates nothing)`);
+  console.log(`  Goals nothing serves:      ${unservedGoals.length ? unservedGoals.join(", ") : "none"}  (gate: none)`);
+  console.log(`  Unreachable without kit:   ${unreachableGoals.length ? unreachableGoals.join(", ") : "none"}  (gate: none)`);
+
   const reviewPath = join(rootDir, "data/vendor/graph-review-flags.json");
   await writeFile(reviewPath, `${JSON.stringify({ classificationAccuracy, misclassified }, null, 2)}\n`);
   console.log(`\nWrote ${misclassified.length} flags to data/vendor/graph-review-flags.json`);
@@ -143,7 +181,9 @@ async function main() {
     classificationAccuracy >= 0.85 &&
     highLoadNoContra === 0 &&
     substituteRate >= 0.85 &&
-    ladderCoverage >= 0.7
+    ladderCoverage >= 0.7 &&
+    unservedGoals.length === 0 &&
+    unreachableGoals.length === 0
       ? 0
       : 1;
 }

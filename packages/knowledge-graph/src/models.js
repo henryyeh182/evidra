@@ -2,7 +2,39 @@
  * @typedef {"squat" | "hinge" | "horizontal_push" | "vertical_push" | "horizontal_pull" | "vertical_pull" | "locomotion" | "mobility"} MovementPattern
  * @typedef {"beginner" | "intermediate" | "advanced"} SkillLevel
  * @typedef {"low" | "moderate" | "high"} ImpactLevel
+ * @typedef {"strength" | "hypertrophy" | "power" | "endurance" | "mobility"} TrainingGoal
  */
+
+/**
+ * What training quality a movement serves. This is a property of the movement
+ * itself — like `equipment` or `contraindications` — not a relationship, which
+ * is why it is a node attribute and not a sixth edge type: "A can replace B"
+ * questions are already expressible through `SUBSTITUTES_FOR_WHEN` conditions.
+ *
+ * It exists so that swapping a movement can preserve the training stimulus.
+ * Without it, an upper-body strength slot whose equipment is unavailable falls
+ * back to whatever else is safe and available, and the session quietly stops
+ * being the session that was prescribed.
+ */
+export const TRAINING_GOALS = ["strength", "hypertrophy", "power", "endurance", "mobility"];
+
+/**
+ * A movement that claims every goal discriminates between none of them, which
+ * is the failure mode this attribute has to survive: it is easy to make ladder
+ * or goal coverage look complete by labelling everything with everything.
+ */
+const MAX_GOALS_PER_EXERCISE = 3;
+
+/**
+ * Patterns whose defining quality is not negotiable. A mobility flow that does
+ * not claim mobility, or a run that does not claim endurance, means the label
+ * was applied without looking at the movement.
+ */
+const REQUIRED_GOAL_BY_PATTERN = {
+  mobility: "mobility",
+  locomotion: "endurance",
+  plyometric: "power"
+};
 
 /**
  * @typedef {Object} ExerciseNode
@@ -18,6 +50,7 @@
  * @property {ImpactLevel} impactLevel
  * @property {string[]} loadsJoints
  * @property {string[]} contraindications
+ * @property {TrainingGoal[]} trainingGoals
  * @property {string} source
  * @property {number} confidence
  */
@@ -56,6 +89,7 @@ const REQUIRED_EXERCISE_FIELDS = [
   "primaryMuscle",
   "equipment",
   "skillLevel",
+  "trainingGoals",
   "source",
   "confidence"
 ];
@@ -108,6 +142,56 @@ export function assertUniqueExerciseNaming(data) {
     claim(exercise.name, exercise.id, "name");
     claim(exercise.displayName, exercise.id, "displayName");
     for (const alias of exercise.aliases || []) claim(alias, exercise.id, "alias");
+  }
+
+  return data;
+}
+
+/**
+ * Training goals carry meaning only while they discriminate. These invariants
+ * are what stops the attribute decaying into a label everything wears:
+ *
+ * 1. Known values only — a typo'd goal silently matches nothing, so a slot that
+ *    asks for it falls back instead of failing loudly.
+ * 2. At least one — an unlabelled movement can never be chosen to serve a goal,
+ *    which makes it invisible to the very queries this attribute exists for.
+ * 3. At most three — a movement claiming everything preserves nothing when it
+ *    is substituted in.
+ * 4. The pattern's defining quality is present (a run is endurance, a mobility
+ *    flow is mobility, a plyometric is power).
+ *
+ * @param {{ exercises: ExerciseNode[] }} data
+ */
+export function assertValidTrainingGoals(data) {
+  const allowed = new Set(TRAINING_GOALS);
+
+  for (const exercise of data.exercises) {
+    const goals = exercise.trainingGoals;
+    if (!Array.isArray(goals)) {
+      throw new Error(`Exercise ${exercise.id} trainingGoals must be an array.`);
+    }
+    if (goals.length === 0) {
+      throw new Error(`Exercise ${exercise.id} declares no training goal.`);
+    }
+    if (goals.length > MAX_GOALS_PER_EXERCISE) {
+      throw new Error(
+        `Exercise ${exercise.id} claims ${goals.length} training goals (max ${MAX_GOALS_PER_EXERCISE}): ${goals.join(", ")}`
+      );
+    }
+    if (new Set(goals).size !== goals.length) {
+      throw new Error(`Exercise ${exercise.id} repeats a training goal: ${goals.join(", ")}`);
+    }
+    for (const goal of goals) {
+      if (!allowed.has(goal)) {
+        throw new Error(`Exercise ${exercise.id} has unknown training goal: ${goal}`);
+      }
+    }
+    const required = REQUIRED_GOAL_BY_PATTERN[exercise.movementPattern];
+    if (required && !goals.includes(required)) {
+      throw new Error(
+        `Exercise ${exercise.id} is a ${exercise.movementPattern} movement but does not serve ${required}: ${goals.join(", ")}`
+      );
+    }
   }
 
   return data;
@@ -223,6 +307,7 @@ export function assertValidGraphData(data) {
 
   assertValidProgressions(data);
   assertUniqueExerciseNaming(data);
+  assertValidTrainingGoals(data);
 
   return data;
 }

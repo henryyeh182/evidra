@@ -11,14 +11,14 @@
 
 ## 1. 已實作元件
 
-173 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+183 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
 | `packages/domain` | 核心模型：User / Goal / Preference / Injury / Equipment / Workout / HealthMetric，含 `assertValidUserContext` |
 | `packages/semantic-engine` | `generateSemanticFitnessState`：recovery / readiness / fatigue / 分肌群疲勞 / 負荷。**訊號可得性自適應**——訊號過期即排除並重新正規化權重，如實下調 confidence，輸出 `signalCoverage`。基線由 `options.baselines` 注入，族群常數僅作 fallback |
 | `packages/training-load` | **`computeTrainingLoad`**：ATL / CTL / TSB（指數移動平均）、ACWR ramp-rate、負荷分區，**detraining 為獨立軸線**（以本人近期 CTL 峰值為基準，須同時滿足閒置天數與體能流失，taper／deload 不誤觸）。**`computePersonalBaselines`**：由傳入的 health metrics 現算本人基線 |
-| `packages/knowledge-graph` | 889 節點 / 5,785 邊。`graph.js`（替代／進退階／結構化檢索遍歷）、`workoutSchema.js`（Block/Set 結構與驗證）、`programTemplates.js`（參數化課表模板）、`resolveExercise`／`displayNameFor`（口語↔規格化命名）、`models.js` 的 `assertValidProgressions` 與 `assertUniqueExerciseNaming`（建圖時強制） |
+| `packages/knowledge-graph` | 889 節點 / 5,785 邊。`graph.js`（替代／進退階／結構化檢索遍歷）、`workoutSchema.js`（Block/Set 結構與驗證）、`programTemplates.js`（參數化課表模板）、`resolveExercise`／`displayNameFor`（口語↔規格化命名）、`models.js` 的 `assertValidProgressions`／`assertUniqueExerciseNaming`／`assertValidTrainingGoals`（建圖時強制） |
 | `packages/planning` | `generatePlan`（週期化 base→build→peak→deload）、`adaptPlan`（非破壞式 diff 預覽）、`planStore`（版本化 preview→commit） |
 | `packages/connectors` | Apple Health（`export.xml` 串流解析）、Strava、**Garmin**（readiness／daily summary／sleep／activities，含 sentinel 處理）的格式正規化 |
 | `packages/evidence` | **Fitness Evidence Model**：跨來源證據契約 ＋ 轉內部 context |
@@ -30,8 +30,9 @@
 
 **工具腳本**：`npm run build:graph`（重建知識圖譜）、`audit:graph`（品質稽核）、`import:apple-health`（本機匯入真實資料）、`eval`（評測計分）
 
-**資料品質現況**：分類準確率 94.1%、替代合理率 100%（50 抽樣）、高負荷動作無禁忌 0 個、
-策展核心進退階覆蓋率 82.1%（gate ≥ 70%）、plan → catalog 100%（gate）。
+**資料品質現況**：分類準確率 94.0%、替代合理率 100%（50 抽樣）、高負荷動作無禁忌 0 個、
+策展核心進退階覆蓋率 82.1%（gate ≥ 70%）、訓練目標每節點平均 1.40 個且無目標挑不出動作
+（gate）、plan → catalog 100%（gate）。
 
 ---
 
@@ -81,7 +82,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 1. 那是在測 Claude / ChatGPT 的腦，不是測我們的產品。
 2. 執行它必須呼叫 LLM API，與 **D-LLM「系統內不含 LLM」** 相衝突。
 
-**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 173 個測試）。
+**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 183 個測試）。
 另補上 **MCP client 相容性驗證**（見下）取代連通性層面的疑慮。
 
 > **D1 與 D2 同一個根因**：系統是照「我們有使用者資料庫，AI 來查」設計的（傳統 SaaS），不是照「AI 帶授權證據來，我們回決策」設計的（intelligence layer）。**架構圖畫的是後者，程式蓋的是前者。**
@@ -94,7 +95,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 |---|---|---|---|
 | 1 | Semantic Fitness Layer | 🟡 | 證據契約已就位（D1 已修）；**3/6** 來源解析器（＋Garmin），來源格式與統一詞彙已有 schema 與方言等價驗證 |
 | 2 | Fitness Intelligence Engine | 🟢 | 確定性且產出五層決策（D2 已修）；ATL/CTL/TSB ＋ detraining 軸線 ＋ 個人基線已上（Phase 4 前兩項） |
-| 3 | Fitness Knowledge Graph | 🟡 | 889 節點 / 5,785 邊。**進退階已補齊**（7 → 34 條，17 組互逆，策展核心覆蓋 82.1%，帶不變量把關）；**命名層已統一**（規格化 id ↔ 口語別名）；**仍缺訓練目標連結**。相似度邊佔 89.4%，但那是匯入節點的設計結果（見 Phase 4.3） |
+| 3 | Fitness Knowledge Graph | 🟢 | 889 節點 / 5,785 邊。**進退階已補齊**（7 → 34 條，17 組互逆，策展核心覆蓋 82.1%，帶不變量把關）；**命名層已統一**（規格化 id ↔ 口語別名）；**訓練目標已上**（節點屬性，接進 plan fallback 與替代決策）。相似度邊佔 89.4%，但那是匯入節點的設計結果（見 Phase 4.3） |
 | 4 | Feedback Learning | 🔴 | **零**。無「狀態→決策→結果」記錄與閉環 |
 | 5 | Multi-LLM Interface | 🟡 | MCP stdio ＋ Streamable HTTP 已上；**無 REST API、無 SDK、無 OAuth**（`http.js` 目前是 bearer token 比對） |
 
@@ -120,7 +121,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 **驗收（已通過）**：以子行程模擬 Claude Desktop 完整流程——handshake → initialized 通知 → tools/list → generate_plan → decide_session，取得帶 from→to 的決策。
 
-### Phase 4 — 決策深度（護城河 #2 #3）🟡 進行中（2.5/3）
+### ~~Phase 4 — 決策深度（護城河 #2 #3）~~ ✅ 完成（3/3）
 
 > 原驗收條件是「lift 相對 Phase 3 基準再提升」。**該條已失效**——lift 的量測方式是
 > D5 取消的裸模型 vs 模型＋MCP 對照，執行它必須呼叫 LLM API，與 **D-LLM** 相衝突。
@@ -158,7 +159,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 > 與 D-DATA 一致：基線是**每次呼叫現算**的，我們這端不保存任何人的基線。
 
-#### 🟡 4.3 知識圖譜語意關係 — 進退階與命名層已補，訓練目標未動
+#### ✅ 4.3 知識圖譜語意關係 — 已完成
 
 **缺的是資料不是程式**：`graph.js` 的 `findSubstitutes` 早就會查 `REGRESSES_TO`
 （`graph.js:109`，權重 0.6），也已導出 `getProgressions` / `getRegressions`。
@@ -200,7 +201,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
   當時沒有反向邊。
 
 - `npm run audit:graph` 新增階梯覆蓋率並納入 gate。**覆蓋率只在策展核心上量**——
-  匯入節點依設計只帶相似度邊。現況 **23/27 = 85.2%**（gate ≥ 70%），
+  匯入節點依設計只帶相似度邊。現況 **23/28 = 82.1%**（gate ≥ 70%），
   未覆蓋的只有 `mobility`。
 
 ##### ✅ 已做：三層命名（規格化 / 對照 / 口語）
@@ -235,14 +236,50 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 **驗收**：eval 的 plan → catalog 由診斷升為 **gate**，62.5% → **100%**。
 
-##### 🔴 剩餘：訓練目標連結
+##### ✅ 已做：訓練目標屬性
 
-圖上仍沒有可依訓練目標（肌力／肥大／耐力／活動度）挑動作的欄位。恢復那半已由
-命名層 ＋ 既有的 `SUBSTITUTES_FOR_WHEN low_readiness` 邊涵蓋。
+依前述建議做成**節點屬性**（`trainingGoals`），不新增邊型別：「這個動作服務什麼目標」
+是動作自己的性質，與 `equipment`／`contraindications` 同類；「A 換成 B」現有 8 種
+`conditions` 已能表達。
 
-**建議做成節點屬性而非新邊型別**：「這個動作服務什麼目標」是動作自己的性質，
-與 `equipment`／`contraindications` 同類；而「A 換成 B」那類問題現有 8 種
-`conditions` 已能表達，新增邊型別會與其重疊。
+**值域五個而非四個**：`strength`／`hypertrophy`／`power`／`endurance`／`mobility`。
+原本規劃的四個沒有 `power`——但資料裡有 61 個 plyometrics 與 35 個 olympic
+weightlifting，四值域只能把爆發力動作誤標成肌力。**寧可多一個值域，不要製造壞資料。**
+
+| 來源 | 怎麼標 |
+|---|---|
+| 策展核心 28 節點 | 手寫 |
+| 匯入 861 節點 | 由 vendor 自帶的 `category` ＋ 已導出的 `movementPattern` 映射 |
+
+這裡與進退階的差別要講清楚：**進退階生不出來是因為資料裡沒有家族順序**（見上節負面
+結果）；訓練目標則是 `category` 直接說了的事——stretching 服務活動度、cardio 服務耐力、
+olympic 服務爆發力。唯一的判斷是複合／單關節：多關節動作同時服務肌力與肥大，單關節
+動作不是任何人練最大肌力的方式。**次數與負重決定其餘，而那些長在課表上，不在動作上。**
+
+`assertValidTrainingGoals`（建圖時強制）四條不變量：
+
+| 不變量 | 擋掉什麼 |
+|---|---|
+| 值必須在值域內 | 打錯字的目標不會炸，只會靜靜地匹配不到任何動作 |
+| 至少一個 | 沒標的動作永遠不會被挑到，等於對這層查詢隱形 |
+| **最多三個** | 宣稱服務所有目標的動作，被換進來時什麼都沒保住 |
+| pattern 的定義性質必須在 | 跑步必須是耐力、活動度流程必須是活動度、增強式必須是爆發力 |
+
+第三條是這個屬性最需要活過的失效模式：**把每個節點都標滿，覆蓋率就會好看。**
+
+**接到決策路徑**（否則只是死資料）：
+
+- `generate_plan` — slot 宣告自己服務什麼目標。原本某個 slot 的動作被器材或 avoid
+  偏好刷光時，一律退回寫死的 `exercise_bodyweight_squat`：**上肢肌力日會變成深蹲**，
+  是一份課表，但不是原本排的那份。現在先向圖譜要一個服務同一目標的動作，要不到才退回
+  寫死值，而且兩種情況都寫進 session rationale。
+- `decide_exercise_substitution` — 替代品若不保住原目標，寫進 `limits`（承諾 A）。
+  受傷時把跑步換成走路仍是對的決策，但呼叫端必須知道刺激換掉了。
+- `graph.searchExercises({ trainingGoal })`／`findSubstitutes({ preserveTrainingGoal })`。
+
+**驗收**：`audit:graph` 兩條新 gate——**沒有任何目標是零動作**、**沒有任何目標在無器材
+條件下挑不出東西**（那正是 fallback 會發的查詢）。目標分佈與「每節點平均目標數」列為
+診斷：現況 **1.40**，沒有標滿。
 
 #### 驗收（重寫）
 
@@ -255,9 +292,10 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 | A2 | 每個非 `keep` 決策都帶 from→to 與可追溯的 reason | `assertValidDecision` 結構性拒絕 |
 | A3 | 證據不足時回退化標記，不猜數值 | `insufficient_history` ／ `signalCoverage` ／ `missing` |
 | A4 | 負荷指標所依據的每個訊號都出現在 `provenance` | eval grounding gate |
-| A5 | ✅ 進退階可從圖上走通，且每條階梯上下都通 | `audit:graph` 階梯覆蓋率 gate（≥ 70%，現 85.2%）＋ `assertValidProgressions` 四條不變量 |
+| A5 | ✅ 進退階可從圖上走通，且每條階梯上下都通 | `audit:graph` 階梯覆蓋率 gate（≥ 70%，現 82.1%）＋ `assertValidProgressions` 四條不變量 |
 | A6 | ✅ 退階請求回真實的退階動作，而非相似動作 | `graph.test.js`：`exercise_pullup` 的退階必須是 `exercise_assisted_pullup`（beginner／同 pattern） |
 | A7 | ✅ 決策與計畫排出的每個動作都指得到圖上節點 | eval `planExerciseCatalogCoverage` 已升為 gate（100%）＋「every movement a plan can prescribe exists in the catalog」測試 |
+| A8 | ✅ 動作被換掉時訓練刺激不會靜靜消失 | `audit:graph` 目標可挑性 gate ＋ `assertValidTrainingGoals` 四條不變量 ＋「a slot that loses its movements keeps its training goal」測試 |
 
 > **訂正（v5.1）**：A5 原本寫的是「`SIMILAR_TO` 佔比上限」。該指標作廢——它假設
 > 生成器會補出大量語意邊來稀釋佔比，而 4.3 的負面結果證明生成器**不該**補進退階。
@@ -338,7 +376,7 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 | **R1 增益無法證明** | ⛔ 評測已取消（測 LLM 腦非產品，且違反 D-LLM）。改以決策可驗證性衡量。**殘留風險：對外仍缺一個量化說法** |
 | **R2 定位滑回內容庫** | 🟢 已發生一次（早期蓋出檢索層），D3 已收回；靠 GPT-6 判準持續守 |
 | **R3 健康建議責任邊界** | 🟡 B2B 讓責任鏈更長，需 tool description ＋ 合約兩層聲明非醫療用途 |
-| **R4 KG 關係品質** | 🟡 進退階已由策展補齊並有不變量把關（4.3）。**殘留**：恢復／訓練目標連結仍缺；匯入的 873 個節點只有相似度邊，且已驗證無法由規則升級為語意邊 |
+| **R4 KG 關係品質** | 🟢 進退階與訓練目標皆已補齊並有不變量把關（4.3）。**殘留**：匯入的 861 個節點只有相似度邊，且已驗證無法由規則升級為語意**邊**（訓練目標走的是節點屬性，不是邊） |
 
 ## 7. 工程原則（沿用，位階次於宣言）
 

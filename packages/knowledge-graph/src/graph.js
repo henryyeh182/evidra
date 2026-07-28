@@ -114,11 +114,17 @@ export function buildExerciseGraph(data) {
    * conditional SUBSTITUTES_FOR_WHEN edges, easier regressions, and similar
    * movements, then filters by available equipment and injury contraindications.
    *
+   * `preserveTrainingGoal` narrows candidates to those that still serve one of
+   * the original's training goals. It is off by default: when someone cannot
+   * train today, a movement that changes the stimulus is often exactly the
+   * right answer (a run becomes a recovery walk), and the caller is the one who
+   * knows which of the two situations it is in.
+   *
    * @param {string} exerciseId
-   * @param {{ conditions?: string[], availableEquipment?: string[], avoidContraindications?: string[], limit?: number }} [options]
+   * @param {{ conditions?: string[], availableEquipment?: string[], avoidContraindications?: string[], preserveTrainingGoal?: boolean, limit?: number }} [options]
    */
   function findSubstitutes(exerciseId, options = {}) {
-    requireExercise(exerciseId);
+    const original = requireExercise(exerciseId);
     const conditions = options.conditions || [];
     const availableSet = options.availableEquipment ? new Set(options.availableEquipment) : null;
     const avoid = options.avoidContraindications || [];
@@ -166,6 +172,9 @@ export function buildExerciseGraph(data) {
     if (avoid.length > 0) {
       results = results.filter((item) => !intersects(item.exercise.contraindications, avoid));
     }
+    if (options.preserveTrainingGoal) {
+      results = results.filter((item) => intersects(item.exercise.trainingGoals, original.trainingGoals));
+    }
 
     results.sort((a, b) => a.rank - b.rank || b.score - a.score || a.exercise.id.localeCompare(b.exercise.id));
 
@@ -173,7 +182,11 @@ export function buildExerciseGraph(data) {
       id: item.exercise.id,
       name: item.exercise.name,
       reason: item.reason,
-      equipment: item.exercise.equipment
+      equipment: item.exercise.equipment,
+      trainingGoals: item.exercise.trainingGoals,
+      // Whether this swap keeps the session doing what it was for. A caller can
+      // still choose a candidate that does not, but never without being told.
+      preservesTrainingGoal: intersects(item.exercise.trainingGoals, original.trainingGoals)
     }));
   }
 
@@ -181,7 +194,7 @@ export function buildExerciseGraph(data) {
    * Structured multi-dimensional exercise search — the query the v2 plan calls
    * out as impossible on Peloton (e.g. "upper body only", "no equipment").
    *
-   * @param {{ muscle?: string, muscleGroup?: "upper" | "lower" | "core", movementPattern?: string, availableEquipment?: string[], excludeContraindications?: string[], maxImpact?: import("./models.js").ImpactLevel, skillLevel?: string, limit?: number }} [filters]
+   * @param {{ muscle?: string, muscleGroup?: "upper" | "lower" | "core", movementPattern?: string, trainingGoal?: import("./models.js").TrainingGoal, availableEquipment?: string[], excludeContraindications?: string[], maxImpact?: import("./models.js").ImpactLevel, skillLevel?: string, limit?: number }} [filters]
    */
   function searchExercises(filters = {}) {
     const availableSet = filters.availableEquipment ? new Set(filters.availableEquipment) : null;
@@ -199,6 +212,9 @@ export function buildExerciseGraph(data) {
         return false;
       }
       if (filters.movementPattern && exercise.movementPattern !== filters.movementPattern) {
+        return false;
+      }
+      if (filters.trainingGoal && !exercise.trainingGoals.includes(filters.trainingGoal)) {
         return false;
       }
       if (filters.skillLevel && exercise.skillLevel !== filters.skillLevel) {

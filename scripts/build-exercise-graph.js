@@ -139,6 +139,50 @@ function deriveContraindications(movementPattern, impactLevel) {
   return [...set];
 }
 
+// Which training quality an imported movement serves. Unlike progressions —
+// which 4.3 established cannot be derived, because the vendor's `level` is a
+// per-exercise difficulty tag with no family ordering behind it — this is a
+// mapping of fields the dataset actually carries: its own `category`, plus the
+// movement pattern we already derived from force/muscle/name. A stretch serves
+// mobility because it is tagged a stretch, not because it resembles one.
+//
+// The one judgement call is compound-vs-isolation among general strength work:
+// a multi-joint lift is prescribed for both strength and hypertrophy, while a
+// single-joint movement is not how anyone builds maximal strength. Reps and
+// load decide the rest, and those live on the session, not on the movement.
+const COMPOUND_PATTERNS = new Set([
+  "squat",
+  "hinge",
+  "horizontal_push",
+  "vertical_push",
+  "horizontal_pull",
+  "vertical_pull"
+]);
+
+function deriveTrainingGoals(exercise, movementPattern) {
+  // Pattern first: these three are definitional, and the invariant in
+  // models.js requires them.
+  if (movementPattern === "mobility") return ["mobility"];
+  if (movementPattern === "locomotion") return ["endurance"];
+  if (movementPattern === "plyometric") return ["power"];
+
+  switch (exercise.category) {
+    case "olympic weightlifting":
+      return ["power", "strength"];
+    case "powerlifting":
+    case "strongman":
+      return ["strength"];
+    case "cardio":
+      return ["endurance"];
+    default:
+      break;
+  }
+
+  if (COMPOUND_PATTERNS.has(movementPattern)) return ["strength", "hypertrophy"];
+  if (movementPattern === "core") return ["strength"];
+  return ["hypertrophy"];
+}
+
 const PLANE_BY_PATTERN = {
   horizontal_push: "transverse",
   horizontal_pull: "transverse",
@@ -199,6 +243,7 @@ function toNode(exercise) {
     impactLevel,
     loadsJoints: LOADS_BY_PATTERN[movementPattern] || [],
     contraindications: deriveContraindications(movementPattern, impactLevel),
+    trainingGoals: deriveTrainingGoals(exercise, movementPattern),
     source: "free-exercise-db",
     confidence: 0.6
   };
