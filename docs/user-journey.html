@@ -210,11 +210,15 @@
   <header class="masthead">
     <div class="brand">
       <svg viewBox="0 0 100 100" aria-hidden="true">
+        <!-- Renders at 34px, so it draws the mark the way the 32px icon does:
+             the outer contour only. The interior struts and the middle foot go
+             to mush at this size. This used to run BL -> PEAK -> BM -> APEX,
+             a zigzag that is neither the full mark (it lacks the PEAK -> APEX
+             chord) nor its reduction (it keeps the interior) — a third shape. -->
         <g fill="none" stroke="#1F1E1D" stroke-width="6" stroke-linecap="round">
-          <path d="M19 78 L34 44 L49 78 L63 26 L79 78 M19 78 L79 78"/>
+          <path d="M19 78 L34 44 L63 26 L79 78 M19 78 L79 78"/>
         </g>
         <circle cx="19" cy="78" r="5" fill="#1F1E1D"/>
-        <circle cx="49" cy="78" r="5" fill="#1F1E1D"/>
         <circle cx="79" cy="78" r="5" fill="#1F1E1D"/>
         <circle cx="34" cy="44" r="4.5" fill="#1F1E1D"/>
         <circle cx="63" cy="26" r="7" fill="#157554"/>
@@ -420,7 +424,7 @@
         <div class="tag">To — 今日執行</div>
         <div class="title">Recovery + mobility</div>
         <div class="meta">30 min · <b>low</b></div>
-        <div class="meta" style="margin-top:6px"><b>Easy walk</b> · <b>Mobility flow</b></div>
+        <div class="meta" style="margin-top:6px"><b>Recovery Walk</b> · <b>Mobility Flow</b></div>
       </div>
     </div>
 
