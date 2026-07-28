@@ -76,11 +76,19 @@
             "intensity": {
               "type": "string"
             },
+            "exerciseIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Canonical exercise ids — the form decisions reference."
+            },
             "exercises": {
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "description": "The same movements spoken for a human; derived from exerciseIds."
             }
           },
           "required": [
@@ -110,11 +118,19 @@
             "intensity": {
               "type": "string"
             },
+            "exerciseIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Canonical exercise ids — the form decisions reference."
+            },
             "exercises": {
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "description": "The same movements spoken for a human; derived from exerciseIds."
             }
           },
           "required": [

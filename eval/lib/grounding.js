@@ -39,9 +39,16 @@ export async function loadKnownIds() {
       ...workoutLibrary.map((workout) => workout.id)
     ]),
     exercises: exerciseIds,
+    // Every sanctioned spelling of a movement: canonical name, the spoken form,
+    // and the colloquial aliases callers are allowed to send in. A name that
+    // resolves through any of these is grounded — the id behind them is one.
     exerciseNames: new Set([
       ...exercises.map((exercise) => exercise.name.toLowerCase()),
-      ...graph.exercises.map((exercise) => exercise.name.toLowerCase())
+      ...graph.exercises.flatMap((exercise) =>
+        [exercise.name, exercise.displayName, ...(exercise.aliases || [])]
+          .filter(Boolean)
+          .map((term) => String(term).toLowerCase())
+      )
     ])
   };
 }
@@ -116,26 +123,38 @@ export class GroundingRegistry {
   }
 
   /**
-   * Diagnostic (non-gating): how many planned-workout exercise names resolve to
-   * a real catalog exercise. This directly measures the P3/R1 gap where the
-   * planner emits free-form exercise names instead of grounded exercise_ids.
+   * How much of a plan's prescribed work points at something that exists.
+   *
+   * Sessions carry `exerciseIds` (canonical) alongside `exercises` (spoken).
+   * Ids are checked against the catalog's ids, which is a real reference check
+   * rather than a spelling comparison; a session that still only carries names
+   * falls back to matching any sanctioned spelling. This used to sit at 62.5%
+   * because the planner authored its own free-text names.
    *
    * @param {*} plan
    * @returns {{ total:number, matched:number, unmatched:string[] }}
    */
   checkPlanExerciseCoverage(plan) {
-    const names = [];
+    const refs = [];
     for (const week of plan?.weeks || []) {
       for (const session of week.sessions || []) {
-        for (const exercise of session.exercises || []) {
-          names.push(exercise);
+        if (session.exerciseIds?.length) {
+          for (const id of session.exerciseIds) refs.push({ value: id, byId: true });
+        } else {
+          for (const name of session.exercises || []) refs.push({ value: name, byId: false });
         }
       }
     }
-    const unmatched = names.filter((name) => !this.exerciseNames.has(String(name).toLowerCase()));
+    const unmatched = refs
+      .filter((ref) =>
+        ref.byId
+          ? !this.known.exercises.has(ref.value)
+          : !this.exerciseNames.has(String(ref.value).toLowerCase())
+      )
+      .map((ref) => ref.value);
     return {
-      total: names.length,
-      matched: names.length - unmatched.length,
+      total: refs.length,
+      matched: refs.length - unmatched.length,
       unmatched: [...new Set(unmatched)]
     };
   }

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { buildExerciseGraph } from "../src/graph.js";
-import { assertValidProgressions } from "../src/models.js";
+import { assertValidProgressions, assertUniqueExerciseNaming } from "../src/models.js";
 
 const data = JSON.parse(
   await readFile(new URL("../../../data/seeds/exercises-graph.json", import.meta.url), "utf8")
@@ -245,4 +245,73 @@ test("high-load imported movements all carry a contraindication flag", () => {
       e.contraindications.length === 0
   );
   assert.deepEqual(unflagged.map((e) => e.name), []);
+});
+
+// --- the naming layer ------------------------------------------------------
+
+test("however a caller says it, it resolves to one canonical exercise", () => {
+  // The three layers: id, canonical name, and whatever a coach actually says.
+  const cases = [
+    ["exercise_bent_over_row", "exercise_bent_over_row"],
+    ["Bent-over Barbell Row", "exercise_bent_over_row"],
+    ["bent-over row", "exercise_bent_over_row"],
+    ["barbell row", "exercise_bent_over_row"],
+    ["  BARBELL ROW  ", "exercise_bent_over_row"],
+    ["easy walk", "exercise_recovery_walk"],
+    ["mobility flow", "exercise_lower_body_mobility"],
+    ["recovery ride", "exercise_stationary_bike_z2"],
+    ["rdl", "exercise_romanian_deadlift"],
+    ["long run", "exercise_zone2_run"]
+  ];
+  for (const [said, expected] of cases) {
+    assert.equal(graph.resolveExercise(said)?.id, expected, `"${said}" should resolve to ${expected}`);
+  }
+  assert.equal(graph.resolveExercise("interpretive dance"), null);
+  assert.equal(graph.resolveExercise(undefined), null);
+});
+
+test("what a human is shown is the spoken form, not the catalog spelling", () => {
+  assert.equal(graph.displayNameFor("exercise_bent_over_row"), "Bent-over Row");
+  assert.equal(graph.getExercise("exercise_bent_over_row").name, "Bent-over Barbell Row");
+  // An id nothing knows stays visible rather than rendering blank.
+  assert.equal(graph.displayNameFor("exercise_nope"), "exercise_nope");
+});
+
+test("a tempo run is its own movement, a long run is the same one for longer", () => {
+  // Duration is a prescription and belongs on the session; a different training
+  // stimulus is a different movement. Collapsing both into aliases would have
+  // made "Tempo Run" mean Zone 2.
+  assert.equal(graph.resolveExercise("long zone 2 run")?.id, "exercise_zone2_run");
+  assert.equal(graph.resolveExercise("tempo run")?.id, "exercise_tempo_run");
+  assert.notEqual(graph.resolveExercise("tempo run")?.id, graph.resolveExercise("long run")?.id);
+});
+
+test("assertUniqueExerciseNaming rejects a term two exercises both claim", () => {
+  assert.throws(
+    () =>
+      assertUniqueExerciseNaming({
+        exercises: [
+          { ...ladderNode("a"), name: "Barbell Row", aliases: [] },
+          { ...ladderNode("b"), name: "Bent-over Barbell Row", aliases: ["barbell row"] }
+        ]
+      }),
+    /Ambiguous exercise/
+  );
+});
+
+test("no imported exercise shadows a curated one under the same name", () => {
+  // Twelve did: the curated Goblet Squat and the vendored one both answered a
+  // search under different ids. Dedupe is by term now, not by id alone.
+  const seen = new Map();
+  for (const exercise of data.exercises) {
+    for (const term of [exercise.name, exercise.displayName, ...(exercise.aliases || [])]) {
+      if (!term) continue;
+      const key = String(term).toLowerCase();
+      assert.ok(
+        !seen.has(key) || seen.get(key) === exercise.id,
+        `"${term}" is claimed by both ${seen.get(key)} and ${exercise.id}`
+      );
+      seen.set(key, exercise.id);
+    }
+  }
 });

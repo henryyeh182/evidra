@@ -39,10 +39,11 @@
                 "durationMinutes": { "type": "number" },
                 "intensity": { "type": "string" },
                 "targetMuscleGroups": { "type": "array", "items": { "type": "string" } },
-                "exercises": { "type": "array", "items": { "type": "string" } },
+                "exerciseIds": { "type": "array", "items": { "type": "string" }, "description": "Canonical exercise ids — the form decisions and storage reference." },
+                "exercises": { "type": "array", "items": { "type": "string" }, "description": "The same movements spoken for a human; derived from exerciseIds, never authored separately." },
                 "rationale": { "type": "string" }
               },
-              "required": ["id", "date", "focus", "type", "durationMinutes", "exercises"]
+              "required": ["id", "date", "focus", "type", "durationMinutes", "exerciseIds", "exercises"]
             }
           }
         },

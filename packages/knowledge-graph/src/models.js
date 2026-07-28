@@ -75,6 +75,44 @@ export function assertValidExercise(exercise) {
   return true;
 }
 
+/**
+ * Naming has three layers, and they must not be confused:
+ *
+ *   `id`          canonical. The only thing decisions, plans and stored data
+ *                 ever reference. Fixed forever.
+ *   `name`        canonical spelling — precise and equipment-qualified so two
+ *                 variants are never the same string ("Bent-over Barbell Row").
+ *   `displayName` what a coach says out loud ("Bent-over Row"). Output only.
+ *   `aliases`     colloquial spellings accepted as input, lower-cased.
+ *
+ * An alias claimed by two exercises makes the mapping ambiguous, which would
+ * mean the same words resolve differently depending on iteration order. That is
+ * exactly the drift this layer exists to prevent, so it is an error.
+ *
+ * @param {{ exercises: ExerciseNode[] }} data
+ */
+export function assertUniqueExerciseNaming(data) {
+  const claimed = new Map();
+  const claim = (term, id, kind) => {
+    if (term === undefined || term === null) return;
+    const key = String(term).trim().toLowerCase();
+    if (!key) return;
+    const existing = claimed.get(key);
+    if (existing && existing !== id) {
+      throw new Error(`Ambiguous exercise ${kind} "${term}": claimed by both ${existing} and ${id}`);
+    }
+    claimed.set(key, id);
+  };
+
+  for (const exercise of data.exercises) {
+    claim(exercise.name, exercise.id, "name");
+    claim(exercise.displayName, exercise.id, "displayName");
+    for (const alias of exercise.aliases || []) claim(alias, exercise.id, "alias");
+  }
+
+  return data;
+}
+
 const SKILL_RANK = { beginner: 0, intermediate: 1, advanced: 2 };
 
 /**
@@ -184,6 +222,7 @@ export function assertValidGraphData(data) {
   }
 
   assertValidProgressions(data);
+  assertUniqueExerciseNaming(data);
 
   return data;
 }

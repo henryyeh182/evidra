@@ -3,6 +3,10 @@
     {
       "id": "exercise_back_squat",
       "name": "Back Squat",
+      "displayName": "Back Squat",
+      "aliases": [
+        "barbell squat"
+      ],
       "movementPattern": "squat",
       "primaryMuscle": "quads",
       "secondaryMuscles": [
@@ -34,6 +38,10 @@
     {
       "id": "exercise_front_squat",
       "name": "Front Squat",
+      "displayName": "Front Squat",
+      "aliases": [
+        "front barbell squat"
+      ],
       "movementPattern": "squat",
       "primaryMuscle": "quads",
       "secondaryMuscles": [
@@ -63,6 +71,8 @@
     {
       "id": "exercise_goblet_squat",
       "name": "Goblet Squat",
+      "displayName": "Goblet Squat",
+      "aliases": [],
       "movementPattern": "squat",
       "primaryMuscle": "quads",
       "secondaryMuscles": [
@@ -87,6 +97,8 @@
     {
       "id": "exercise_box_squat",
       "name": "Box Squat",
+      "displayName": "Box Squat",
+      "aliases": [],
       "movementPattern": "squat",
       "primaryMuscle": "quads",
       "secondaryMuscles": [
@@ -114,6 +126,11 @@
     {
       "id": "exercise_bodyweight_squat",
       "name": "Bodyweight Squat",
+      "displayName": "Bodyweight Squat",
+      "aliases": [
+        "air squat",
+        "bodyweight circuit"
+      ],
       "movementPattern": "squat",
       "primaryMuscle": "quads",
       "secondaryMuscles": [
@@ -137,6 +154,8 @@
     {
       "id": "exercise_leg_press",
       "name": "Leg Press",
+      "displayName": "Leg Press",
+      "aliases": [],
       "movementPattern": "squat",
       "primaryMuscle": "quads",
       "secondaryMuscles": [
@@ -160,6 +179,11 @@
     {
       "id": "exercise_split_squat",
       "name": "Bulgarian Split Squat",
+      "displayName": "Split Squat",
+      "aliases": [
+        "bulgarian split squat",
+        "rear-foot elevated split squat"
+      ],
       "movementPattern": "squat",
       "primaryMuscle": "quads",
       "secondaryMuscles": [
@@ -188,6 +212,10 @@
     {
       "id": "exercise_deadlift",
       "name": "Conventional Deadlift",
+      "displayName": "Deadlift",
+      "aliases": [
+        "conventional deadlift"
+      ],
       "movementPattern": "hinge",
       "primaryMuscle": "hamstrings",
       "secondaryMuscles": [
@@ -216,6 +244,11 @@
     {
       "id": "exercise_romanian_deadlift",
       "name": "Romanian Deadlift",
+      "displayName": "Romanian Deadlift",
+      "aliases": [
+        "rdl",
+        "stiff-leg deadlift"
+      ],
       "movementPattern": "hinge",
       "primaryMuscle": "hamstrings",
       "secondaryMuscles": [
@@ -242,6 +275,10 @@
     {
       "id": "exercise_hip_thrust",
       "name": "Barbell Hip Thrust",
+      "displayName": "Hip Thrust",
+      "aliases": [
+        "barbell hip thrust"
+      ],
       "movementPattern": "hinge",
       "primaryMuscle": "glutes",
       "secondaryMuscles": [
@@ -265,6 +302,8 @@
     {
       "id": "exercise_glute_bridge",
       "name": "Glute Bridge",
+      "displayName": "Glute Bridge",
+      "aliases": [],
       "movementPattern": "hinge",
       "primaryMuscle": "glutes",
       "secondaryMuscles": [
@@ -288,6 +327,10 @@
     {
       "id": "exercise_kettlebell_swing",
       "name": "Kettlebell Swing",
+      "displayName": "Kettlebell Swing",
+      "aliases": [
+        "kb swing"
+      ],
       "movementPattern": "hinge",
       "primaryMuscle": "glutes",
       "secondaryMuscles": [
@@ -315,6 +358,11 @@
     {
       "id": "exercise_bench_press",
       "name": "Barbell Bench Press",
+      "displayName": "Bench Press",
+      "aliases": [
+        "barbell bench press",
+        "flat bench press"
+      ],
       "movementPattern": "horizontal_push",
       "primaryMuscle": "chest",
       "secondaryMuscles": [
@@ -342,6 +390,10 @@
     {
       "id": "exercise_dumbbell_bench_press",
       "name": "Dumbbell Bench Press",
+      "displayName": "Dumbbell Bench Press",
+      "aliases": [
+        "db bench press"
+      ],
       "movementPattern": "horizontal_push",
       "primaryMuscle": "chest",
       "secondaryMuscles": [
@@ -369,6 +421,11 @@
     {
       "id": "exercise_pushup",
       "name": "Push-up",
+      "displayName": "Push-up",
+      "aliases": [
+        "push up",
+        "press-up"
+      ],
       "movementPattern": "horizontal_push",
       "primaryMuscle": "chest",
       "secondaryMuscles": [
@@ -397,6 +454,11 @@
     {
       "id": "exercise_incline_pushup",
       "name": "Incline Push-up",
+      "displayName": "Incline Push-up",
+      "aliases": [
+        "incline push up",
+        "hands-elevated push-up"
+      ],
       "movementPattern": "horizontal_push",
       "primaryMuscle": "chest",
       "secondaryMuscles": [
@@ -424,6 +486,12 @@
     {
       "id": "exercise_overhead_press",
       "name": "Overhead Press",
+      "displayName": "Overhead Press",
+      "aliases": [
+        "shoulder press",
+        "military press",
+        "strict press"
+      ],
       "movementPattern": "vertical_push",
       "primaryMuscle": "shoulders",
       "secondaryMuscles": [
@@ -451,6 +519,11 @@
     {
       "id": "exercise_dumbbell_shoulder_press",
       "name": "Dumbbell Shoulder Press",
+      "displayName": "Dumbbell Shoulder Press",
+      "aliases": [
+        "db shoulder press",
+        "dumbbell overhead press"
+      ],
       "movementPattern": "vertical_push",
       "primaryMuscle": "shoulders",
       "secondaryMuscles": [
@@ -477,6 +550,11 @@
     {
       "id": "exercise_pullup",
       "name": "Pull-up",
+      "displayName": "Pull-up",
+      "aliases": [
+        "pull up",
+        "chin-up"
+      ],
       "movementPattern": "vertical_pull",
       "primaryMuscle": "back",
       "secondaryMuscles": [
@@ -504,6 +582,11 @@
     {
       "id": "exercise_assisted_pullup",
       "name": "Band-assisted Pull-up",
+      "displayName": "Assisted Pull-up",
+      "aliases": [
+        "assisted pull up",
+        "banded pull-up"
+      ],
       "movementPattern": "vertical_pull",
       "primaryMuscle": "back",
       "secondaryMuscles": [
@@ -532,6 +615,11 @@
     {
       "id": "exercise_lat_pulldown",
       "name": "Lat Pulldown",
+      "displayName": "Lat Pulldown",
+      "aliases": [
+        "pulldown",
+        "cable pulldown"
+      ],
       "movementPattern": "vertical_pull",
       "primaryMuscle": "back",
       "secondaryMuscles": [
@@ -557,6 +645,11 @@
     {
       "id": "exercise_bent_over_row",
       "name": "Bent-over Barbell Row",
+      "displayName": "Bent-over Row",
+      "aliases": [
+        "bent over row",
+        "barbell row"
+      ],
       "movementPattern": "horizontal_pull",
       "primaryMuscle": "back",
       "secondaryMuscles": [
@@ -584,6 +677,12 @@
     {
       "id": "exercise_dumbbell_row",
       "name": "Single-arm Dumbbell Row",
+      "displayName": "Dumbbell Row",
+      "aliases": [
+        "single-arm dumbbell row",
+        "one-arm row",
+        "db row"
+      ],
       "movementPattern": "horizontal_pull",
       "primaryMuscle": "back",
       "secondaryMuscles": [
@@ -608,6 +707,14 @@
     {
       "id": "exercise_zone2_run",
       "name": "Zone 2 Run",
+      "displayName": "Zone 2 Run",
+      "aliases": [
+        "easy run",
+        "long run",
+        "long zone 2 run",
+        "easy zone 2 run",
+        "steady run"
+      ],
       "movementPattern": "locomotion",
       "primaryMuscle": "quads",
       "secondaryMuscles": [
@@ -635,8 +742,49 @@
       "confidence": 0.9
     },
     {
+      "id": "exercise_tempo_run",
+      "name": "Tempo Run",
+      "displayName": "Tempo Run",
+      "aliases": [
+        "threshold run",
+        "tempo"
+      ],
+      "movementPattern": "locomotion",
+      "primaryMuscle": "quads",
+      "secondaryMuscles": [
+        "hamstrings",
+        "calves",
+        "glutes"
+      ],
+      "equipment": [
+        "treadmill",
+        "outdoor"
+      ],
+      "planeOfMotion": "sagittal",
+      "unilateral": false,
+      "skillLevel": "intermediate",
+      "impactLevel": "moderate",
+      "loadsJoints": [
+        "knee",
+        "ankle",
+        "hip"
+      ],
+      "contraindications": [
+        "knee",
+        "ankle"
+      ],
+      "source": "seed_manual",
+      "confidence": 0.9
+    },
+    {
       "id": "exercise_recovery_walk",
       "name": "Recovery Walk",
+      "displayName": "Recovery Walk",
+      "aliases": [
+        "easy walk",
+        "walk",
+        "recovery walking"
+      ],
       "movementPattern": "locomotion",
       "primaryMuscle": "calves",
       "secondaryMuscles": [
@@ -661,6 +809,14 @@
     {
       "id": "exercise_stationary_bike_z2",
       "name": "Zone 2 Stationary Bike",
+      "displayName": "Recovery Ride",
+      "aliases": [
+        "recovery ride",
+        "zone 2 bike",
+        "stationary bike",
+        "easy ride",
+        "zone 2 cardio"
+      ],
       "movementPattern": "locomotion",
       "primaryMuscle": "quads",
       "secondaryMuscles": [
@@ -685,6 +841,12 @@
     {
       "id": "exercise_lower_body_mobility",
       "name": "Lower Body Mobility Flow",
+      "displayName": "Mobility Flow",
+      "aliases": [
+        "mobility flow",
+        "mobility",
+        "lower body mobility flow"
+      ],
       "movementPattern": "mobility",
       "primaryMuscle": "hips",
       "secondaryMuscles": [
@@ -1920,32 +2082,6 @@
       "confidence": 0.6
     },
     {
-      "id": "exercise_fedb_barbell_hip_thrust",
-      "name": "Barbell Hip Thrust",
-      "movementPattern": "hinge",
-      "primaryMuscle": "glutes",
-      "secondaryMuscles": [
-        "calves",
-        "hamstrings"
-      ],
-      "equipment": [
-        "barbell"
-      ],
-      "planeOfMotion": "sagittal",
-      "unilateral": false,
-      "skillLevel": "intermediate",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "hip",
-        "spine"
-      ],
-      "contraindications": [
-        "lower_back"
-      ],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
       "id": "exercise_fedb_barbell_incline_bench_press_medium_grip",
       "name": "Barbell Incline Bench Press - Medium Grip",
       "movementPattern": "horizontal_push",
@@ -2202,34 +2338,6 @@
       ],
       "planeOfMotion": "sagittal",
       "unilateral": true,
-      "skillLevel": "beginner",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "knee",
-        "hip"
-      ],
-      "contraindications": [
-        "knee"
-      ],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
-      "id": "exercise_fedb_barbell_squat",
-      "name": "Barbell Squat",
-      "movementPattern": "squat",
-      "primaryMuscle": "quads",
-      "secondaryMuscles": [
-        "calves",
-        "glutes",
-        "hamstrings",
-        "lower_back"
-      ],
-      "equipment": [
-        "barbell"
-      ],
-      "planeOfMotion": "sagittal",
-      "unilateral": false,
       "skillLevel": "beginner",
       "impactLevel": "low",
       "loadsJoints": [
@@ -2997,32 +3105,6 @@
       "confidence": 0.6
     },
     {
-      "id": "exercise_fedb_bodyweight_squat",
-      "name": "Bodyweight Squat",
-      "movementPattern": "squat",
-      "primaryMuscle": "quads",
-      "secondaryMuscles": [
-        "glutes",
-        "hamstrings"
-      ],
-      "equipment": [
-        "none"
-      ],
-      "planeOfMotion": "sagittal",
-      "unilateral": false,
-      "skillLevel": "beginner",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "knee",
-        "hip"
-      ],
-      "contraindications": [
-        "knee"
-      ],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
       "id": "exercise_fedb_bodyweight_walking_lunge",
       "name": "Bodyweight Walking Lunge",
       "movementPattern": "squat",
@@ -3166,35 +3248,6 @@
       "contraindications": [
         "knee",
         "ankle"
-      ],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
-      "id": "exercise_fedb_box_squat",
-      "name": "Box Squat",
-      "movementPattern": "squat",
-      "primaryMuscle": "quads",
-      "secondaryMuscles": [
-        "adductors",
-        "calves",
-        "glutes",
-        "hamstrings",
-        "lower_back"
-      ],
-      "equipment": [
-        "barbell"
-      ],
-      "planeOfMotion": "sagittal",
-      "unilateral": false,
-      "skillLevel": "intermediate",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "knee",
-        "hip"
-      ],
-      "contraindications": [
-        "knee"
       ],
       "source": "free-exercise-db",
       "confidence": 0.6
@@ -4468,33 +4521,6 @@
       "impactLevel": "low",
       "loadsJoints": [],
       "contraindications": [],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
-      "id": "exercise_fedb_chin_up",
-      "name": "Chin-Up",
-      "movementPattern": "vertical_pull",
-      "primaryMuscle": "lats",
-      "secondaryMuscles": [
-        "biceps",
-        "forearms",
-        "back"
-      ],
-      "equipment": [
-        "pull_up_bar"
-      ],
-      "planeOfMotion": "frontal",
-      "unilateral": false,
-      "skillLevel": "beginner",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "shoulder",
-        "elbow"
-      ],
-      "contraindications": [
-        "shoulder"
-      ],
       "source": "free-exercise-db",
       "confidence": 0.6
     },
@@ -5975,32 +6001,6 @@
       "confidence": 0.6
     },
     {
-      "id": "exercise_fedb_dumbbell_bench_press",
-      "name": "Dumbbell Bench Press",
-      "movementPattern": "horizontal_push",
-      "primaryMuscle": "chest",
-      "secondaryMuscles": [
-        "shoulders",
-        "triceps"
-      ],
-      "equipment": [
-        "dumbbell"
-      ],
-      "planeOfMotion": "transverse",
-      "unilateral": false,
-      "skillLevel": "beginner",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "shoulder",
-        "elbow"
-      ],
-      "contraindications": [
-        "shoulder"
-      ],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
       "id": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
       "name": "Dumbbell Bench Press with Neutral Grip",
       "movementPattern": "horizontal_push",
@@ -6480,32 +6480,6 @@
       "impactLevel": "low",
       "loadsJoints": [],
       "contraindications": [],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
-      "id": "exercise_fedb_dumbbell_shoulder_press",
-      "name": "Dumbbell Shoulder Press",
-      "movementPattern": "vertical_push",
-      "primaryMuscle": "shoulders",
-      "secondaryMuscles": [
-        "triceps"
-      ],
-      "equipment": [
-        "dumbbell"
-      ],
-      "planeOfMotion": "frontal",
-      "unilateral": false,
-      "skillLevel": "intermediate",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "shoulder",
-        "elbow"
-      ],
-      "contraindications": [
-        "shoulder",
-        "lower_back"
-      ],
       "source": "free-exercise-db",
       "confidence": 0.6
     },
@@ -7418,33 +7392,6 @@
       "confidence": 0.6
     },
     {
-      "id": "exercise_fedb_front_barbell_squat",
-      "name": "Front Barbell Squat",
-      "movementPattern": "squat",
-      "primaryMuscle": "quads",
-      "secondaryMuscles": [
-        "calves",
-        "glutes",
-        "hamstrings"
-      ],
-      "equipment": [
-        "barbell"
-      ],
-      "planeOfMotion": "sagittal",
-      "unilateral": false,
-      "skillLevel": "advanced",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "knee",
-        "hip"
-      ],
-      "contraindications": [
-        "knee"
-      ],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
       "id": "exercise_fedb_front_barbell_squat_to_a_bench",
       "name": "Front Barbell Squat To A Bench",
       "movementPattern": "squat",
@@ -7845,34 +7792,6 @@
       ],
       "contraindications": [
         "lower_back"
-      ],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
-      "id": "exercise_fedb_goblet_squat",
-      "name": "Goblet Squat",
-      "movementPattern": "squat",
-      "primaryMuscle": "quads",
-      "secondaryMuscles": [
-        "calves",
-        "glutes",
-        "hamstrings",
-        "shoulders"
-      ],
-      "equipment": [
-        "kettlebell"
-      ],
-      "planeOfMotion": "sagittal",
-      "unilateral": false,
-      "skillLevel": "beginner",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "knee",
-        "hip"
-      ],
-      "contraindications": [
-        "knee"
       ],
       "source": "free-exercise-db",
       "confidence": 0.6
@@ -8897,32 +8816,6 @@
       "impactLevel": "low",
       "loadsJoints": [],
       "contraindications": [],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
-      "id": "exercise_fedb_incline_push_up",
-      "name": "Incline Push-Up",
-      "movementPattern": "horizontal_push",
-      "primaryMuscle": "chest",
-      "secondaryMuscles": [
-        "shoulders",
-        "triceps"
-      ],
-      "equipment": [
-        "none"
-      ],
-      "planeOfMotion": "transverse",
-      "unilateral": false,
-      "skillLevel": "beginner",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "shoulder",
-        "elbow"
-      ],
-      "contraindications": [
-        "shoulder"
-      ],
       "source": "free-exercise-db",
       "confidence": 0.6
     },
@@ -10496,33 +10389,6 @@
       ],
       "contraindications": [
         "lower_back"
-      ],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
-      "id": "exercise_fedb_leg_press",
-      "name": "Leg Press",
-      "movementPattern": "squat",
-      "primaryMuscle": "quads",
-      "secondaryMuscles": [
-        "calves",
-        "glutes",
-        "hamstrings"
-      ],
-      "equipment": [
-        "machine"
-      ],
-      "planeOfMotion": "sagittal",
-      "unilateral": false,
-      "skillLevel": "beginner",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "knee",
-        "hip"
-      ],
-      "contraindications": [
-        "knee"
       ],
       "source": "free-exercise-db",
       "confidence": 0.6
@@ -15018,33 +14884,6 @@
       ],
       "contraindications": [
         "shoulder"
-      ],
-      "source": "free-exercise-db",
-      "confidence": 0.6
-    },
-    {
-      "id": "exercise_fedb_romanian_deadlift",
-      "name": "Romanian Deadlift",
-      "movementPattern": "hinge",
-      "primaryMuscle": "hamstrings",
-      "secondaryMuscles": [
-        "calves",
-        "glutes",
-        "lower_back"
-      ],
-      "equipment": [
-        "barbell"
-      ],
-      "planeOfMotion": "sagittal",
-      "unilateral": false,
-      "skillLevel": "intermediate",
-      "impactLevel": "low",
-      "loadsJoints": [
-        "hip",
-        "spine"
-      ],
-      "contraindications": [
-        "lower_back"
       ],
       "source": "free-exercise-db",
       "confidence": 0.6
@@ -52048,16 +51887,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_arnold_dumbbell_press",
-      "to": "exercise_fedb_dumbbell_shoulder_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_arnold_dumbbell_press",
       "to": "exercise_fedb_see_saw_press_alternating_side_press",
       "score": 0.95,
       "dimensions": [
@@ -52089,6 +51918,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_arnold_dumbbell_press",
       "to": "exercise_fedb_seated_dumbbell_press",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_arnold_dumbbell_press",
+      "to": "exercise_fedb_standing_alternating_dumbbell_press",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -52768,7 +52607,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_cuban_press",
-      "to": "exercise_fedb_dumbbell_shoulder_press",
+      "to": "exercise_fedb_log_lift",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -53000,16 +52839,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_dumbbell_one_arm_shoulder_press",
-      "to": "exercise_fedb_dumbbell_shoulder_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_one_arm_shoulder_press",
       "to": "exercise_fedb_see_saw_press_alternating_side_press",
       "score": 0.95,
       "dimensions": [
@@ -53041,6 +52870,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_dumbbell_one_arm_shoulder_press",
       "to": "exercise_fedb_seated_dumbbell_press",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_dumbbell_one_arm_shoulder_press",
+      "to": "exercise_fedb_standing_alternating_dumbbell_press",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -53119,74 +52958,6 @@
       "type": "SUBSTITUTES_FOR_WHEN",
       "from": "exercise_fedb_handstand_push_ups",
       "to": "exercise_fedb_dumbbell_scaption",
-      "conditions": [
-        "no_equipment"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_shoulder_press",
-      "to": "exercise_fedb_arnold_dumbbell_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_shoulder_press",
-      "to": "exercise_fedb_dumbbell_one_arm_shoulder_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_shoulder_press",
-      "to": "exercise_fedb_see_saw_press_alternating_side_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_shoulder_press",
-      "to": "exercise_fedb_standing_palms_in_dumbbell_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_shoulder_press",
-      "to": "exercise_fedb_dumbbell_incline_shoulder_raise",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_shoulder_press",
-      "to": "exercise_fedb_seated_dumbbell_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_handstand_push_ups",
-      "to": "exercise_fedb_dumbbell_shoulder_press",
       "conditions": [
         "no_equipment"
       ]
@@ -55256,16 +55027,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_see_saw_press_alternating_side_press",
-      "to": "exercise_fedb_dumbbell_shoulder_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_see_saw_press_alternating_side_press",
       "to": "exercise_fedb_landmine_linear_jammer",
       "score": 0.95,
       "dimensions": [
@@ -55277,6 +55038,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_see_saw_press_alternating_side_press",
       "to": "exercise_fedb_log_lift",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_see_saw_press_alternating_side_press",
+      "to": "exercise_fedb_standing_palms_in_dumbbell_press",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -55868,16 +55639,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_standing_dumbbell_straight_arm_front_delt_raise_above_head",
-      "to": "exercise_fedb_dumbbell_shoulder_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_standing_dumbbell_straight_arm_front_delt_raise_above_head",
       "to": "exercise_fedb_iron_cross",
       "score": 0.95,
       "dimensions": [
@@ -55889,6 +55650,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_standing_dumbbell_straight_arm_front_delt_raise_above_head",
       "to": "exercise_fedb_see_saw_press_alternating_side_press",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_standing_dumbbell_straight_arm_front_delt_raise_above_head",
+      "to": "exercise_fedb_standing_palms_in_dumbbell_press",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -56198,16 +55969,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_standing_palms_in_dumbbell_press",
-      "to": "exercise_fedb_dumbbell_shoulder_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_standing_palms_in_dumbbell_press",
       "to": "exercise_fedb_see_saw_press_alternating_side_press",
       "score": 0.95,
       "dimensions": [
@@ -56229,6 +55990,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_standing_palms_in_dumbbell_press",
       "to": "exercise_fedb_seated_dumbbell_press",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_standing_palms_in_dumbbell_press",
+      "to": "exercise_fedb_standing_alternating_dumbbell_press",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -56538,16 +56309,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_around_the_worlds",
-      "to": "exercise_fedb_dumbbell_bench_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_around_the_worlds",
       "to": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
       "score": 0.95,
       "dimensions": [
@@ -56569,6 +56330,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_around_the_worlds",
       "to": "exercise_fedb_incline_dumbbell_bench_with_palms_facing_in",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_around_the_worlds",
+      "to": "exercise_fedb_incline_dumbbell_press",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -56868,16 +56639,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_bent_arm_dumbbell_pullover",
-      "to": "exercise_fedb_dumbbell_bench_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_bent_arm_dumbbell_pullover",
       "to": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
       "score": 0.95,
       "dimensions": [
@@ -56909,6 +56670,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_bent_arm_dumbbell_pullover",
       "to": "exercise_fedb_incline_dumbbell_press",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_bent_arm_dumbbell_pullover",
+      "to": "exercise_fedb_one_arm_dumbbell_bench_press",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -57150,16 +56921,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_clock_push_up",
-      "to": "exercise_fedb_incline_push_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_clock_push_up",
       "to": "exercise_fedb_incline_push_up_medium",
       "score": 0.95,
       "dimensions": [
@@ -57181,6 +56942,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_clock_push_up",
       "to": "exercise_fedb_incline_push_up_wide",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_clock_push_up",
+      "to": "exercise_fedb_isometric_wipers",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -57326,16 +57097,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_decline_dumbbell_bench_press",
-      "to": "exercise_fedb_dumbbell_bench_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_decline_dumbbell_bench_press",
       "to": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
       "score": 0.95,
       "dimensions": [
@@ -57384,21 +57145,21 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_decline_dumbbell_bench_press",
+      "to": "exercise_fedb_bent_arm_dumbbell_pullover",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
       "from": "exercise_fedb_clock_push_up",
       "to": "exercise_fedb_decline_dumbbell_bench_press",
       "conditions": [
         "no_equipment"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_decline_push_up",
-      "to": "exercise_fedb_incline_push_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
       ]
     },
     {
@@ -57445,6 +57206,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_decline_push_up",
       "to": "exercise_fedb_push_ups_with_feet_elevated",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_decline_push_up",
+      "to": "exercise_fedb_pushups",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -57589,86 +57360,8 @@
     },
     {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_bench_press",
-      "to": "exercise_fedb_decline_dumbbell_bench_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_bench_press",
-      "to": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_bench_press",
-      "to": "exercise_fedb_hammer_grip_incline_db_bench_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_bench_press",
-      "to": "exercise_fedb_incline_dumbbell_bench_with_palms_facing_in",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_bench_press",
-      "to": "exercise_fedb_incline_dumbbell_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_bench_press",
-      "to": "exercise_fedb_one_arm_dumbbell_bench_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_clock_push_up",
-      "to": "exercise_fedb_dumbbell_bench_press",
-      "conditions": [
-        "no_equipment"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
       "from": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
       "to": "exercise_fedb_decline_dumbbell_bench_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
-      "to": "exercise_fedb_dumbbell_bench_press",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -57709,6 +57402,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
       "to": "exercise_fedb_one_arm_dumbbell_bench_press",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
+      "to": "exercise_fedb_bent_arm_dumbbell_pullover",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -57872,16 +57575,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_hammer_grip_incline_db_bench_press",
-      "to": "exercise_fedb_dumbbell_bench_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_hammer_grip_incline_db_bench_press",
       "to": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
       "score": 0.95,
       "dimensions": [
@@ -57913,6 +57606,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_hammer_grip_incline_db_bench_press",
       "to": "exercise_fedb_one_arm_dumbbell_bench_press",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_hammer_grip_incline_db_bench_press",
+      "to": "exercise_fedb_bent_arm_dumbbell_pullover",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -58008,16 +57711,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_incline_dumbbell_bench_with_palms_facing_in",
-      "to": "exercise_fedb_dumbbell_bench_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_dumbbell_bench_with_palms_facing_in",
       "to": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
       "score": 0.95,
       "dimensions": [
@@ -58049,6 +57742,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_incline_dumbbell_bench_with_palms_facing_in",
       "to": "exercise_fedb_one_arm_dumbbell_bench_press",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_incline_dumbbell_bench_with_palms_facing_in",
+      "to": "exercise_fedb_bent_arm_dumbbell_pullover",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -58076,16 +57779,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_incline_dumbbell_press",
-      "to": "exercise_fedb_dumbbell_bench_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_dumbbell_press",
       "to": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
       "score": 0.95,
       "dimensions": [
@@ -58124,6 +57817,16 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_incline_dumbbell_press",
+      "to": "exercise_fedb_bent_arm_dumbbell_pullover",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
       "from": "exercise_fedb_clock_push_up",
       "to": "exercise_fedb_incline_dumbbell_press",
@@ -58133,27 +57836,7 @@
     },
     {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up",
-      "to": "exercise_fedb_decline_push_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up",
-      "to": "exercise_fedb_incline_push_up_medium",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up",
+      "from": "exercise_fedb_incline_push_up_medium",
       "to": "exercise_fedb_incline_push_up_reverse_grip",
       "score": 0.95,
       "dimensions": [
@@ -58163,7 +57846,7 @@
     },
     {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up",
+      "from": "exercise_fedb_incline_push_up_medium",
       "to": "exercise_fedb_incline_push_up_wide",
       "score": 0.95,
       "dimensions": [
@@ -58173,7 +57856,7 @@
     },
     {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up",
+      "from": "exercise_fedb_incline_push_up_medium",
       "to": "exercise_fedb_isometric_wipers",
       "score": 0.95,
       "dimensions": [
@@ -58183,7 +57866,27 @@
     },
     {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up",
+      "from": "exercise_fedb_incline_push_up_medium",
+      "to": "exercise_fedb_alternating_floor_press",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_incline_push_up_medium",
+      "to": "exercise_fedb_decline_push_up",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_incline_push_up_medium",
       "to": "exercise_fedb_push_ups_with_feet_elevated",
       "score": 0.95,
       "dimensions": [
@@ -58193,66 +57896,6 @@
     },
     {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up_medium",
-      "to": "exercise_fedb_incline_push_up_reverse_grip",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up_medium",
-      "to": "exercise_fedb_incline_push_up_wide",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up_medium",
-      "to": "exercise_fedb_isometric_wipers",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up_medium",
-      "to": "exercise_fedb_alternating_floor_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up_medium",
-      "to": "exercise_fedb_decline_push_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_incline_push_up_medium",
-      "to": "exercise_fedb_incline_push_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
       "from": "exercise_fedb_incline_push_up_reverse_grip",
       "to": "exercise_fedb_incline_push_up_medium",
       "score": 0.95,
@@ -58304,7 +57947,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_incline_push_up_reverse_grip",
-      "to": "exercise_fedb_incline_push_up",
+      "to": "exercise_fedb_push_ups_with_feet_elevated",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -58364,7 +58007,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_incline_push_up_wide",
-      "to": "exercise_fedb_incline_push_up",
+      "to": "exercise_fedb_push_ups_with_feet_elevated",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -58424,7 +58067,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_isometric_wipers",
-      "to": "exercise_fedb_incline_push_up",
+      "to": "exercise_fedb_push_ups_with_feet_elevated",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -58920,16 +58563,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_one_arm_dumbbell_bench_press",
-      "to": "exercise_fedb_dumbbell_bench_press",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_one_arm_dumbbell_bench_press",
       "to": "exercise_fedb_dumbbell_bench_press_with_neutral_grip",
       "score": 0.95,
       "dimensions": [
@@ -58961,6 +58594,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_one_arm_dumbbell_bench_press",
       "to": "exercise_fedb_incline_dumbbell_press",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_one_arm_dumbbell_bench_press",
+      "to": "exercise_fedb_bent_arm_dumbbell_pullover",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -59056,16 +58699,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_push_ups_with_feet_elevated",
-      "to": "exercise_fedb_incline_push_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_push_ups_with_feet_elevated",
       "to": "exercise_fedb_incline_push_up_medium",
       "score": 0.95,
       "dimensions": [
@@ -59097,6 +58730,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_push_ups_with_feet_elevated",
       "to": "exercise_fedb_isometric_wipers",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_push_ups_with_feet_elevated",
+      "to": "exercise_fedb_pushups",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -59184,16 +58827,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_pushups",
-      "to": "exercise_fedb_incline_push_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_pushups",
       "to": "exercise_fedb_incline_push_up_medium",
       "score": 0.95,
       "dimensions": [
@@ -59225,6 +58858,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_pushups",
       "to": "exercise_fedb_isometric_wipers",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_pushups",
+      "to": "exercise_fedb_push_ups_with_feet_elevated",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -59244,16 +58887,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_pushups_close_and_wide_hand_positions",
-      "to": "exercise_fedb_incline_push_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_pushups_close_and_wide_hand_positions",
       "to": "exercise_fedb_incline_push_up_medium",
       "score": 0.95,
       "dimensions": [
@@ -59285,6 +58918,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_pushups_close_and_wide_hand_positions",
       "to": "exercise_fedb_isometric_wipers",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_pushups_close_and_wide_hand_positions",
+      "to": "exercise_fedb_push_ups_with_feet_elevated",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -59314,16 +58957,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_single_arm_push_up",
-      "to": "exercise_fedb_incline_push_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_single_arm_push_up",
       "to": "exercise_fedb_incline_push_up_medium",
       "score": 0.95,
       "dimensions": [
@@ -59345,6 +58978,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_single_arm_push_up",
       "to": "exercise_fedb_incline_push_up_wide",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_single_arm_push_up",
+      "to": "exercise_fedb_isometric_wipers",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -60170,16 +59813,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_barbell_glute_bridge",
-      "to": "exercise_fedb_barbell_hip_thrust",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_glute_bridge",
       "to": "exercise_fedb_hip_lift_with_band",
       "score": 0.95,
       "dimensions": [
@@ -60228,67 +59861,9 @@
       ]
     },
     {
-      "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_butt_lift_bridge",
-      "to": "exercise_fedb_barbell_glute_bridge",
-      "conditions": [
-        "no_equipment"
-      ]
-    },
-    {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_hip_thrust",
-      "to": "exercise_fedb_barbell_glute_bridge",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_hip_thrust",
-      "to": "exercise_fedb_hip_lift_with_band",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_hip_thrust",
-      "to": "exercise_fedb_one_legged_cable_kickback",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_hip_thrust",
-      "to": "exercise_fedb_butt_lift_bridge",
-      "score": 0.92,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_hip_thrust",
-      "to": "exercise_fedb_flutter_kicks",
-      "score": 0.92,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_hip_thrust",
-      "to": "exercise_fedb_glute_kickback",
+      "from": "exercise_fedb_barbell_glute_bridge",
+      "to": "exercise_fedb_hip_extension_with_bands",
       "score": 0.92,
       "dimensions": [
         "movement_pattern",
@@ -60298,7 +59873,7 @@
     {
       "type": "SUBSTITUTES_FOR_WHEN",
       "from": "exercise_fedb_butt_lift_bridge",
-      "to": "exercise_fedb_barbell_hip_thrust",
+      "to": "exercise_fedb_barbell_glute_bridge",
       "conditions": [
         "no_equipment"
       ]
@@ -61698,16 +61273,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_hip_lift_with_band",
-      "to": "exercise_fedb_barbell_hip_thrust",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_hip_lift_with_band",
       "to": "exercise_fedb_butt_lift_bridge",
       "score": 0.95,
       "dimensions": [
@@ -61729,6 +61294,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_hip_lift_with_band",
       "to": "exercise_fedb_glute_kickback",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_hip_lift_with_band",
+      "to": "exercise_fedb_leg_lift",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -62678,16 +62253,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_one_legged_cable_kickback",
-      "to": "exercise_fedb_barbell_hip_thrust",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_one_legged_cable_kickback",
       "to": "exercise_fedb_butt_lift_bridge",
       "score": 0.92,
       "dimensions": [
@@ -62709,6 +62274,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_one_legged_cable_kickback",
       "to": "exercise_fedb_glute_kickback",
+      "score": 0.92,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_one_legged_cable_kickback",
+      "to": "exercise_fedb_hip_extension_with_bands",
       "score": 0.92,
       "dimensions": [
         "movement_pattern",
@@ -63529,74 +63104,6 @@
       "dimensions": [
         "movement_pattern",
         "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_romanian_deadlift",
-      "to": "exercise_fedb_clean",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_romanian_deadlift",
-      "to": "exercise_fedb_power_clean",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_romanian_deadlift",
-      "to": "exercise_fedb_snatch_pull",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_romanian_deadlift",
-      "to": "exercise_fedb_hang_snatch",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_romanian_deadlift",
-      "to": "exercise_fedb_hang_snatch_below_knees",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_romanian_deadlift",
-      "to": "exercise_fedb_power_snatch",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_floor_glute_ham_raise",
-      "to": "exercise_fedb_romanian_deadlift",
-      "conditions": [
-        "no_equipment"
       ]
     },
     {
@@ -68497,66 +68004,6 @@
     },
     {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_chin_up",
-      "to": "exercise_fedb_pullups",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_chin_up",
-      "to": "exercise_fedb_v_bar_pullup",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_chin_up",
-      "to": "exercise_fedb_kipping_muscle_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_chin_up",
-      "to": "exercise_fedb_london_bridges",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_chin_up",
-      "to": "exercise_fedb_muscle_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_chin_up",
-      "to": "exercise_fedb_rope_climb",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
       "from": "exercise_fedb_close_grip_front_lat_pulldown",
       "to": "exercise_fedb_underhand_cable_pulldowns",
       "score": 0.95,
@@ -69758,16 +69205,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_pullups",
-      "to": "exercise_fedb_chin_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_pullups",
       "to": "exercise_fedb_v_bar_pullup",
       "score": 0.95,
       "dimensions": [
@@ -69809,6 +69246,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_pullups",
       "to": "exercise_fedb_underhand_cable_pulldowns",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_pullups",
+      "to": "exercise_fedb_wide_grip_lat_pulldown",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -70198,16 +69645,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_scapular_pull_up",
-      "to": "exercise_fedb_chin_up",
-      "score": 0.71,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_scapular_pull_up",
       "to": "exercise_fedb_pullups",
       "score": 0.71,
       "dimensions": [
@@ -70230,6 +69667,16 @@
       "from": "exercise_fedb_scapular_pull_up",
       "to": "exercise_fedb_wide_grip_rear_pull_up",
       "score": 0.67,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_scapular_pull_up",
+      "to": "exercise_fedb_band_pull_apart",
+      "score": 0.63,
       "dimensions": [
         "movement_pattern",
         "primary_muscle"
@@ -70788,16 +70235,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_v_bar_pullup",
-      "to": "exercise_fedb_chin_up",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_v_bar_pullup",
       "to": "exercise_fedb_close_grip_front_lat_pulldown",
       "score": 0.95,
       "dimensions": [
@@ -70829,6 +70266,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_v_bar_pullup",
       "to": "exercise_fedb_wide_grip_lat_pulldown",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_v_bar_pullup",
+      "to": "exercise_fedb_full_range_of_motion_lat_pulldown",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -71197,7 +70644,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_backward_drag",
       "conditions": [
         "no_equipment"
@@ -71266,16 +70713,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_barbell_full_squat",
-      "to": "exercise_fedb_box_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_full_squat",
       "to": "exercise_fedb_hang_clean",
       "score": 0.95,
       "dimensions": [
@@ -71324,8 +70761,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_barbell_full_squat",
+      "to": "exercise_fedb_reverse_band_box_squat",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_barbell_full_squat",
       "conditions": [
         "no_equipment"
@@ -71393,7 +70840,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_barbell_hack_squat",
       "conditions": [
         "no_equipment"
@@ -71413,16 +70860,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_barbell_lunge",
       "to": "exercise_fedb_barbell_step_ups",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_lunge",
-      "to": "exercise_fedb_box_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -71460,8 +70897,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_barbell_lunge",
+      "to": "exercise_fedb_hang_clean_below_the_knees",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_barbell_lunge",
       "conditions": [
         "no_equipment"
@@ -71470,16 +70917,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_barbell_side_split_squat",
-      "to": "exercise_fedb_barbell_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_side_split_squat",
       "to": "exercise_fedb_barbell_full_squat",
       "score": 0.95,
       "dimensions": [
@@ -71491,16 +70928,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_barbell_side_split_squat",
       "to": "exercise_fedb_barbell_squat_to_a_bench",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_side_split_squat",
-      "to": "exercise_fedb_box_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -71528,66 +70955,8 @@
       ]
     },
     {
-      "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_barbell_side_split_squat",
-      "conditions": [
-        "no_equipment"
-      ]
-    },
-    {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_squat",
-      "to": "exercise_fedb_barbell_full_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_squat",
-      "to": "exercise_fedb_barbell_squat_to_a_bench",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_squat",
-      "to": "exercise_fedb_box_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_squat",
-      "to": "exercise_fedb_box_squat_with_bands",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_squat",
-      "to": "exercise_fedb_box_squat_with_chains",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_squat",
+      "from": "exercise_fedb_barbell_side_split_squat",
       "to": "exercise_fedb_hang_clean",
       "score": 0.95,
       "dimensions": [
@@ -71596,9 +70965,19 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_barbell_side_split_squat",
+      "to": "exercise_fedb_hang_clean_below_the_knees",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_barbell_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
+      "to": "exercise_fedb_barbell_side_split_squat",
       "conditions": [
         "no_equipment"
       ]
@@ -71665,7 +71044,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_barbell_squat_to_a_bench",
       "conditions": [
         "no_equipment"
@@ -71685,16 +71064,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_barbell_step_ups",
       "to": "exercise_fedb_barbell_lunge",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_step_ups",
-      "to": "exercise_fedb_box_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -71732,21 +71101,21 @@
       ]
     },
     {
-      "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_barbell_step_ups",
-      "conditions": [
-        "no_equipment"
-      ]
-    },
-    {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_barbell_walking_lunge",
-      "to": "exercise_fedb_barbell_squat",
+      "from": "exercise_fedb_barbell_step_ups",
+      "to": "exercise_fedb_hang_clean_below_the_knees",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
         "primary_muscle"
+      ]
+    },
+    {
+      "type": "SUBSTITUTES_FOR_WHEN",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
+      "to": "exercise_fedb_barbell_step_ups",
+      "conditions": [
+        "no_equipment"
       ]
     },
     {
@@ -71792,7 +71161,17 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_barbell_walking_lunge",
-      "to": "exercise_fedb_box_squat",
+      "to": "exercise_fedb_box_squat_with_bands",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_barbell_walking_lunge",
+      "to": "exercise_fedb_box_squat_with_chains",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -71801,7 +71180,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_barbell_walking_lunge",
       "conditions": [
         "no_equipment"
@@ -71869,7 +71248,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_bear_crawl_sled_drags",
       "conditions": [
         "no_equipment"
@@ -71877,66 +71256,6 @@
     },
     {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_bodyweight_walking_lunge",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_sit_squats",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_freehand_jump_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_backward_drag",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_barbell_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_barbell_walking_lunge",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
       "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_freehand_jump_squat",
       "score": 0.95,
@@ -71949,16 +71268,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_backward_drag",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_bodyweight_walking_lunge",
-      "to": "exercise_fedb_barbell_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -71988,7 +71297,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_bodyweight_walking_lunge",
-      "to": "exercise_fedb_bodyweight_squat",
+      "to": "exercise_fedb_chair_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -71997,70 +71306,12 @@
     },
     {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_box_squat",
-      "to": "exercise_fedb_reverse_band_box_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
+      "to": "exercise_fedb_dumbbell_lunges",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
         "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_box_squat",
-      "to": "exercise_fedb_squat_with_bands",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_box_squat",
-      "to": "exercise_fedb_squat_with_chains",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_box_squat",
-      "to": "exercise_fedb_box_squat_with_bands",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_box_squat",
-      "to": "exercise_fedb_box_squat_with_chains",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_box_squat",
-      "to": "exercise_fedb_reverse_band_power_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_box_squat",
-      "conditions": [
-        "no_equipment"
       ]
     },
     {
@@ -72096,16 +71347,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_box_squat_with_bands",
-      "to": "exercise_fedb_box_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_box_squat_with_bands",
       "to": "exercise_fedb_squat_with_bands",
       "score": 0.95,
       "dimensions": [
@@ -72124,8 +71365,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_box_squat_with_bands",
+      "to": "exercise_fedb_squat_with_plate_movers",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_box_squat_with_bands",
       "conditions": [
         "no_equipment"
@@ -72164,16 +71415,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_box_squat_with_chains",
-      "to": "exercise_fedb_box_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_box_squat_with_chains",
       "to": "exercise_fedb_squat_with_bands",
       "score": 0.95,
       "dimensions": [
@@ -72192,8 +71433,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_box_squat_with_chains",
+      "to": "exercise_fedb_squat_with_plate_movers",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_box_squat_with_chains",
       "conditions": [
         "no_equipment"
@@ -72222,16 +71473,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_cable_hip_adduction",
-      "to": "exercise_fedb_barbell_squat",
-      "score": 0.88,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_cable_hip_adduction",
       "to": "exercise_fedb_barbell_walking_lunge",
       "score": 0.88,
       "dimensions": [
@@ -72252,7 +71493,17 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_cable_hip_adduction",
-      "to": "exercise_fedb_bodyweight_squat",
+      "to": "exercise_fedb_bodyweight_walking_lunge",
+      "score": 0.88,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_cable_hip_adduction",
+      "to": "exercise_fedb_chair_squat",
       "score": 0.88,
       "dimensions": [
         "movement_pattern",
@@ -72261,7 +71512,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_cable_hip_adduction",
       "conditions": [
         "no_equipment"
@@ -72281,16 +71532,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_calf_press_on_the_leg_press_machine",
       "to": "exercise_fedb_hack_squat",
-      "score": 0.63,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_calf_press_on_the_leg_press_machine",
-      "to": "exercise_fedb_leg_press",
       "score": 0.63,
       "dimensions": [
         "movement_pattern",
@@ -72329,9 +71570,9 @@
     },
     {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_chair_squat",
-      "to": "exercise_fedb_hack_squat",
-      "score": 0.95,
+      "from": "exercise_fedb_calf_press_on_the_leg_press_machine",
+      "to": "exercise_fedb_thigh_adductor",
+      "score": 0.63,
       "dimensions": [
         "movement_pattern",
         "primary_muscle"
@@ -72340,7 +71581,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_chair_squat",
-      "to": "exercise_fedb_leg_press",
+      "to": "exercise_fedb_hack_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -72388,8 +71629,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_chair_squat",
+      "to": "exercise_fedb_narrow_stance_hack_squats",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_chair_squat",
       "conditions": [
         "no_equipment"
@@ -72457,7 +71708,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_clean_pull",
       "conditions": [
         "no_equipment"
@@ -72525,7 +71776,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_clean_from_blocks",
       "conditions": [
         "no_equipment"
@@ -72593,7 +71844,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_conans_wheel",
       "conditions": [
         "no_equipment"
@@ -72721,7 +71972,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_dumbbell_lunges",
       "conditions": [
         "no_equipment"
@@ -72789,7 +72040,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_dumbbell_rear_lunge",
       "conditions": [
         "no_equipment"
@@ -72809,16 +72060,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_dumbbell_squat",
       "to": "exercise_fedb_backward_drag",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_squat",
-      "to": "exercise_fedb_barbell_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -72856,8 +72097,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_dumbbell_squat",
+      "to": "exercise_fedb_smith_machine_squat",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_dumbbell_squat",
       "conditions": [
         "no_equipment"
@@ -72877,16 +72128,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_dumbbell_squat_to_a_bench",
       "to": "exercise_fedb_barbell_full_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_dumbbell_squat_to_a_bench",
-      "to": "exercise_fedb_box_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -72924,8 +72165,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_dumbbell_squat_to_a_bench",
+      "to": "exercise_fedb_hang_clean_below_the_knees",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_dumbbell_squat_to_a_bench",
       "conditions": [
         "no_equipment"
@@ -72993,7 +72244,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_dumbbell_step_ups",
       "conditions": [
         "no_equipment"
@@ -73032,16 +72283,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_elevated_back_lunge",
-      "to": "exercise_fedb_box_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_elevated_back_lunge",
       "to": "exercise_fedb_clean_from_blocks",
       "score": 0.95,
       "dimensions": [
@@ -73060,8 +72301,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_elevated_back_lunge",
+      "to": "exercise_fedb_frankenstein_squat",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_elevated_back_lunge",
       "conditions": [
         "no_equipment"
@@ -73120,7 +72371,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_frankenstein_squat",
-      "to": "exercise_fedb_box_squat",
+      "to": "exercise_fedb_clean_from_blocks",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -73129,7 +72380,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_frankenstein_squat",
       "conditions": [
         "no_equipment"
@@ -73178,16 +72429,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_freehand_jump_squat",
-      "to": "exercise_fedb_box_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_freehand_jump_squat",
       "to": "exercise_fedb_clean_from_blocks",
       "score": 0.95,
       "dimensions": [
@@ -73197,70 +72438,12 @@
     },
     {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_front_barbell_squat",
-      "to": "exercise_fedb_barbell_squat_to_a_bench",
+      "from": "exercise_fedb_freehand_jump_squat",
+      "to": "exercise_fedb_dumbbell_rear_lunge",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
         "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_front_barbell_squat",
-      "to": "exercise_fedb_box_squat_with_bands",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_front_barbell_squat",
-      "to": "exercise_fedb_box_squat_with_chains",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_front_barbell_squat",
-      "to": "exercise_fedb_front_barbell_squat_to_a_bench",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_front_barbell_squat",
-      "to": "exercise_fedb_one_leg_barbell_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_front_barbell_squat",
-      "to": "exercise_fedb_overhead_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_front_barbell_squat",
-      "conditions": [
-        "no_equipment"
       ]
     },
     {
@@ -73296,16 +72479,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_front_barbell_squat_to_a_bench",
-      "to": "exercise_fedb_front_barbell_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_front_barbell_squat_to_a_bench",
       "to": "exercise_fedb_one_leg_barbell_squat",
       "score": 0.95,
       "dimensions": [
@@ -73324,8 +72497,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_front_barbell_squat_to_a_bench",
+      "to": "exercise_fedb_power_jerk",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_front_barbell_squat_to_a_bench",
       "conditions": [
         "no_equipment"
@@ -73393,20 +72576,10 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_front_squat_clean_grip",
       "conditions": [
         "no_equipment"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_front_squats_with_two_kettlebells",
-      "to": "exercise_fedb_goblet_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
       ]
     },
     {
@@ -73460,46 +72633,8 @@
       ]
     },
     {
-      "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_front_squats_with_two_kettlebells",
-      "conditions": [
-        "no_equipment"
-      ]
-    },
-    {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_goblet_squat",
-      "to": "exercise_fedb_kettlebell_pistol_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_goblet_squat",
-      "to": "exercise_fedb_one_arm_overhead_kettlebell_squats",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_goblet_squat",
-      "to": "exercise_fedb_sandbag_load",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_goblet_squat",
+      "from": "exercise_fedb_front_squats_with_two_kettlebells",
       "to": "exercise_fedb_clean_from_blocks",
       "score": 0.95,
       "dimensions": [
@@ -73508,29 +72643,9 @@
       ]
     },
     {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_goblet_squat",
-      "to": "exercise_fedb_hang_clean",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_goblet_squat",
-      "to": "exercise_fedb_hang_clean_below_the_knees",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_goblet_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
+      "to": "exercise_fedb_front_squats_with_two_kettlebells",
       "conditions": [
         "no_equipment"
       ]
@@ -73539,16 +72654,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_hack_squat",
       "to": "exercise_fedb_chair_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_hack_squat",
-      "to": "exercise_fedb_leg_press",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -73596,8 +72701,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_hack_squat",
+      "to": "exercise_fedb_narrow_stance_hack_squats",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_hack_squat",
       "conditions": [
         "no_equipment"
@@ -73665,7 +72780,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_hang_clean",
       "conditions": [
         "no_equipment"
@@ -73733,7 +72848,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_hang_clean_below_the_knees",
       "conditions": [
         "no_equipment"
@@ -73801,7 +72916,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_heaving_snatch_balance",
       "conditions": [
         "no_equipment"
@@ -73840,16 +72955,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_hip_flexion_with_band",
-      "to": "exercise_fedb_barbell_squat",
-      "score": 0.88,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_hip_flexion_with_band",
       "to": "exercise_fedb_barbell_walking_lunge",
       "score": 0.88,
       "dimensions": [
@@ -73868,8 +72973,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_hip_flexion_with_band",
+      "to": "exercise_fedb_bodyweight_walking_lunge",
+      "score": 0.88,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_hip_flexion_with_band",
       "conditions": [
         "no_equipment"
@@ -73937,7 +73052,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_jefferson_squats",
       "conditions": [
         "no_equipment"
@@ -74005,7 +73120,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_jerk_dip_squat",
       "conditions": [
         "no_equipment"
@@ -74015,16 +73130,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_kettlebell_pistol_squat",
       "to": "exercise_fedb_one_arm_overhead_kettlebell_squats",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_kettlebell_pistol_squat",
-      "to": "exercise_fedb_goblet_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -74072,8 +73177,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_kettlebell_pistol_squat",
+      "to": "exercise_fedb_clean_from_blocks",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_kettlebell_pistol_squat",
       "conditions": [
         "no_equipment"
@@ -74310,7 +73425,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_kneeling_squat",
-      "to": "exercise_fedb_box_squat",
+      "to": "exercise_fedb_clean_pull",
       "score": 0.79,
       "dimensions": [
         "movement_pattern",
@@ -74320,7 +73435,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_kneeling_squat",
-      "to": "exercise_fedb_clean_pull",
+      "to": "exercise_fedb_frankenstein_squat",
       "score": 0.79,
       "dimensions": [
         "movement_pattern",
@@ -74331,74 +73446,6 @@
       "type": "SUBSTITUTES_FOR_WHEN",
       "from": "exercise_fedb_step_up_with_knee_raise",
       "to": "exercise_fedb_kneeling_squat",
-      "conditions": [
-        "no_equipment"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_leg_press",
-      "to": "exercise_fedb_chair_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_leg_press",
-      "to": "exercise_fedb_hack_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_leg_press",
-      "to": "exercise_fedb_smith_machine_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_leg_press",
-      "to": "exercise_fedb_smith_single_leg_split_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_leg_press",
-      "to": "exercise_fedb_lunge_sprint",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_leg_press",
-      "to": "exercise_fedb_lying_machine_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_leg_press",
       "conditions": [
         "no_equipment"
       ]
@@ -74446,7 +73493,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_lunge_pass_through",
-      "to": "exercise_fedb_goblet_squat",
+      "to": "exercise_fedb_kettlebell_pistol_squat",
       "score": 0.75,
       "dimensions": [
         "movement_pattern",
@@ -74456,7 +73503,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_lunge_pass_through",
-      "to": "exercise_fedb_kettlebell_pistol_squat",
+      "to": "exercise_fedb_one_arm_overhead_kettlebell_squats",
       "score": 0.75,
       "dimensions": [
         "movement_pattern",
@@ -74533,7 +73580,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_lunge_sprint",
       "conditions": [
         "no_equipment"
@@ -74601,7 +73648,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_lying_machine_squat",
       "conditions": [
         "no_equipment"
@@ -74729,7 +73776,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_narrow_stance_hack_squats",
       "conditions": [
         "no_equipment"
@@ -74797,7 +73844,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_narrow_stance_leg_press",
       "conditions": [
         "no_equipment"
@@ -74807,16 +73854,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_narrow_stance_squats",
       "to": "exercise_fedb_barbell_full_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_narrow_stance_squats",
-      "to": "exercise_fedb_box_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -74864,8 +73901,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_narrow_stance_squats",
+      "to": "exercise_fedb_reverse_band_box_squat",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_narrow_stance_squats",
       "conditions": [
         "no_equipment"
@@ -74904,16 +73951,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_olympic_squat",
-      "to": "exercise_fedb_box_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_olympic_squat",
       "to": "exercise_fedb_clean_from_blocks",
       "score": 0.95,
       "dimensions": [
@@ -74932,8 +73969,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_olympic_squat",
+      "to": "exercise_fedb_hang_clean",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_olympic_squat",
       "conditions": [
         "no_equipment"
@@ -74943,16 +73990,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_one_arm_overhead_kettlebell_squats",
       "to": "exercise_fedb_kettlebell_pistol_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_one_arm_overhead_kettlebell_squats",
-      "to": "exercise_fedb_goblet_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -75000,8 +74037,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_one_arm_overhead_kettlebell_squats",
+      "to": "exercise_fedb_clean_from_blocks",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_one_arm_overhead_kettlebell_squats",
       "conditions": [
         "no_equipment"
@@ -75040,16 +74087,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_one_leg_barbell_squat",
-      "to": "exercise_fedb_front_barbell_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_one_leg_barbell_squat",
       "to": "exercise_fedb_front_barbell_squat_to_a_bench",
       "score": 0.95,
       "dimensions": [
@@ -75068,8 +74105,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_one_leg_barbell_squat",
+      "to": "exercise_fedb_power_jerk",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_one_leg_barbell_squat",
       "conditions": [
         "no_equipment"
@@ -75137,7 +74184,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_overhead_squat",
       "conditions": [
         "no_equipment"
@@ -75205,7 +74252,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_plie_dumbbell_squat",
       "conditions": [
         "no_equipment"
@@ -75273,7 +74320,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_power_jerk",
       "conditions": [
         "no_equipment"
@@ -75341,7 +74388,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_power_snatch_from_blocks",
       "conditions": [
         "no_equipment"
@@ -75361,16 +74408,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_reverse_band_box_squat",
       "to": "exercise_fedb_box_squat_with_chains",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_reverse_band_box_squat",
-      "to": "exercise_fedb_box_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -75408,8 +74445,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_reverse_band_box_squat",
+      "to": "exercise_fedb_split_clean",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_reverse_band_box_squat",
       "conditions": [
         "no_equipment"
@@ -75429,16 +74476,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_reverse_band_power_squat",
       "to": "exercise_fedb_box_squat_with_chains",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_reverse_band_power_squat",
-      "to": "exercise_fedb_box_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -75476,8 +74513,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_reverse_band_power_squat",
+      "to": "exercise_fedb_barbell_squat_to_a_bench",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_reverse_band_power_squat",
       "conditions": [
         "no_equipment"
@@ -75545,7 +74592,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_sandbag_load",
       "conditions": [
         "no_equipment"
@@ -75613,20 +74660,10 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_single_leg_high_box_squat",
       "conditions": [
         "no_equipment"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_sit_squats",
-      "to": "exercise_fedb_bodyweight_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
       ]
     },
     {
@@ -75673,6 +74710,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_sit_squats",
       "to": "exercise_fedb_reverse_band_box_squat",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_sit_squats",
+      "to": "exercise_fedb_squat_with_plate_movers",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -75741,7 +74788,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_sled_drag_harness",
       "conditions": [
         "no_equipment"
@@ -75809,7 +74856,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_sled_push",
       "conditions": [
         "no_equipment"
@@ -75877,7 +74924,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_smith_machine_leg_press",
       "conditions": [
         "no_equipment"
@@ -75945,7 +74992,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_smith_machine_pistol_squat",
       "conditions": [
         "no_equipment"
@@ -75955,16 +75002,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_smith_machine_squat",
       "to": "exercise_fedb_backward_drag",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_smith_machine_squat",
-      "to": "exercise_fedb_barbell_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -76004,7 +75041,17 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_smith_machine_squat",
-      "to": "exercise_fedb_leg_press",
+      "to": "exercise_fedb_sandbag_load",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_smith_machine_squat",
+      "to": "exercise_fedb_smith_single_leg_split_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -76013,7 +75060,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_smith_machine_squat",
       "conditions": [
         "no_equipment"
@@ -76033,16 +75080,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_smith_single_leg_split_squat",
       "to": "exercise_fedb_hack_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_smith_single_leg_split_squat",
-      "to": "exercise_fedb_leg_press",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -76080,8 +75117,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_smith_single_leg_split_squat",
+      "to": "exercise_fedb_narrow_stance_hack_squats",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_smith_single_leg_split_squat",
       "conditions": [
         "no_equipment"
@@ -76149,7 +75196,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_snatch",
       "conditions": [
         "no_equipment"
@@ -76217,7 +75264,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_snatch_balance",
       "conditions": [
         "no_equipment"
@@ -76285,7 +75332,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_snatch_from_blocks",
       "conditions": [
         "no_equipment"
@@ -76324,16 +75371,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_speed_box_squat",
-      "to": "exercise_fedb_box_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_speed_box_squat",
       "to": "exercise_fedb_clean_from_blocks",
       "score": 0.95,
       "dimensions": [
@@ -76352,8 +75389,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_speed_box_squat",
+      "to": "exercise_fedb_hang_clean",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_speed_box_squat",
       "conditions": [
         "no_equipment"
@@ -76421,7 +75468,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_speed_squats",
       "conditions": [
         "no_equipment"
@@ -76489,7 +75536,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_split_clean",
       "conditions": [
         "no_equipment"
@@ -76557,7 +75604,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_split_jerk",
       "conditions": [
         "no_equipment"
@@ -76625,7 +75672,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_split_squat_with_dumbbells",
       "conditions": [
         "no_equipment"
@@ -76753,7 +75800,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_squat_jerk",
       "conditions": [
         "no_equipment"
@@ -76762,16 +75809,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_squat_with_bands",
-      "to": "exercise_fedb_box_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_squat_with_bands",
       "to": "exercise_fedb_reverse_band_box_squat",
       "score": 0.95,
       "dimensions": [
@@ -76820,21 +75857,21 @@
       ]
     },
     {
-      "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
-      "to": "exercise_fedb_squat_with_bands",
-      "conditions": [
-        "no_equipment"
-      ]
-    },
-    {
       "type": "SIMILAR_TO",
-      "from": "exercise_fedb_squat_with_chains",
-      "to": "exercise_fedb_box_squat",
+      "from": "exercise_fedb_squat_with_bands",
+      "to": "exercise_fedb_barbell_full_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
         "primary_muscle"
+      ]
+    },
+    {
+      "type": "SUBSTITUTES_FOR_WHEN",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
+      "to": "exercise_fedb_squat_with_bands",
+      "conditions": [
+        "no_equipment"
       ]
     },
     {
@@ -76888,8 +75925,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_squat_with_chains",
+      "to": "exercise_fedb_barbell_full_squat",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_squat_with_chains",
       "conditions": [
         "no_equipment"
@@ -76928,16 +75975,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_squat_with_plate_movers",
-      "to": "exercise_fedb_box_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_squat_with_plate_movers",
       "to": "exercise_fedb_squat_with_bands",
       "score": 0.95,
       "dimensions": [
@@ -76956,8 +75993,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_squat_with_plate_movers",
+      "to": "exercise_fedb_suspended_split_squat",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_squat_with_plate_movers",
       "conditions": [
         "no_equipment"
@@ -76967,16 +76014,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_squats_with_bands",
       "to": "exercise_fedb_backward_drag",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_squats_with_bands",
-      "to": "exercise_fedb_barbell_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -77024,8 +76061,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_squats_with_bands",
+      "to": "exercise_fedb_barbell_squat_to_a_bench",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_squats_with_bands",
       "conditions": [
         "no_equipment"
@@ -77064,16 +76111,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_step_up_with_knee_raise",
-      "to": "exercise_fedb_bodyweight_squat",
-      "score": 0.71,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_step_up_with_knee_raise",
       "to": "exercise_fedb_bodyweight_walking_lunge",
       "score": 0.71,
       "dimensions": [
@@ -77086,6 +76123,16 @@
       "from": "exercise_fedb_step_up_with_knee_raise",
       "to": "exercise_fedb_sit_squats",
       "score": 0.71,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_step_up_with_knee_raise",
+      "to": "exercise_fedb_barbell_step_ups",
+      "score": 0.67,
       "dimensions": [
         "movement_pattern",
         "primary_muscle"
@@ -77144,7 +76191,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_suspended_split_squat",
-      "to": "exercise_fedb_box_squat",
+      "to": "exercise_fedb_squat_with_bands",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -77153,7 +76200,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_suspended_split_squat",
       "conditions": [
         "no_equipment"
@@ -77192,16 +76239,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_thigh_abductor",
-      "to": "exercise_fedb_leg_press",
-      "score": 0.71,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_thigh_abductor",
       "to": "exercise_fedb_smith_machine_squat",
       "score": 0.71,
       "dimensions": [
@@ -77213,6 +76250,16 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_thigh_abductor",
       "to": "exercise_fedb_smith_single_leg_split_squat",
+      "score": 0.71,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_thigh_abductor",
+      "to": "exercise_fedb_thigh_adductor",
       "score": 0.71,
       "dimensions": [
         "movement_pattern",
@@ -77252,16 +76299,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_thigh_adductor",
-      "to": "exercise_fedb_leg_press",
-      "score": 0.79,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_thigh_adductor",
       "to": "exercise_fedb_smith_machine_squat",
       "score": 0.79,
       "dimensions": [
@@ -77274,6 +76311,16 @@
       "from": "exercise_fedb_thigh_adductor",
       "to": "exercise_fedb_smith_single_leg_split_squat",
       "score": 0.79,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_thigh_adductor",
+      "to": "exercise_fedb_lunge_sprint",
+      "score": 0.75,
       "dimensions": [
         "movement_pattern",
         "primary_muscle"
@@ -77341,7 +76388,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_tire_flip",
       "conditions": [
         "no_equipment"
@@ -77351,16 +76398,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_weighted_jump_squat",
       "to": "exercise_fedb_barbell_full_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_weighted_jump_squat",
-      "to": "exercise_fedb_box_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -77408,8 +76445,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_weighted_jump_squat",
+      "to": "exercise_fedb_power_snatch_from_blocks",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_weighted_jump_squat",
       "conditions": [
         "no_equipment"
@@ -77448,16 +76495,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_weighted_sissy_squat",
-      "to": "exercise_fedb_front_barbell_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_weighted_sissy_squat",
       "to": "exercise_fedb_front_barbell_squat_to_a_bench",
       "score": 0.95,
       "dimensions": [
@@ -77476,8 +76513,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_weighted_sissy_squat",
+      "to": "exercise_fedb_overhead_squat",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_weighted_sissy_squat",
       "conditions": [
         "no_equipment"
@@ -77545,7 +76592,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_weighted_squat",
       "conditions": [
         "no_equipment"
@@ -77555,16 +76602,6 @@
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_wide_stance_barbell_squat",
       "to": "exercise_fedb_barbell_full_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_wide_stance_barbell_squat",
-      "to": "exercise_fedb_box_squat",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -77612,8 +76649,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_wide_stance_barbell_squat",
+      "to": "exercise_fedb_power_snatch_from_blocks",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_wide_stance_barbell_squat",
       "conditions": [
         "no_equipment"
@@ -77672,7 +76719,7 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_yoke_walk",
-      "to": "exercise_fedb_box_squat",
+      "to": "exercise_fedb_squat_with_bands",
       "score": 0.95,
       "dimensions": [
         "movement_pattern",
@@ -77681,7 +76728,7 @@
     },
     {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_yoke_walk",
       "conditions": [
         "no_equipment"
@@ -77720,16 +76767,6 @@
     {
       "type": "SIMILAR_TO",
       "from": "exercise_fedb_zercher_squats",
-      "to": "exercise_fedb_front_barbell_squat",
-      "score": 0.95,
-      "dimensions": [
-        "movement_pattern",
-        "primary_muscle"
-      ]
-    },
-    {
-      "type": "SIMILAR_TO",
-      "from": "exercise_fedb_zercher_squats",
       "to": "exercise_fedb_front_barbell_squat_to_a_bench",
       "score": 0.95,
       "dimensions": [
@@ -77748,8 +76785,18 @@
       ]
     },
     {
+      "type": "SIMILAR_TO",
+      "from": "exercise_fedb_zercher_squats",
+      "to": "exercise_fedb_overhead_squat",
+      "score": 0.95,
+      "dimensions": [
+        "movement_pattern",
+        "primary_muscle"
+      ]
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
-      "from": "exercise_fedb_bodyweight_squat",
+      "from": "exercise_fedb_bodyweight_walking_lunge",
       "to": "exercise_fedb_zercher_squats",
       "conditions": [
         "no_equipment"

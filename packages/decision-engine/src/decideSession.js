@@ -26,7 +26,20 @@ const INTENSITY_ORDER = ["low", "moderate", "high"];
 // What a deferred session becomes. Deliberately equipment-free so the swap
 // holds whatever the athlete has, and low-impact so it stays valid under the
 // joint restrictions that often accompany a low-readiness day.
-const RECOVERY_MOVEMENTS = ["Easy walk", "Mobility flow"];
+//
+// Canonical ids, not names. These were the free-text strings "Easy walk" and
+// "Mobility flow", which resolved to nothing: the catalog calls the same two
+// movements Recovery Walk and Lower Body Mobility Flow, so a caller who wanted
+// to ask what was in the swapped-in session had nothing to look up.
+const RECOVERY_MOVEMENT_IDS = ["exercise_recovery_walk", "exercise_lower_body_mobility"];
+
+// When every movement in the session was contraindicated. Same reasoning as the
+// planner's fallback: an id, so the caller can look it up.
+const FALLBACK_EXERCISE_ID = "exercise_bodyweight_squat";
+
+// See generatePlan: the caller injects a catalog-backed spelling; on its own
+// this package hands back the id, which is the canonical form.
+const identityDisplay = (id) => id;
 
 // When several rules fire, the reported type is the most consequential one, not
 // the last one to run. Removing a contraindicated movement must never be masked
@@ -54,15 +67,20 @@ function targetFatigue(session, muscleFatigue = {}) {
   return worst;
 }
 
-function toSessionShape(session) {
+function toSessionShape(session, displayNameFor) {
   if (!session) return null;
+  // Callers hand us whatever their agent had. `exerciseIds` is the canonical
+  // form; `exercises` is accepted as a fallback so a caller that has not been
+  // normalized at the tool boundary still gets a decision rather than an error.
+  const exerciseIds = [...(session.exerciseIds || session.exercises || [])];
   return {
     sessionId: session.id,
     focus: session.focus,
     type: session.type,
     durationMinutes: session.durationMinutes,
     intensity: session.intensity,
-    exercises: [...(session.exercises || [])]
+    exerciseIds,
+    exercises: exerciseIds.map((id) => displayNameFor(id))
   };
 }
 
@@ -72,7 +90,8 @@ function diffShapes(from, to) {
   for (const field of ["focus", "type", "durationMinutes", "intensity"]) {
     if (from[field] !== to[field]) changed.push(field);
   }
-  if (JSON.stringify(from.exercises) !== JSON.stringify(to.exercises)) {
+  // Compared on ids: the canonical form is what actually changed or did not.
+  if (JSON.stringify(from.exerciseIds) !== JSON.stringify(to.exerciseIds)) {
     changed.push("exercises");
   }
   return changed;
@@ -88,7 +107,8 @@ function diffShapes(from, to) {
  * @param {{ scheduledSession: object|null, state: object, availableMinutes?: number }} input
  * @returns {import("./models.js").SessionDecision}
  */
-export function decideSession({ scheduledSession, state, availableMinutes } = {}) {
+export function decideSession({ scheduledSession, state, availableMinutes, displayNameFor } = {}) {
+  const speak = displayNameFor || identityDisplay;
   if (!state) {
     throw new Error("decideSession requires today's state.");
   }
@@ -158,8 +178,8 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
     return result;
   }
 
-  const from = toSessionShape(scheduledSession);
-  const to = { ...from, exercises: [...from.exercises] };
+  const from = toSessionShape(scheduledSession, speak);
+  const to = { ...from, exerciseIds: [...from.exerciseIds], exercises: [...from.exercises] };
   let type = "keep";
   let intent = "proceed_as_planned";
 
@@ -173,17 +193,26 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
   // 1. Safety first: injury restrictions hard-filter the session's movements.
   //    This is a guarantee, not advice — it cannot be reasoned away.
   const restrictions = state.avoid || [];
-  const blockedExercises = to.exercises.filter((name) =>
-    restrictions.some((restriction) => {
+  // Matched against the spoken name only. Restrictions are written the way a
+  // person talks ("avoid heavy lower body"), and an id's slug carries anatomy
+  // words that are not claims about the movement — matching the raw id made
+  // "avoid heavy lower body" strike exercise_lower_body_mobility, the very
+  // movement the recovery swap relies on being safe.
+  const blockedIds = to.exerciseIds.filter((id) => {
+    const haystack = String(speak(id)).toLowerCase();
+    return restrictions.some((restriction) => {
       const words = String(restriction).toLowerCase().replace(/^avoid\s+/, "").split(/[\s-]+/);
-      return words.some((word) => word.length > 3 && name.toLowerCase().includes(word));
-    })
-  );
-  if (blockedExercises.length > 0) {
-    to.exercises = to.exercises.filter((name) => !blockedExercises.includes(name));
-    if (to.exercises.length === 0) to.exercises = ["Bodyweight circuit"];
+      return words.some((word) => word.length > 3 && haystack.includes(word));
+    });
+  });
+  if (blockedIds.length > 0) {
+    to.exerciseIds = to.exerciseIds.filter((id) => !blockedIds.includes(id));
+    if (to.exerciseIds.length === 0) to.exerciseIds = [FALLBACK_EXERCISE_ID];
+    to.exercises = to.exerciseIds.map((id) => speak(id));
     escalate("substitute", "remove_contraindicated_movements");
-    reason.push(`移除受限動作 ${blockedExercises.join("、")}（限制：${restrictions.join("；")}）`);
+    reason.push(
+      `移除受限動作 ${blockedIds.map((id) => speak(id)).join("、")}（限制：${restrictions.join("；")}）`
+    );
   }
 
   // 2-4. Each safety rule states how many intensity steps it demands, judged
@@ -208,7 +237,8 @@ export function decideSession({ scheduledSession, state, availableMinutes } = {}
     // The session's movements have to change with it. Leaving the planned
     // exercises in place produced a record that contradicted itself — a "to"
     // reading "Recovery + mobility" while still prescribing VO₂max intervals.
-    to.exercises = [...RECOVERY_MOVEMENTS];
+    to.exerciseIds = [...RECOVERY_MOVEMENT_IDS];
+    to.exercises = to.exerciseIds.map((id) => speak(id));
     // The cap is the recovery rule's own, driven by readiness — not a claim
     // about how much time the athlete has.
     to.durationMinutes = Math.min(to.durationMinutes, RULES.recoveryCapMinutes);

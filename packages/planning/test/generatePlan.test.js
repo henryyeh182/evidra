@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { generateTrainingPlan } from "../src/generatePlan.js";
+import { generateTrainingPlan, GOAL_TEMPLATES } from "../src/generatePlan.js";
 
 const context = JSON.parse(
   await readFile(new URL("../../../data/seeds/sample-user-context.json", import.meta.url), "utf8")
@@ -120,4 +120,76 @@ test("an athlete who is still training keeps the normal periodization", () => {
     !JSON.stringify(plan).includes("return-to-training week"),
     "no session should carry a return-to-training note"
   );
+});
+
+// --- the naming contract ---------------------------------------------------
+
+const graphData = JSON.parse(
+  await readFile(new URL("../../../data/seeds/exercises-graph.json", import.meta.url), "utf8")
+);
+const catalog = new Map(graphData.exercises.map((exercise) => [exercise.id, exercise]));
+
+/** The sample athlete, re-aimed at one goal so every template gets exercised. */
+const withGoal = (type) => ({
+  ...context,
+  goals: [{ id: `goal_${type}`, type, label: type, priority: 1, targetDate: "2026-12-01" }]
+});
+
+test("every movement a plan can prescribe exists in the catalog", () => {
+  // The drift this pins: the templates were authored with free-text names hours
+  // before the knowledge graph chose equipment-qualified ones, and nothing
+  // failed when "Bent-over Row" stopped meaning anything. An id cannot go
+  // quietly wrong — it is either in the catalog or this test is red.
+  const plans = ["half_marathon", "build_muscle", "general_fitness", "recovery", "lose_fat"].map(
+    (goalType) => generateTrainingPlan(withGoal(goalType), { startDate: "2026-08-03", weeks: 4 })
+  );
+
+  const missing = new Set();
+  for (const plan of plans) {
+    for (const week of plan.weeks) {
+      for (const session of week.sessions) {
+        assert.ok(session.exerciseIds?.length > 0, `${session.id} prescribes nothing`);
+        for (const id of session.exerciseIds) {
+          if (!catalog.has(id)) missing.add(id);
+        }
+      }
+    }
+  }
+  assert.deepEqual([...missing], []);
+});
+
+test("the spoken list is derived from the canonical one, never authored beside it", () => {
+  const plan = generateTrainingPlan(withGoal("build_muscle"), {
+    startDate: "2026-08-03",
+    weeks: 2,
+    displayNameFor: (id) => catalog.get(id)?.displayName || catalog.get(id)?.name || id
+  });
+
+  for (const week of plan.weeks) {
+    for (const session of week.sessions) {
+      assert.equal(session.exercises.length, session.exerciseIds.length);
+      session.exerciseIds.forEach((id, index) => {
+        assert.equal(session.exercises[index], catalog.get(id).displayName || catalog.get(id).name);
+      });
+    }
+  }
+});
+
+test("a slot's declared equipment matches the catalog entry it points at", () => {
+  // Equipment is stated on the slot so planning stays dependency-free, which
+  // means it is a second copy of something the catalog already knows. This is
+  // what stops the copy from drifting.
+  for (const [goalType, template] of Object.entries(GOAL_TEMPLATES)) {
+    for (const slot of template.slots) {
+      for (const entry of slot.exercises) {
+        const node = catalog.get(entry.exerciseId);
+        assert.ok(node, `${goalType}: unknown exercise ${entry.exerciseId}`);
+        assert.deepEqual(
+          [...entry.equipment].sort(),
+          [...node.equipment].sort(),
+          `${goalType}: ${entry.exerciseId} equipment disagrees with the catalog`
+        );
+      }
+    }
+  }
 });

@@ -1,6 +1,6 @@
 # Fitness MCP — Implementation Plan
 
-> 版本：**v5.1** · 依 [Design Manifesto](design-manifesto.md) 推導
+> 版本：**v5.2** · 依 [Design Manifesto](design-manifesto.md) 推導
 > **Mission**：A permissioned Fitness Decision Engine that turns fragmented, user-owned health evidence into explainable training decisions for AI agents.
 
 > ⚠️ [Design Manifesto](design-manifesto.md) 位階最高，衝突時以宣言為準。
@@ -11,14 +11,14 @@
 
 ## 1. 已實作元件
 
-163 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+173 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
 | `packages/domain` | 核心模型：User / Goal / Preference / Injury / Equipment / Workout / HealthMetric，含 `assertValidUserContext` |
 | `packages/semantic-engine` | `generateSemanticFitnessState`：recovery / readiness / fatigue / 分肌群疲勞 / 負荷。**訊號可得性自適應**——訊號過期即排除並重新正規化權重，如實下調 confidence，輸出 `signalCoverage`。基線由 `options.baselines` 注入，族群常數僅作 fallback |
 | `packages/training-load` | **`computeTrainingLoad`**：ATL / CTL / TSB（指數移動平均）、ACWR ramp-rate、負荷分區，**detraining 為獨立軸線**（以本人近期 CTL 峰值為基準，須同時滿足閒置天數與體能流失，taper／deload 不誤觸）。**`computePersonalBaselines`**：由傳入的 health metrics 現算本人基線 |
-| `packages/knowledge-graph` | 900 節點 / 5,866 邊。`graph.js`（替代／進退階／結構化檢索遍歷）、`workoutSchema.js`（Block/Set 結構與驗證）、`programTemplates.js`（參數化課表模板）、`models.js` 的 `assertValidProgressions`（進退階不變量，建圖時強制） |
+| `packages/knowledge-graph` | 889 節點 / 5,785 邊。`graph.js`（替代／進退階／結構化檢索遍歷）、`workoutSchema.js`（Block/Set 結構與驗證）、`programTemplates.js`（參數化課表模板）、`resolveExercise`／`displayNameFor`（口語↔規格化命名）、`models.js` 的 `assertValidProgressions` 與 `assertUniqueExerciseNaming`（建圖時強制） |
 | `packages/planning` | `generatePlan`（週期化 base→build→peak→deload）、`adaptPlan`（非破壞式 diff 預覽）、`planStore`（版本化 preview→commit） |
 | `packages/connectors` | Apple Health（`export.xml` 串流解析）、Strava、**Garmin**（readiness／daily summary／sleep／activities，含 sentinel 處理）的格式正規化 |
 | `packages/evidence` | **Fitness Evidence Model**：跨來源證據契約 ＋ 轉內部 context |
@@ -26,12 +26,12 @@
 | `packages/db` | PostgreSQL schema 與 row mappers（尚未接 runtime） |
 | `apps/mcp-server` | **6 個對外決策 tool**（另 10 個 Content 端點已下架、仍可呼叫一版），JSON-RPC over stdio，含 `assertGrounded` 與 4KB payload 預算 |
 | `/schemas` | 各 tool 的 input/output JSON Schema 契約 ＋ drift guard |
-| `/eval` | 20 golden cases，4 個 gate（case pass／schema／grounding／plan validity）全綠 |
+| `/eval` | 20 golden cases，5 個 gate（case pass／schema／grounding／plan validity／**plan → catalog**）全綠 |
 
 **工具腳本**：`npm run build:graph`（重建知識圖譜）、`audit:graph`（品質稽核）、`import:apple-health`（本機匯入真實資料）、`eval`（評測計分）
 
 **資料品質現況**：分類準確率 94.1%、替代合理率 100%（50 抽樣）、高負荷動作無禁忌 0 個、
-策展核心進退階覆蓋率 85.2%（gate ≥ 70%）。
+策展核心進退階覆蓋率 82.1%（gate ≥ 70%）、plan → catalog 100%（gate）。
 
 ---
 
@@ -81,7 +81,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 1. 那是在測 Claude / ChatGPT 的腦，不是測我們的產品。
 2. 執行它必須呼叫 LLM API，與 **D-LLM「系統內不含 LLM」** 相衝突。
 
-**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 163 個測試）。
+**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 173 個測試）。
 另補上 **MCP client 相容性驗證**（見下）取代連通性層面的疑慮。
 
 > **D1 與 D2 同一個根因**：系統是照「我們有使用者資料庫，AI 來查」設計的（傳統 SaaS），不是照「AI 帶授權證據來，我們回決策」設計的（intelligence layer）。**架構圖畫的是後者，程式蓋的是前者。**
@@ -94,7 +94,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 |---|---|---|---|
 | 1 | Semantic Fitness Layer | 🟡 | 證據契約已就位（D1 已修）；**3/6** 來源解析器（＋Garmin），來源格式與統一詞彙已有 schema 與方言等價驗證 |
 | 2 | Fitness Intelligence Engine | 🟢 | 確定性且產出五層決策（D2 已修）；ATL/CTL/TSB ＋ detraining 軸線 ＋ 個人基線已上（Phase 4 前兩項） |
-| 3 | Fitness Knowledge Graph | 🟡 | 900 節點 / 5,866 邊。**進退階已補齊**（7 → 34 條，17 組互逆，策展核心覆蓋 85.2%，帶不變量把關）；**仍缺恢復、訓練目標連結**。相似度邊佔 89.4%，但那是匯入節點的設計結果（見 Phase 4.3） |
+| 3 | Fitness Knowledge Graph | 🟡 | 889 節點 / 5,785 邊。**進退階已補齊**（7 → 34 條，17 組互逆，策展核心覆蓋 82.1%，帶不變量把關）；**命名層已統一**（規格化 id ↔ 口語別名）；**仍缺訓練目標連結**。相似度邊佔 89.4%，但那是匯入節點的設計結果（見 Phase 4.3） |
 | 4 | Feedback Learning | 🔴 | **零**。無「狀態→決策→結果」記錄與閉環 |
 | 5 | Multi-LLM Interface | 🟡 | MCP stdio ＋ Streamable HTTP 已上；**無 REST API、無 SDK、無 OAuth**（`http.js` 目前是 bearer token 比對） |
 
@@ -120,7 +120,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 **驗收（已通過）**：以子行程模擬 Claude Desktop 完整流程——handshake → initialized 通知 → tools/list → generate_plan → decide_session，取得帶 from→to 的決策。
 
-### Phase 4 — 決策深度（護城河 #2 #3）🟡 進行中（2/3）
+### Phase 4 — 決策深度（護城河 #2 #3）🟡 進行中（2.5/3）
 
 > 原驗收條件是「lift 相對 Phase 3 基準再提升」。**該條已失效**——lift 的量測方式是
 > D5 取消的裸模型 vs 模型＋MCP 對照，執行它必須呼叫 LLM API，與 **D-LLM** 相衝突。
@@ -158,7 +158,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 > 與 D-DATA 一致：基線是**每次呼叫現算**的，我們這端不保存任何人的基線。
 
-#### 🟡 4.3 知識圖譜語意關係 — 進退階已補，恢復／訓練目標未動
+#### 🟡 4.3 知識圖譜語意關係 — 進退階與命名層已補，訓練目標未動
 
 **缺的是資料不是程式**：`graph.js` 的 `findSubstitutes` 早就會查 `REGRESSES_TO`
 （`graph.js:109`，權重 0.6），也已導出 `getProgressions` / `getRegressions`。
@@ -203,16 +203,46 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
   匯入節點依設計只帶相似度邊。現況 **23/27 = 85.2%**（gate ≥ 70%），
   未覆蓋的只有 `mobility`。
 
-##### 剩餘：恢復與訓練目標連結
+##### ✅ 已做：三層命名（規格化 / 對照 / 口語）
 
-- `decideSession.js:29` 的 `RECOVERY_MOVEMENTS = ["Easy walk", "Mobility flow"]`
-  是**寫死字串**，不是從圖上取的——這就是「缺恢復連結」的具體形態，也對應 eval
-  那條 plan exercise → catalog coverage 62.5% 的診斷（`Tempo Run`、`Bent-over Row`、
-  `Long Zone 2 Run` 都指不到節點）。
-- 訓練目標同理，圖上沒有可依目標挑動作的欄位或邊。
-- **待決策**：目標與恢復角色要做成**節點屬性**（與 equipment／joints 現有做法一致，
-  見 `models.js` 的註解）或**新邊型別**。前者改動小且與現況一致；後者在導入 graph DB
-  後較自然。此決策未做，故此項未開工。
+原本兩份動作名單各自獨立誕生：計畫引擎（`86afe50`）先寫，知識圖譜（`c7af0de`，同日
+稍後）另起一份，用了器材限定的精確命名。`exercises` 欄位存的是**自由文字不是外鍵**，
+所以沒有任何機制擋下漂移，CI 也不會叫。
+
+| 層 | 欄位 | 例 | 規則 |
+|---|---|---|---|
+| **規格化** | `id` | `exercise_bent_over_row` | 決策、儲存、比對一律只用它。永久固定 |
+| **規格化拼寫** | `name` | `Bent-over Barbell Row` | 精確、帶器材限定，兩個變化式不會撞名 |
+| **口語顯示** | `displayName` | `Bent-over Row` | 只用於輸出 |
+| **口語輸入** | `aliases[]` | `barbell row`／`rdl`／`easy walk` | 使用者怎麼講都收，一律映射回 id |
+
+- `graph.resolveExercise(任意說法)` 是自由文字變成 id 的**唯一入口**；
+  `graph.displayNameFor(id)` 是 id 變成人話的唯一出口。
+- 課表模板改存 `exerciseId`；session 同時輸出 `exerciseIds`（規格化）與
+  `exercises`（口語，由前者導出，不另行撰寫）。
+- `decideSession` 的 `RECOVERY_MOVEMENTS` 寫死字串改為 canonical id。
+- **「多久／多重」不進動作身分**：Long Zone 2 Run 是 Zone 2 Run 跑久一點
+  （`baseMinutes`／`longSession`），所以是別名；Tempo Run 是不同的訓練刺激，
+  所以是**自己的節點**。
+- 端到端實測：口語 `["barbell row","rdl","bench press"]` →
+  `["exercise_bent_over_row","exercise_romanian_deadlift","exercise_bench_press"]` →
+  口語 `["Bent-over Row","Romanian Deadlift","Bench Press"]`。
+
+**這一層抓到的既有壞資料**：`assertUniqueExerciseNaming` 一上線就擋下建圖——
+匯入資料與策展核心有 **12 組同名節點**（Goblet Squat、Leg Press、Romanian Deadlift…），
+同一個動作在圖上存在兩份、各有不同 id，`search_exercises` 會回兩次。build script 原本
+只用 id 去重；已改為以名稱／別名去重，策展版優先。
+
+**驗收**：eval 的 plan → catalog 由診斷升為 **gate**，62.5% → **100%**。
+
+##### 🔴 剩餘：訓練目標連結
+
+圖上仍沒有可依訓練目標（肌力／肥大／耐力／活動度）挑動作的欄位。恢復那半已由
+命名層 ＋ 既有的 `SUBSTITUTES_FOR_WHEN low_readiness` 邊涵蓋。
+
+**建議做成節點屬性而非新邊型別**：「這個動作服務什麼目標」是動作自己的性質，
+與 `equipment`／`contraindications` 同類；而「A 換成 B」那類問題現有 8 種
+`conditions` 已能表達，新增邊型別會與其重疊。
 
 #### 驗收（重寫）
 
@@ -227,7 +257,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 | A4 | 負荷指標所依據的每個訊號都出現在 `provenance` | eval grounding gate |
 | A5 | ✅ 進退階可從圖上走通，且每條階梯上下都通 | `audit:graph` 階梯覆蓋率 gate（≥ 70%，現 85.2%）＋ `assertValidProgressions` 四條不變量 |
 | A6 | ✅ 退階請求回真實的退階動作，而非相似動作 | `graph.test.js`：`exercise_pullup` 的退階必須是 `exercise_assisted_pullup`（beginner／同 pattern） |
-| A7 | **恢復／訓練目標連結完成後**：`decideSession` 換入的恢復動作指得到圖上節點 | eval 的 plan exercise → catalog coverage 由診斷升為 gate |
+| A7 | ✅ 決策與計畫排出的每個動作都指得到圖上節點 | eval `planExerciseCatalogCoverage` 已升為 gate（100%）＋「every movement a plan can prescribe exists in the catalog」測試 |
 
 > **訂正（v5.1）**：A5 原本寫的是「`SIMILAR_TO` 佔比上限」。該指標作廢——它假設
 > 生成器會補出大量語意邊來稀釋佔比，而 4.3 的負面結果證明生成器**不該**補進退階。

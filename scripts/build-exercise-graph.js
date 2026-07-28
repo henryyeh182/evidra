@@ -283,12 +283,31 @@ async function main() {
   const raw = JSON.parse(await readFile(join(rootDir, "data/vendor/free-exercise-db.json"), "utf8"));
 
   const curatedIds = new Set(curated.exercises.map((e) => e.id));
+
+  // Dedupe by what the exercise is called, not only by id. The curated ids are
+  // hand-written ("exercise_goblet_squat") and the imported ones are derived
+  // from the vendor's own ids, so the same movement lands under two ids and an
+  // id-only check waves it through — the graph carried twelve such pairs, with
+  // the curated Goblet Squat and the imported one both answering a search.
+  // The curated node wins: it is the reviewed, higher-confidence one.
+  const curatedTerms = new Set();
+  for (const exercise of curated.exercises) {
+    for (const term of [exercise.name, exercise.displayName, ...(exercise.aliases || [])]) {
+      if (term) curatedTerms.add(String(term).trim().toLowerCase());
+    }
+  }
+
   const importedNodes = [];
   const importedIds = new Set();
+  const shadowed = [];
 
   for (const exercise of raw) {
     const node = toNode(exercise);
-    if (curatedIds.has(node.id) || importedIds.has(node.id)) continue; // never shadow curated / dedupe
+    if (curatedIds.has(node.id) || importedIds.has(node.id)) continue;
+    if (curatedTerms.has(node.name.trim().toLowerCase())) {
+      shadowed.push(node.name);
+      continue;
+    }
     importedIds.add(node.id);
     importedNodes.push(node);
   }
@@ -312,6 +331,9 @@ async function main() {
   console.log("Built data/seeds/exercises-graph.json");
   console.log(`  curated: ${curated.exercises.length} nodes, ${curated.edges.length} edges`);
   console.log(`  imported: ${importedNodes.length} nodes, ${importedEdges.length} edges`);
+  if (shadowed.length) {
+    console.log(`  shadowed by curated (${shadowed.length}): ${shadowed.join(", ")}`);
+  }
   console.log(`  total:   ${merged.exercises.length} nodes, ${merged.edges.length} edges`);
   console.log(`  imported movement patterns:`, patternCounts);
 }

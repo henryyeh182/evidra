@@ -14,9 +14,30 @@ function selectWeeks(plan, weekIndexes) {
   return plan.weeks.filter((week) => wanted.has(week.weekIndex));
 }
 
-function isAvoided(exerciseName, avoidMovements) {
-  const name = exerciseName.toLowerCase();
-  return avoidMovements.some((movement) => name.includes(String(movement).toLowerCase()));
+// Sessions are keyed by canonical id, and an injury is described the way the
+// athlete says it ("bench press", "overhead"). Slug and prose differ only in
+// their separators, so both sides are flattened before comparing — matching the
+// id verbatim would miss "bench press" against exercise_dumbbell_bench_press.
+function normalizeTerm(text) {
+  return String(text).toLowerCase().replace(/^exercise_/, "").replace(/[\s_-]+/g, " ").trim();
+}
+
+function isAvoided(exerciseId, avoidMovements) {
+  const name = normalizeTerm(exerciseId);
+  return avoidMovements.some((movement) => name.includes(normalizeTerm(movement)));
+}
+
+const FALLBACK_EXERCISE_ID = "exercise_bodyweight_squat";
+
+/**
+ * Keep whatever spelling the session already carried for an id it already had;
+ * a newly introduced id has no spoken form here, so it stays canonical until
+ * the tool boundary resolves it.
+ */
+function displayOf(session, id) {
+  const ids = session.exerciseIds || session.exercises || [];
+  const index = ids.indexOf(id);
+  return index >= 0 ? (session.exercises || [])[index] ?? id : id;
 }
 
 function matchesRegion(text, bodyRegion) {
@@ -77,20 +98,25 @@ function applyAddInjury(plan, changeRequest, diff) {
         session.rationale += ` Intensity lowered to protect ${changeRequest.bodyRegion}.`;
       }
 
-      const remaining = session.exercises.filter(
-        (name) => !isAvoided(name, avoidMovements) && !(guardsLowerBody && matchesRegion(name.toLowerCase(), region))
+      const currentIds = session.exerciseIds || session.exercises || [];
+      const remaining = currentIds.filter(
+        (id) => !isAvoided(id, avoidMovements) && !(guardsLowerBody && matchesRegion(normalizeTerm(id), region))
       );
-      if (remaining.length !== session.exercises.length) {
-        const removed = session.exercises.filter((name) => !remaining.includes(name));
+      if (remaining.length !== currentIds.length) {
+        const removed = currentIds.filter((id) => !remaining.includes(id));
+        const after = remaining.length > 0 ? remaining : [FALLBACK_EXERCISE_ID];
         diff.push({
           weekIndex: week.weekIndex,
           date: session.date,
           field: "exercises",
-          before: session.exercises,
-          after: remaining.length > 0 ? remaining : ["Bodyweight circuit"],
+          before: currentIds,
+          after,
           reason: `Removed ${removed.join(", ")} due to ${changeRequest.bodyRegion} injury.`
         });
-        session.exercises = remaining.length > 0 ? remaining : ["Bodyweight circuit"];
+        session.exerciseIds = after;
+        // The spoken list is derived, so it cannot drift from the canonical one.
+        // Names are re-resolved at the tool boundary; here they track the ids.
+        session.exercises = after.map((id) => displayOf(session, id));
       }
     }
   }

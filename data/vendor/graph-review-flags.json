@@ -1,5 +1,5 @@
 {
-  "classificationAccuracy": 0.9411764705882353,
+  "classificationAccuracy": 0.9397905759162304,
   "misclassified": [
     {
       "id": "exercise_fedb_band_assisted_pull_up",

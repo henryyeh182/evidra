@@ -26,48 +26,63 @@ const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Satu
  * Weekly session templates keyed by primary goal type. Each slot is expressed in
  * "ideal" terms; the constraint pass later trims duration, downgrades intensity,
  * and filters exercises to what is actually safe and available.
+ *
+ * Slots name movements by canonical `exerciseId` only. They used to carry
+ * free-text names, which drifted from the catalog the moment the knowledge
+ * graph was authored with equipment-qualified names a few hours later: the
+ * template's "Bent-over Row" and the graph's "Bent-over Barbell Row" were the
+ * same movement that nothing could join. An id either resolves or fails loudly.
+ *
+ * What varies by prescription rather than by movement — how long, how hard —
+ * lives on the slot (`baseMinutes`, `intensity`, `longSession`), never in the
+ * movement's identity. A long Zone 2 run is the Zone 2 run movement with a
+ * bigger `baseMinutes`, not a separate exercise.
  */
-const GOAL_TEMPLATES = {
+export const GOAL_TEMPLATES = {
   half_marathon: {
     periodizationType: "linear_endurance",
     slots: [
-      { dayOffset: 0, focus: "Easy Zone 2 run", type: "run", baseMinutes: 45, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ name: "Zone 2 Run", equipment: ["treadmill", "outdoor"] }] },
-      { dayOffset: 1, focus: "Full-body strength support", type: "strength", baseMinutes: 45, intensity: "moderate", muscleGroups: ["legs", "glutes", "back", "core"], exercises: [{ name: "Goblet Squat", equipment: ["dumbbell"] }, { name: "Romanian Deadlift", equipment: ["barbell"] }] },
-      { dayOffset: 2, focus: "Recovery + mobility", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs", "core"], exercises: [{ name: "Lower Body Mobility Flow", equipment: ["none"] }] },
-      { dayOffset: 3, focus: "Tempo run", type: "run", baseMinutes: 45, intensity: "high", muscleGroups: ["legs"], exercises: [{ name: "Tempo Run", equipment: ["treadmill", "outdoor"] }] },
-      { dayOffset: 4, focus: "Upper-body strength", type: "strength", baseMinutes: 45, intensity: "moderate", muscleGroups: ["chest", "back", "shoulders", "arms"], exercises: [{ name: "Dumbbell Bench Press", equipment: ["dumbbell"] }, { name: "Bent-over Row", equipment: ["barbell"] }] },
-      { dayOffset: 5, focus: "Long run", type: "run", baseMinutes: 75, intensity: "moderate", muscleGroups: ["legs"], longSession: true, exercises: [{ name: "Long Zone 2 Run", equipment: ["treadmill", "outdoor"] }] }
+      { dayOffset: 0, focus: "Easy Zone 2 run", type: "run", baseMinutes: 45, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_zone2_run", equipment: ["treadmill", "outdoor"] }] },
+      { dayOffset: 1, focus: "Full-body strength support", type: "strength", baseMinutes: 45, intensity: "moderate", muscleGroups: ["legs", "glutes", "back", "core"], exercises: [{ exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }, { exerciseId: "exercise_romanian_deadlift", equipment: ["barbell"] }] },
+      { dayOffset: 2, focus: "Recovery + mobility", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs", "core"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] },
+      { dayOffset: 3, focus: "Tempo run", type: "run", baseMinutes: 45, intensity: "high", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_tempo_run", equipment: ["treadmill", "outdoor"] }] },
+      { dayOffset: 4, focus: "Upper-body strength", type: "strength", baseMinutes: 45, intensity: "moderate", muscleGroups: ["chest", "back", "shoulders", "arms"], exercises: [{ exerciseId: "exercise_dumbbell_bench_press", equipment: ["dumbbell", "bench"] }, { exerciseId: "exercise_bent_over_row", equipment: ["barbell"] }] },
+      { dayOffset: 5, focus: "Long run", type: "run", baseMinutes: 75, intensity: "moderate", muscleGroups: ["legs"], longSession: true, exercises: [{ exerciseId: "exercise_zone2_run", equipment: ["treadmill", "outdoor"] }] }
     ]
   },
   build_muscle: {
     periodizationType: "upper_lower_split",
     slots: [
-      { dayOffset: 0, focus: "Lower-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["legs", "glutes", "core"], exercises: [{ name: "Back Squat", equipment: ["barbell"] }, { name: "Romanian Deadlift", equipment: ["barbell"] }] },
-      { dayOffset: 1, focus: "Upper-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["chest", "back", "shoulders", "arms"], exercises: [{ name: "Dumbbell Bench Press", equipment: ["dumbbell"] }, { name: "Bent-over Row", equipment: ["barbell"] }] },
-      { dayOffset: 2, focus: "Zone 2 cardio", type: "ride", baseMinutes: 35, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ name: "Recovery Ride", equipment: ["stationary_bike", "outdoor"] }] },
-      { dayOffset: 3, focus: "Lower-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["legs", "glutes"], exercises: [{ name: "Goblet Squat", equipment: ["dumbbell"] }, { name: "Hip Thrust", equipment: ["barbell"] }] },
-      { dayOffset: 4, focus: "Upper-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["chest", "back", "arms"], exercises: [{ name: "Overhead Press", equipment: ["dumbbell"] }, { name: "Pull-up", equipment: ["pull_up_bar"] }] },
-      { dayOffset: 5, focus: "Mobility + core", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "core"], exercises: [{ name: "Lower Body Mobility Flow", equipment: ["none"] }] }
+      { dayOffset: 0, focus: "Lower-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["legs", "glutes", "core"], exercises: [{ exerciseId: "exercise_back_squat", equipment: ["barbell", "squat_rack"] }, { exerciseId: "exercise_romanian_deadlift", equipment: ["barbell"] }] },
+      { dayOffset: 1, focus: "Upper-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["chest", "back", "shoulders", "arms"], exercises: [{ exerciseId: "exercise_dumbbell_bench_press", equipment: ["dumbbell", "bench"] }, { exerciseId: "exercise_bent_over_row", equipment: ["barbell"] }] },
+      { dayOffset: 2, focus: "Zone 2 cardio", type: "ride", baseMinutes: 35, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_stationary_bike_z2", equipment: ["stationary_bike"] }] },
+      { dayOffset: 3, focus: "Lower-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["legs", "glutes"], exercises: [{ exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }, { exerciseId: "exercise_hip_thrust", equipment: ["barbell", "bench"] }] },
+      { dayOffset: 4, focus: "Upper-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["chest", "back", "arms"], exercises: [{ exerciseId: "exercise_dumbbell_shoulder_press", equipment: ["dumbbell"] }, { exerciseId: "exercise_pullup", equipment: ["pull_up_bar"] }] },
+      { dayOffset: 5, focus: "Mobility + core", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "core"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] }
     ]
   },
   general_fitness: {
     periodizationType: "mixed_conditioning",
     slots: [
-      { dayOffset: 0, focus: "Full-body strength", type: "strength", baseMinutes: 40, intensity: "moderate", muscleGroups: ["legs", "back", "core"], exercises: [{ name: "Goblet Squat", equipment: ["dumbbell"] }, { name: "Bent-over Row", equipment: ["dumbbell"] }] },
-      { dayOffset: 2, focus: "Zone 2 cardio", type: "run", baseMinutes: 35, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ name: "Zone 2 Run", equipment: ["treadmill", "outdoor"] }] },
-      { dayOffset: 4, focus: "Full-body strength", type: "strength", baseMinutes: 40, intensity: "moderate", muscleGroups: ["chest", "legs", "core"], exercises: [{ name: "Dumbbell Bench Press", equipment: ["dumbbell"] }, { name: "Goblet Squat", equipment: ["dumbbell"] }] },
-      { dayOffset: 5, focus: "Mobility + walk", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs"], exercises: [{ name: "Lower Body Mobility Flow", equipment: ["none"] }] }
+      { dayOffset: 0, focus: "Full-body strength", type: "strength", baseMinutes: 40, intensity: "moderate", muscleGroups: ["legs", "back", "core"], exercises: [{ exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }, { exerciseId: "exercise_dumbbell_row", equipment: ["dumbbell", "bench"] }] },
+      { dayOffset: 2, focus: "Zone 2 cardio", type: "run", baseMinutes: 35, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_zone2_run", equipment: ["treadmill", "outdoor"] }] },
+      { dayOffset: 4, focus: "Full-body strength", type: "strength", baseMinutes: 40, intensity: "moderate", muscleGroups: ["chest", "legs", "core"], exercises: [{ exerciseId: "exercise_dumbbell_bench_press", equipment: ["dumbbell", "bench"] }, { exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }] },
+      { dayOffset: 5, focus: "Mobility + walk", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] }
     ]
   },
   recovery: {
     periodizationType: "recovery_focus",
     slots: [
-      { dayOffset: 0, focus: "Recovery walk", type: "walk", baseMinutes: 30, intensity: "low", muscleGroups: ["legs"], exercises: [{ name: "Recovery Walk", equipment: ["outdoor", "treadmill"] }] },
-      { dayOffset: 2, focus: "Mobility flow", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs", "core"], exercises: [{ name: "Lower Body Mobility Flow", equipment: ["none"] }] },
-      { dayOffset: 4, focus: "Easy Zone 2 cardio", type: "ride", baseMinutes: 30, intensity: "low", muscleGroups: ["legs"], exercises: [{ name: "Recovery Ride", equipment: ["stationary_bike", "outdoor"] }] }
+      { dayOffset: 0, focus: "Recovery walk", type: "walk", baseMinutes: 30, intensity: "low", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_recovery_walk", equipment: ["none", "outdoor"] }] },
+      { dayOffset: 2, focus: "Mobility flow", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs", "core"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] },
+      { dayOffset: 4, focus: "Easy Zone 2 cardio", type: "ride", baseMinutes: 30, intensity: "low", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_stationary_bike_z2", equipment: ["stationary_bike"] }] }
     ]
   }
 };
+
+// Used when every prescribed movement was filtered out. An id, like everything
+// else here — the old free-text "Bodyweight circuit" resolved to nothing.
+const FALLBACK_EXERCISE_ID = "exercise_bodyweight_squat";
 
 const GOAL_ALIASES = {
   lose_fat: "general_fitness"
@@ -128,7 +143,14 @@ function isAvoided(exerciseName, avoidMovements) {
   return avoidMovements.some((movement) => name.includes(String(movement).toLowerCase()));
 }
 
-function applyConstraintsToSlot(slot, constraints, availableSet) {
+/**
+ * How an exercise id is spoken. The caller injects the catalog-backed one (the
+ * MCP server does); on its own this package stays dependency-free and hands
+ * back the id, which is the canonical form anyway.
+ */
+const identityDisplay = (id) => id;
+
+function applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor) {
   const notes = [];
   let intensity = slot.intensity;
   let focus = slot.focus;
@@ -142,29 +164,34 @@ function applyConstraintsToSlot(slot, constraints, availableSet) {
 
   const cap = slot.longSession ? constraints.longSessionMinutes : constraints.weekdayAvailableMinutes;
 
-  const exercises = [];
+  const exerciseIds = [];
   for (const exercise of slot.exercises) {
-    if (isAvoided(exercise.name, constraints.avoidMovements)) {
-      notes.push(`Removed ${exercise.name} due to avoid preference.`);
+    const label = displayNameFor(exercise.exerciseId);
+    // The athlete's avoid list is written however they say it ("squat", "rows"),
+    // so it is matched against both the spoken name and the id's own slug.
+    if (isAvoided(`${label} ${exercise.exerciseId}`, constraints.avoidMovements)) {
+      notes.push(`Removed ${label} due to avoid preference.`);
       continue;
     }
     if (!isEquipmentAvailable(exercise.equipment, availableSet)) {
-      notes.push(`Skipped ${exercise.name} because required equipment is unavailable.`);
+      notes.push(`Skipped ${label} because required equipment is unavailable.`);
       continue;
     }
-    exercises.push(exercise.name);
+    exerciseIds.push(exercise.exerciseId);
   }
 
-  if (exercises.length === 0) {
-    exercises.push("Bodyweight circuit");
-    notes.push("Fell back to a bodyweight circuit because no prescribed exercise was available.");
+  if (exerciseIds.length === 0) {
+    exerciseIds.push(FALLBACK_EXERCISE_ID);
+    notes.push(
+      `Fell back to ${displayNameFor(FALLBACK_EXERCISE_ID)} because no prescribed exercise was available.`
+    );
   }
 
-  return { focus, intensity, cap, exercises, notes };
+  return { focus, intensity, cap, exerciseIds, notes };
 }
 
-function buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier) {
-  const resolved = applyConstraintsToSlot(slot, constraints, availableSet);
+function buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier, displayNameFor) {
+  const resolved = applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor);
   const targetMinutes = Math.round(slot.baseMinutes * multiplier);
   const durationMinutes = Math.max(15, Math.min(targetMinutes, resolved.cap));
   const date = addDays(weekStartDate, slot.dayOffset);
@@ -191,7 +218,10 @@ function buildSession(slot, constraints, availableSet, weekStartDate, phase, mul
     durationMinutes,
     intensity,
     targetMuscleGroups: slot.muscleGroups,
-    exercises: resolved.exercises,
+    // Canonical first: `exerciseIds` is what decisions and storage reference,
+    // `exercises` is the same list spoken for a human.
+    exerciseIds: resolved.exerciseIds,
+    exercises: resolved.exerciseIds.map((id) => displayNameFor(id)),
     rationale: rationaleParts.join(" ")
   };
 }
@@ -222,6 +252,7 @@ export function generateTrainingPlan(context, options = {}) {
   const totalWeeks = Math.max(1, options.weeks || 4);
   const constraints = deriveConstraints(context);
   const availableSet = new Set(constraints.availableEquipment);
+  const displayNameFor = options.displayNameFor || identityDisplay;
 
   const sortedGoals = [...context.goals].sort((a, b) => a.priority - b.priority);
   const primaryGoal = options.goalId
@@ -244,7 +275,7 @@ export function generateTrainingPlan(context, options = {}) {
     const multiplier = phase === "return" ? RETURN_RAMP[weekIndex] : PHASE_MULTIPLIERS[phase];
     const weekStartDate = addDays(startDate, weekIndex * 7);
     const sessions = template.slots.map((slot) =>
-      buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier)
+      buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier, displayNameFor)
     );
 
     weeks.push({

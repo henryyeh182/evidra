@@ -15,7 +15,12 @@ const GATES = {
   schemaValidityRate: 1,
   groundingRate: 0.99,
   planValidityRate: 1,
-  casePassRate: 1
+  casePassRate: 1,
+  // Promoted from diagnostic once sessions began carrying canonical ids. It sat
+  // at 62.5% while the planner authored its own exercise names; now that every
+  // prescribed movement is an id, anything below 100% means a plan is
+  // prescribing something the catalog cannot describe.
+  planExerciseCatalogCoverage: 1
 };
 
 // ---- small helpers -------------------------------------------------------
@@ -185,10 +190,10 @@ export async function runGoldenSet(goldenPath = join(__dirname, "golden/v0.json"
       casePassRate: rate(casesPassed, caseResults.length),
       schemaValidityRate: rate(schemaPass, schemaChecks),
       groundingRate: rate(groundingPass, groundingRefs),
-      planValidityRate: rate(planPass, planChecks)
+      planValidityRate: rate(planPass, planChecks),
+      planExerciseCatalogCoverage: rate(coverage.matched, coverage.total)
     },
     diagnostics: {
-      planExerciseCatalogCoverage: rate(coverage.matched, coverage.total),
       unmatchedExerciseNames: [...coverage.unmatched]
     },
     counts: {
@@ -227,10 +232,9 @@ async function main() {
   console.log(`Schema validity:    ${pct(metrics.schemaValidityRate)}   (gate 100%)`);
   console.log(`Grounding rate:     ${pct(metrics.groundingRate)}   (gate >=99%, ${counts.groundingRefs} id refs)`);
   console.log(`Plan validity:      ${pct(metrics.planValidityRate)}   (gate 100%, ${counts.planChecks} plans)`);
-  console.log(`\nDiagnostic (non-gating):`);
-  console.log(`  Plan exercise -> catalog coverage: ${pct(diagnostics.planExerciseCatalogCoverage)} (${counts.exerciseNamesChecked} names)`);
+  console.log(`Plan -> catalog:    ${pct(metrics.planExerciseCatalogCoverage)}   (gate 100%, ${counts.exerciseNamesChecked} refs)`);
   if (diagnostics.unmatchedExerciseNames.length > 0) {
-    console.log(`  Ungrounded exercise names: ${diagnostics.unmatchedExerciseNames.join(", ")}`);
+    console.log(`\n  Ungrounded exercise references: ${diagnostics.unmatchedExerciseNames.join(", ")}`);
   }
 
   const failedCases = report.caseResults.filter((c) => !c.passed);

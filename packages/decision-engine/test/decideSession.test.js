@@ -306,7 +306,15 @@ test("the recovery swap stays valid under an active restriction", () => {
   ];
   const result = decideSession({
     scheduledSession: session(),
-    state: state({ readinessScore: 30, avoid: restrictions })
+    state: state({ readinessScore: 30, avoid: restrictions }),
+    // Restrictions are written in spoken terms, so the property is about the
+    // spoken form. The catalog spelling is pinned to the graph by
+    // "every canonical id the engine can emit exists in the catalog".
+    displayNameFor: (id) =>
+      ({
+        exercise_recovery_walk: "Recovery Walk",
+        exercise_lower_body_mobility: "Mobility Flow"
+      })[id] || id
   });
 
   for (const movement of result.action.to.exercises) {
@@ -395,4 +403,43 @@ test("training load with no break leaves the existing rules untouched", () => {
   });
 
   assert.equal(result.decision.type, "keep");
+});
+
+test("every canonical id the engine can emit exists in the catalog", async () => {
+  // decideSession names movements without holding the catalog, so nothing at
+  // runtime would notice a typo in a recovery id — the swapped-in session would
+  // just prescribe something nothing can describe, which is how "Easy walk"
+  // survived. This is the join the engine cannot make for itself.
+  const { readFile } = await import("node:fs/promises");
+  const graph = JSON.parse(
+    await readFile(new URL("../../../data/seeds/exercises-graph.json", import.meta.url), "utf8")
+  );
+  const ids = new Set(graph.exercises.map((exercise) => exercise.id));
+
+  const deferred = decideSession({
+    scheduledSession: session(),
+    state: state({ readinessScore: 25 })
+  });
+  const blockedOut = decideSession({
+    scheduledSession: { ...session(), exerciseIds: ["exercise_back_squat"] },
+    state: state({ avoid: ["avoid squat"] })
+  });
+
+  for (const id of [...deferred.action.to.exerciseIds, ...blockedOut.action.to.exerciseIds]) {
+    assert.ok(ids.has(id), `${id} is not in the catalog`);
+  }
+});
+
+test("the decision speaks colloquially but changes are judged on ids", () => {
+  const result = decideSession({
+    scheduledSession: { ...session(), exerciseIds: ["exercise_zone2_run"] },
+    state: state({ readinessScore: 25 }),
+    displayNameFor: (id) => ({ exercise_zone2_run: "Zone 2 Run", exercise_recovery_walk: "Recovery Walk", exercise_lower_body_mobility: "Mobility Flow" })[id] || id
+  });
+
+  assert.deepEqual(result.action.from.exerciseIds, ["exercise_zone2_run"]);
+  assert.deepEqual(result.action.from.exercises, ["Zone 2 Run"]);
+  assert.deepEqual(result.action.to.exerciseIds, ["exercise_recovery_walk", "exercise_lower_body_mobility"]);
+  assert.deepEqual(result.action.to.exercises, ["Recovery Walk", "Mobility Flow"]);
+  assert.ok(result.action.changed.includes("exercises"));
 });

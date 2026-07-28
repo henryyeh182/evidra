@@ -5,6 +5,7 @@ import {
   createPlanStore
 } from "../../../packages/planning/src/index.js";
 import { loadDemoUserContext, loadExerciseCatalog } from "./demoData.js";
+import { loadKnowledgeBase } from "./knowledgeBase.js";
 import { jsonContent } from "./content.js";
 import { decideSession } from "../../../packages/decision-engine/src/index.js";
 import {
@@ -140,13 +141,32 @@ export async function getTrainingContext(args = {}) {
   });
 }
 
+/**
+ * The naming boundary. Inside this server everything is a canonical
+ * `exercise_*` id; the graph is the only thing that knows how those are spoken,
+ * and the only thing that can turn however a caller phrased it back into an id.
+ */
+async function exerciseNaming() {
+  const { graph } = await loadKnowledgeBase();
+  return {
+    displayNameFor: (id) => graph.displayNameFor(id),
+    // Free text in, canonical id out. Anything that does not resolve is left
+    // untouched rather than dropped, so an unknown movement stays visible in
+    // the decision instead of silently disappearing from the session.
+    toCanonicalIds: (values = []) =>
+      values.map((value) => graph.resolveExercise(value)?.id ?? value)
+  };
+}
+
 export async function generateTrainingPlanTool(args = {}) {
   const { context } = await resolveContext(args);
+  const { displayNameFor } = await exerciseNaming();
 
   const plan = generateTrainingPlan(context, {
     goalId: args.goalId,
     weeks: args.weeks,
-    startDate: args.startDate
+    startDate: args.startDate,
+    displayNameFor
   });
   planStore.savePlan(plan);
 
@@ -264,8 +284,20 @@ export async function decideSessionTool(args = {}) {
 
   const trainingLoad = computeTrainingLoad(context.workouts, { asOf: date });
 
+  // Agents describe the session the way their user does ("bent-over row",
+  // "easy walk"). Normalize to canonical ids here so the decision engine never
+  // has to reason about spelling, and so what comes back can be looked up.
+  const { displayNameFor, toCanonicalIds } = await exerciseNaming();
+  if (scheduledSession) {
+    scheduledSession = {
+      ...scheduledSession,
+      exerciseIds: toCanonicalIds(scheduledSession.exerciseIds || scheduledSession.exercises || [])
+    };
+  }
+
   const decision = decideSession({
     scheduledSession,
+    displayNameFor,
     // The impulse-response ACWR supersedes the crude 7d/28d ratio when the
     // history is long enough to have converged.
     state: trainingLoad.coverage.sufficient

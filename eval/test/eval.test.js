@@ -22,11 +22,12 @@ test("grounding and plan-validity are actually exercised (not vacuously green)",
   assert.ok(report.counts.planChecks > 0, "expected at least one plan-validity check");
 });
 
-test("diagnostic surfaces the planner's ungrounded exercise names", async () => {
+test("every movement a plan prescribes resolves in the catalog", async () => {
   const report = await runGoldenSet();
-  // The planner emits free-form exercise names, not catalog ids, so coverage is
-  // expected to be partial today. This asserts the diagnostic is wired and
-  // reporting the gap (P3/R1) rather than silently passing.
-  assert.ok(report.diagnostics.planExerciseCatalogCoverage <= 1);
-  assert.ok(Array.isArray(report.diagnostics.unmatchedExerciseNames));
+  // Was a partial-by-design diagnostic while the planner emitted free-form
+  // names. Sessions now carry canonical ids, so this is a reference check and
+  // anything unresolved is a plan prescribing work nothing can describe.
+  assert.equal(report.metrics.planExerciseCatalogCoverage, 1);
+  assert.deepEqual(report.diagnostics.unmatchedExerciseNames, []);
+  assert.ok(report.counts.exerciseNamesChecked > 0, "expected the check to actually run");
 });

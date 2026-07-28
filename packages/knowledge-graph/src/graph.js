@@ -41,8 +41,50 @@ export function buildExerciseGraph(data) {
     incoming.get(edge.to).push(edge);
   }
 
+  // Colloquial term -> canonical id. Built once so resolution is a lookup, not
+  // a scan, and so an ambiguous term is impossible by construction (the data
+  // validator rejects a term claimed by two exercises).
+  const byTerm = new Map();
+  for (const exercise of data.exercises) {
+    const claim = (term) => {
+      if (term === undefined || term === null) return;
+      const key = String(term).trim().toLowerCase();
+      if (key) byTerm.set(key, exercise.id);
+    };
+    claim(exercise.name);
+    claim(exercise.displayName);
+    for (const alias of exercise.aliases || []) claim(alias);
+  }
+
   function getExercise(id) {
     return nodes.get(id) || null;
+  }
+
+  /**
+   * Resolve however the caller said it — canonical id, canonical name, display
+   * name, or a colloquial alias — to the one exercise it means. This is the
+   * only sanctioned way free text becomes an id; everything downstream of it
+   * works in ids alone.
+   *
+   * @param {string} term
+   * @returns {import("./models.js").ExerciseNode | null}
+   */
+  function resolveExercise(term) {
+    if (term === undefined || term === null) return null;
+    const raw = String(term).trim();
+    if (nodes.has(raw)) return nodes.get(raw);
+    const id = byTerm.get(raw.toLowerCase());
+    return id ? nodes.get(id) : null;
+  }
+
+  /**
+   * What to show a human for an id. Falls back to the canonical name, then to
+   * the id itself, so an unresolvable reference is visible rather than blank.
+   */
+  function displayNameFor(id) {
+    const exercise = nodes.get(id);
+    if (!exercise) return String(id);
+    return exercise.displayName || exercise.name;
   }
 
   function requireExercise(id) {
@@ -182,6 +224,8 @@ export function buildExerciseGraph(data) {
     size: nodes.size,
     edgeCount: data.edges.length,
     getExercise,
+    resolveExercise,
+    displayNameFor,
     exists: (id) => nodes.has(id),
     getVariants: (id) => targets(id, "IS_VARIANT_OF"),
     getProgressions: (id) => targets(id, "PROGRESSES_TO"),
