@@ -102,11 +102,50 @@ async function main() {
     console.log(`  questionable: ${badSubstitutes.slice(0, 5).join("; ")}${badSubstitutes.length > 5 ? " …" : ""}`);
   }
 
+  // Progression ladder coverage (Phase 4.3). Measured on the curated core only:
+  // the vendored dataset's `level` is a per-exercise difficulty tag, not an
+  // ordering within a movement family, so no rule over it produces a real
+  // ladder. Progressions are hand-authored, and this is what checks they reach
+  // every pattern rather than clustering in the squat family.
+  const curated = data.exercises.filter((e) => e.source !== "free-exercise-db");
+  const curatedIds = new Set(curated.map((e) => e.id));
+  const onLadder = new Set();
+  for (const edge of data.edges) {
+    if (edge.type !== "PROGRESSES_TO" && edge.type !== "REGRESSES_TO") continue;
+    if (curatedIds.has(edge.from)) onLadder.add(edge.from);
+    if (curatedIds.has(edge.to)) onLadder.add(edge.to);
+  }
+  const ladderCoverage = curated.length ? onLadder.size / curated.length : 1;
+
+  // Which patterns can actually answer "give me something easier".
+  const patternsWithLadder = new Set();
+  const patternsCurated = new Set();
+  for (const node of curated) {
+    patternsCurated.add(node.movementPattern);
+    if (onLadder.has(node.id)) patternsWithLadder.add(node.movementPattern);
+  }
+  const uncovered = [...patternsCurated].filter((p) => !patternsWithLadder.has(p)).sort();
+
+  const progressionEdges = data.edges.filter((e) => e.type === "PROGRESSES_TO").length;
+  const similarShare = data.edges.filter((e) => e.type === "SIMILAR_TO").length / data.edges.length;
+
+  console.log(`\nProgression ladders (curated core, ${curated.length} nodes):`);
+  console.log(`  Nodes on a ladder:         ${onLadder.size}/${curated.length}  ${(ladderCoverage * 100).toFixed(1)}%  (gate >= 70%)`);
+  console.log(`  Progression pairs:         ${progressionEdges}`);
+  console.log(`  Patterns without a ladder: ${uncovered.length ? uncovered.join(", ") : "none"}`);
+  console.log(`  SIMILAR_TO share of all edges: ${(similarShare * 100).toFixed(1)}%  (diagnostic — imported nodes carry similarity only, by design)`);
+
   const reviewPath = join(rootDir, "data/vendor/graph-review-flags.json");
   await writeFile(reviewPath, `${JSON.stringify({ classificationAccuracy, misclassified }, null, 2)}\n`);
   console.log(`\nWrote ${misclassified.length} flags to data/vendor/graph-review-flags.json`);
 
-  process.exitCode = classificationAccuracy >= 0.85 && highLoadNoContra === 0 && substituteRate >= 0.85 ? 0 : 1;
+  process.exitCode =
+    classificationAccuracy >= 0.85 &&
+    highLoadNoContra === 0 &&
+    substituteRate >= 0.85 &&
+    ladderCoverage >= 0.7
+      ? 0
+      : 1;
 }
 
 main().catch((error) => {

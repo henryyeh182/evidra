@@ -395,6 +395,33 @@
       "confidence": 0.97
     },
     {
+      "id": "exercise_incline_pushup",
+      "name": "Incline Push-up",
+      "movementPattern": "horizontal_push",
+      "primaryMuscle": "chest",
+      "secondaryMuscles": [
+        "triceps",
+        "shoulders"
+      ],
+      "equipment": [
+        "bench"
+      ],
+      "planeOfMotion": "transverse",
+      "unilateral": false,
+      "skillLevel": "beginner",
+      "impactLevel": "low",
+      "loadsJoints": [
+        "shoulder",
+        "elbow",
+        "wrist"
+      ],
+      "contraindications": [
+        "wrist"
+      ],
+      "source": "seed_manual",
+      "confidence": 0.95
+    },
+    {
       "id": "exercise_overhead_press",
       "name": "Overhead Press",
       "movementPattern": "vertical_push",
@@ -422,6 +449,32 @@
       "confidence": 0.9
     },
     {
+      "id": "exercise_dumbbell_shoulder_press",
+      "name": "Dumbbell Shoulder Press",
+      "movementPattern": "vertical_push",
+      "primaryMuscle": "shoulders",
+      "secondaryMuscles": [
+        "triceps",
+        "core"
+      ],
+      "equipment": [
+        "dumbbell"
+      ],
+      "planeOfMotion": "frontal",
+      "unilateral": false,
+      "skillLevel": "beginner",
+      "impactLevel": "low",
+      "loadsJoints": [
+        "shoulder",
+        "elbow"
+      ],
+      "contraindications": [
+        "shoulder"
+      ],
+      "source": "seed_manual",
+      "confidence": 0.93
+    },
+    {
       "id": "exercise_pullup",
       "name": "Pull-up",
       "movementPattern": "vertical_pull",
@@ -447,6 +500,59 @@
       ],
       "source": "seed_manual",
       "confidence": 0.9
+    },
+    {
+      "id": "exercise_assisted_pullup",
+      "name": "Band-assisted Pull-up",
+      "movementPattern": "vertical_pull",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps",
+        "core"
+      ],
+      "equipment": [
+        "pull_up_bar",
+        "bands"
+      ],
+      "planeOfMotion": "frontal",
+      "unilateral": false,
+      "skillLevel": "beginner",
+      "impactLevel": "low",
+      "loadsJoints": [
+        "shoulder",
+        "elbow"
+      ],
+      "contraindications": [
+        "shoulder",
+        "elbow"
+      ],
+      "source": "seed_manual",
+      "confidence": 0.9
+    },
+    {
+      "id": "exercise_lat_pulldown",
+      "name": "Lat Pulldown",
+      "movementPattern": "vertical_pull",
+      "primaryMuscle": "back",
+      "secondaryMuscles": [
+        "biceps"
+      ],
+      "equipment": [
+        "cable"
+      ],
+      "planeOfMotion": "frontal",
+      "unilateral": false,
+      "skillLevel": "beginner",
+      "impactLevel": "low",
+      "loadsJoints": [
+        "shoulder",
+        "elbow"
+      ],
+      "contraindications": [
+        "shoulder"
+      ],
+      "source": "seed_manual",
+      "confidence": 0.93
     },
     {
       "id": "exercise_bent_over_row",
@@ -21316,6 +21422,36 @@
       "to": "exercise_goblet_squat"
     },
     {
+      "type": "REGRESSES_TO",
+      "from": "exercise_front_squat",
+      "to": "exercise_back_squat"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_back_squat",
+      "to": "exercise_front_squat"
+    },
+    {
+      "type": "REGRESSES_TO",
+      "from": "exercise_back_squat",
+      "to": "exercise_leg_press"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_leg_press",
+      "to": "exercise_back_squat"
+    },
+    {
+      "type": "REGRESSES_TO",
+      "from": "exercise_split_squat",
+      "to": "exercise_goblet_squat"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_goblet_squat",
+      "to": "exercise_split_squat"
+    },
+    {
       "type": "SIMILAR_TO",
       "from": "exercise_back_squat",
       "to": "exercise_leg_press",
@@ -21376,6 +21512,31 @@
       "to": "exercise_romanian_deadlift"
     },
     {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_romanian_deadlift",
+      "to": "exercise_deadlift"
+    },
+    {
+      "type": "REGRESSES_TO",
+      "from": "exercise_romanian_deadlift",
+      "to": "exercise_hip_thrust"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_hip_thrust",
+      "to": "exercise_romanian_deadlift"
+    },
+    {
+      "type": "REGRESSES_TO",
+      "from": "exercise_hip_thrust",
+      "to": "exercise_glute_bridge"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_glute_bridge",
+      "to": "exercise_hip_thrust"
+    },
+    {
       "type": "SIMILAR_TO",
       "from": "exercise_deadlift",
       "to": "exercise_romanian_deadlift",
@@ -21418,6 +21579,66 @@
       "to": "exercise_bench_press"
     },
     {
+      "type": "REGRESSES_TO",
+      "from": "exercise_bench_press",
+      "to": "exercise_dumbbell_bench_press"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_dumbbell_bench_press",
+      "to": "exercise_bench_press"
+    },
+    {
+      "type": "REGRESSES_TO",
+      "from": "exercise_dumbbell_bench_press",
+      "to": "exercise_pushup"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_pushup",
+      "to": "exercise_dumbbell_bench_press"
+    },
+    {
+      "type": "REGRESSES_TO",
+      "from": "exercise_pushup",
+      "to": "exercise_incline_pushup"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_incline_pushup",
+      "to": "exercise_pushup"
+    },
+    {
+      "type": "REGRESSES_TO",
+      "from": "exercise_overhead_press",
+      "to": "exercise_dumbbell_shoulder_press"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_dumbbell_shoulder_press",
+      "to": "exercise_overhead_press"
+    },
+    {
+      "type": "REGRESSES_TO",
+      "from": "exercise_pullup",
+      "to": "exercise_assisted_pullup"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_assisted_pullup",
+      "to": "exercise_pullup"
+    },
+    {
+      "type": "REGRESSES_TO",
+      "from": "exercise_assisted_pullup",
+      "to": "exercise_lat_pulldown"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_lat_pulldown",
+      "to": "exercise_assisted_pullup"
+    },
+    {
       "type": "SUBSTITUTES_FOR_WHEN",
       "from": "exercise_pushup",
       "to": "exercise_bench_press",
@@ -21436,6 +21657,16 @@
     },
     {
       "type": "IS_VARIANT_OF",
+      "from": "exercise_dumbbell_row",
+      "to": "exercise_bent_over_row"
+    },
+    {
+      "type": "REGRESSES_TO",
+      "from": "exercise_bent_over_row",
+      "to": "exercise_dumbbell_row"
+    },
+    {
+      "type": "PROGRESSES_TO",
       "from": "exercise_dumbbell_row",
       "to": "exercise_bent_over_row"
     },
@@ -21485,6 +21716,16 @@
         "movement_pattern",
         "energy_system"
       ]
+    },
+    {
+      "type": "REGRESSES_TO",
+      "from": "exercise_zone2_run",
+      "to": "exercise_recovery_walk"
+    },
+    {
+      "type": "PROGRESSES_TO",
+      "from": "exercise_recovery_walk",
+      "to": "exercise_zone2_run"
     },
     {
       "type": "SIMILAR_TO",

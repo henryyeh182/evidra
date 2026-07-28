@@ -1,6 +1,6 @@
 # Fitness MCP — Implementation Plan
 
-> 版本：**v5** · 依 [Design Manifesto](design-manifesto.md) 推導
+> 版本：**v5.1** · 依 [Design Manifesto](design-manifesto.md) 推導
 > **Mission**：A permissioned Fitness Decision Engine that turns fragmented, user-owned health evidence into explainable training decisions for AI agents.
 
 > ⚠️ [Design Manifesto](design-manifesto.md) 位階最高，衝突時以宣言為準。
@@ -11,14 +11,14 @@
 
 ## 1. 已實作元件
 
-157 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+163 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
 | `packages/domain` | 核心模型：User / Goal / Preference / Injury / Equipment / Workout / HealthMetric，含 `assertValidUserContext` |
 | `packages/semantic-engine` | `generateSemanticFitnessState`：recovery / readiness / fatigue / 分肌群疲勞 / 負荷。**訊號可得性自適應**——訊號過期即排除並重新正規化權重，如實下調 confidence，輸出 `signalCoverage`。基線由 `options.baselines` 注入，族群常數僅作 fallback |
 | `packages/training-load` | **`computeTrainingLoad`**：ATL / CTL / TSB（指數移動平均）、ACWR ramp-rate、負荷分區，**detraining 為獨立軸線**（以本人近期 CTL 峰值為基準，須同時滿足閒置天數與體能流失，taper／deload 不誤觸）。**`computePersonalBaselines`**：由傳入的 health metrics 現算本人基線 |
-| `packages/knowledge-graph` | 896 節點 / 5,839 邊。`graph.js`（替代／進退階／結構化檢索遍歷）、`workoutSchema.js`（Block/Set 結構與驗證）、`programTemplates.js`（參數化課表模板） |
+| `packages/knowledge-graph` | 900 節點 / 5,866 邊。`graph.js`（替代／進退階／結構化檢索遍歷）、`workoutSchema.js`（Block/Set 結構與驗證）、`programTemplates.js`（參數化課表模板）、`models.js` 的 `assertValidProgressions`（進退階不變量，建圖時強制） |
 | `packages/planning` | `generatePlan`（週期化 base→build→peak→deload）、`adaptPlan`（非破壞式 diff 預覽）、`planStore`（版本化 preview→commit） |
 | `packages/connectors` | Apple Health（`export.xml` 串流解析）、Strava、**Garmin**（readiness／daily summary／sleep／activities，含 sentinel 處理）的格式正規化 |
 | `packages/evidence` | **Fitness Evidence Model**：跨來源證據契約 ＋ 轉內部 context |
@@ -30,7 +30,8 @@
 
 **工具腳本**：`npm run build:graph`（重建知識圖譜）、`audit:graph`（品質稽核）、`import:apple-health`（本機匯入真實資料）、`eval`（評測計分）
 
-**資料品質現況**：分類準確率 94.1%、替代合理率 100%（50 抽樣）、高負荷動作無禁忌 0 個。
+**資料品質現況**：分類準確率 94.1%、替代合理率 100%（50 抽樣）、高負荷動作無禁忌 0 個、
+策展核心進退階覆蓋率 85.2%（gate ≥ 70%）。
 
 ---
 
@@ -80,7 +81,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 1. 那是在測 Claude / ChatGPT 的腦，不是測我們的產品。
 2. 執行它必須呼叫 LLM API，與 **D-LLM「系統內不含 LLM」** 相衝突。
 
-**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 157 個測試）。
+**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 163 個測試）。
 另補上 **MCP client 相容性驗證**（見下）取代連通性層面的疑慮。
 
 > **D1 與 D2 同一個根因**：系統是照「我們有使用者資料庫，AI 來查」設計的（傳統 SaaS），不是照「AI 帶授權證據來，我們回決策」設計的（intelligence layer）。**架構圖畫的是後者，程式蓋的是前者。**
@@ -93,7 +94,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 |---|---|---|---|
 | 1 | Semantic Fitness Layer | 🟡 | 證據契約已就位（D1 已修）；**3/6** 來源解析器（＋Garmin），來源格式與統一詞彙已有 schema 與方言等價驗證 |
 | 2 | Fitness Intelligence Engine | 🟢 | 確定性且產出五層決策（D2 已修）；ATL/CTL/TSB ＋ detraining 軸線 ＋ 個人基線已上（Phase 4 前兩項） |
-| 3 | Fitness Knowledge Graph | 🟡 | 只連動作/肌群/器材/替代；**缺恢復、訓練目標連結**。5,242/5,839 邊（89.8%）是自動生成的 SIMILAR_TO，**進退階關係幾乎不存在**（`PROGRESSES_TO` 3 ＋ `REGRESSES_TO` 4，共 7 條） |
+| 3 | Fitness Knowledge Graph | 🟡 | 900 節點 / 5,866 邊。**進退階已補齊**（7 → 34 條，17 組互逆，策展核心覆蓋 85.2%，帶不變量把關）；**仍缺恢復、訓練目標連結**。相似度邊佔 89.4%，但那是匯入節點的設計結果（見 Phase 4.3） |
 | 4 | Feedback Learning | 🔴 | **零**。無「狀態→決策→結果」記錄與閉環 |
 | 5 | Multi-LLM Interface | 🟡 | MCP stdio ＋ Streamable HTTP 已上；**無 REST API、無 SDK、無 OAuth**（`http.js` 目前是 bearer token 比對） |
 
@@ -157,24 +158,61 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 > 與 D-DATA 一致：基線是**每次呼叫現算**的，我們這端不保存任何人的基線。
 
-#### 🔴 4.3 知識圖譜語意關係 — 未開始
+#### 🟡 4.3 知識圖譜語意關係 — 進退階已補，恢復／訓練目標未動
 
-實測邊型別分佈（`data/seeds/exercises-graph.json`，5,839 邊）：
-
-| 型別 | 邊數 | 佔比 |
-|---|---:|---:|
-| `SIMILAR_TO`（自動生成） | 5,242 | 89.8% |
-| `SUBSTITUTES_FOR_WHEN` | 584 | 10.0% |
-| `IS_VARIANT_OF` | 4 | — |
-| `REGRESSES_TO` | 4 | — |
-| `PROGRESSES_TO` | 3 | — |
-| `ANTAGONIST_OF` | 2 | — |
-
-兩個缺口：**進退階實質不存在**（7 條），**恢復與訓練目標沒有邊型別**。這是 R4 的具體形態。
-
-**缺的是資料不是程式**：`graph.js` 的 `findSubstitutions` 已經會查 `REGRESSES_TO`
+**缺的是資料不是程式**：`graph.js` 的 `findSubstitutes` 早就會查 `REGRESSES_TO`
 （`graph.js:109`，權重 0.6），也已導出 `getProgressions` / `getRegressions`。
-遍歷路徑存在，但圖上只有 4 條退階邊 —— 那條分支近乎永遠空手，結果落回 `SIMILAR_TO`。
+遍歷路徑一直都在，缺的是可走的邊。
+
+##### 負面結果：進退階生不出來，只能標註
+
+試過三條在 vendored 資料屬性上的生成規則（同群＋同器材＋skill +1；同群＋同器材＋
+單邊化；同群＋器材階梯 +1），以及一條以動作名稱主幹為錨的規則。全部失敗：
+
+| 規則 | 產出 | 樣本 |
+|---|---:|---|
+| skill +1（同器材） | 1,360 條，最大扇出 25 | `3/4 Sit-Up → Russian Twist` |
+| 器材階梯 +1 | 2,380 條，最大扇出 25 | `3/4 Sit-Up → Cable Crunch` |
+| 名稱主幹＋skill +1 | 214 條，最大扇出 4 | `Cable Shoulder Press → Dumbbell Shoulder Press`（換器材，不是進階）<br>`Close-Grip Dumbbell Press → Alternating Kettlebell Press`（主幹 "press" 把胸推和壺鈴過頭推併在一起） |
+
+**根因**：free-exercise-db 的 `level` 是**單一動作的難度標籤**，不是動作家族內的順序；
+資料裡也沒有家族欄位可當錨。任何在這組屬性上的規則，本質都是「相似度加一個方向」——
+正是本節開頭警告的那件事。**進退階是策展關係，不是可推導關係。**
+
+##### 已做：策展階梯 ＋ 資料層不變量
+
+- 補 4 個缺的橫檔節點：`Incline Push-up`、`Dumbbell Shoulder Press`、
+  `Band-assisted Pull-up`、`Lat Pulldown`（`Pull-up` 與 `Overhead Press` 原本
+  **沒有任何退階可退**）
+- 進退階 **7 → 34 條**（17 組互逆），涵蓋 squat／hinge／horizontal_push／
+  vertical_push／vertical_pull／horizontal_pull／locomotion
+- `assertValidProgressions`（`packages/knowledge-graph/src/models.js`）在**每次
+  建圖時**強制四條不變量，這是擋住「相似度改包裝」的實際機制：
+
+  | 不變量 | 擋掉什麼 |
+  |---|---|
+  | 互逆 | 只能爬不能退的階梯——`findSubstitutes` 找的是退階，單向等於沒有 |
+  | skill 沿 `PROGRESSES_TO` 非遞減 | 進階回傳一個更簡單的動作 |
+  | 不得互為對方的進階 | 矛盾邊 |
+  | 無環 | 「比自己難」，且會讓找下一階的呼叫端無限繞 |
+
+  修這件事時就抓到一條真實壞資料：`deadlift REGRESSES_TO romanian_deadlift`
+  當時沒有反向邊。
+
+- `npm run audit:graph` 新增階梯覆蓋率並納入 gate。**覆蓋率只在策展核心上量**——
+  匯入節點依設計只帶相似度邊。現況 **23/27 = 85.2%**（gate ≥ 70%），
+  未覆蓋的只有 `mobility`。
+
+##### 剩餘：恢復與訓練目標連結
+
+- `decideSession.js:29` 的 `RECOVERY_MOVEMENTS = ["Easy walk", "Mobility flow"]`
+  是**寫死字串**，不是從圖上取的——這就是「缺恢復連結」的具體形態，也對應 eval
+  那條 plan exercise → catalog coverage 62.5% 的診斷（`Tempo Run`、`Bent-over Row`、
+  `Long Zone 2 Run` 都指不到節點）。
+- 訓練目標同理，圖上沒有可依目標挑動作的欄位或邊。
+- **待決策**：目標與恢復角色要做成**節點屬性**（與 equipment／joints 現有做法一致，
+  見 `models.js` 的註解）或**新邊型別**。前者改動小且與現況一致；後者在導入 graph DB
+  後較自然。此決策未做，故此項未開工。
 
 #### 驗收（重寫）
 
@@ -187,11 +225,18 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 | A2 | 每個非 `keep` 決策都帶 from→to 與可追溯的 reason | `assertValidDecision` 結構性拒絕 |
 | A3 | 證據不足時回退化標記，不猜數值 | `insufficient_history` ／ `signalCoverage` ／ `missing` |
 | A4 | 負荷指標所依據的每個訊號都出現在 `provenance` | eval grounding gate |
-| A5 | **4.3 完成後**：進退階可從圖上走通，且 `SIMILAR_TO` 不再是唯一實質關係 | `npm run audit:graph` 加斷言：具進退階邊的動作覆蓋率，及 `SIMILAR_TO` 佔比上限 |
-| A6 | **4.3 完成後**：`decide_exercise_substitution` 對退階請求回真實的退階動作，而非相似動作 | eval golden case 新增退階情境 |
+| A5 | ✅ 進退階可從圖上走通，且每條階梯上下都通 | `audit:graph` 階梯覆蓋率 gate（≥ 70%，現 85.2%）＋ `assertValidProgressions` 四條不變量 |
+| A6 | ✅ 退階請求回真實的退階動作，而非相似動作 | `graph.test.js`：`exercise_pullup` 的退階必須是 `exercise_assisted_pullup`（beginner／同 pattern） |
+| A7 | **恢復／訓練目標連結完成後**：`decideSession` 換入的恢復動作指得到圖上節點 | eval 的 plan exercise → catalog coverage 由診斷升為 gate |
 
-> A5 / A6 的門檻值待 4.3 開工時依實際可標註量訂定，**不得為了通過門檻而回頭放寬
-> 自動生成規則**——那會把 89.8% 的相似度邊重新包裝成語意邊。
+> **訂正（v5.1）**：A5 原本寫的是「`SIMILAR_TO` 佔比上限」。該指標作廢——它假設
+> 生成器會補出大量語意邊來稀釋佔比，而 4.3 的負面結果證明生成器**不該**補進退階。
+> 全圖 89.4% 的相似度佔比是匯入節點的設計結果，不是缺陷，壓低它只能靠刪資料或造假邊。
+> 改以**策展核心的階梯覆蓋率**衡量——那才決定「要求退階時答不答得出來」。
+> 佔比仍列在 audit 輸出中，作為診斷而非 gate。
+>
+> 原則不變：**不得為了通過門檻而回頭放寬自動生成規則**。這條現在由
+> `graph.test.js` 的「generated nodes must not carry progression edges」直接把關。
 
 ### Phase 5 — 多來源正規化（護城河 #1）🟡 進行中
 - Garmin / Oura / Whoop / MyFitnessPal 格式解析 —— **Garmin 已完成**（3/6 來源）
@@ -263,7 +308,7 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 | **R1 增益無法證明** | ⛔ 評測已取消（測 LLM 腦非產品，且違反 D-LLM）。改以決策可驗證性衡量。**殘留風險：對外仍缺一個量化說法** |
 | **R2 定位滑回內容庫** | 🟢 已發生一次（早期蓋出檢索層），D3 已收回；靠 GPT-6 判準持續守 |
 | **R3 健康建議責任邊界** | 🟡 B2B 讓責任鏈更長，需 tool description ＋ 合約兩層聲明非醫療用途 |
-| **R4 KG 關係品質** | 🟡 89.8% 邊是自動生成的相似度，語意關係稀疏。承接處：**Phase 4.3** |
+| **R4 KG 關係品質** | 🟡 進退階已由策展補齊並有不變量把關（4.3）。**殘留**：恢復／訓練目標連結仍缺；匯入的 873 個節點只有相似度邊，且已驗證無法由規則升級為語意邊 |
 
 ## 7. 工程原則（沿用，位階次於宣言）
 

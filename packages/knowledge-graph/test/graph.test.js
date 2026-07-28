@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { buildExerciseGraph } from "../src/graph.js";
+import { assertValidProgressions } from "../src/models.js";
 
 const data = JSON.parse(
   await readFile(new URL("../../../data/seeds/exercises-graph.json", import.meta.url), "utf8")
@@ -130,6 +131,108 @@ test("R3 safety: contraindication filter never leaks, at full graph scale", () =
   for (const sub of subs) {
     assert.ok(!graph.getExercise(sub.id).contraindications.includes("knee"));
   }
+});
+
+// --- progression ladders (Phase 4.3) --------------------------------------
+
+const ladderNode = (id) => ({
+  id,
+  name: id,
+  movementPattern: "squat",
+  primaryMuscle: "quads",
+  secondaryMuscles: [],
+  equipment: ["none"],
+  skillLevel: "beginner",
+  source: "test",
+  confidence: 1
+});
+
+test("every core lift can be climbed down as well as up", () => {
+  // A ladder with only PROGRESSES_TO is invisible to findSubstitutes, which
+  // reaches for regressions. Each of these is the top of a curated ladder.
+  for (const id of [
+    "exercise_back_squat",
+    "exercise_deadlift",
+    "exercise_bench_press",
+    "exercise_overhead_press",
+    "exercise_pullup",
+    "exercise_bent_over_row",
+    "exercise_zone2_run"
+  ]) {
+    const easier = graph.getRegressions(id);
+    assert.ok(easier.length > 0, `${id} has no regression to fall back to`);
+    for (const step of easier) {
+      assert.ok(
+        graph.getProgressions(step.id).some((back) => back.id === id),
+        `${step.id} does not climb back to ${id}`
+      );
+    }
+  }
+});
+
+test("a regression request returns a real regression, not a similar movement", () => {
+  // The Phase 4.3 acceptance case: asking to scale back an advanced pull must
+  // hand back an easier vertical pull, not another advanced one.
+  const subs = graph.findSubstitutes("exercise_pullup", {});
+  const regression = subs.find((sub) => sub.id === "exercise_assisted_pullup");
+  assert.ok(regression, `expected the assisted pull-up rung, got ${subs.map((s) => s.id).join(", ")}`);
+  assert.equal(graph.getExercise(regression.id).movementPattern, "vertical_pull");
+  assert.equal(graph.getExercise(regression.id).skillLevel, "beginner");
+});
+
+test("progression edges are curated only — generated edges never claim a direction", () => {
+  // The generator ranks by similarity, which has no direction. If it ever
+  // starts emitting PROGRESSES_TO, that is similarity wearing a coaching label.
+  const bySource = new Map(data.exercises.map((e) => [e.id, e.source]));
+  const directed = data.edges.filter((e) => e.type === "PROGRESSES_TO" || e.type === "REGRESSES_TO");
+  const generated = directed.filter(
+    (e) => bySource.get(e.from) === "free-exercise-db" || bySource.get(e.to) === "free-exercise-db"
+  );
+  assert.deepEqual(generated, [], "generated nodes must not carry progression edges");
+});
+
+test("assertValidProgressions rejects a one-way ladder", () => {
+  assert.throws(
+    () =>
+      assertValidProgressions({
+        exercises: [ladderNode("a"), ladderNode("b")],
+        edges: [{ type: "PROGRESSES_TO", from: "a", to: "b" }]
+      }),
+    /no matching REGRESSES_TO/
+  );
+});
+
+test("assertValidProgressions rejects progressing to an easier movement", () => {
+  assert.throws(
+    () =>
+      assertValidProgressions({
+        exercises: [{ ...ladderNode("a"), skillLevel: "advanced" }, ladderNode("b")],
+        edges: [
+          { type: "PROGRESSES_TO", from: "a", to: "b" },
+          { type: "REGRESSES_TO", from: "b", to: "a" }
+        ]
+      }),
+    /lower skill level/
+  );
+});
+
+test("assertValidProgressions rejects a cycle of same-level movements", () => {
+  // Skill monotonicity alone would let this through: every rung is beginner.
+  assert.throws(
+    () =>
+      assertValidProgressions({
+        exercises: [ladderNode("a"), ladderNode("b"), ladderNode("c")],
+        edges: [
+          { type: "PROGRESSES_TO", from: "a", to: "b" },
+          { type: "REGRESSES_TO", from: "b", to: "a" },
+          { type: "PROGRESSES_TO", from: "b", to: "c" },
+          { type: "REGRESSES_TO", from: "c", to: "b" },
+          { type: "PROGRESSES_TO", from: "c", to: "a" },
+          { type: "REGRESSES_TO", from: "a", to: "c" }
+        ]
+      }),
+    /cycle/
+  );
 });
 
 test("high-load imported movements all carry a contraindication flag", () => {
