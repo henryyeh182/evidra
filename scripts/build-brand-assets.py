@@ -33,10 +33,18 @@ NODES = [(BL, 0.044, NODE), (BM, 0.044, NODE), (BR, 0.044, NODE),
          (PEAK, 0.040, NODE), (APEX, 0.058, ACCENT)]
 
 
-# At small sizes the full graph collapses into a smudge, so the mark reduces:
-# the outer frame and the mint apex carry the identity, the interior does not.
+# The 32px reduction: the mark's outer contour, with the two interior struts
+# and the middle foot dropped. Rendered at 32 against the full mark and against
+# a straight downscale of the 256, the interior is mush either way — the struts
+# and the left triangle merge into grey. The contour is the only part that
+# survives, so it is the only part drawn.
+#
+# The bend at PEAK is the mark's own, not an artefact of reducing it: the left
+# edge turns 28 degrees there. At the weight this used to ship it spanned about
+# two pixels and read as a wobble, which is why the strokes below are heavier
+# than a proportional scale would give.
 SIMPLE_EDGES = [(BL, PEAK), (PEAK, APEX), (APEX, BR), (BL, BR)]
-SIMPLE_NODES = [(BL, 0.05, NODE), (BR, 0.05, NODE), (PEAK, 0.045, NODE), (APEX, 0.075, ACCENT)]
+SIMPLE_NODES = [(BL, 0.05, NODE), (BR, 0.05, NODE), (PEAK, 0.045, NODE), (APEX, 0.085, ACCENT)]
 
 
 def draw_mark(draw, cx, cy, scale, stroke, simplified=False):
@@ -70,13 +78,22 @@ def render(size, mark_fraction, corner_fraction):
     radius = int(canvas * corner_fraction)
     draw.rounded_rectangle([0, 0, canvas - 1, canvas - 1], radius=radius, fill=INK)
 
-    # Below ~64px a proportional stroke thins to near-invisibility and the mint
-    # node disappears, so small sizes get a heavier mark rather than a faithful
-    # miniature of the large one.
-    simplified = size <= 64
+    # 32 and 64 fail differently, and treating them as one case is what went
+    # wrong before. 64 has room for the whole mark — struts, middle foot and
+    # all — and simplifying it threw away the structure for nothing. Only 32
+    # is genuinely too small to hold the interior.
+    #
+    # A proportional stroke is too thin at both: it leaves the mint node barely
+    # present and the bend at PEAK looking accidental. Sizes are scaled rather
+    # than replaced so a caller's framing survives — the avatar asks for a
+    # smaller mark because GitHub crops it to a circle.
+    simplified = size <= 32
     if simplified:
-        mark_fraction *= 1.15
-        stroke_fraction = 0.05
+        mark_fraction *= 1.23
+        stroke_fraction = 0.058
+    elif size <= 64:
+        mark_fraction *= 1.06
+        stroke_fraction = 0.034
     elif size <= 128:
         stroke_fraction = 0.034
     else:
