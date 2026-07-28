@@ -1,6 +1,7 @@
 import { stableId } from "../../../../db/src/id.js";
 
-const STRAVA_TYPE_MAP = {
+/** Shared with the bulk-export dialect: both spell sport types identically. */
+export const STRAVA_TYPE_MAP = {
   Run: "run",
   TrailRun: "run",
   Ride: "ride",

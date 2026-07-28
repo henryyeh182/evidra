@@ -4,7 +4,22 @@ export {
   normalizedHealthMetricToHealthMetric,
   applyNormalizedEventsToContext
 } from "./normalization.js";
-export { normalizeStravaActivity } from "./providers/strava/index.js";
+export {
+  normalizeStravaActivity,
+  parseStravaExport,
+  attachLocalOffsets,
+  readStravaFitOffset,
+  readFitLocalOffset,
+  formatUtcOffset,
+  parseStravaActivitiesCsv,
+  parseStravaPreferencesCsv,
+  parseStravaStructuredDetailsCsv,
+  stravaExportDateToIso,
+  normalizeStravaExport,
+  normalizeStravaExportActivity,
+  describeStravaExportCoverage,
+  STRAVA_EXPORT_SCHEMA
+} from "./providers/strava/index.js";
 export {
   parseAppleHealthExport,
   parseAppleHealthExportString,

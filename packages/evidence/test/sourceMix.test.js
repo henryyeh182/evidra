@@ -118,6 +118,25 @@ test("source coverage is knowable before any decision is attempted", () => {
   assert.deepEqual(describeSourceCoverage(["fitbit"]).unknownSources, ["fitbit"]);
 });
 
+test("an activity-only source is described by the load it carries, not the physiology it lacks", () => {
+  const strava = describeSourceCoverage(["strava"]);
+  assert.ok(
+    strava.availableSignals.includes("session_relative_effort"),
+    "Strava's contribution is per-session load, and the registry says so"
+  );
+  assert.equal(strava.hasRecoveryEvidence, false, "which is still not recovery physiology");
+
+  // The bulk export is a second dialect of the same platform: no OAuth, more
+  // columns, and load that only exists when the session recorded power.
+  const exported = describeSourceCoverage(["strava_export"]);
+  assert.deepEqual(exported.availableSignals, [
+    "session_intensity_factor",
+    "session_relative_effort",
+    "session_training_load"
+  ]);
+  assert.equal(exported.hasRecoveryEvidence, false);
+});
+
 test("the registry answers which platforms supply a given signal", () => {
   const sleepSources = sourcesProviding("sleep_duration_hours");
   for (const expected of ["apple_health", "garmin", "google_health_connect", "oura", "whoop"]) {

@@ -1,0 +1,7 @@
+Activity ID,Exercise Name,Repetitions,Duration (seconds),Weight,Start Time (milliseconds),Superset ID,Rate of Perceived Exertion
+1000000004,Barbell Back Squat,6,40,90.0,0,,7
+1000000004,Barbell Back Squat,6,40,90.0,220000,,8
+1000000004,Barbell Back Squat,6,38,95.0,450000,,8
+1000000004,Romanian Deadlift,10,48,75.0,720000,1,7
+1000000004,Bulgarian Split Squat,12,52,24.0,860000,1,7
+1000000004,Plank,,60,,1080000,,6
