@@ -1,6 +1,6 @@
 # Fitness MCP — Implementation Plan
 
-> 版本：**v4** · 依 [Design Manifesto](design-manifesto.md) 推導
+> 版本：**v5** · 依 [Design Manifesto](design-manifesto.md) 推導
 > **Mission**：A permissioned Fitness Decision Engine that turns fragmented, user-owned health evidence into explainable training decisions for AI agents.
 
 > ⚠️ [Design Manifesto](design-manifesto.md) 位階最高，衝突時以宣言為準。
@@ -11,12 +11,13 @@
 
 ## 1. 已實作元件
 
-138 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+157 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
 | `packages/domain` | 核心模型：User / Goal / Preference / Injury / Equipment / Workout / HealthMetric，含 `assertValidUserContext` |
-| `packages/semantic-engine` | `generateSemanticFitnessState`：recovery / readiness / fatigue / 分肌群疲勞 / 負荷。**訊號可得性自適應**——訊號過期即排除並重新正規化權重，如實下調 confidence，輸出 `signalCoverage` |
+| `packages/semantic-engine` | `generateSemanticFitnessState`：recovery / readiness / fatigue / 分肌群疲勞 / 負荷。**訊號可得性自適應**——訊號過期即排除並重新正規化權重，如實下調 confidence，輸出 `signalCoverage`。基線由 `options.baselines` 注入，族群常數僅作 fallback |
+| `packages/training-load` | **`computeTrainingLoad`**：ATL / CTL / TSB（指數移動平均）、ACWR ramp-rate、負荷分區，**detraining 為獨立軸線**（以本人近期 CTL 峰值為基準，須同時滿足閒置天數與體能流失，taper／deload 不誤觸）。**`computePersonalBaselines`**：由傳入的 health metrics 現算本人基線 |
 | `packages/knowledge-graph` | 896 節點 / 5,839 邊。`graph.js`（替代／進退階／結構化檢索遍歷）、`workoutSchema.js`（Block/Set 結構與驗證）、`programTemplates.js`（參數化課表模板） |
 | `packages/planning` | `generatePlan`（週期化 base→build→peak→deload）、`adaptPlan`（非破壞式 diff 預覽）、`planStore`（版本化 preview→commit） |
 | `packages/connectors` | Apple Health（`export.xml` 串流解析）、Strava、**Garmin**（readiness／daily summary／sleep／activities，含 sentinel 處理）的格式正規化 |
@@ -79,7 +80,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 1. 那是在測 Claude / ChatGPT 的腦，不是測我們的產品。
 2. 執行它必須呼叫 LLM API，與 **D-LLM「系統內不含 LLM」** 相衝突。
 
-**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 138 個測試）。
+**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 157 個測試）。
 另補上 **MCP client 相容性驗證**（見下）取代連通性層面的疑慮。
 
 > **D1 與 D2 同一個根因**：系統是照「我們有使用者資料庫，AI 來查」設計的（傳統 SaaS），不是照「AI 帶授權證據來，我們回決策」設計的（intelligence layer）。**架構圖畫的是後者，程式蓋的是前者。**
@@ -91,10 +92,10 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 | # | 能力 | 現況 | 缺口 |
 |---|---|---|---|
 | 1 | Semantic Fitness Layer | 🟡 | 證據契約已就位（D1 已修）；**3/6** 來源解析器（＋Garmin），來源格式與統一詞彙已有 schema 與方言等價驗證 |
-| 2 | Fitness Intelligence Engine | 🟢 | 確定性且產出五層決策（D2 已修）；深度待補 ATL/CTL/TSB |
-| 3 | Fitness Knowledge Graph | 🟡 | 只連動作/肌群/器材/替代；**缺恢復、訓練目標連結**。5,242/5,839 邊是自動生成的 SIMILAR_TO，**進退階關係幾乎不存在**（僅 7 條） |
+| 2 | Fitness Intelligence Engine | 🟢 | 確定性且產出五層決策（D2 已修）；ATL/CTL/TSB ＋ detraining 軸線 ＋ 個人基線已上（Phase 4 前兩項） |
+| 3 | Fitness Knowledge Graph | 🟡 | 只連動作/肌群/器材/替代；**缺恢復、訓練目標連結**。5,242/5,839 邊（89.8%）是自動生成的 SIMILAR_TO，**進退階關係幾乎不存在**（`PROGRESSES_TO` 3 ＋ `REGRESSES_TO` 4，共 7 條） |
 | 4 | Feedback Learning | 🔴 | **零**。無「狀態→決策→結果」記錄與閉環 |
-| 5 | Multi-LLM Interface | 🔴 | 只有 MCP stdio，**無 REST API、無 SDK** |
+| 5 | Multi-LLM Interface | 🟡 | MCP stdio ＋ Streamable HTTP 已上；**無 REST API、無 SDK、無 OAuth**（`http.js` 目前是 bearer token 比對） |
 
 ---
 
@@ -118,11 +119,79 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 **驗收（已通過）**：以子行程模擬 Claude Desktop 完整流程——handshake → initialized 通知 → tools/list → generate_plan → decide_session，取得帶 from→to 的決策。
 
-### Phase 4 — 決策深度（護城河 #2 #3）
-- Training Load Model：ATL / CTL / TSB（指數移動平均）
-- 個人基線取代寫死常數（現在 `hrvMs: 52` 是族群平均，不是本人基線）
-- KG 補上恢復、訓練目標的連結；補真實的進退階關係
-- **驗收**：lift 相對 Phase 3 基準再提升
+### Phase 4 — 決策深度（護城河 #2 #3）🟡 進行中（2/3）
+
+> 原驗收條件是「lift 相對 Phase 3 基準再提升」。**該條已失效**——lift 的量測方式是
+> D5 取消的裸模型 vs 模型＋MCP 對照，執行它必須呼叫 LLM API，與 **D-LLM** 相衝突。
+> 下面依 D5 的替代原則（決策可驗證性）重寫。
+
+#### ✅ 4.1 Training Load Model — 已完成
+
+`packages/training-load/src/trainingLoad.js`，接線於 [`toolHandlers.js`](../apps/mcp-server/src/toolHandlers.js)。
+
+| 產出 | 內容 |
+|---|---|
+| ATL / CTL / TSB | 指數移動平均，由傳入證據中的 workouts 現算（不落地，符合 D-DATA） |
+| ACWR ramp-rate | 急慢性負荷比，作為升載安全閥 |
+| 負荷分區 | `LOAD_ZONES`，資料不足時回 `insufficient_history` 而非猜一個分區 |
+| **detraining 獨立軸線** | 見下 |
+
+**detraining 不是 TSB 的一個帶**。TSB = CTL − ATL 是差值，ATL 觸底後會跟著 CTL 一起
+回到 0——舊版 `TSB >= 25` 的判法讓休兩週讀作 "fresh"、休六個月讀作 "neutral"，
+**離開越久越健康**。現以本人近期 CTL 峰值為基準，同時要求「閒置天數」與「CTL 流失
+百分比」兩個條件，taper 與 deload 因此不會誤觸。
+
+兩個呼叫端一併補上這個軸線：
+
+- `decideSession` — 原本只讀恢復訊號（休息中當然全部漂亮，且 ACWR=0 對 ramp-rate
+  規則是最安全值），照原樣發出高強度課表。現在降強度與量，且不對「只是很新鮮」的人
+  提議進階。
+- `generateTrainingPlan` — 原本無視訓練史，每份計畫從滿載 base 開頭。現在偵測到
+  起始前有中斷時走 return ramp。
+
+#### ✅ 4.2 個人基線取代寫死常數 — 已完成
+
+`computePersonalBaselines(healthMetrics, { asOf })` 由傳入證據現算本人基線，經
+`toolHandlers` 注入 semantic-engine 的 `options.baselines`。`DEFAULT_BASELINES`
+（含原本的 `hrvMs: 52`）降為**證據不足時的 fallback**，不再是唯一來源。
+
+> 與 D-DATA 一致：基線是**每次呼叫現算**的，我們這端不保存任何人的基線。
+
+#### 🔴 4.3 知識圖譜語意關係 — 未開始
+
+實測邊型別分佈（`data/seeds/exercises-graph.json`，5,839 邊）：
+
+| 型別 | 邊數 | 佔比 |
+|---|---:|---:|
+| `SIMILAR_TO`（自動生成） | 5,242 | 89.8% |
+| `SUBSTITUTES_FOR_WHEN` | 584 | 10.0% |
+| `IS_VARIANT_OF` | 4 | — |
+| `REGRESSES_TO` | 4 | — |
+| `PROGRESSES_TO` | 3 | — |
+| `ANTAGONIST_OF` | 2 | — |
+
+兩個缺口：**進退階實質不存在**（7 條），**恢復與訓練目標沒有邊型別**。這是 R4 的具體形態。
+
+**缺的是資料不是程式**：`graph.js` 的 `findSubstitutions` 已經會查 `REGRESSES_TO`
+（`graph.js:109`，權重 0.6），也已導出 `getProgressions` / `getRegressions`。
+遍歷路徑存在，但圖上只有 4 條退階邊 —— 那條分支近乎永遠空手，結果落回 `SIMILAR_TO`。
+
+#### 驗收（重寫）
+
+這一層的驗收是「**決策可被驗證**」，不是「決策更準」。沒有 ground truth，也不做模型
+對照（D5）；能驗的是規則是否確定性、輸出是否自我解釋、退化是否誠實。
+
+| # | 驗收條件 | 量測方式 |
+|---|---|---|
+| A1 | 同一組證據重複呼叫，決策完全相同 | 既有測試即為確定性斷言 |
+| A2 | 每個非 `keep` 決策都帶 from→to 與可追溯的 reason | `assertValidDecision` 結構性拒絕 |
+| A3 | 證據不足時回退化標記，不猜數值 | `insufficient_history` ／ `signalCoverage` ／ `missing` |
+| A4 | 負荷指標所依據的每個訊號都出現在 `provenance` | eval grounding gate |
+| A5 | **4.3 完成後**：進退階可從圖上走通，且 `SIMILAR_TO` 不再是唯一實質關係 | `npm run audit:graph` 加斷言：具進退階邊的動作覆蓋率，及 `SIMILAR_TO` 佔比上限 |
+| A6 | **4.3 完成後**：`decide_exercise_substitution` 對退階請求回真實的退階動作，而非相似動作 | eval golden case 新增退階情境 |
+
+> A5 / A6 的門檻值待 4.3 開工時依實際可標註量訂定，**不得為了通過門檻而回頭放寬
+> 自動生成規則**——那會把 89.8% 的相似度邊重新包裝成語意邊。
 
 ### Phase 5 — 多來源正規化（護城河 #1）🟡 進行中
 - Garmin / Oura / Whoop / MyFitnessPal 格式解析 —— **Garmin 已完成**（3/6 來源）
@@ -155,9 +224,16 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 - 我們這端的學習發生在**引擎規則與知識圖譜**（跨使用者的通則），不在個人資料
 - **驗收**：規則能依回傳的結果證據調整，且不需保存任何個人紀錄
 
-### Phase 7 — Multi-LLM Interface（護城河 #5）
-- MCP（Streamable HTTP）＋ **REST API** ＋ **SDK**
-- OAuth 2.1 Resource Server（認證 agent 開發者）
+### Phase 7 — Multi-LLM Interface（護城河 #5）🟡 部分完成
+
+| 項目 | 狀態 | 位置／缺口 |
+|---|---|---|
+| MCP stdio | ✅ | `apps/mcp-server/src/stdio.js` |
+| MCP Streamable HTTP | ✅ | `apps/mcp-server/src/http.js`，`npm run serve:http`；另有 `/health` |
+| OAuth 2.1 Resource Server | ❌ | 目前是 bearer token 字串比對（`http.js`），非 OAuth。**手機與 marketplace 上架的前提** |
+| REST API | ❌ | HTTP server 只掛 MCP endpoint ＋ `/health`，無資源式 REST |
+| SDK | ❌ | 無 |
+
 - **驗收**：外部 agent 開發者不接觸原始碼即可接上
 
 ### Phase 8 — 商業化
@@ -187,7 +263,7 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 | **R1 增益無法證明** | ⛔ 評測已取消（測 LLM 腦非產品，且違反 D-LLM）。改以決策可驗證性衡量。**殘留風險：對外仍缺一個量化說法** |
 | **R2 定位滑回內容庫** | 🟢 已發生一次（早期蓋出檢索層），D3 已收回；靠 GPT-6 判準持續守 |
 | **R3 健康建議責任邊界** | 🟡 B2B 讓責任鏈更長，需 tool description ＋ 合約兩層聲明非醫療用途 |
-| **R4 KG 關係品質** | 🟡 90% 邊是自動生成的相似度，語意關係稀疏 |
+| **R4 KG 關係品質** | 🟡 89.8% 邊是自動生成的相似度，語意關係稀疏。承接處：**Phase 4.3** |
 
 ## 7. 工程原則（沿用，位階次於宣言）
 
