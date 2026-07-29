@@ -20,7 +20,7 @@
 | `packages/training-load` | **`computeTrainingLoad`**：ATL / CTL / TSB（指數移動平均）、ACWR ramp-rate、負荷分區，**detraining 為獨立軸線**（以本人近期 CTL 峰值為基準，須同時滿足閒置天數與體能流失，taper／deload 不誤觸）。**`computePersonalBaselines`**：由傳入的 health metrics 現算本人基線 |
 | `packages/knowledge-graph` | 889 節點 / 5,785 邊。`graph.js`（替代／進退階／結構化檢索遍歷）、`workoutSchema.js`（Block/Set 結構與驗證）、`programTemplates.js`（參數化課表模板）、`resolveExercise`／`displayNameFor`（口語↔規格化命名）、`models.js` 的 `assertValidProgressions`／`assertUniqueExerciseNaming`／`assertValidTrainingGoals`（建圖時強制） |
 | `packages/planning` | `generatePlan`（週期化 base→build→peak→deload）、`adaptPlan`（非破壞式 diff 預覽）、`planStore`（版本化 preview→commit） |
-| `packages/connectors` | Apple Health（`export.xml` 串流解析）、Strava、**Garmin**（readiness／daily summary／sleep／activities，含 sentinel 處理）的格式正規化 |
+| `packages/connectors` | Apple Health（`export.xml` 串流解析）、**Strava**（OAuth API ＋ bulk export 兩種方言，後者按欄位索引解析並從 `.fit.gz` 還原本地 offset）、**Garmin**（readiness／daily summary／sleep／activities，含 sentinel 處理）的格式正規化 |
 | `packages/evidence` | **Fitness Evidence Model**：跨來源證據契約 ＋ 轉內部 context |
 | `packages/decision-engine` | **`decideSession`**：計畫 × 證據 → Decision/Action/Reason，結構性拒絕退化成推薦 |
 | `packages/db` | PostgreSQL schema 與 row mappers（尚未接 runtime） |
@@ -307,7 +307,7 @@ olympic 服務爆發力。唯一的判斷是複合／單關節：多關節動作
 > `graph.test.js` 的「generated nodes must not carry progression edges」直接把關。
 
 ### Phase 5 — 多來源正規化（護城河 #1）🟡 進行中
-- Oura / Whoop / Google Health Connect 格式解析 —— **Apple Health／Garmin／Strava 已完成**（3/6 來源，其餘三家 registry 已宣告映射但無解析器）
+- Oura / Whoop / Google Health Connect 格式解析 —— **Apple Health／Garmin／Strava 已完成**（3/6 來源，其餘三家 registry 已宣告映射但無解析器）。Strava 兩種方言各自解析：OAuth API 與 bulk export
 - 跨來源語意對齊（同一個 HRV，各家名稱／單位／取樣頻率統一）
 - **證據由 tool call 傳入，不做 OAuth 拉取**
 - **驗收**：同一使用者接不同來源，決策語意一致；訊號衝突有明確優先序
@@ -321,6 +321,25 @@ olympic 服務爆發力。唯一的判斷是複合／單關節：多關節動作
 | 解析器補齊 sleep／stress，與 registry 宣告一致 | `packages/connectors/src/providers/garmin/` |
 | 匯出樣本（含真實缺洞） | `data/fixtures/garmin/export-sample.json` |
 | 五種匯出形狀的模擬場景 ＋ `npm run simulate:garmin` | `eval/scenarios/` |
+
+**已完成（Strava bulk export）**：同一個平台的第二種方言。Strava 的 Download Request
+不需要 OAuth，是使用者交出歷史而不授予常駐存取的路徑——所以它值得被當成獨立方言讀，
+而不是 API 形狀的變體。
+
+| 產出 | 位置 |
+|---|---|
+| 方言宣告（欄位索引、單位陷阱、FTP 相對性、錨點檔） | `VENDOR_SCHEMAS.strava_export`，`packages/evidence/src/schemaRegistry.js` |
+| CSV 解析器（按**索引**定址，進檔前驗證 header row） | `packages/connectors/src/providers/strava/parseExport.js` |
+| 最小 FIT 解碼器（只取 `activity.local_timestamp − timestamp`） | `packages/connectors/src/providers/strava/parseFit.js` |
+| 正規化 ＋ coverage（`loadSource`／`rpeBasis`／`timezoneKnown`） | `packages/connectors/src/providers/strava/normalizeExport.js` |
+| 合成匯出樣本（真實 103 欄 header ＋ 手工 FIT 檔） | `data/fixtures/strava/export/` |
+
+三個陷阱是這個方言的全部重點：`activities.csv` 有 **5 組同名欄單位不同**（`Distance`[6]
+是本地化的公里／英里，[17] 恆為公尺），所以按欄名解析會靜默拿到錯的單位；`Activity Date`
+是 **UTC 且 CSV 裡沒有任何 offset**，本地時區只存在於 `activities/*.fit.gz`；`Training Load`
+與 `Intensity` 是 **FTP 相對值**且只在該次有功率時存在，跨人不可比、FTP 過期即失真——
+因此負荷取 `Relative Effort`（每筆都有，且與 API 的 `suffer_score` 同一把尺），TSS 連同
+它所相對的 FTP 一起放進 metadata。
 
 **這一層的驗收是「讀得懂」，不是「調得準」**：斷言只有命名／單位／source 標籤／
 sentinel 不外洩／缺的誠實列在 `missing`／registry ↔ parser 一致，外加「決策仍成立且
