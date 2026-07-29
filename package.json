@@ -16,7 +16,8 @@
     "audit:graph": "node scripts/audit-exercise-graph.js",
     "eval": "node eval/runner.js",
     "test": "node --test",
-    "serve:http": "node apps/mcp-server/src/http.js"
+    "serve:http": "node apps/mcp-server/src/http.js",
+    "review:phase": "node scripts/review-phase.js"
   },
   "engines": {
     "node": ">=20"

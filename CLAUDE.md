@@ -110,9 +110,17 @@ Claude / ChatGPT 回覆使用者
 ```bash
 npm test                     # 全套測試
 npm run eval                 # golden set 計分
+npm run review:phase         # 階段完成審查（宣告「做完了」之前必跑）
 npm run build:graph          # 重建知識圖譜
 npm run audit:graph          # 圖譜品質稽核
 npm run serve:http           # HTTP transport
 ```
+
+## 宣告完成之前
+
+要說某個 Phase／偏差／修正「做完了」，先走 [docs/phase-review.md](docs/phase-review.md)：
+先讀（memory → 本檔 → README → 宣言 → plan → user-journey），再跑 `npm run review:phase`
+的七條 gate，最後回答七道機械驗不到的判斷題（GPT-6 判準、Decision ≠ Recommendation、
+三條紀律…）。**gate 紅的不得宣告完成**——紅的是宣稱與現況的落差，不是待辦功能。
 
 **MCP server 是常駐行程，改程式不會熱重載**——要驗證改動必須開新 session 或重啟行程。

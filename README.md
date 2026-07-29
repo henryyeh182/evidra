@@ -51,7 +51,7 @@ Claude / ChatGPT 回覆使用者
 
 ## Status
 
-目前：**6 個決策 tool**（stdio ＋ Streamable HTTP）、889 節點知識圖譜、Apple Health／Strava／Garmin 證據正規化、184 tests pass。
+目前：**6 個決策 tool**（stdio ＋ Streamable HTTP）、889 節點知識圖譜、Apple Health／Strava／Garmin 證據正規化、221 tests pass。
 
 各家 schema 的解讀能力有獨立的驗證軸線：`/schemas/sources` 記錄各廠原始格式（含 sentinel 與缺洞），
 `/schemas/evidence` 是統一詞彙，`/eval/scenarios` 用五種匯出形狀（完整／sentinel／方言等價／有損／稀疏）
@@ -74,13 +74,15 @@ Claude / ChatGPT 回覆使用者
 - [**Design Manifesto**](docs/design-manifesto.md) — 定位與治理，位階最高
 - [Implementation Plan](docs/fitness-mcp-implementation-plan.md) — 現況、偏差、Phase 順序
 - [MCP Server](docs/mcp-server.md) — server 與 tool 說明
+- [Phase Review](docs/phase-review.md) — 宣告完成前的審查機制（機械 gate ＋ 判斷題）
 - [Schemas](schemas/README.md) · [Eval](eval/README.md)
 
 ## Local Commands
 
 ```bash
-npm test                    # 138 tests
+npm test                    # 221 tests
 npm run eval                # golden set 計分
+npm run review:phase        # 階段完成審查（宣告「做完了」之前必跑）
 npm run simulate:garmin     # Garmin 各種匯出形狀的讀取報告
 npm run build:graph         # 重建知識圖譜
 npm run audit:graph         # 圖譜品質稽核
