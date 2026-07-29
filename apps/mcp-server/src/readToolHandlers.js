@@ -221,6 +221,7 @@ export async function decideExerciseSubstitutionTool(args = {}) {
   const evidence = [
     { signal: "exercise.contraindications", value: original.contraindications, source: "knowledge_graph" },
     { signal: "exercise.movement_pattern", value: original.movementPattern, source: "knowledge_graph" },
+    { signal: "exercise.training_goals", value: original.trainingGoals, source: "knowledge_graph" },
     ...(conditions.length ? [{ signal: "reported_conditions", value: conditions, source: "caller" }] : []),
     ...(avoid.length ? [{ signal: "protected_joints", value: avoid, source: "caller" }] : [])
   ];
@@ -255,10 +256,20 @@ export async function decideExerciseSubstitutionTool(args = {}) {
     })),
     reason: [
       chosen.reason,
-      ...(avoid.length ? [`已硬性排除對 ${avoid.join("、")} 有禁忌的動作。`] : [])
+      ...(avoid.length ? [`已硬性排除對 ${avoid.join("、")} 有禁忌的動作。`] : []),
+      ...(chosen.preservesTrainingGoal
+        ? [`替代動作仍服務原本的訓練目標（${original.trainingGoals.join("、")}）。`]
+        : [])
     ],
     confidence: original.confidence >= 0.9 ? "high" : "medium",
-    limits: []
+    // A safe swap that trains something else is still the right call when the
+    // original cannot be done — but the caller has to know the session stopped
+    // serving what it was scheduled for.
+    limits: chosen.preservesTrainingGoal
+      ? []
+      : [
+          `訓練刺激已改變：原動作服務 ${original.trainingGoals.join("、")}，替代動作服務 ${chosen.trainingGoals.join("、")}。`
+        ]
   };
 
   return jsonContent(assertGrounded(payload, graph));

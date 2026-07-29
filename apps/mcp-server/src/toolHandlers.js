@@ -172,15 +172,44 @@ async function exerciseNaming() {
   };
 }
 
+/**
+ * The catalog lookup a plan uses when a slot's prescribed movements are all
+ * unavailable: something else that trains the same quality, under the same
+ * equipment and injury constraints. Returns an id or null — the planner decides
+ * what to do with "nothing fits", and says so in the session rationale either
+ * way.
+ */
+async function goalAlternativeLookup() {
+  const { graph } = await loadKnowledgeBase();
+
+  return ({ trainingGoal, availableEquipment, excludeContraindications, avoidMovements = [] }) => {
+    if (!trainingGoal) return null;
+    const matches = graph.searchExercises({
+      trainingGoal,
+      availableEquipment,
+      excludeContraindications,
+      limit: 20
+    });
+    const avoided = (exercise) =>
+      avoidMovements.some((movement) => {
+        const term = String(movement).toLowerCase();
+        return `${exercise.name} ${exercise.id}`.toLowerCase().includes(term);
+      });
+    return matches.find((exercise) => !avoided(exercise))?.id ?? null;
+  };
+}
+
 export async function generateTrainingPlanTool(args = {}) {
   const { context } = await resolveContext(args);
   const { displayNameFor } = await exerciseNaming();
+  const findGoalAlternative = await goalAlternativeLookup();
 
   const plan = generateTrainingPlan(context, {
     goalId: args.goalId,
     weeks: args.weeks,
     startDate: args.startDate,
-    displayNameFor
+    displayNameFor,
+    findGoalAlternative
   });
   planStore.savePlan(plan);
 

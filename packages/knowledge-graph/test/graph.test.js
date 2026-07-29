@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { buildExerciseGraph } from "../src/graph.js";
-import { assertValidProgressions, assertUniqueExerciseNaming } from "../src/models.js";
+import { assertValidProgressions, assertUniqueExerciseNaming, assertValidTrainingGoals } from "../src/models.js";
 
 const data = JSON.parse(
   await readFile(new URL("../../../data/seeds/exercises-graph.json", import.meta.url), "utf8")
@@ -77,6 +77,7 @@ test("buildExerciseGraph rejects edges with missing endpoints", () => {
             secondaryMuscles: [],
             equipment: ["none"],
             skillLevel: "beginner",
+            trainingGoals: ["strength"],
             source: "test",
             confidence: 1
           }
@@ -143,6 +144,7 @@ const ladderNode = (id) => ({
   secondaryMuscles: [],
   equipment: ["none"],
   skillLevel: "beginner",
+  trainingGoals: ["strength"],
   source: "test",
   confidence: 1
 });
@@ -314,4 +316,104 @@ test("no imported exercise shadows a curated one under the same name", () => {
       seen.set(key, exercise.id);
     }
   }
+});
+
+// --- training goals -------------------------------------------------------
+
+test("a movement can be found by the quality it trains", () => {
+  const mobility = graph.searchExercises({ trainingGoal: "mobility", availableEquipment: [] });
+  assert.ok(mobility.some((exercise) => exercise.id === "exercise_lower_body_mobility"));
+  assert.ok(mobility.every((exercise) => exercise.trainingGoals.includes("mobility")));
+
+  // Endurance is not a strength lift wearing a different label.
+  const endurance = graph.searchExercises({ trainingGoal: "endurance" });
+  assert.ok(endurance.some((exercise) => exercise.id === "exercise_zone2_run"));
+  assert.ok(!endurance.some((exercise) => exercise.id === "exercise_back_squat"));
+});
+
+test("a substitute says whether it still trains what the original did", () => {
+  // A run with an injured knee becomes a walk: safe, and still endurance.
+  const forRun = graph.findSubstitutes("exercise_zone2_run", {
+    conditions: ["knee_injury"],
+    avoidContraindications: ["knee"]
+  });
+  const walk = forRun.find((item) => item.id === "exercise_recovery_walk");
+  assert.ok(walk, "expected the recovery walk among knee-safe substitutes");
+  assert.equal(walk.preservesTrainingGoal, true);
+  assert.deepEqual(walk.trainingGoals, ["endurance"]);
+});
+
+test("preserveTrainingGoal drops candidates that change the stimulus", () => {
+  const all = graph.findSubstitutes("exercise_back_squat", { limit: 20 });
+  const preserved = graph.findSubstitutes("exercise_back_squat", { preserveTrainingGoal: true, limit: 20 });
+
+  assert.ok(preserved.length > 0, "a squat must have goal-preserving substitutes");
+  assert.ok(preserved.length <= all.length);
+  const squatGoals = graph.getExercise("exercise_back_squat").trainingGoals;
+  for (const item of preserved) {
+    assert.ok(
+      item.trainingGoals.some((goal) => squatGoals.includes(goal)),
+      `${item.id} shares no training goal with the back squat`
+    );
+    assert.equal(item.preservesTrainingGoal, true);
+  }
+});
+
+test("assertValidTrainingGoals rejects an unlabelled movement", () => {
+  assert.throws(
+    () => assertValidTrainingGoals({ exercises: [{ ...ladderNode("a"), trainingGoals: [] }] }),
+    /declares no training goal/
+  );
+});
+
+test("assertValidTrainingGoals rejects a movement that claims everything", () => {
+  // The failure mode this attribute has to survive: goal coverage made to look
+  // complete by labelling every node with every goal.
+  assert.throws(
+    () =>
+      assertValidTrainingGoals({
+        exercises: [
+          {
+            ...ladderNode("a"),
+            trainingGoals: ["strength", "hypertrophy", "power", "endurance", "mobility"]
+          }
+        ]
+      }),
+    /claims 5 training goals/
+  );
+});
+
+test("assertValidTrainingGoals rejects an unknown goal", () => {
+  assert.throws(
+    () => assertValidTrainingGoals({ exercises: [{ ...ladderNode("a"), trainingGoals: ["fat_loss"] }] }),
+    /unknown training goal/
+  );
+});
+
+test("assertValidTrainingGoals holds a pattern to its defining quality", () => {
+  assert.throws(
+    () =>
+      assertValidTrainingGoals({
+        exercises: [
+          { ...ladderNode("a"), movementPattern: "locomotion", trainingGoals: ["strength"] }
+        ]
+      }),
+    /does not serve endurance/
+  );
+});
+
+test("imported nodes carry goals derived from vendor fields, not a blanket label", () => {
+  // The mirror of the progression rule: generated data may state what the
+  // vendor's own category says, and nothing beyond it. If every imported node
+  // wore the same goals, the attribute could not tell two movements apart.
+  const imported = data.exercises.filter((e) => e.source === "free-exercise-db");
+  const combos = new Set(imported.map((e) => [...e.trainingGoals].sort().join("+")));
+  assert.ok(combos.size >= 4, `expected varied goal sets, got ${[...combos].join(" | ")}`);
+
+  const stretches = imported.filter((e) => e.movementPattern === "mobility");
+  assert.ok(stretches.every((e) => e.trainingGoals.includes("mobility")));
+  assert.ok(
+    stretches.every((e) => !e.trainingGoals.includes("strength")),
+    "a stretch is not a strength movement"
+  );
 });

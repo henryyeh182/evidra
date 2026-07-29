@@ -203,3 +203,55 @@ test("a plan with no start date starts today where the user lives", () => {
   // generated after that day would silently backdate itself to.
   assert.equal(plan.id, `plan_${context.user.id}_${todayInTimezone(context.user.timezone)}`);
 });
+
+test("a slot that loses its movements keeps its training goal", async () => {
+  // The upper-body strength day prescribes dumbbell and barbell work. Strip the
+  // equipment and every prescribed movement is filtered out — the slot used to
+  // become a bodyweight squat, which is a session, but not the session that was
+  // scheduled. The catalog is asked for something that still trains the slot's
+  // goal before the hard-coded fallback is reached.
+  const { buildExerciseGraph } = await import("../../knowledge-graph/src/graph.js");
+  const graphData = JSON.parse(
+    await readFile(new URL("../../../data/seeds/exercises-graph.json", import.meta.url), "utf8")
+  );
+  const graph = buildExerciseGraph(graphData);
+
+  const noKit = {
+    ...context,
+    equipment: context.equipment.map((item) => ({ ...item, available: false }))
+  };
+  const options = { startDate: "2026-07-27", weeks: 1 };
+  const findGoalAlternative = ({ trainingGoal, availableEquipment, excludeContraindications }) =>
+    graph.searchExercises({ trainingGoal, availableEquipment, excludeContraindications, limit: 1 })[0]?.id ?? null;
+
+  const upperDay = (plan) => plan.weeks[0].sessions.find((session) => /Upper-body/.test(session.focus));
+
+  const withoutCatalog = upperDay(generateTrainingPlan(noKit, options));
+  assert.deepEqual(withoutCatalog.exerciseIds, ["exercise_bodyweight_squat"]);
+
+  const withCatalog = upperDay(generateTrainingPlan(noKit, { ...options, findGoalAlternative }));
+  const chosen = graph.getExercise(withCatalog.exerciseIds[0]);
+  assert.ok(chosen, `expected a catalog movement, got ${withCatalog.exerciseIds[0]}`);
+  assert.ok(
+    chosen.trainingGoals.includes("strength"),
+    `${chosen.id} does not train strength: ${chosen.trainingGoals.join(", ")}`
+  );
+  assert.ok(chosen.equipment.every((item) => ["none", "bodyweight", "outdoor"].includes(item)));
+  assert.match(withCatalog.rationale, /still trains strength/);
+});
+
+test("the fallback is still reached when nothing serves the goal", () => {
+  // A catalog that answers nothing must not silently produce an empty session.
+  const noKit = {
+    ...context,
+    equipment: context.equipment.map((item) => ({ ...item, available: false }))
+  };
+  const plan = generateTrainingPlan(noKit, {
+    startDate: "2026-07-27",
+    weeks: 1,
+    findGoalAlternative: () => null
+  });
+  const upper = plan.weeks[0].sessions.find((session) => /Upper-body/.test(session.focus));
+  assert.deepEqual(upper.exerciseIds, ["exercise_bodyweight_squat"]);
+  assert.match(upper.rationale, /catalog offers no strength movement/);
+});

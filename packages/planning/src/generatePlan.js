@@ -43,46 +43,47 @@ export const GOAL_TEMPLATES = {
   half_marathon: {
     periodizationType: "linear_endurance",
     slots: [
-      { dayOffset: 0, focus: "Easy Zone 2 run", type: "run", baseMinutes: 45, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_zone2_run", equipment: ["treadmill", "outdoor"] }] },
-      { dayOffset: 1, focus: "Full-body strength support", type: "strength", baseMinutes: 45, intensity: "moderate", muscleGroups: ["legs", "glutes", "back", "core"], exercises: [{ exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }, { exerciseId: "exercise_romanian_deadlift", equipment: ["barbell"] }] },
-      { dayOffset: 2, focus: "Recovery + mobility", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs", "core"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] },
-      { dayOffset: 3, focus: "Tempo run", type: "run", baseMinutes: 45, intensity: "high", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_tempo_run", equipment: ["treadmill", "outdoor"] }] },
-      { dayOffset: 4, focus: "Upper-body strength", type: "strength", baseMinutes: 45, intensity: "moderate", muscleGroups: ["chest", "back", "shoulders", "arms"], exercises: [{ exerciseId: "exercise_dumbbell_bench_press", equipment: ["dumbbell", "bench"] }, { exerciseId: "exercise_bent_over_row", equipment: ["barbell"] }] },
-      { dayOffset: 5, focus: "Long run", type: "run", baseMinutes: 75, intensity: "moderate", muscleGroups: ["legs"], longSession: true, exercises: [{ exerciseId: "exercise_zone2_run", equipment: ["treadmill", "outdoor"] }] }
+      { dayOffset: 0, focus: "Easy Zone 2 run", type: "run", trainingGoal: "endurance", baseMinutes: 45, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_zone2_run", equipment: ["treadmill", "outdoor"] }] },
+      { dayOffset: 1, focus: "Full-body strength support", type: "strength", trainingGoal: "strength", baseMinutes: 45, intensity: "moderate", muscleGroups: ["legs", "glutes", "back", "core"], exercises: [{ exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }, { exerciseId: "exercise_romanian_deadlift", equipment: ["barbell"] }] },
+      { dayOffset: 2, focus: "Recovery + mobility", type: "mobility", trainingGoal: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs", "core"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] },
+      { dayOffset: 3, focus: "Tempo run", type: "run", trainingGoal: "endurance", baseMinutes: 45, intensity: "high", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_tempo_run", equipment: ["treadmill", "outdoor"] }] },
+      { dayOffset: 4, focus: "Upper-body strength", type: "strength", trainingGoal: "strength", baseMinutes: 45, intensity: "moderate", muscleGroups: ["chest", "back", "shoulders", "arms"], exercises: [{ exerciseId: "exercise_dumbbell_bench_press", equipment: ["dumbbell", "bench"] }, { exerciseId: "exercise_bent_over_row", equipment: ["barbell"] }] },
+      { dayOffset: 5, focus: "Long run", type: "run", trainingGoal: "endurance", baseMinutes: 75, intensity: "moderate", muscleGroups: ["legs"], longSession: true, exercises: [{ exerciseId: "exercise_zone2_run", equipment: ["treadmill", "outdoor"] }] }
     ]
   },
   build_muscle: {
     periodizationType: "upper_lower_split",
     slots: [
-      { dayOffset: 0, focus: "Lower-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["legs", "glutes", "core"], exercises: [{ exerciseId: "exercise_back_squat", equipment: ["barbell", "squat_rack"] }, { exerciseId: "exercise_romanian_deadlift", equipment: ["barbell"] }] },
-      { dayOffset: 1, focus: "Upper-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["chest", "back", "shoulders", "arms"], exercises: [{ exerciseId: "exercise_dumbbell_bench_press", equipment: ["dumbbell", "bench"] }, { exerciseId: "exercise_bent_over_row", equipment: ["barbell"] }] },
-      { dayOffset: 2, focus: "Zone 2 cardio", type: "ride", baseMinutes: 35, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_stationary_bike_z2", equipment: ["stationary_bike"] }] },
-      { dayOffset: 3, focus: "Lower-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["legs", "glutes"], exercises: [{ exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }, { exerciseId: "exercise_hip_thrust", equipment: ["barbell", "bench"] }] },
-      { dayOffset: 4, focus: "Upper-body strength", type: "strength", baseMinutes: 50, intensity: "high", muscleGroups: ["chest", "back", "arms"], exercises: [{ exerciseId: "exercise_dumbbell_shoulder_press", equipment: ["dumbbell"] }, { exerciseId: "exercise_pullup", equipment: ["pull_up_bar"] }] },
-      { dayOffset: 5, focus: "Mobility + core", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "core"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] }
+      { dayOffset: 0, focus: "Lower-body strength", type: "strength", trainingGoal: "hypertrophy", baseMinutes: 50, intensity: "high", muscleGroups: ["legs", "glutes", "core"], exercises: [{ exerciseId: "exercise_back_squat", equipment: ["barbell", "squat_rack"] }, { exerciseId: "exercise_romanian_deadlift", equipment: ["barbell"] }] },
+      { dayOffset: 1, focus: "Upper-body strength", type: "strength", trainingGoal: "hypertrophy", baseMinutes: 50, intensity: "high", muscleGroups: ["chest", "back", "shoulders", "arms"], exercises: [{ exerciseId: "exercise_dumbbell_bench_press", equipment: ["dumbbell", "bench"] }, { exerciseId: "exercise_bent_over_row", equipment: ["barbell"] }] },
+      { dayOffset: 2, focus: "Zone 2 cardio", type: "ride", trainingGoal: "endurance", baseMinutes: 35, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_stationary_bike_z2", equipment: ["stationary_bike"] }] },
+      { dayOffset: 3, focus: "Lower-body strength", type: "strength", trainingGoal: "hypertrophy", baseMinutes: 50, intensity: "high", muscleGroups: ["legs", "glutes"], exercises: [{ exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }, { exerciseId: "exercise_hip_thrust", equipment: ["barbell", "bench"] }] },
+      { dayOffset: 4, focus: "Upper-body strength", type: "strength", trainingGoal: "hypertrophy", baseMinutes: 50, intensity: "high", muscleGroups: ["chest", "back", "arms"], exercises: [{ exerciseId: "exercise_dumbbell_shoulder_press", equipment: ["dumbbell"] }, { exerciseId: "exercise_pullup", equipment: ["pull_up_bar"] }] },
+      { dayOffset: 5, focus: "Mobility + core", type: "mobility", trainingGoal: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "core"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] }
     ]
   },
   general_fitness: {
     periodizationType: "mixed_conditioning",
     slots: [
-      { dayOffset: 0, focus: "Full-body strength", type: "strength", baseMinutes: 40, intensity: "moderate", muscleGroups: ["legs", "back", "core"], exercises: [{ exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }, { exerciseId: "exercise_dumbbell_row", equipment: ["dumbbell", "bench"] }] },
-      { dayOffset: 2, focus: "Zone 2 cardio", type: "run", baseMinutes: 35, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_zone2_run", equipment: ["treadmill", "outdoor"] }] },
-      { dayOffset: 4, focus: "Full-body strength", type: "strength", baseMinutes: 40, intensity: "moderate", muscleGroups: ["chest", "legs", "core"], exercises: [{ exerciseId: "exercise_dumbbell_bench_press", equipment: ["dumbbell", "bench"] }, { exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }] },
-      { dayOffset: 5, focus: "Mobility + walk", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] }
+      { dayOffset: 0, focus: "Full-body strength", type: "strength", trainingGoal: "strength", baseMinutes: 40, intensity: "moderate", muscleGroups: ["legs", "back", "core"], exercises: [{ exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }, { exerciseId: "exercise_dumbbell_row", equipment: ["dumbbell", "bench"] }] },
+      { dayOffset: 2, focus: "Zone 2 cardio", type: "run", trainingGoal: "endurance", baseMinutes: 35, intensity: "moderate", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_zone2_run", equipment: ["treadmill", "outdoor"] }] },
+      { dayOffset: 4, focus: "Full-body strength", type: "strength", trainingGoal: "strength", baseMinutes: 40, intensity: "moderate", muscleGroups: ["chest", "legs", "core"], exercises: [{ exerciseId: "exercise_dumbbell_bench_press", equipment: ["dumbbell", "bench"] }, { exerciseId: "exercise_goblet_squat", equipment: ["dumbbell"] }] },
+      { dayOffset: 5, focus: "Mobility + walk", type: "mobility", trainingGoal: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] }
     ]
   },
   recovery: {
     periodizationType: "recovery_focus",
     slots: [
-      { dayOffset: 0, focus: "Recovery walk", type: "walk", baseMinutes: 30, intensity: "low", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_recovery_walk", equipment: ["none", "outdoor"] }] },
-      { dayOffset: 2, focus: "Mobility flow", type: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs", "core"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] },
-      { dayOffset: 4, focus: "Easy Zone 2 cardio", type: "ride", baseMinutes: 30, intensity: "low", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_stationary_bike_z2", equipment: ["stationary_bike"] }] }
+      { dayOffset: 0, focus: "Recovery walk", type: "walk", trainingGoal: "endurance", baseMinutes: 30, intensity: "low", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_recovery_walk", equipment: ["none", "outdoor"] }] },
+      { dayOffset: 2, focus: "Mobility flow", type: "mobility", trainingGoal: "mobility", baseMinutes: 30, intensity: "low", muscleGroups: ["hips", "legs", "core"], exercises: [{ exerciseId: "exercise_lower_body_mobility", equipment: ["none"] }] },
+      { dayOffset: 4, focus: "Easy Zone 2 cardio", type: "ride", trainingGoal: "endurance", baseMinutes: 30, intensity: "low", muscleGroups: ["legs"], exercises: [{ exerciseId: "exercise_stationary_bike_z2", equipment: ["stationary_bike"] }] }
     ]
   }
 };
 
-// Used when every prescribed movement was filtered out. An id, like everything
-// else here — the old free-text "Bodyweight circuit" resolved to nothing.
+// Last resort when every prescribed movement was filtered out and the catalog
+// offers nothing that serves the slot's goal. An id, like everything else here
+// — the old free-text "Bodyweight circuit" resolved to nothing.
 const FALLBACK_EXERCISE_ID = "exercise_bodyweight_squat";
 
 const GOAL_ALIASES = {
@@ -151,7 +152,14 @@ function isAvoided(exerciseName, avoidMovements) {
  */
 const identityDisplay = (id) => id;
 
-function applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor) {
+/**
+ * Without a catalog to ask, a slot that loses all its movements has nothing to
+ * fall back on but the hard-coded id. The MCP server injects the graph-backed
+ * one; the package on its own stays dependency-free.
+ */
+const noCatalog = () => null;
+
+function applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor, findGoalAlternative) {
   const notes = [];
   let intensity = slot.intensity;
   let focus = slot.focus;
@@ -182,17 +190,35 @@ function applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor)
   }
 
   if (exerciseIds.length === 0) {
-    exerciseIds.push(FALLBACK_EXERCISE_ID);
-    notes.push(
-      `Fell back to ${displayNameFor(FALLBACK_EXERCISE_ID)} because no prescribed exercise was available.`
-    );
+    // The stimulus is what the slot is for. An upper-body strength day whose
+    // equipment is missing used to become a bodyweight squat — still a session,
+    // but no longer the session the plan prescribed. Ask the catalog for
+    // something that serves the same training goal before giving up on it.
+    const alternative = findGoalAlternative({
+      trainingGoal: slot.trainingGoal,
+      availableEquipment: [...availableSet],
+      excludeContraindications: constraints.restrictions,
+      avoidMovements: constraints.avoidMovements
+    });
+
+    if (alternative) {
+      exerciseIds.push(alternative);
+      notes.push(
+        `Substituted ${displayNameFor(alternative)} for the prescribed movements: none were available, and this still trains ${slot.trainingGoal}.`
+      );
+    } else {
+      exerciseIds.push(FALLBACK_EXERCISE_ID);
+      notes.push(
+        `Fell back to ${displayNameFor(FALLBACK_EXERCISE_ID)} because no prescribed exercise was available and the catalog offers no ${slot.trainingGoal} movement under these constraints.`
+      );
+    }
   }
 
   return { focus, intensity, cap, exerciseIds, notes };
 }
 
-function buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier, displayNameFor) {
-  const resolved = applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor);
+function buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier, displayNameFor, findGoalAlternative) {
+  const resolved = applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor, findGoalAlternative);
   const targetMinutes = Math.round(slot.baseMinutes * multiplier);
   const durationMinutes = Math.max(15, Math.min(targetMinutes, resolved.cap));
   const date = addDays(weekStartDate, slot.dayOffset);
@@ -243,7 +269,7 @@ function phaseForWeek(weekIndex, totalWeeks, returning = false) {
  * Generate a deterministic multi-week training plan for a user context.
  *
  * @param {UserFitnessContext} context
- * @param {{ startDate?: string, weeks?: number, goalId?: string, planId?: string }} [options]
+ * @param {{ startDate?: string, weeks?: number, goalId?: string, planId?: string, displayNameFor?: Function, findGoalAlternative?: Function }} [options]
  * @returns {import("./models.js").TrainingPlan}
  */
 export function generateTrainingPlan(context, options = {}) {
@@ -256,6 +282,7 @@ export function generateTrainingPlan(context, options = {}) {
   const constraints = deriveConstraints(context);
   const availableSet = new Set(constraints.availableEquipment);
   const displayNameFor = options.displayNameFor || identityDisplay;
+  const findGoalAlternative = options.findGoalAlternative || noCatalog;
 
   const sortedGoals = [...context.goals].sort((a, b) => a.priority - b.priority);
   const primaryGoal = options.goalId
@@ -278,7 +305,7 @@ export function generateTrainingPlan(context, options = {}) {
     const multiplier = phase === "return" ? RETURN_RAMP[weekIndex] : PHASE_MULTIPLIERS[phase];
     const weekStartDate = addDays(startDate, weekIndex * 7);
     const sessions = template.slots.map((slot) =>
-      buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier, displayNameFor)
+      buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier, displayNameFor, findGoalAlternative)
     );
 
     weeks.push({
