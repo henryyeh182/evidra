@@ -47,14 +47,14 @@ test("MCP server lists core fitness tools", async () => {
   }
 });
 
-test("MCP server calls recommend_workout", async () => {
+test("MCP server calls assess_fitness_state", async () => {
   const response = await handleJsonRpcMessage(
     JSON.stringify({
       jsonrpc: "2.0",
       id: 3,
       method: "tools/call",
       params: {
-        name: "recommend_workout",
+        name: "assess_fitness_state",
         arguments: {
           userId: "user_henry_demo",
           date: "2026-07-23",
@@ -69,6 +69,7 @@ test("MCP server calls recommend_workout", async () => {
   assert.equal(payload.recommendedFocus, "Low-impact Zone 2 cardio + lower body mobility");
   assert.equal(payload.readinessScore, 67);
   assert.ok(payload.reasoning.some((line) => line.includes("Leg fatigue is elevated")));
+  assert.equal(payload.provenance.evidenceSource, "demo_fallback");
 });
 
 test("MCP server still routes a deprecated tool alias to its canonical handler", async () => {

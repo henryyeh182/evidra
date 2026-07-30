@@ -81,7 +81,7 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Decide what today's already-scheduled session should become, given today's evidence. Returns a decision with from -> to: the session as planned, what it should change to, and the evidence and rules behind the change. Use this for 'what should I train today', 'am I ready for today's session', 'should I adjust today's workout'. If the user proposes their own alternative — 'today was cardio, can I do stretching instead?' — pass that as `proposedSession` and it comes back accepted or refused, with the reason. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. Requires a scheduled session: this decides about an existing plan rather than inventing one. Do NOT re-derive or override the intensity, duration or movements it returns — injury filtering and load limits are enforced server-side and are decisions, not advice. To look up state alone, use assess_fitness_state.",
+      "Decide what today's scheduled session should become, given today's evidence. Returns a decision with from -> to: the session as planned, what it should change to, and the evidence and rules behind the change. Use this for 'what should I train today', 'am I ready for today's session', 'should I adjust today's workout'. If the user proposes their own alternative — 'today was cardio, can I do stretching instead?' — pass that as `proposedSession` and it comes back accepted or refused, with the reason. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. This is a decision, not a suggestion: it requires a scheduled session and decides about an existing plan rather than inventing one. Do NOT re-derive or override the intensity, duration or movements it returns — injury filtering and load limits are enforced server-side and are decisions, not advice. To look up state alone, use assess_fitness_state.",
     inputSchema: {
       type: "object",
       properties: {
@@ -250,7 +250,7 @@ export const toolDefinitions = [
     name: "get_user_profile",
     deprecated: true,
     description:
-      "Return the user's goals, preferences, active injuries, and available equipment. Use this to learn the constraints that apply to any recommendation. Do NOT use this for past sessions (use get_training_history) or for today's readiness (use get_semantic_fitness_state).",
+      "Return the user's goals, preferences, active injuries, and available equipment. Use this to learn the constraints that apply to any recommendation. Do NOT use this for past sessions (use get_training_history) or for today's readiness (use assess_fitness_state).",
     inputSchema: {
       type: "object",
       properties: {

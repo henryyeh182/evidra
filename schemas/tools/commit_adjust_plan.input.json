@@ -4,7 +4,7 @@
   "title": "commit_adjust_plan input",
   "type": "object",
   "properties": {
-    "previewId": { "type": "string", "description": "Preview identifier returned by preview_plan_change." }
+    "previewId": { "type": "string", "description": "Preview identifier returned by preview_adjust_plan." }
   },
   "required": ["previewId"]
 }

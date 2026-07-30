@@ -250,7 +250,7 @@ export async function previewPlanChangeTool(args = {}) {
     baseVersion: preview.baseVersion,
     summary: preview.summary,
     diff: preview.diff,
-    note: "Call commit_plan_change with this previewId to apply the change."
+    note: "Call commit_adjust_plan with this previewId to apply the change."
   });
 }
 

@@ -5,9 +5,9 @@
     {
       "id": "semantic_state_demo_user",
       "query": "What's my fitness state today?",
-      "expectedTool": "get_semantic_fitness_state",
+      "expectedTool": "assess_fitness_state",
       "call": {
-        "tool": "get_semantic_fitness_state",
+        "tool": "assess_fitness_state",
         "arguments": {
           "userId": "user_henry_demo",
           "date": "2026-07-23"
@@ -472,9 +472,9 @@
     {
       "id": "trap_unknown_user",
       "query": "State for a user that does not exist.",
-      "expectedTool": "get_semantic_fitness_state",
+      "expectedTool": "assess_fitness_state",
       "call": {
-        "tool": "get_semantic_fitness_state",
+        "tool": "assess_fitness_state",
         "arguments": {
           "userId": "user_does_not_exist"
         }

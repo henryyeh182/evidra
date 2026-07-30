@@ -67,7 +67,7 @@ const ID_FIELDS = {
 
 /**
  * Tracks IDs minted by the server during a run so later tool calls that
- * reference them (get_training_plan, commit_plan_change, ...) count as grounded.
+ * reference them (get_plan, commit_adjust_plan, ...) count as grounded.
  */
 export class GroundingRegistry {
   constructor(knownIds) {

@@ -149,7 +149,7 @@ test("evidence passed in drives the decision for a user the server has never see
   };
 
   // This id exists nowhere in the server's own files.
-  const state = await call("get_semantic_fitness_state", {
+  const state = await call("assess_fitness_state", {
     userId: "external_user_42",
     date: "2026-07-27",
     evidence
@@ -167,7 +167,7 @@ test("evidence passed in drives the decision for a user the server has never see
 });
 
 test("without evidence the server says it fell back to demo data", async () => {
-  const { payload } = await call("get_semantic_fitness_state", {
+  const { payload } = await call("assess_fitness_state", {
     userId: "user_henry_demo",
     date: "2026-07-23"
   });
