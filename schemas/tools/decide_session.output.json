@@ -193,6 +193,31 @@
       "required": [
         "evidenceSource"
       ]
+    },
+    "proposal": {
+      "type": "object",
+      "nullable": true,
+      "description": "Present only when the caller proposed an alternative. The verdict on that proposal, judged against the ceiling rules 1-7 established — never against a threshold invented for proposals.",
+      "properties": {
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "rejected"
+          ]
+        },
+        "violations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Empty when accepted. Each entry names the axis that failed and by how much."
+        }
+      },
+      "required": [
+        "verdict",
+        "violations"
+      ]
     }
   },
   "required": [

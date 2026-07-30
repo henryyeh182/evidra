@@ -122,6 +122,19 @@ export const toolDefinitions = [
             exercises: { type: "array", items: { type: "string" } }
           }
         },
+        proposedSession: {
+          type: "object",
+          description:
+            "What the athlete asked for instead — the alternative they proposed, judged against what today can carry. Supply it when the user names a specific option (today was cardio, can I do mobility work instead?). Without it the engine answers only what today should be, leaving the person's own suggestion unaddressed. Same shape as scheduledSession.",
+          properties: {
+            focus: { type: "string" },
+            type: { type: "string" },
+            durationMinutes: { type: "number" },
+            intensity: { type: "string", enum: ["low", "moderate", "high"] },
+            targetMuscleGroups: { type: "array", items: { type: "string" } },
+            exercises: { type: "array", items: { type: "string" } }
+          }
+        },
         planId: { type: "string", description: "Local demo only: look up the session in a stored plan instead of supplying it." },
         availableMinutes: { type: "number", description: "Override today's available time, e.g. when the user says they are busy." },
         includeStravaFixture: { type: "boolean", description: "Include the local Strava fixture as extra evidence." }

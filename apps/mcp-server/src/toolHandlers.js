@@ -331,15 +331,19 @@ export async function decideSessionTool(args = {}) {
   // "easy walk"). Normalize to canonical ids here so the decision engine never
   // has to reason about spelling, and so what comes back can be looked up.
   const { displayNameFor, toCanonicalIds } = await exerciseNaming();
-  if (scheduledSession) {
-    scheduledSession = {
-      ...scheduledSession,
-      exerciseIds: toCanonicalIds(scheduledSession.exerciseIds || scheduledSession.exercises || [])
-    };
-  }
+  const canonicalize = (session) =>
+    session
+      ? { ...session, exerciseIds: toCanonicalIds(session.exerciseIds || session.exercises || []) }
+      : session;
+  scheduledSession = canonicalize(scheduledSession);
+
+  // What the athlete asked for instead. Normalized the same way as the plan so
+  // the two are compared on canonical ids, not on however each was spelled.
+  const proposedSession = canonicalize(args.proposedSession || null);
 
   const decision = decideSession({
     scheduledSession,
+    proposedSession,
     displayNameFor,
     // The impulse-response ACWR supersedes the crude 7d/28d ratio when the
     // history is long enough to have converged.
@@ -366,7 +370,8 @@ export async function decideSessionTool(args = {}) {
     ...decision,
     provenance: {
       ...provenance,
-      scheduledSessionSource: args.scheduledSession ? "provided" : "demo_plan_store"
+      scheduledSessionSource: args.scheduledSession ? "provided" : "demo_plan_store",
+      proposedSessionSource: args.proposedSession ? "provided" : "none"
     }
   });
 }

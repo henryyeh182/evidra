@@ -443,3 +443,116 @@ test("the decision speaks colloquially but changes are judged on ids", () => {
   assert.deepEqual(result.action.to.exercises, ["Recovery Walk", "Mobility Flow"]);
   assert.ok(result.action.changed.includes("exercises"));
 });
+
+// --- the athlete proposes an alternative -----------------------------------
+//
+// "Today was cardio — can I do mobility work instead?" is a question the engine
+// used to leave unanswered: it applied its own rules and handed back its own
+// `to`, saying nothing about the option the person had actually named.
+
+test("a proposal inside today's ceiling is accepted and becomes the action", () => {
+  const result = decideSession({
+    scheduledSession: session(),
+    proposedSession: {
+      focus: "Recovery + mobility",
+      type: "mobility",
+      durationMinutes: 30,
+      intensity: "low",
+      targetMuscleGroups: ["hips", "core"],
+      exercises: ["exercise_lower_body_mobility"]
+    },
+    state: state({ readinessScore: 52 })
+  });
+
+  assert.equal(result.proposal.verdict, "accepted");
+  assert.deepEqual(result.proposal.violations, []);
+  assert.equal(result.decision.type, "substitute");
+  assert.equal(result.decision.intent, "accept_athlete_proposal");
+  assert.equal(result.action.to.focus, "Recovery + mobility");
+  assert.equal(result.action.to.intensity, "low");
+  assertValidDecision(result);
+});
+
+test("a proposal above the ceiling is refused, and the refusal names the axis", () => {
+  const result = decideSession({
+    scheduledSession: session({ intensity: "moderate", durationMinutes: 45 }),
+    proposedSession: {
+      focus: "VO2max Intervals",
+      type: "run",
+      durationMinutes: 60,
+      intensity: "high",
+      targetMuscleGroups: ["legs"],
+      exercises: ["Tempo Run"]
+    },
+    // Readiness below the reduce threshold caps today at one notch down.
+    state: state({ readinessScore: 52 })
+  });
+
+  assert.equal(result.proposal.verdict, "rejected");
+  assert.ok(result.proposal.violations.some((v) => v.includes("強度")), "names the intensity axis");
+  assert.ok(result.proposal.violations.some((v) => v.includes("時長")), "names the duration axis");
+  // Refusing the proposal must not leave the athlete without an answer.
+  assert.equal(result.action.to.intensity, "low");
+  assertValidDecision(result);
+});
+
+test("resting more than required is always allowed", () => {
+  const result = decideSession({
+    scheduledSession: session({ intensity: "high", durationMinutes: 60 }),
+    proposedSession: {
+      focus: "Easy walk",
+      type: "recovery",
+      durationMinutes: 20,
+      intensity: "low",
+      targetMuscleGroups: [],
+      exercises: ["exercise_recovery_walk"]
+    },
+    // Nothing wrong today — the ceiling is the session as planned.
+    state: state({ readinessScore: 80 })
+  });
+
+  assert.equal(result.proposal.verdict, "accepted");
+});
+
+test("a proposal cannot switch off an injury restriction", () => {
+  const result = decideSession({
+    scheduledSession: session({ intensity: "low" }),
+    proposedSession: {
+      focus: "Squats",
+      type: "strength",
+      durationMinutes: 30,
+      intensity: "low",
+      targetMuscleGroups: ["legs"],
+      exercises: ["Barbell Back Squat"]
+    },
+    state: state({ readinessScore: 80, avoid: ["avoid barbell loading"] })
+  });
+
+  assert.equal(result.proposal.verdict, "rejected");
+  assert.ok(result.proposal.violations.some((v) => v.includes("受限動作")));
+});
+
+test("a proposal aimed at an already-fatigued muscle group is caught", () => {
+  // The fatigue rules judge the *scheduled* session's target muscles. A proposal
+  // pointing somewhere else has to be re-checked or it slips past all of them.
+  const result = decideSession({
+    scheduledSession: session({ targetMuscleGroups: ["chest"], intensity: "moderate" }),
+    proposedSession: {
+      focus: "Leg day",
+      type: "strength",
+      durationMinutes: 45,
+      intensity: "moderate",
+      targetMuscleGroups: ["legs"],
+      exercises: ["Barbell Back Squat"]
+    },
+    state: state({ readinessScore: 80, muscleFatigue: { chest: 10, legs: 88 } })
+  });
+
+  assert.equal(result.proposal.verdict, "rejected");
+  assert.ok(result.proposal.violations.some((v) => v.includes("legs")));
+});
+
+test("no proposal, no proposal field — the shape does not change for callers who did not ask", () => {
+  const result = decideSession({ scheduledSession: session(), state: state() });
+  assert.equal("proposal" in result, false);
+});

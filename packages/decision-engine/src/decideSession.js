@@ -107,7 +107,14 @@ function diffShapes(from, to) {
  * @param {{ scheduledSession: object|null, state: object, availableMinutes?: number }} input
  * @returns {import("./models.js").SessionDecision}
  */
-export function decideSession({ scheduledSession, state, availableMinutes, displayNameFor, intensityDistributions } = {}) {
+export function decideSession({
+  scheduledSession,
+  proposedSession,
+  state,
+  availableMinutes,
+  displayNameFor,
+  intensityDistributions
+} = {}) {
   const speak = displayNameFor || identityDisplay;
   if (!state) {
     throw new Error("decideSession requires today's state.");
@@ -362,6 +369,85 @@ export function decideSession({ scheduledSession, state, availableMinutes, displ
     reason.push(`Readiness ${readiness} 雖高，但有活動中的限制（${restrictions.join("；")}），不提升強度。`);
   }
 
+  // 8. The athlete proposed something.
+  //
+  //    "Today was cardio — can I do mobility work instead?" is a different
+  //    question from "what should I do today", and until now the engine only
+  //    answered the second one. It applied its own rules and handed back its
+  //    own `to`, leaving a proposed alternative unaddressed — which reads as
+  //    ignoring the person who asked.
+  //
+  //    Adjudicating a proposal needs no new thresholds. Rules 1-7 just
+  //    established what today can carry; that is the ceiling. A proposal at or
+  //    under it on every axis is admissible, one that exceeds it on any axis is
+  //    not, and the axis that failed is the reason. Being *more* conservative
+  //    than the ceiling is always allowed — an athlete may rest more than
+  //    required, never less.
+  let proposal = null;
+  if (proposedSession) {
+    const wanted = toSessionShape(proposedSession, speak);
+    const violations = [];
+
+    if (INTENSITY_ORDER.indexOf(wanted.intensity) > INTENSITY_ORDER.indexOf(to.intensity)) {
+      violations.push(
+        `提議強度 ${wanted.intensity} 高於今日上限 ${to.intensity}。`
+      );
+    }
+    if (wanted.durationMinutes > to.durationMinutes) {
+      violations.push(`提議時長 ${wanted.durationMinutes} 分鐘超過今日上限 ${to.durationMinutes} 分鐘。`);
+    }
+
+    // The fatigue rules above were judged against the *scheduled* session's
+    // target muscles. A proposal can point at a different group, and a fresh
+    // group is exactly why swapping is often the right call — but a proposal
+    // aimed at an already-loaded group has to be caught here or it slips past
+    // every check that ran.
+    const wantedFatigue = targetFatigue(proposedSession, state.muscleFatigue);
+    if (wantedFatigue.group && wantedFatigue.value >= RULES.muscleFatigueHigh && wanted.intensity !== "low") {
+      violations.push(
+        `提議刺激 ${wantedFatigue.group}，該肌群疲勞 ${wantedFatigue.value} 偏高，非低強度不宜。`
+      );
+    }
+
+    // Contraindications are a guarantee, so they apply to a proposal exactly as
+    // they applied to the plan. Nothing the athlete asks for can switch them off.
+    const wantedBlocked = wanted.exerciseIds.filter((id) => {
+      const haystack = String(speak(id)).toLowerCase();
+      return restrictions.some((restriction) => {
+        const words = String(restriction).toLowerCase().replace(/^avoid\s+/, "").split(/[\s-]+/);
+        return words.some((word) => word.length > 3 && haystack.includes(word));
+      });
+    });
+    if (wantedBlocked.length > 0) {
+      violations.push(
+        `提議包含受限動作 ${wantedBlocked.map((id) => speak(id)).join("、")}（限制：${restrictions.join("；")}）。`
+      );
+    }
+
+    if (violations.length === 0) {
+      proposal = { verdict: "accepted", violations: [] };
+      reason.push(
+        `提議的「${wanted.focus || wanted.type}」在今日上限（${to.intensity} 強度、${to.durationMinutes} 分鐘）之內，採用。`
+      );
+      // The proposal becomes the action. Everything the rules capped still
+      // holds — it passed those caps, that is why it was accepted.
+      to.focus = wanted.focus;
+      to.type = wanted.type;
+      to.intensity = wanted.intensity;
+      to.durationMinutes = wanted.durationMinutes;
+      to.exerciseIds = [...wanted.exerciseIds];
+      to.exercises = to.exerciseIds.map((id) => speak(id));
+      escalate("substitute", "accept_athlete_proposal");
+    } else {
+      // Rejected, but not left hanging: the action stays the engine's own `to`,
+      // so the answer is still "here is what today should be", with the reason
+      // the alternative was refused.
+      proposal = { verdict: "rejected", violations };
+      for (const violation of violations) reason.push(violation);
+      limits.push("提議未被採用，行動維持引擎依證據判定的內容。");
+    }
+  }
+
   const changed = diffShapes(from, to);
   if (type !== "keep" && changed.length === 0) {
     type = "keep";
@@ -398,6 +484,7 @@ export function decideSession({ scheduledSession, state, availableMinutes, displ
     reason,
     confidence: state.confidence || "low",
     signalCoverage: coverage,
+    ...(proposal ? { proposal } : {}),
     limits
   };
 
