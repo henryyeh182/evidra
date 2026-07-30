@@ -151,7 +151,9 @@ export function evidenceToUserContext(evidence, options = {}) {
       name: workout.name || workout.type || "Workout",
       startedAt: workout.startedAt,
       durationMinutes: workout.durationMinutes,
-      rpe: workout.rpe ?? 5,
+      // Absent stays absent. A caller reporting "no RPE" was being overruled
+      // with a 5, which then read downstream as something the athlete had said.
+      rpe: workout.rpe ?? null,
       trainingLoad: workout.trainingLoad ?? Math.round(workout.durationMinutes * 1.0),
       muscleGroups: workout.muscleGroups || [],
       source: workout.source || "manual",

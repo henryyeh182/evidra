@@ -78,6 +78,9 @@ function calculateMuscleFatigue(workouts, anchorDate) {
   for (const workout of workoutsWithinDays(workouts, anchorDate, 7)) {
     const ageDays = daysBetween(anchorDate, new Date(workout.startedAt));
     const decay = Math.max(0.15, 1 - ageDays / 5);
+    // No reported RPE, no fatigue contribution. Skipped rather than counted as
+    // zero: zero is a claim that the session cost nothing, and nobody said that.
+    if (typeof workout.rpe !== "number") continue;
     const fatigueContribution = workout.trainingLoad * (workout.rpe / 10) * decay;
 
     for (const muscleGroup of workout.muscleGroups) {
