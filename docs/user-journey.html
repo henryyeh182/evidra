@@ -273,8 +273,9 @@
     <h2>證據怎麼到 AI 手上</h2>
     <p class="lede">
       實際情境是這樣開始的：使用者在手機上打開 Claude，說「今天該練什麼」。
-      決策鏈要能開始，證據得先進到那句對話裡——而這段路上的每一步，
-      <strong>不是每一步都由我們走</strong>。誰負責哪一步，決定了這個產品什麼時候能上手機。
+      決策鏈要能開始，證據得先進到那句對話裡；決策做完之後，還得<strong>走回去變成一句人話</strong>。
+      這是一趟往返，而這趟路上<strong>不是每一步都由我們走</strong>——
+      誰負責哪一步，決定了這個產品什麼時候能上手機。
     </p>
     <div class="scroller">
       <table>
@@ -288,6 +289,11 @@
             <td class="yes">✓ 已存在</td>
           </tr>
           <tr>
+            <td class="sig-name">聽懂問題，判斷要湊哪些證據</td>
+            <td>host 模型</td>
+            <td class="yes">✓ 已存在</td>
+          </tr>
+          <tr>
             <td class="sig-name">Claude 連上 Evidra</td>
             <td><b>我們</b>　遠端 MCP server ＋ OAuth 2.1</td>
             <td class="no">— 未完成</td>
@@ -298,12 +304,12 @@
             <td class="no">— 不在我們手上</td>
           </tr>
           <tr>
-            <td class="sig-name">取得 Garmin Connect 資料</td>
-            <td>Garmin OAuth，授權對象是 host</td>
+            <td class="sig-name">取得 Garmin ／ Strava 資料</td>
+            <td>廠商 OAuth，授權對象是 host</td>
             <td class="no">— 不在我們手上</td>
           </tr>
           <tr>
-            <td class="sig-name">證據以參數進入 tool call</td>
+            <td class="sig-name">最小化證據以參數進入 tool call</td>
             <td><b>我們</b>　Fitness Evidence Model</td>
             <td class="yes">✓ 已完成</td>
           </tr>
@@ -311,6 +317,16 @@
             <td class="sig-name">五層決策</td>
             <td><b>我們</b>　Fitness Decision Engine</td>
             <td class="yes">✓ 已完成，見下</td>
+          </tr>
+          <tr>
+            <td class="sig-name">把結構化決策講成人話</td>
+            <td>host 模型</td>
+            <td class="yes">✓ 已存在</td>
+          </tr>
+          <tr>
+            <td class="sig-name">使用者收到個人化教練回覆</td>
+            <td>——　鏈的終點</td>
+            <td class="no">— 中間三步到位才成立</td>
           </tr>
         </tbody>
       </table>
@@ -322,7 +338,8 @@
       <strong>不需要靠承諾來保證，架構上就做不到</strong>。
     </p>
     <p class="note warn">
-      中間那三步全是紅的，而且只有第一步是我們做得完的。
+      往返鏈的兩端都已經存在——手機上的對話、把結果講成人話，都是 host 本來就會做的事。
+      紅的是中間那三步（連上 Evidra、Apple Health、Garmin ／ Strava），而且只有第一步是我們做得完的。
       OAuth 做好，Apple Health 與 Garmin 的取用也不會自動出現——
       <strong>手機情境能不能成立，有一半取決於 host 支援到哪裡。</strong>
       這一段之所以要寫進來，是為了不讓「等 OAuth 做完就好了」變成一句誤導人的話。
@@ -344,15 +361,29 @@
         <h4>證據由 AI Agent 帶進來，我們不去拿</h4>
         <p>
           授權對象是使用者已經在用的 AI，不是我們。證據經 tool call 以參數傳入——
-          <strong>Evidra 不連廠商雲端、不持有原始健康資料</strong>。
+          <strong>Evidra 不連廠商雲端，只處理呼叫端送進來的最小化證據，算完不留</strong>。
           所以「Apple Health 沒有伺服器 API」這類問題，在這個架構下不存在。
+        </p>
+        <p class="note">
+          精確講不是「完全不碰健康資料」——收到證據、算出決策，這中間就是在處理它。
+          對外承諾的正式表述是：
+          <em style="font-style:normal;color:var(--text-2)">“We process only the minimum
+          health-related evidence submitted by the caller, solely to compute the requested
+          fitness decision. We do not retain, sell, use for training, or use it for unrelated
+          purposes.”</em>
         </p>
         <div class="readout">
           <div class="row"><span class="k">hrv_ms</span><span class="v">39</span><span class="v dim">· 個人基線 48（40 筆，可信）</span></div>
           <div class="row"><span class="k">resting_hr_bpm</span><span class="v">59</span><span class="v dim">· garmin</span></div>
           <div class="row"><span class="k">body_battery</span><span class="v">52</span><span class="v dim">· garmin 自算的複合分數</span></div>
           <div class="row"><span class="k">workouts</span><span class="v">25 場 / 42 天</span><span class="v dim">· 昨日 80min RPE 8</span></div>
+          <div class="row"><span class="k">plannedSession</span><span class="v">VO₂max Intervals 60min high</span><span class="v dim">· 今日原本要做的</span></div>
         </div>
+        <p class="note">
+          <strong>今日課表也是證據，而且是不可省的那一個。</strong>
+          少了它，輸出只能是「建議做 Zone 2」這種憑空發出的句子；
+          有了它，才有 from 可以改成 to。
+        </p>
         <p class="note">
           個人基線取代族群平均。這位使用者的 HRV 中位數是 48——用教科書的 52 當基準，
           他每天都會被判成恢復不良。
