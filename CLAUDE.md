@@ -51,7 +51,11 @@ Decision 與 Action 必須分開：同一意圖在不同器材／時間／傷病
 ## 架構（不得偏離）
 
 ```
-Sources（Apple Health · Garmin · Oura · Whoop · Strava · Google Health Connect）
+手錶（Garmin · Apple Watch）—— 真正的量測源頭
+   │ Garmin Connect / Connect IQ 向外同步
+   ▼
+Sources（Apple Health · Google Health · Strava · Oura · Whoop）
+   │ 都是下游。Strava 最窄：只有運動當下的資料，沒有睡眠／HRV／靜息心率
    │ User OAuth 授權 —— 授權對象是 AI 那層，不是我們
    ▼
 Claude / ChatGPT（Conversation + Reasoning）
@@ -65,7 +69,18 @@ Claude / ChatGPT 回覆使用者
 ```
 
 **我們不 fetch、不持有原始健康資料。** 因此某來源有沒有伺服器 API 與本架構無關。
-系統內**不含 LLM**——語言與推理來自 host，我們提供確定性的領域智慧。
+
+## 核心概念（使用者定調，2026-07-30）
+
+> **知識的輸出現在已經沒有價值**，任何問 AI 馬上有答案。
+> 但要做到**輸入的數據有結構化、標準化**，馬上可以立刻找到 `acwr = atl / ctl`。
+> 這一個除法——來說明近期負荷除以長期負荷。算出的數值 = readiness、分肌群疲勞。
+> **Claude 已經可以組成完整的中文理由句子**，然後用白話回應給 user。
+
+三段分工：**①我們把四家資料做成標準化的一份 → ②我們做確定性計算 → ③Claude 講人話。**
+
+系統內**不含 LLM**——但這條管的是**模型在誰家，不是有沒有模型**。禁的只有「我們的程式
+呼叫模型來產生決策」；模型是前提不是選配，聽懂問題、湊齊證據、選工具、講人話全是 host 在做。
 
 ## 三條反覆失守的紀律
 
