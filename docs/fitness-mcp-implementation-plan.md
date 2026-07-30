@@ -1,6 +1,6 @@
 # Fitness MCP — Implementation Plan
 
-> 版本：**v5.2** · 依 [Design Manifesto](design-manifesto.md) 推導
+> 版本：**v6** · 依 [Design Manifesto](design-manifesto.md) 推導
 > **Mission**：A permissioned Fitness Decision Engine that turns fragmented, user-owned health evidence into explainable training decisions for AI agents.
 
 > ⚠️ [Design Manifesto](design-manifesto.md) 位階最高，衝突時以宣言為準。
@@ -97,11 +97,28 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 | 2 | Fitness Intelligence Engine | 🟢 | 確定性且產出五層決策（D2 已修）；ATL/CTL/TSB ＋ detraining 軸線 ＋ 個人基線已上（Phase 4 前兩項） |
 | 3 | Fitness Knowledge Graph | 🟢 | 889 節點 / 5,785 邊。**進退階已補齊**（7 → 34 條，17 組互逆，策展核心覆蓋 82.1%，帶不變量把關）；**命名層已統一**（規格化 id ↔ 口語別名）；**訓練目標已上**（節點屬性，接進 plan fallback 與替代決策）。相似度邊佔 89.4%，但那是匯入節點的設計結果（見 Phase 4.3） |
 | 4 | Feedback Learning | 🔴 | **零**。無「狀態→決策→結果」記錄與閉環 |
-| 5 | Multi-LLM Interface | 🟡 | MCP stdio ＋ Streamable HTTP 已上；**無 REST API、無 SDK、無 OAuth**（`http.js` 目前是 bearer token 比對） |
+| 5 | Multi-LLM Interface | 🟡 | MCP stdio ＋ Streamable HTTP 已上；**無 REST API、無 SDK**。OAuth **資源伺服器那半已完成**（`b37027e`），缺的是簽章驗證器、進入點接線、authorization server —— 見 7.1 |
 
 ---
 
 ## 4. Phase 順序
+
+### 盤查表（v6，2026-07-30）
+
+| Phase | 狀態 | 已完成 | 未完成 |
+|---|---|---|---|
+| 1 修架構級偏差 | ✅ 完成 | 證據經 tool call 傳入；五層決策契約 | — |
+| 2 工具面收斂 | ✅ 完成 | 14 → 6 個對外 tool | — |
+| 3 證明增益 | ✅ 完成（已改範圍） | 改為 MCP client 相容性驗證 | 原本的裸模型對照已取消，**取消理由第 2 條對宣言不成立**（見 4.5-B2） |
+| 4 決策深度 | ✅ 完成 3/3 | 訓練負荷模型、個人基線、知識圖譜語意關係 | — |
+| 5 多來源正規化 | 🟡 進行中 | 3/6 來源有解析器（Apple Health／Garmin／Strava，Strava 兩種方言）；心率區間分佈 | 其餘 3 家（Oura／Whoop／Google Health Connect）只有 registry 宣告；**G5 紅**：Apple Health 與 Strava 缺 source schema 與 scenario（4/4 只做到 2/4） |
+| 6 Feedback Learning | 🔴 未開始 | — | 全部。**且與宣言衝突未解**，使用者指定另開 session 討論（4.5-B1） |
+| 7 Multi-LLM Interface | 🟡 部分完成 | stdio；Streamable HTTP；OAuth 資源伺服器那一半 | 7.1 三缺口（簽章驗證器空著／進入點沒接線／沒有 authorization server）；7.2 公開部署；REST API；SDK |
+| 8 商業化 | 🔴 未開始 | 成本已實測；上架清單已查證 | 14 項上架前置只有 icon ✅、tool annotations ✅；計價單位未定（4.5-A2） |
+| 9 協定升級 2026-07-28 | 🔴 未開始（v6 新增） | — | 全部。做法已定：dual-era |
+
+**下一步的順序**：7.1 → 7.2 → Phase 8 清單 → Phase 9。
+Phase 9 不擋上架，但 7.1 選 authorization server 時必須照 Phase 9 的結論挑（要支援 CIMD）。
 
 ### ~~Phase 1 — 修架構級偏差（D1 + D2）~~ ✅ 完成
 證據經 tool call 傳入、五層決策契約上線。外部使用者（server 檔案中不存在）可純靠傳入證據取得完整決策。
@@ -312,6 +329,49 @@ olympic 服務爆發力。唯一的判斷是複合／單關節：多關節動作
 - **證據由 tool call 傳入，不做 OAuth 拉取**
 - **驗收**：同一使用者接不同來源，決策語意一致；訊號衝突有明確優先序
 
+> **來源方自己在做 connector（2026-07-30 查證，v6 補記）。** Strava 自 2026-06-01 上線
+> 官方 remote MCP server，使用者在 claude.ai 點 Connect 用 Strava 帳號授權；COROS 2026-05
+> 亦已推出（`mcp.coros.com`）；Garmin 無官方，論壇有 feature request。
+>
+> **它給什麼**（官方說明頁）：活動歷史、fitness trends、**training load**、**readiness
+> metrics**、目標進度、跨運動比較、裝備。逐秒心率與配速的 full stream。
+>
+> **它明確不給什麼**：官方寫明 connector 是 **read-only**，且**不提供教練決策或 AI 生成
+> 的建議**——它把資料交給 AI client，由 client 自己推理，並註明「AI 客戶端有自己處理資訊
+> 的方式」，結果與 Strava app 內的 Performance Predictions／訓練計畫不同。
+>
+> **兩者是同一條管線上相鄰的兩段，不是競爭關係。** 使用者的 Claude 同時裝著兩個 connector：
+>
+> ```
+> 使用者問 Claude
+>   → Claude 向 Strava connector 取證據（近 30 天活動、逐秒心率、Relative Effort）
+>   → Claude 把證據當參數呼叫 Evidra：decide_session({ evidence, scheduledSession })
+>   → Evidra 回 from: Tempo Run 45min high → to: Zone 2 Run 45min low，reason: ACWR 2.1 > 1.4
+>   → Claude 用人話講給使用者聽
+> ```
+>
+> **能推出的結論有兩條**：
+>
+> ① **不要自建來源 connector。** 來源方給得比我們拉得到的完整（我們拉不到逐秒串流），
+> 自建既違反 D-EVIDENCE 也是多餘的。
+>
+> ② **架構有一個我們自己不擁有的前提，這個前提現在成立了。** 整份設計建立在「證據會抵達
+> AI 那層，而且不是我們去 fetch」之上——但**誰把證據送到 Claude 手上，從來不是我們能決定
+> 的**。2026-06 之前那是假設，管線第一段是空的，只能靠使用者手動匯出撐著。Strava 與
+> COROS 上線官方 connector 之後，**該前提對至少兩個來源已從假設變成可觀察的事實**。
+> 加上 Strava 官方寫明 read-only、不提供教練決策或 AI 建議，**兩段不重疊**。
+>
+> **仍然推不出來的**：這不證明決策層本身有價值。決策層要靠 GPT-6 判準與
+> Decision ≠ Recommendation 自己站住，與 Strava 做不做無關。**②講的是管線接得起來，
+> 不是我們賣的東西值錢。**
+>
+> **要盯著的一項**：它輸出的 training load 與 readiness 是**廠商複合值**，與
+> Relative Effort 46 同型（可引用、不可重算，見本節下方）。這類值進到我們手上是證據，
+> 不是可重算的量，registry 要照這個性質標。
+>
+> 出處：`support.strava.com/en-us/articles/15401531-strava-mcp-connector`、
+> `press.strava.com/articles/strava-launches-mcp-connector`
+
 **已完成（Garmin）**：
 
 | 產出 | 位置 |
@@ -373,6 +433,13 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 做得到，這層才是翻譯；做不到，就只是一堆各格式的特例。
 
 ### Phase 6 — Feedback Learning（護城河 #4）
+
+> 🔴 **與宣言衝突，未結（v6 標記，本文件暫不改）。**
+> 宣言 L55：「Feedback Learning 需保存狀態→決策→結果三元組——那是決策紀錄，非原始健康
+> 資料，符合資料主權界線」。本節寫的是相反的。**宣言位階最高，所以要改的是計畫。**
+> 但使用者已指定此項**另開新 session 討論**（牽動 MCP session 機制），因此 v6 只標記衝突、
+> 不擅自改寫下面的內容。見「待決事項」。
+
 > ⚠️ 受 D-DATA「不保存」約束，閉環設計需重新定義：**我們這端不留三元組**。
 - 「狀態→決策→結果」由**呼叫端**保存，並可作為證據回傳
 - 我們這端的學習發生在**引擎規則與知識圖譜**（跨使用者的通則），不在個人資料
@@ -384,11 +451,44 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 |---|---|---|
 | MCP stdio | ✅ | `apps/mcp-server/src/stdio.js` |
 | MCP Streamable HTTP | ✅ | `apps/mcp-server/src/http.js`，`npm run serve:http`；另有 `/health` |
-| OAuth 2.1 Resource Server | ❌ | 目前是 bearer token 字串比對（`http.js`），非 OAuth。**手機與 marketplace 上架的前提** |
+| OAuth 2.1 Resource Server | 🟡 | **見下方訂正**——資源伺服器那半已實作，但驗證器沒填、進入點沒接線 |
 | REST API | ❌ | HTTP server 只掛 MCP endpoint ＋ `/health`，無資源式 REST |
 | SDK | ❌ | 無 |
 
 - **驗收**：外部 agent 開發者不接觸原始碼即可接上
+
+> **訂正（v6）**：v5.2 這行原本寫「OAuth ❌ · 目前是 bearer token 字串比對，非 OAuth」。
+> **不準確。** `apps/mcp-server/src/oauth.js`（181 行）已實作資源伺服器該負責的全部：
+> RFC 9728 protected resource metadata、audience 驗證（confused deputy 防護）、issuer
+> 白名單、scope 檢查、`WWW-Authenticate` 導引、bearer 僅限 header。`http.js` 也已掛上
+> `/.well-known/oauth-protected-resource` 與 401 流程。
+> 實際缺的是三件具體的事，列為 7.1。
+
+#### 7.1 OAuth 補完（上架前置，擋路項）
+
+| # | 缺口 | 位置 | 性質 |
+|---|---|---|---|
+| A | 簽章驗證器是空插槽 | `http.js` `verify: options.oauth.verify \|\| null` | 沒填 → `claims` 為 null → **每個 token 都被拒**。需接 JWKS 驗證 |
+| B | 進入點沒把 oauth 接進去 | `http.js` 直接執行區塊只傳 `token` / `allowedOrigins` | `npm run serve:http` 跑起來是共用密碼模式，**不是 OAuth** |
+| C | 沒有 authorization server | — | 發 token／跑同意畫面那一端。**唯一 per-MAU 成本**（見 Phase 8） |
+
+**C 的選型受 2026-07-28 規格影響，先讀 Phase 9 再選。** 規格已將 DCR（RFC 7591）
+deprecated，改推 **CIMD**（Client ID Metadata Documents），授權伺服器以
+`client_id_metadata_document_supported` 宣告支援。客戶端優先序為
+pre-registration → CIMD → DCR → 要使用者手動填。**選一個不支援 CIMD 的
+authorization server，等於一上線就走在 deprecated 路徑上。**
+
+- **7.1 驗收**：MCP Inspector 帶真實 token 走完 401 → metadata → 授權 → 帶 token 呼叫，
+  且錯誤 token（過期／audience 不符／issuer 不認得）各自回正確狀態碼。
+
+#### 7.2 公開部署（上架前置，擋路項）
+
+現況只跑 `localhost:8787`。目錄要求：
+
+- **`https://` 網址**（提交表單強制），且**須從 Anthropic IP 連得到**——
+  私有網段、VPN 後、防火牆擋掉的一律不通，「自己電腦連得到」不算數
+- 網域**應與服務本身一致**（review 準則的 API ownership 條款）
+- transport 二選一：**streamable HTTP 或 SSE**——我們走 streamable HTTP，已符合
 
 ### Phase 8 — 商業化
 
@@ -440,6 +540,148 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 **所以金流必須自己做。** 另有一個定價天花板：使用者已經在付 Claude／ChatGPT 訂閱，
 **我們是加在上面的第二筆**。
 
+#### 上架前置清單（2026-07-30 實查官方文件）
+
+來源：[Submitting to the Connectors Directory](https://claude.com/docs/connectors/building/submission) ·
+[Pre-submission checklist](https://claude.com/docs/connectors/building/review-criteria) ·
+[Anthropic Software Directory Policy](https://support.claude.com/en/articles/13145358-anthropic-software-directory-policy)
+
+| # | 要求 | 現況 |
+|---|---|---|
+| 1 | **Team 或 Enterprise 組織帳號**——提交入口在 Claude.ai admin settings，個人方案沒有 | ❌ **硬前提，先前未列** |
+| 2 | `https://` 網址，Anthropic IP 連得到 | ❌ 見 7.2 |
+| 3 | 需要驗證的服務**必須用 OAuth 2.0**（憑證須來自公認 CA）；模式限 DCR／CIMD／Anthropic 保管的 static client ID | 🟡 見 7.1 |
+| 4 | 每個 tool 要有 `title` ＋ 對應的 `readOnlyHint`／`destructiveHint` | ✅ 6 個對外 tool 全數具備（已實測 `listedToolDefinitions()`） |
+| 5 | 讀寫分離，不得有 `method` 參數的萬用 tool | ✅ 決策 tool 本來就是專用端點 |
+| 6 | tool 描述不得含引導 Claude 行為的字句（prompt-injection 準則） | 🟡 **待逐條自審**——描述裡的「Use this after…」句式需確認落在「說明何時呼叫」而非「指揮模型」 |
+| 7 | Privacy policy URL（HTTPS）。**缺或不完整＝立即退件** | ❌ 未寫 |
+| 8 | 公開文件 URL（部落格或說明文章即可，發布日前備妥） | ❌ 未寫 |
+| 9 | support 聯絡方式、icon、listing slug（slug 發布後永久固定） | 🟡 **icon ✅ 已備**（`docs/brand/`，含 1024／512／256 等尺寸）；support 聯絡與 slug 未定 |
+| 10 | **測試帳號＋範例資料**，資料要夠完整讓審查者跑完每個 tool | ❌ 未備 |
+| 11 | 三組可運作的範例 prompt | ❌ 未寫 |
+| 12 | 自行用 MCP Inspector ＋ Claude custom connector 跑過每個 tool | ❌ 未做 |
+| 13 | Data handling 一欄須申報**是否處理個人健康資料** | 🟡 **要據實申報**。我們不保存（D-DATA），但證據確實經手，申報要照實寫 |
+| 14 | 七項 compliance 聲明（含 prompt injection、對話資料蒐集、first-party API） | 🟡 D-DATA／D-EVIDENCE 對我們有利，但要逐條對答案 |
+
+> **政策面對我們無阻礙的部分**：禁止金流、禁止 AI 生成影音、禁止廣告——三條都與我們無關。
+> 政策全文**未對健康／醫療資料設額外限制**，只走一般隱私條款；但 R3（責任邊界）
+> 仍是我們自己的義務，不因政策沒寫而消失。
+
+---
+
+### Phase 9 — 協定升級至 MCP 2026-07-28（新增於 v6）
+
+> **這一條不擋上架。** 上架擋在 7.1 ／ 7.2 ／ Phase 8 清單。本 Phase 是協定版本跟進，
+> 兩條線只有一個交集：**7.1-C 的 authorization server 選型必須照新版選 CIMD**。
+
+**現況**：`server.js` 的 `SUPPORTED_PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26",
+"2024-11-05"]`，走 `initialize` 握手，HTTP 端以 `mcp-session-id` 發 session。
+按新版術語這是 **legacy（handshake-based）** 實作。
+
+#### 為什麼必須做成 dual-era，而不是直接改成 stateless
+
+官方 versioning 頁的相容性矩陣寫得很直接：
+
+| Client | Server | 結果 |
+|---|---|---|
+| Legacy | Modern | **Fails**——legacy 客戶端沒有向前相容機制 |
+| Modern | Legacy | **Fails** |
+| Legacy／Modern | **Dual-era** | 都 Works |
+
+**所以「直接改成新版」會打死所有還沒升級的客戶端。** 唯一安全路徑是 dual-era：
+帶 modern `_meta` 的請求走 stateless，收到 `initialize` 就走 legacy 語意。
+規格明文允許同一個 endpoint 同時服務兩個世代。
+
+#### 9.1 Modern 路徑（新增，不動既有 legacy 路徑）
+
+| # | 項目 | 規格要求 |
+|---|---|---|
+| A | 每請求 `_meta` | `io.modelcontextprotocol/protocolVersion`／`clientInfo`／`clientCapabilities`；結果的 `_meta` 回 `serverInfo` |
+| B | `server/discover` | **MUST 實作**，宣告支援版本、能力、身分 |
+| C | `MCP-Protocol-Version` header | 每個 POST 必帶，且**必須與 body `_meta` 一致**，不一致回 `400` ＋ `-32020 HeaderMismatch` |
+| D | `Mcp-Method`／`Mcp-Name` header | `Mcp-Method` 所有請求必帶；`Mcp-Name` 於 `tools/call` 必帶。非 ASCII 走 `=?base64?…?=` sentinel，**比對前要先解碼** |
+| E | 版本不支援 | 回 `-32022 UnsupportedProtocolVersionError`，`data.supported` 列出支援清單 |
+| F | 所有 result 加 `resultType` | `"complete"`／`"input_required"` |
+| G | `ttlMs` ＋ `cacheScope` | `tools/list` 等清單型結果**必填**。我們的 tool 清單是靜態的，`cacheScope: "public"` 合理 |
+| H | GET／DELETE | 只支援本版時一律回 `405`；收到 `Mcp-Session-Id` 忽略不回聲；`Last-Event-ID` 忽略 |
+| I | `tools/list` 順序 | SHOULD 穩定排序，利於客戶端與 prompt cache |
+
+#### 9.2 要拆掉的東西（僅限 modern 路徑；legacy 路徑保留）
+
+- `ping`、`logging/setLevel`、`notifications/roots/list_changed` 已從協定移除
+- GET SSE endpoint（`http.js`）→ 改由 `subscriptions/listen` 提供
+- SSE resumability（`Last-Event-ID`）不再支援
+- `sessions` Set → **直接刪除**。已實測它只有 `add` 與 `delete`、**從無 `has`**，
+  沒有任何一行檢查它，等於刪掉而不是重寫
+
+#### 9.3 MRTR（Multi Round-Trip Requests）
+
+server 不再主動送 request。需要補資料時回 `InputRequiredResult`（`resultType:
+"input_required"` ＋ `inputRequests`），客戶端帶 `inputResponses` **重試原請求**。
+
+**這條與 P6（elicitation 一次收齊參數）合流**——P6 從此不是「補一個 elicitation 呼叫」，
+而是「在 MRTR 形狀下一次列出缺的參數」。跨重試的關聯自己編在 `requestState`。
+
+#### 9.4 時程壓力
+
+新版有**十二個月最短 deprecation window**，Roots／Sampling／Logging 與 HTTP+SSE
+都在窗內。**不急，但別拖到窗尾**；且 7.1-C 一旦選定 authorization server 就難改，
+CIMD 那個決定要在 Phase 7 就下對。
+
+- **Phase 9 驗收**：
+  1. 同一個 endpoint 對 legacy 客戶端（送 `initialize`）與 modern 客戶端（帶 `_meta`）皆可用
+  2. header 與 body 不一致時確實回 `-32020`
+  3. 不支援的版本回 `-32022` 且列出 `supported`
+  4. `server/discover` 回得出支援版本清單
+  5. 既有 247 tests 全綠，且新增 dual-era 雙路徑測試
+
+---
+
+## 4.5 待決事項與未結項（v6 新增）
+
+> 來源：2026-07-30 工作紀錄。列在這裡是因為**沒有任何 gate 抓得到它們**——
+> `npm run review:phase` 九條 gate 全綠也不代表這些消失了。
+
+### A. 要使用者決定的四項
+
+| # | 事項 | 卡在哪 |
+|---|---|---|
+| A1 | **Authorization server 選哪家**（Auth0／WorkOS／Clerk／自建） | resource server 已寫好，沒有 AS 就無法端到端。**v6 已給出硬判準：必須支援 CIMD**（見 D-REGISTRATION），這條先前沒有 |
+| A2 | **計價單位** | 宣言 L184「商業單位 = Decision Tools」vs 實測成本隨人數（per-MAU）。兩者要對齊，Phase 8 現在寫「未定」 |
+| A3 | **max HR 171 是年齡估計**（220−49） | 資料裡觀察到的最高 150，但那 7 筆全是穩態有氧，是下限不是上限。維持估計值、還是做一次最大努力測試 |
+| A4 | **四個 tool 要不要改名**（`decide_session` → `decide_training_session` 等，牽動 6 處） | 判準是「遮住 connector 名稱後看不看得出是健身領域」，四個沒過。`deprecatedToolAliases` 已在，改名不會斷既有呼叫端 |
+
+### B. 計畫與宣言衝突三處（宣言位階最高 → 要改的是計畫）
+
+| # | 宣言 | 計畫現況 | 狀態 |
+|---|---|---|---|
+| B1 | L55 需保存「狀態→決策→結果」三元組（決策紀錄非原始健康資料） | Phase 6「我們這端不留三元組」 | 🔴 **另開 session 討論**，v6 只標記 |
+| B2 | L190 第一里程碑＝裸模型 vs 模型＋MCP 對照；L42 明文例外「開發期的 lift 評測…是開發工具，不是產品的一部分」 | D5 取消評測，理由之一「呼叫 LLM API 違反 D-LLM」 | 🔴 **該理由對宣言不成立**，D5 的第 2 條理由要撤或重寫 |
+| B3 | L184「商業單位 = Decision Tools，工具面的定義就是商業模型的定義」 | Phase 8 計價單位改「未定」 | 🟡 同 A2 |
+
+### C. 未結的技術債
+
+| # | 項目 | 位置 |
+|---|---|---|
+| C1 | **`maxSampleGapSeconds = 30` 沒有出處**——「心率斷超過 30 秒算暫停」的 30 是挑的，已 commit。要有依據，或改成呼叫端必填 | `packages/connectors/src/timeInZone.js:106` |
+| C2 | **`trainingLoad ?? 分鐘數` 仍在編造負荷值**（`rpe ?? 5` 已於 `ec7f887` 移除，這條當時明確劃在範圍外） | `packages/evidence/src/model.js:155` |
+| C3 | **user-journey 缺兩個已完成功能**（提議評估、心率區間分佈）。**沒有 gate 抓得到**——G4 只比對五種決策型別，沒有東西比對「功能 ↔ 對外文件」 | `docs/user-journey.html` |
+| C4 | **G5 一直紅著**：Apple Health 與 Strava 有 parser，但 `schemas/sources/` 缺原始格式契約、`eval/scenarios/` 缺匯出形狀場景。`schemas/README.md` 自訂規則是「registry ＋ source schema ＋ parser ＋ scenario」四件，現在 2/4 | `schemas/sources/`、`eval/scenarios/` |
+
+> **C4 現在的條件比先前好**：真實 Apple Health 匯出已在 `data/private/AppleHealth/export.xml`
+> （153MB／382,246 筆／2017-11→2026-07），可得率是量出來的，可以照 Garmin 那份寫成真正的
+> source contract。
+
+### D. 一個會影響 registry 正確性的實測發現
+
+**`apple_health` 給什麼訊號，完全取決於哪個裝置在餵它。** 實測該匯出：來源名稱 `Connect`
+（Garmin）寫入 30,198 筆心率、114/120 筆靜息心率、**41 筆睡眠（100%）**——iPhone 自己量不到
+這些；HRV 則只有 Apple Watch 有（19 筆，最後一筆 2023-08，近三年 0 筆）。
+
+**registry 寫「apple_health 提供 4 個 signal」是錯的**——它提供的是餵它的那些裝置能給的
+**聯集**，而且隨使用者的裝置史變動。這是 schema registry 的正確性問題，不是某個使用者的
+資料特性（紀律 2 不禁止這一類斷言：它講的是匯出檔的形狀，不是某人的生理數值）。
+
 ---
 
 ## 5. 決策日誌
@@ -454,6 +696,9 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 | **D-TOOL** | **14 → 6**，依 GPT-6 判準；砍端點不砍能力（已執行）|
 | **D-INTERFACE** | 不只 MCP，還要 REST API ＋ SDK（Phase 7） |
 | **D-GRAPHDB** | 未觸發，in-memory 足夠，不導入 Neo4j |
+| **D-CONNECTOR**（v6） | **不自建任何來源 connector。** Strava（2026-06）、COROS（2026-05）已自行 host 官方 MCP server，給得比我們拉得到的完整（逐秒串流），且官方寫明 read-only、不做教練決策——**與我們相鄰不重疊**。連帶效果：架構原本「證據自己會到 AI 那層」這個我們不擁有的前提，已對兩個來源成為事實。**但這只說明管線接得起來，不代表決策層有價值**，見 Phase 5 補記 |
+| **D-PROTOCOL**（v6） | 升 2026-07-28 走 **dual-era**，不是直接切換。依官方相容性矩陣，單邊 modern 會打死所有 legacy 客戶端 |
+| **D-REGISTRATION**（v6） | authorization server 以**支援 CIMD** 為選型硬條件。DCR 已 deprecated，只留向後相容 |
 
 ## 6. 風險
 
@@ -463,6 +708,7 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 | **R2 定位滑回內容庫** | 🟢 已發生一次（早期蓋出檢索層），D3 已收回；靠 GPT-6 判準持續守 |
 | **R3 健康建議責任邊界** | 🟡 B2B 讓責任鏈更長，需 tool description ＋ 合約兩層聲明非醫療用途 |
 | **R4 KG 關係品質** | 🟢 進退階與訓練目標皆已補齊並有不變量把關（4.3）。**殘留**：匯入的 861 個節點只有相似度邊，且已驗證無法由規則升級為語意**邊**（訓練目標走的是節點屬性，不是邊） |
+| **R5 上架前提未備**（v6） | 🔴 提交入口需 **Team／Enterprise 組織**，個人方案進不去；privacy policy 缺件即退件。**這兩項與程式無關，寫再多程式也繞不過**，見 Phase 8 清單 |
 
 ## 7. 工程原則（沿用，位階次於宣言）
 
@@ -473,7 +719,7 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 | P3 | 輸出帶可驗證 ID，回傳前驗證存在性 | ✅ `assertGrounded` |
 | P4 | 寫入 two-phase + idempotency key | 🟡 缺 idempotency key |
 | P5 | 日期／時區由 server 解析 | 🟡 預設日期已改由 server 以使用者時區解析（`packages/domain/src/dates.js`）；**尚缺**自然語言相對日期（「明天」「上週三」）解析 |
-| P6 | elicitation 一次收齊參數 | ❌ |
+| P6 | elicitation 一次收齊參數 | ❌ **形狀已變**——見 Phase 9.3，2026-07-28 起走 MRTR，不再是 server 主動送 elicitation request |
 
 > **P5 訂正**：原本 `toolHandlers.js` 的 `DEFAULT_DATE = "2026-07-23"` 與
 > `generatePlan.js` 的 `startDate || "2026-07-27"` 是**寫死的日曆日**——沒帶 `date` 的

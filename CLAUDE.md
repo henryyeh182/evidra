@@ -103,7 +103,9 @@ Claude / ChatGPT 回覆使用者
 - schema registry 涵蓋 6 家 ＋ Strava bulk export 方言；parser 實作 3 家（Apple Health／Garmin／Strava，Strava 含 API 與 bulk export 兩種方言）
 - Strava bulk export：CSV 按欄位**索引**解析（5 組同名欄單位不同）；`Activity Date` 是 UTC 無 offset，本地時區只能從 `activities/*.fit.gz` 的 `activity.local_timestamp − timestamp` 還原（opt-in `readLocalTimezone`）
 - 知識圖譜 889 節點 / 5,785 邊（**內部證據來源，不是對外產品**）
-- transport：stdio ✅ · Streamable HTTP ✅ · **OAuth ❌**（手機與 marketplace 上架的前提）
+- transport：stdio ✅ · Streamable HTTP ✅ · OAuth **資源伺服器那一半 ✅**（`oauth.js`），
+  但**簽章驗證器沒填、`serve:http` 進入點沒接線、沒有 authorization server** → 端到端還不能用
+- 協定版本停在 `2025-06-18`；最新規格是 `2026-07-28`（stateless）。升級做法已定：dual-era
 
 ## 常用指令
 
@@ -120,7 +122,7 @@ npm run serve:http           # HTTP transport
 
 要說某個 Phase／偏差／修正「做完了」，先走 [docs/phase-review.md](docs/phase-review.md)：
 先讀（memory → 本檔 → README → 宣言 → plan → user-journey），再跑 `npm run review:phase`
-的七條 gate，最後回答七道機械驗不到的判斷題（GPT-6 判準、Decision ≠ Recommendation、
+的九條 gate，最後回答七道機械驗不到的判斷題（GPT-6 判準、Decision ≠ Recommendation、
 三條紀律…）。**gate 紅的不得宣告完成**——紅的是宣稱與現況的落差，不是待辦功能。
 
 **MCP server 是常駐行程，改程式不會熱重載**——要驗證改動必須開新 session 或重啟行程。
