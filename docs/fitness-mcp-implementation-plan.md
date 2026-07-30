@@ -125,7 +125,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 ### 護城河：GPT-6 判準的三樣，只有兩樣是我們的
 
-| GPT-6 殺不死的 | 我們的實況 | 依據 |
+| 大型模型自己做不到的三件事 | 我們的實況 | 依據 |
 |---|---|---|
 | **證據** | 🟡 **不是我們的護城河**。證據是來源方給的，Strava 給得比我們拉得到的完整 | 已驗證（見 Phase 5 補記） |
 | **計算** | ✅ 是。ATL/CTL/TSB、detraining 獨立軸線、個人基線，確定性、零外部 API、0.443ms | 已驗證（實測，Phase 8） |
@@ -154,7 +154,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 ### 可以怎麼做（順序，不是清單）
 
-1. **C5 計畫持久化**——決策的基底。不做這個，上面每一條都是話術。
+1. **C5 計畫持久化**——決策的基底。不做這個，上面每一條都拿不出證據。
 2. **7.1 OAuth 補完 → 7.2 公開部署**——沒有這兩個，沒有人用得到。
 3. **Phase 8 上架清單**——擋在 Team 帳號與隱私政策，與程式無關，可平行進行。
 4. **Phase 9 協定升級**——不擋上架，但 7.1 選 authorization server 時就要照它的結論挑。
@@ -529,7 +529,7 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 > `/.well-known/oauth-protected-resource` 與 401 流程。
 > 實際缺的是三件具體的事，列為 7.1。
 
-#### 7.1 OAuth 補完（上架前置，擋路項）
+#### 7.1 OAuth 補完（上架前必須完成）
 
 | # | 缺口 | 位置 | 性質 |
 |---|---|---|---|
@@ -546,7 +546,7 @@ authorization server，等於一上線就走在 deprecated 路徑上。**
 - **7.1 驗收**：MCP Inspector 帶真實 token 走完 401 → metadata → 授權 → 帶 token 呼叫，
   且錯誤 token（過期／audience 不符／issuer 不認得）各自回正確狀態碼。
 
-#### 7.2 公開部署（上架前置，擋路項）
+#### 7.2 公開部署（上架前必須完成）
 
 現況只跑 `localhost:8787`。目錄要求：
 
@@ -653,7 +653,7 @@ authorization server，等於一上線就走在 deprecated 路徑上。**
 | Modern | Legacy | **Fails** |
 | Legacy／Modern | **Dual-era** | 都 Works |
 
-**所以「直接改成新版」會打死所有還沒升級的客戶端。** 唯一安全路徑是 dual-era：
+**所以直接改成新版，所有還沒升級的客戶端都會連不上。** 唯一安全路徑是 dual-era：
 帶 modern `_meta` 的請求走 stateless，收到 `initialize` 就走 legacy 語意。
 規格明文允許同一個 endpoint 同時服務兩個世代。
 
@@ -763,7 +763,7 @@ CIMD 那個決定要在 Phase 7 就下對。
 | **D-INTERFACE** | 不只 MCP，還要 REST API ＋ SDK（Phase 7） |
 | **D-GRAPHDB** | 未觸發，in-memory 足夠，不導入 Neo4j |
 | **D-CONNECTOR**（v6） | **不自建任何來源 connector。** Strava（2026-06）、COROS（2026-05）已自行 host 官方 MCP server，給得比我們拉得到的完整（逐秒串流），且官方寫明 read-only、不做教練決策——**與我們相鄰不重疊**。連帶效果：架構原本「證據自己會到 AI 那層」這個我們不擁有的前提，已對兩個來源成為事實。**但這只說明管線接得起來，不代表決策層有價值**，見 Phase 5 補記 |
-| **D-PROTOCOL**（v6） | 升 2026-07-28 走 **dual-era**，不是直接切換。依官方相容性矩陣，單邊 modern 會打死所有 legacy 客戶端 |
+| **D-PROTOCOL**（v6） | 升 2026-07-28 走 **dual-era**，不是直接切換。依官方相容性矩陣，只支援新版會讓所有舊版客戶端連不上 |
 | **D-REGISTRATION**（v6） | authorization server 以**支援 CIMD** 為選型硬條件。DCR 已 deprecated，只留向後相容 |
 
 ## 6. 風險
