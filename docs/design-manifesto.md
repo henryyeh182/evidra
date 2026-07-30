@@ -215,6 +215,76 @@ Claude 先向 Strava 取證據 → 再把證據當參數呼叫 Evidra → Evidra
 
 這是原則 1「Data stays with the user」的結構性保證：我們對原始資料無狀態，只收證據、回決策。
 
+## 部署模式與資料處理邊界（2026-07-30 定案）
+
+「不 fetch、不持有原始資料」不等於「完全不處理資料」。只要 hosted
+Fitness MCP 收到 caller 傳入的 Evidence 並進行標準化或決策計算，它就是
+**transient data processor**：可以不持久化、不保管、不販售、不訓練利用，
+但不能宣稱 never processes health data。
+
+產品支援兩種部署模式：
+
+### Phase 1：Hosted decision service
+
+```
+Apple Health / Garmin / Strava
+        │ 使用者授權資料來源
+        ▼
+AI host 或 user-controlled local gateway
+        │ parser / normalization / 最小化 Evidence
+        ▼
+Hosted Fitness MCP（transient processing only）
+        │ deterministic computation
+        ▼
+Decision / Action / Reason
+```
+
+Phase 1 的 hosted MCP：
+
+- 不直接連 Apple Health、Garmin、Strava 等資料供應商
+- 不持有來源 OAuth refresh token
+- 只接收完成請求所需的最小 Evidence
+- 不將 raw Evidence 寫入 database、file、object storage、queue 或 analytics
+- 不把 Evidence 用於訓練、廣告、profiling 或無關的二次目的
+- request 完成後不保留 Evidence；log、trace、error telemetry 必須遮蔽 payload、token 與健康欄位
+
+因此對外 Privacy Policy 應使用以下準確表述：
+
+> We process only the minimum health-related evidence submitted by the caller,
+> solely to compute the requested fitness decision. We do not retain, sell, use
+> for training, or use it for unrelated purposes.
+
+不得使用以下不準確表述：
+
+> We never process health data.
+
+### Phase 2：User-controlled private engine
+
+```
+Apple Health / Garmin / Strava
+        │
+        ▼
+User device / private gateway / private VPC
+  ├─ source connectors
+  ├─ packages/evidence
+  ├─ packages/semantic-engine
+  ├─ decision computation
+  └─ local/private MCP server
+        │ 只回傳最小化 Decision 結果
+        ▼
+Claude / ChatGPT / internal AI host
+```
+
+Phase 2 將 source connectors、`packages/evidence`、
+`packages/semantic-engine` 與 decision computation 放在使用者控制的環境。
+Hosted service 不接觸 raw health Evidence；這是高隱私、離線、企業 private
+VPC 或資料 residency 情境的部署選項。這不代表該使用者或企業環境不需要
+自己的存取控制、加密、保留與刪除政策。
+
+兩種模式共用同一套純 domain packages；差別只在於 source adapter、MCP
+transport 與 Evidence 的處理位置。Phase 1 是 hosted transient processing；
+Phase 2 才是 hosted service 不接觸健康 Evidence 的模式。
+
 > 用詞：內部討論 input 一律稱 **Evidence** 不稱 Data。架構圖層級名稱維持原文。
 > `Data Access` 的語意＝**使用者授權 AI 取用，資料所有權仍屬使用者**。
 

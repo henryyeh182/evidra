@@ -70,6 +70,19 @@ Claude / ChatGPT 回覆使用者
 
 **我們不 fetch、不持有原始健康資料。** 因此某來源有沒有伺服器 API 與本架構無關。
 
+**邊界精確定義**：hosted Fitness MCP 會 transiently process caller 傳入的
+最小化 Evidence；不得把這件事描述成「完全不處理健康資料」。正式 wording：
+
+> We process only the minimum health-related evidence submitted by the caller,
+> solely to compute the requested fitness decision. We do not retain, sell, use
+> for training, or use it for unrelated purposes.
+
+Phase 1 是 `source connector → minimum Evidence → hosted Fitness MCP → transient
+decision`；Phase 2 才把 `packages/evidence`、`packages/semantic-engine` 與
+decision computation 放進 user-controlled local/private environment，讓 hosted
+service 不接觸 raw health Evidence。完整邊界以
+[`docs/design-manifesto.md`](docs/design-manifesto.md) 為準。
+
 ## 核心概念（使用者定調，2026-07-30）
 
 > **知識的輸出現在已經沒有價值**，任何問 AI 馬上有答案。

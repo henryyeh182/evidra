@@ -27,6 +27,46 @@ Claude / ChatGPT 回覆使用者
 證據由 AI 那層經 tool call 傳入 — **Fitness MCP 不去廠商雲端拉資料，也不持有原始健康資料**。
 系統內**不含 LLM**：語言與推理來自 host，我們提供確定性的領域智慧。
 
+### Privacy boundary
+
+目前的 hosted MCP 是 **transient data processor**：它會接收並分析 caller
+提交的最小化 Evidence，但不應持久化、不保管 raw health data、不持有來源
+OAuth refresh token，也不應將 Evidence 用於販售、模型訓練、廣告、profiling
+或其他無關目的。
+
+因此產品文件應寫：
+
+> We process only the minimum health-related evidence submitted by the caller,
+> solely to compute the requested fitness decision. We do not retain, sell, use
+> for training, or use it for unrelated purposes.
+
+不要寫成 `We never process health data`；接收並計算 Evidence 本身就是
+transient processing。
+
+部署分成兩種模式：
+
+```text
+Phase 1 — Hosted decision service
+
+Apple Health / Garmin / Strava
+        → AI host 或 user-controlled local gateway
+        → minimum Evidence
+        → hosted Fitness MCP（transient computation）
+        → Decision / Action / Reason
+
+Phase 2 — User-controlled private engine
+
+Apple Health / Garmin / Strava
+        → user device / private gateway / private VPC
+        → connectors + evidence + semantic engine + decision computation
+        → local/private MCP
+        → Claude / ChatGPT 只收到最小化決策結果
+```
+
+Phase 1 適合一般 hosted connector；Phase 2 適合高隱私、離線、企業 private
+VPC 或資料 residency 情境。兩種模式共用 domain packages，但 Phase 2 才能
+讓 hosted service 完全不接觸 raw health Evidence。
+
 ## Design Principles
 
 1. **Data stays with the user** — 不建資料湖、不保存原始健康資料

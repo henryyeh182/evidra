@@ -1,6 +1,6 @@
 # Fitness MCP — Implementation Plan
 
-> 版本：**v6** · 依 [Design Manifesto](design-manifesto.md) 推導
+> 版本：**v7** · 依 [Design Manifesto](design-manifesto.md) 推導
 > **Mission**：A permissioned Fitness Decision Engine that turns fragmented, user-owned health evidence into explainable training decisions for AI agents.
 
 > ⚠️ [Design Manifesto](design-manifesto.md) 位階最高，衝突時以宣言為準。
@@ -8,6 +8,152 @@
 > 本文件是唯一的實作計畫，先前的 v1／v2／各 phase 分冊已刪除並整併於此。
 
 ---
+
+## 0. 對外產品交付路線（P1 → P8）
+
+本節以**使用者實際旅程**排列新的優先順序；下方第 4 節的 Phase 1–9
+是歷史工程階段與完成狀態，兩者不要混為同一套編號。第一個成功標準不是
+parser 或 tool 的數量，而是使用者能在手機上的 Claude／ChatGPT 直接問訓練問題，
+得到有證據、可解釋、可執行的決策。
+
+### P1 — 資料主權與產品邊界
+
+固定「誰取得資料、誰處理資料、誰保存資料」：
+
+- Fitness MCP 不直接 fetch Apple Health、Garmin、Strava，也不持有來源 OAuth refresh token。
+- Hosted 版本只接受 caller 傳入的最小化 Evidence，transiently 計算後丟棄。
+- Evidence 不進 database、file、object storage、queue、analytics、trace 或模型訓練資料。
+- 完成 Privacy Policy、data-flow map、retention policy、subprocessor 清單與非醫療用途聲明。
+- 對外使用：`We process only the minimum health-related evidence submitted by the caller...`
+  不使用 `We never process health data`。
+
+**驗收**：每條 request path 都能說明 Evidence 從哪裡來、在哪裡短暫存在、何時消失，且 log／error path 不洩漏 Evidence。
+
+### P2 — 最小化 Evidence 契約與來源形狀
+
+固定跨 Apple Health、Garmin、Strava 的 canonical Evidence：必要欄位、單位、時間、來源與 freshness。
+
+- 對照真實 connector 輸出，不只驗證本機 export fixture。
+- 缺資料時回 `signalCoverage.missing` 與降低 confidence，不補造數值。
+- 只傳決策所需欄位，不把完整活動原始 payload 帶進 hosted MCP。
+- 補齊 Apple Health／Garmin／Strava 的 source schema 與 scenario gate。
+
+**驗收**：相同 canonical Evidence 在不同來源下產生相同 deterministic state；缺少的訊號被誠實標示。
+
+### P3 — AI 教練決策 MVP
+
+```text
+使用者在 Claude／ChatGPT 手機輸入問題
+        ↓ AI host 理解意圖並取得必要 Evidence
+Fitness MCP：state → decision → action → reason
+        ↓
+AI host 把結構化結果講成人話
+```
+
+#### 使用情境 A：今天的課表
+
+使用者：「我今天的課程安排是什麼？」
+
+若有今日計畫且負荷偏高：
+
+```text
+原定：高強度腿部訓練
+決策：adjust
+改為：中等強度下肢訓練
+原因：近期負荷偏高
+```
+
+這是 `Decision`，因為明確包含 `from → to`。
+
+#### 使用情境 B：昨天運動量很大
+
+使用者：「我昨天運動量很大，今天適合做什麼？」
+
+若今天有原定課表，流程是：
+
+```text
+昨日 Evidence → 今日原定課表 → 調整後課表
+```
+
+例如把間歇課改成 Zone 2 或恢復活動。若今天沒有原定課表，不能偽裝成
+Decision，應明確回傳 `Recommendation`，例如輕鬆步行、核心穩定、活動度或伸展。
+
+#### 使用情境 C：限制與信心
+
+使用者：「我睡不好但還是想運動，今天可以怎麼安排？」
+
+MCP 必須回傳缺少或過期的 HRV／睡眠訊號、confidence 與 limits，而不是由 LLM 猜測生理狀態。
+
+**驗收**：六個 decision tools 能由 Claude／ChatGPT 以自然語句正確選用，回覆包含 Decision、Action、Reason、confidence、signal coverage 與 limits。
+
+### P4 — Local / private engine
+
+提供不讓 hosted service 接觸 raw health Evidence 的版本：
+
+```text
+Apple Health / Garmin / Strava
+        ↓
+User device / home server / private VPC
+  ├─ source connectors
+  ├─ packages/evidence
+  ├─ packages/semantic-engine
+  ├─ decision computation
+  └─ local/private MCP server
+        ↓ 只回傳最小化 Decision
+Claude／ChatGPT／internal AI host
+```
+
+把 source adapters、`packages/evidence`、`packages/semantic-engine` 與 decision computation
+綁成 local bundle 或 Docker image；local stdio 給個人電腦，private HTTP 給 NAS／企業 VPC。
+
+**驗收**：在沒有 hosted MCP 的情況下仍可完成 P3 三個情境，並測得 raw Evidence 不離開 user-controlled environment。
+
+### P5 — Hosted MCP production boundary
+
+讓一般使用者能從手機 AI App 連到 hosted Fitness MCP：
+
+- Docker 化 Node HTTP server，公開 HTTPS `/mcp`。
+- 完成 OAuth Resource Server：signature/JWKS、issuer、audience、expiry、scope。
+- 接入外部 Authorization Server；MCP 不自己保存帳號密碼。
+- 定義 `fitness:read`、`fitness:plan:write` 等 scopes。
+- request body、tool arguments、Bearer token 不進 access log、APM 或 error trace。
+- Hosted MCP stateless，或明確使用受控的外部狀態。
+
+**驗收**：完成 `401 → metadata → OAuth → token → tools/list → tools/call`；錯誤 token、錯誤 audience、過期 token、缺 scope 正確回 401／403。
+
+### P6 — Mobile AI coach connector journey
+
+```text
+Claude／ChatGPT Mobile
+        ↓ Connect／登入／同意
+AI host 取得來源 connector 的 Evidence
+        ↓
+Hosted 或 local/private Fitness MCP
+        ↓ 結構化 Decision
+        ↓
+AI 以貼身教練口吻回覆
+```
+
+驗證使用者可從手機完成連線、授權、撤銷與重新授權；AI 能區分「查詢課表」、
+「調整既有課表」與「沒有課表時的推薦」；connector 輸出能映射到 P2 Evidence；
+Claude Desktop 的 local stdio 與手機的 remote HTTP 是兩條清楚的 deployment path。
+
+**驗收**：用真實或固定 connector 跑完 P3 三個情境，從輸入到自然語言回覆可追蹤，但追蹤紀錄不含健康資料。
+
+### P7 — Safety、privacy 與上架準備
+
+完成 GDPR/controller-processor 角色分析、DPA、DPIA 評估、資料主體權利流程、
+retention／跨境傳輸／subprocessor 文件、非醫療診斷聲明、incident response、
+token rotation，以及 connector directory 的 OAuth、privacy URL、support、測試帳號與範例 prompts。
+
+**驗收**：Privacy Policy、實際 request path、cloud logging 設定與 automated tests 對同一份 data-flow map；不一致不得上架。
+
+### P8 — REST／SDK 與營運擴充
+
+在 P6 使用旅程被驗證後再做 REST API／SDK、idempotency、rate limit、quota、
+不含健康資料的 usage metering、source contract regression、MCP dual-era、pricing、tenant isolation 與 enterprise private deployment。
+
+**優先級**：P1–P3 是核心；P4 是高隱私版本；P5–P6 是 hosted mobile distribution；P7 是上架 gate；P8 不得搶在核心旅程驗證前。
 
 ## 1. 已實作元件
 
