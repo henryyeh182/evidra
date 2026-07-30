@@ -269,6 +269,67 @@
   </header>
 
   <section class="spine">
+    <p class="section-label">Before The Chain</p>
+    <h2>證據怎麼到 AI 手上</h2>
+    <p class="lede">
+      實際情境是這樣開始的：使用者在手機上打開 Claude，說「今天該練什麼」。
+      決策鏈要能開始，證據得先進到那句對話裡——而這段路上的每一步，
+      <strong>不是每一步都由我們走</strong>。誰負責哪一步，決定了這個產品什麼時候能上手機。
+    </p>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>步驟</th><th>做的人</th><th>現況</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="sig-name">在手機上開 Claude 對話</td>
+            <td>Anthropic</td>
+            <td class="yes">✓ 已存在</td>
+          </tr>
+          <tr>
+            <td class="sig-name">Claude 連上 Evidra</td>
+            <td><b>我們</b>　遠端 MCP server ＋ OAuth 2.1</td>
+            <td class="no">— 未完成</td>
+          </tr>
+          <tr>
+            <td class="sig-name">取得 Apple Health 資料</td>
+            <td>Claude app 的 HealthKit 權限</td>
+            <td class="no">— 不在我們手上</td>
+          </tr>
+          <tr>
+            <td class="sig-name">取得 Garmin Connect 資料</td>
+            <td>Garmin OAuth，授權對象是 host</td>
+            <td class="no">— 不在我們手上</td>
+          </tr>
+          <tr>
+            <td class="sig-name">證據以參數進入 tool call</td>
+            <td><b>我們</b>　Fitness Evidence Model</td>
+            <td class="yes">✓ 已完成</td>
+          </tr>
+          <tr>
+            <td class="sig-name">五層決策</td>
+            <td><b>我們</b>　Fitness Decision Engine</td>
+            <td class="yes">✓ 已完成，見下</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      授權對象自始至終是<strong>使用者已經在用的那個 AI</strong>，不是我們。
+      這不是權宜之計——它是「不建資料湖」這條原則的執行方式：
+      我們沒有拿到金鑰，就沒有能力保存任何人的健康資料，
+      <strong>不需要靠承諾來保證，架構上就做不到</strong>。
+    </p>
+    <p class="note warn">
+      中間那三步全是紅的，而且只有第一步是我們做得完的。
+      OAuth 做好，Apple Health 與 Garmin 的取用也不會自動出現——
+      <strong>手機情境能不能成立，有一半取決於 host 支援到哪裡。</strong>
+      這一段之所以要寫進來，是為了不讓「等 OAuth 做完就好了」變成一句誤導人的話。
+    </p>
+  </section>
+
+  <section class="spine">
     <p class="section-label">The Chain</p>
     <h2>五層決策模型</h2>
     <p class="lede">
@@ -548,8 +609,12 @@
         <p>模型可以被說服繞過安全規則；確定性過濾器不會。傷病硬過濾與兩階段寫入都屬此類。</p>
       </div>
       <div class="finding gap">
-        <h4>還沒到位的</h4>
-        <p>OAuth 與雲端部署尚未完成，所以目前只能在本機連上，手機與 marketplace 上架都還做不到。</p>
+        <h4>還沒到位的　我們的工</h4>
+        <p>OAuth 2.1 與雲端部署尚未完成，所以目前只能在本機連上，marketplace 上架做不到。這一項做得完。</p>
+      </div>
+      <div class="finding gap">
+        <h4>還沒到位的　不是我們的工</h4>
+        <p>手機上的 Apple Health 要 Claude app 具備 HealthKit 權限，Garmin Connect 的授權對象也是 host。上面那項做完，這兩項不會跟著出現。</p>
       </div>
     </div>
 
