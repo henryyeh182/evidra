@@ -186,6 +186,61 @@ gate(
 );
 
 // ---------------------------------------------------------------------------
+// G2b — 被選中的條件
+// ---------------------------------------------------------------------------
+
+gate(
+  "G2b",
+  "每個對外 tool 都說得出使用者會怎麼問，並說明證據從哪來",
+  "分發不是靠人逛目錄，是靠 host 在一堆 connector 裡挑。tool 描述就是分發面：沒有使用者語彙，對不上提問；沒有取證指示，host 會用空證據呼叫，然後得到一個看起來沒用的答案。",
+  () => {
+    const findings = [];
+    const source = readFileSync(join(rootDir, "apps/mcp-server/src/toolDefinitions.js"), "utf8");
+
+    // Read the live definitions rather than the file text: a description
+    // assembled from concatenated string literals is invisible to a regex.
+    const listed = [...source.matchAll(/^\s{4}name:\s*"([a-z_]+)"/gm)].map((m) => m[1]);
+    const deprecated = new Set(
+      [...source.matchAll(/name:\s*"([a-z_]+)"[\s\S]{0,900}?deprecated:\s*true/g)].map((m) => m[1])
+    );
+    const exposed = listed.filter((name) => !deprecated.has(name));
+
+    const blocks = new Map();
+    for (const name of exposed) {
+      const start = source.indexOf(`    name: "${name}",`);
+      const next = source.indexOf("\n  {\n", start + 1);
+      blocks.set(name, source.slice(start, next === -1 ? source.length : next));
+    }
+
+    for (const [name, block] of blocks) {
+      const description = block.match(/description:\s*([\s\S]*?)\n\s{4}inputSchema/)?.[1] || "";
+
+      if (!/Use this for|Use this after/.test(description)) {
+        findings.push(`${name} 的描述沒有觸發語句（Use this for …）——host 無從得知使用者會怎麼問`);
+      }
+
+      // Plan-write tools take history, not physiology, so they are exempt from
+      // the health-connector instruction; everything else must say where the
+      // evidence comes from.
+      const needsEvidence = !["preview_adjust_plan", "commit_adjust_plan"].includes(name);
+      if (needsEvidence && !/`evidence`/.test(description)) {
+        findings.push(`${name} 的描述沒有說明證據從哪來`);
+      }
+
+      // A description that points at a tool nobody serves sends the host
+      // somewhere that does not exist.
+      for (const [, referenced] of description.matchAll(/\b((?:get|search|list|decide|assess|generate|preview|commit|recommend)_[a-z_]+)\b/g)) {
+        if (!exposed.includes(referenced)) {
+          findings.push(`${name} 的描述指向 ${referenced}，那不在對外清單上`);
+        }
+      }
+    }
+
+    return findings;
+  }
+);
+
+// ---------------------------------------------------------------------------
 // G3 — 承諾 A：決策自我解釋
 // ---------------------------------------------------------------------------
 

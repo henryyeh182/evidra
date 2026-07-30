@@ -8,7 +8,8 @@ export const toolDefinitions = [
       idempotentHint: true,
       openWorldHint: false
     },
-    description: "Return the user's computed Semantic Fitness State for a date.",
+    description:
+      "Report how the user is doing today: recovery, readiness, muscle-group fatigue and training load, each with the evidence behind it and an honest list of what could not be seen. Use this for 'how am I doing today', 'have I recovered', 'am I overtraining', 'how is my training load'. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. This reports state only. To decide what to do about a session that is already planned, use decide_session.",
     inputSchema: {
       type: "object",
       properties: {
@@ -80,7 +81,7 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Decide what today's SCHEDULED session should become, given today's evidence. Returns a decision with from -> to: the session as planned, and what it should be changed to, with the evidence and reasoning behind it. Use this for 'what should I train today', 'am I ready for today's session', or 'should I adjust today's workout'. This is a decision, not a suggestion — it requires a stored plan. Do NOT use this to look up state alone (use get_semantic_fitness_state), and do NOT re-derive or override the intensity it returns: injury filtering is a hard safety rule.",
+      "Decide what today's already-scheduled session should become, given today's evidence. Returns a decision with from -> to: the session as planned, what it should change to, and the evidence and rules behind the change. Use this for 'what should I train today', 'am I ready for today's session', 'should I adjust today's workout'. If the user proposes their own alternative — 'today was cardio, can I do stretching instead?' — pass that as `proposedSession` and it comes back accepted or refused, with the reason. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. Requires a scheduled session: this decides about an existing plan rather than inventing one. Do NOT re-derive or override the intensity, duration or movements it returns — injury filtering and load limits are enforced server-side and are decisions, not advice. To look up state alone, use assess_fitness_state.",
     inputSchema: {
       type: "object",
       properties: {
@@ -152,7 +153,7 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Decide what a movement the user cannot do today should be replaced with. Returns a decision with from -> to: the original exercise and the one it becomes, plus the evidence behind the swap. Injury contraindications are a hard filter applied server-side — do NOT override or reason past the result. Use this when a specific exercise hurts or the equipment is unavailable. Do NOT use it to browse exercises.",
+      "Decide what a movement the user cannot do today should be replaced with. Returns a decision with from -> to: the original exercise, the one it becomes, and the evidence behind the swap, including whether the training stimulus survived the change. Use this for 'my knee hurts when I squat', 'I have no barbell today', 'what can I do instead of X'. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. Injury contraindications are a hard filter applied server-side — do NOT override or reason past the result. Do NOT use this to browse exercises.",
     inputSchema: {
       type: "object",
       properties: {
@@ -305,7 +306,8 @@ export const toolDefinitions = [
       idempotentHint: false,
       openWorldHint: false
     },
-    description: "Generate and store a deterministic periodized multi-week training plan from the user's goals and constraints.",
+    description:
+      "Build a multi-week training plan from the user's goal, available days and equipment — the baseline that later daily decisions adjust. Use this for 'make me a training plan', 'I want to train for a half marathon', 'give me a 4-week program'. Pass the user's recent training history as `evidence` where available, so the plan starts from the load they are actually carrying rather than from zero. Weeks are periodized, and every movement it prescribes resolves to a real catalog entry.",
     inputSchema: {
       type: "object",
       properties: {
@@ -373,7 +375,8 @@ export const toolDefinitions = [
       idempotentHint: true,
       openWorldHint: false
     },
-    description: "Preview a non-destructive change to a stored plan (reduce availability, add injury, or deload a week) and return the diff. Nothing is committed until commit_adjust_plan is called.",
+    description:
+      "Show what a change to a stored plan would do, without applying it. Use this for 'I am busy this week', 'my knee hurts, adjust my plan', 'I want an easier week'. Returns the diff and a previewId. Nothing is changed until commit_adjust_plan is called with that id — the user sees the change before it happens.",
     inputSchema: {
       type: "object",
       properties: {
@@ -400,7 +403,8 @@ export const toolDefinitions = [
       idempotentHint: true,
       openWorldHint: false
     },
-    description: "Commit a previously previewed plan change. Requires the previewId from preview_adjust_plan and bumps the plan version.",
+    description:
+      "Apply a plan change the user has already seen and approved. Use this after preview_adjust_plan, when the user says 'yes, do it' or 'confirm'. Requires the previewId. A preview built against an older version of the plan is refused rather than overwriting a newer change.",
     inputSchema: {
       type: "object",
       properties: {
