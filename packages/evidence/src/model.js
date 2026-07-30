@@ -154,7 +154,10 @@ export function evidenceToUserContext(evidence, options = {}) {
       rpe: workout.rpe ?? 5,
       trainingLoad: workout.trainingLoad ?? Math.round(workout.durationMinutes * 1.0),
       muscleGroups: workout.muscleGroups || [],
-      source: workout.source || "manual"
+      source: workout.source || "manual",
+      // Absent stays absent. There is no sensible default for "how long was
+      // this person between 140 and 152 bpm", so nothing is filled in.
+      intensityDistribution: workout.intensityDistribution ?? null
     })),
     vendorAssessments: (evidence.vendorAssessments || []).map((item) => ({
       source: item.source || "unknown",
@@ -178,11 +181,24 @@ export function describeEvidence(evidence) {
   const metrics = evidence.healthMetrics || [];
   const types = [...new Set(metrics.map((metric) => metric.type))];
   const dates = metrics.map((metric) => metric.recordedAt).sort();
+  const workouts = evidence.workouts || [];
+
+  // Per-session intensity is worth naming in provenance on its own: a decision
+  // weighed against a known zone distribution rests on different ground than
+  // one weighed against a single load number, and the reader should be able to
+  // tell which without opening the evidence.
+  const withDistribution = workouts.filter((workout) => workout.intensityDistribution);
+  const boundarySources = [
+    ...new Set(withDistribution.map((workout) => workout.intensityDistribution.boundarySource).filter(Boolean))
+  ];
+
   return {
     metricCount: metrics.length,
     metricTypes: types,
-    workoutCount: (evidence.workouts || []).length,
+    workoutCount: workouts.length,
     earliest: dates[0] || null,
-    latest: dates[dates.length - 1] || null
+    latest: dates[dates.length - 1] || null,
+    intensityDistributionCount: withDistribution.length,
+    ...(boundarySources.length > 0 ? { intensityBoundarySources: boundarySources } : {})
   };
 }

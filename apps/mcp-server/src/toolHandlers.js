@@ -346,7 +346,17 @@ export async function decideSessionTool(args = {}) {
     state: trainingLoad.coverage.sufficient
       ? { ...state, acuteChronicWorkloadRatio: trainingLoad.acwr, trainingLoad }
       : { ...state, trainingLoad },
-    availableMinutes: args.availableMinutes
+    availableMinutes: args.availableMinutes,
+    // Passed so the decision can declare it was carried and not consumed.
+    // Only what is needed to say that — the zone seconds themselves stay in the
+    // evidence the caller already holds.
+    intensityDistributions: context.workouts
+      .filter((workout) => workout.intensityDistribution)
+      .map((workout) => ({
+        startedAt: workout.startedAt,
+        boundarySource: workout.intensityDistribution.boundarySource,
+        derivation: workout.intensityDistribution.derivation
+      }))
   });
 
   return jsonContent({

@@ -107,7 +107,7 @@ function diffShapes(from, to) {
  * @param {{ scheduledSession: object|null, state: object, availableMinutes?: number }} input
  * @returns {import("./models.js").SessionDecision}
  */
-export function decideSession({ scheduledSession, state, availableMinutes, displayNameFor } = {}) {
+export function decideSession({ scheduledSession, state, availableMinutes, displayNameFor, intensityDistributions } = {}) {
   const speak = displayNameFor || identityDisplay;
   if (!state) {
     throw new Error("decideSession requires today's state.");
@@ -374,6 +374,20 @@ export function decideSession({ scheduledSession, state, availableMinutes, displ
   const coverage = state.signalCoverage || { usable: [], missing: [] };
   if (coverage.missing?.length > 0) {
     limits.push(`缺少 ${coverage.missing.join("、")} 訊號，信心下調。`);
+  }
+
+  // Per-session intensity distribution is carried, not consumed. Saying so is
+  // the point: a caller who supplied zone data deserves to know the decision
+  // did not weigh it, rather than assuming it did. No rule reads these values —
+  // inventing a threshold from one athlete's sessions is how an engine gets
+  // fitted to a single person.
+  const distributions = intensityDistributions || [];
+  if (distributions.length > 0) {
+    const sources = [...new Set(distributions.map((entry) => entry.boundarySource).filter(Boolean))];
+    limits.push(
+      `${distributions.length} 筆訓練帶有心率區間分佈（邊界來源：${sources.join("、") || "未標示"}），` +
+        `已列入證據鏈，但目前沒有任何決策規則讀取它——不以單一使用者的資料訂門檻。`
+    );
   }
 
   const result = {

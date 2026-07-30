@@ -2,18 +2,26 @@ import { readFile } from "node:fs/promises";
 import { gunzipSync } from "node:zlib";
 
 /**
- * The smallest FIT reader that answers one question: where was the athlete?
+ * The smallest FIT reader that answers two questions the CSVs cannot.
  *
- * Strava's bulk export dates every activity in UTC and carries no offset
- * anywhere in the CSVs. The offset survives in exactly one place — the FIT
- * file's `activity` message, which records both `timestamp` (UTC) and
- * `local_timestamp` (the same instant on the athlete's wall clock). Their
- * difference is the offset, and it is the only thing this module extracts.
+ * 1. **Where was the athlete?** Strava's bulk export dates every activity in
+ *    UTC and carries no offset anywhere in the CSVs. The offset survives in
+ *    exactly one place — the `activity` message, which records both
+ *    `timestamp` (UTC) and `local_timestamp` (the same instant on the
+ *    athlete's wall clock). Their difference is the offset.
  *
- * Deliberately not a FIT library. It walks the record stream to stay aligned,
- * decodes values only for the messages it wants, and skips everything else by
- * declared size. Streams, laps, GPS — none of it is read, so none of it is
- * held.
+ * 2. **How hard was it, minute by minute?** Strava shows a Heart Rate Analysis
+ *    on its site; the bulk export contains neither the distribution nor the
+ *    zone boundaries it was computed against. Both are recoverable: the `record`
+ *    messages carry the per-second heart rate, and given boundaries the
+ *    distribution is arithmetic, not a guess. Verified against Strava's own
+ *    panel for a real 35-minute session — every zone agreed to the second.
+ *
+ * Still not a FIT library. It walks the record stream to stay aligned, decodes
+ * only the fields these two answers need, and skips everything else by declared
+ * size. GPS, power, cadence, laps — never read, so never held. The heart-rate
+ * samples are read to be aggregated: what leaves this module should be seconds
+ * per zone, not a stream of someone's heartbeats.
  */
 
 /** FIT timestamps count seconds from 1989-12-31T00:00:00Z. */
@@ -30,8 +38,10 @@ const BASE_TYPE_SIZES = [1, 1, 1, 2, 2, 4, 4, 1, 4, 8, 1, 2, 4, 1, 8, 8, 8];
 const INVALID = { 1: 0x7f, 2: 0xff, 3: 0x7fff, 4: 0xffff, 5: 0x7fffffff, 6: 0xffffffff };
 
 const GLOBAL_ACTIVITY = 34;
+const GLOBAL_RECORD = 20;
 const FIELD_TIMESTAMP = 253;
 const FIELD_LOCAL_TIMESTAMP = 5;
+const FIELD_HEART_RATE = 3;
 
 function readScalar(buffer, offset, size, baseType, littleEndian) {
   const base = baseType & 0x1f;
@@ -56,13 +66,17 @@ function readScalar(buffer, offset, size, baseType, littleEndian) {
 }
 
 /**
- * Walk a decompressed FIT buffer and return the `activity` message's UTC and
- * local timestamps, in FIT seconds.
+ * Walk a decompressed FIT buffer, decoding only the messages a caller asks for.
+ *
+ * The walk itself is the whole trick: every data message must be stepped over
+ * by its declared size whether or not it is wanted, or the stream desynchronises
+ * and every later message decodes into plausible nonsense.
  *
  * @param {Buffer} buffer
- * @returns {{ timestamp: number|null, localTimestamp: number|null }|null}
+ * @param {(globalMessage: number) => boolean} wants
+ * @param {(globalMessage: number, fields: Record<number, number|null>) => void} visit
  */
-function readActivityTimestamps(buffer) {
+function walkMessages(buffer, wants, visit) {
   if (buffer.length < 14 || buffer.toString("latin1", 8, 12) !== ".FIT") {
     throw new Error("Not a FIT file: missing .FIT signature.");
   }
@@ -72,7 +86,6 @@ function readActivityTimestamps(buffer) {
 
   const definitions = new Map();
   let position = headerSize;
-  let found = null;
 
   while (position < dataEnd) {
     const recordHeader = buffer.readUInt8(position);
@@ -127,19 +140,64 @@ function readActivityTimestamps(buffer) {
       throw new Error(`FIT stream out of sync: data message for undefined local type ${localType}.`);
     }
 
-    const wanted = definition.globalMessage === GLOBAL_ACTIVITY;
+    const wanted = wants(definition.globalMessage);
+    const fields = wanted ? {} : null;
     for (const field of definition.fields) {
-      if (wanted && (field.number === FIELD_TIMESTAMP || field.number === FIELD_LOCAL_TIMESTAMP)) {
-        const value = readScalar(buffer, position, field.size, field.baseType, definition.littleEndian);
-        found ??= { timestamp: null, localTimestamp: null };
-        if (field.number === FIELD_TIMESTAMP) found.timestamp = value;
-        else found.localTimestamp = value;
+      if (wanted && field.number >= 0) {
+        fields[field.number] = readScalar(buffer, position, field.size, field.baseType, definition.littleEndian);
       }
       position += field.size;
     }
+    if (wanted) visit(definition.globalMessage, fields);
   }
+}
 
+/**
+ * The `activity` message's UTC and local timestamps, in FIT seconds.
+ *
+ * @param {Buffer} buffer
+ * @returns {{ timestamp: number|null, localTimestamp: number|null }|null}
+ */
+function readActivityTimestamps(buffer) {
+  let found = null;
+  walkMessages(
+    buffer,
+    (global) => global === GLOBAL_ACTIVITY,
+    (_global, fields) => {
+      found ??= { timestamp: null, localTimestamp: null };
+      if (fields[FIELD_TIMESTAMP] !== undefined) found.timestamp = fields[FIELD_TIMESTAMP];
+      if (fields[FIELD_LOCAL_TIMESTAMP] !== undefined) found.localTimestamp = fields[FIELD_LOCAL_TIMESTAMP];
+    }
+  );
   return found;
+}
+
+/**
+ * The per-second heart rate the athlete's device recorded.
+ *
+ * Returned as `{ timestamp, bpm }` in FIT seconds so a caller can weigh each
+ * sample by how long it actually stood — devices drop samples, and treating a
+ * gap as one second would quietly shorten the session. Samples the device did
+ * not record read as absent, never as zero.
+ *
+ * This is the rawest thing this codebase touches. Aggregate it and let go of it:
+ * seconds per zone is evidence, a stranger's heartbeat trace is not ours to keep.
+ *
+ * @param {Buffer} buffer a decompressed FIT file
+ * @returns {Array<{ timestamp: number, bpm: number|null }>} ordered by time
+ */
+export function readFitHeartRateSamples(buffer) {
+  const samples = [];
+  walkMessages(
+    buffer,
+    (global) => global === GLOBAL_RECORD,
+    (_global, fields) => {
+      const timestamp = fields[FIELD_TIMESTAMP];
+      if (timestamp === undefined || timestamp === null) return;
+      samples.push({ timestamp, bpm: fields[FIELD_HEART_RATE] ?? null });
+    }
+  );
+  return samples.sort((a, b) => a.timestamp - b.timestamp);
 }
 
 /**

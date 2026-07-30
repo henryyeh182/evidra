@@ -1,5 +1,6 @@
 export { normalizeStravaActivity, STRAVA_TYPE_MAP } from "./normalizeActivity.js";
-export { readFitLocalOffset, readStravaFitOffset, formatUtcOffset } from "./parseFit.js";
+export { readFitLocalOffset, readStravaFitOffset, formatUtcOffset, readFitHeartRateSamples } from "./parseFit.js";
+export { readStravaActivityIntensity } from "./intensityDistribution.js";
 export {
   parseStravaExport,
   attachLocalOffsets,

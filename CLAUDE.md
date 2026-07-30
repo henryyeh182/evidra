@@ -99,7 +99,7 @@ Claude / ChatGPT 回覆使用者
 ## 現況（2026-07）
 
 - 對外 **6 個決策 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` · `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
-- 221 tests、eval 20 golden cases，全綠
+- 230 tests、eval 20 golden cases，全綠
 - schema registry 涵蓋 6 家 ＋ Strava bulk export 方言；parser 實作 3 家（Apple Health／Garmin／Strava，Strava 含 API 與 bulk export 兩種方言）
 - Strava bulk export：CSV 按欄位**索引**解析（5 組同名欄單位不同）；`Activity Date` 是 UTC 無 offset，本地時區只能從 `activities/*.fit.gz` 的 `activity.local_timestamp − timestamp` 還原（opt-in `readLocalTimezone`）
 - 知識圖譜 889 節點 / 5,785 邊（**內部證據來源，不是對外產品**）

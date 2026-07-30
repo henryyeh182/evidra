@@ -31,8 +31,30 @@ export const CANONICAL_SIGNALS = {
   // and a decision built on that has to be able to name it.
   session_relative_effort: { unit: "score", domain: "load", composite: true, perSession: true },
   session_training_load: { unit: "tss", domain: "load", composite: true, perSession: true },
-  session_intensity_factor: { unit: "percent_of_threshold", domain: "load", composite: true, perSession: true }
+  session_intensity_factor: { unit: "percent_of_threshold", domain: "load", composite: true, perSession: true },
+  // Not `composite`. The others on this list are numbers a vendor computed by
+  // rules it does not publish; this one is arithmetic over the athlete's own
+  // recorded samples against boundaries that travel with the answer. It can be
+  // checked — and was, against Strava's own panel, to the second.
+  session_intensity_distribution: {
+    unit: "seconds_per_zone",
+    domain: "load",
+    perSession: true,
+    derived: true
+  }
 };
+
+/**
+ * What a vendor number has to have before it can enter this vocabulary.
+ *
+ * Relative Effort qualifies: a 0-300 scale with a declared basis. A per-zone
+ * second count qualifies: a unit, and boundaries that say what it means.
+ * "This was harder than your usual effort" does not — no unit, no scale, no
+ * stated comparison. It cannot be converted, cannot be checked, and cannot be
+ * argued with in `limits`, so it stays out rather than riding along as prose
+ * dressed up as evidence.
+ */
+export const ADMISSION_RULE = "a vendor value needs a unit and a declared basis; a vendor sentence does not qualify";
 
 const hours = (seconds) => Number((seconds / 3600).toFixed(2));
 const minutes = (seconds) => Math.round(seconds / 60);
@@ -201,7 +223,9 @@ export const VENDOR_SCHEMAS = {
       perActivityStepsAreNotDailySteps:
         "`Total Steps`[85] counts one activity, not one day. It is deliberately not mapped to the canonical `steps` signal — summing it would understate a day and blending it with a daily total would be a silent lie.",
       maxHeartRateMayBeAgeEstimate:
-        "`Maximum Heartrate` defaults to 220 - age unless the athlete overrode it. Relative Effort inherits that estimate, so a Relative Effort built on an unedited default deserves lower confidence than one built on a measured max."
+        "`Maximum Heartrate` defaults to 220 - age unless the athlete overrode it. Relative Effort inherits that estimate, so a Relative Effort built on an unedited default deserves lower confidence than one built on a measured max.",
+      heartRateZonesAreNotInTheExport:
+        "Strava's Heart Rate Analysis — seconds and percent per zone — exists only on the site. Neither the distribution nor the zone boundaries are in any CSV; `general_preferences.csv` carries pace zones and leaves heart rate out. The per-second heart rate is in `activities/*.fit.gz` though, so given boundaries from the caller the distribution is recomputable: `readStravaActivityIntensity` reproduced Strava's own panel to the second across all five zones on a real 35-minute session. Boundaries must arrive through the tool call — that is evidence the athlete authorized, not something to infer from Maximum Heartrate."
     },
 
     /**

@@ -11,7 +11,7 @@
 
 ## 1. 已實作元件
 
-221 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+230 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
@@ -82,7 +82,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 1. 那是在測 Claude / ChatGPT 的腦，不是測我們的產品。
 2. 執行它必須呼叫 LLM API，與 **D-LLM「系統內不含 LLM」** 相衝突。
 
-**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 221 個測試）。
+**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 230 個測試）。
 另補上 **MCP client 相容性驗證**（見下）取代連通性層面的疑慮。
 
 > **D1 與 D2 同一個根因**：系統是照「我們有使用者資料庫，AI 來查」設計的（傳統 SaaS），不是照「AI 帶授權證據來，我們回決策」設計的（intelligence layer）。**架構圖畫的是後者，程式蓋的是前者。**
@@ -345,6 +345,28 @@ olympic 服務爆發力。唯一的判斷是複合／單關節：多關節動作
 sentinel 不外洩／缺的誠實列在 `missing`／registry ↔ parser 一致，外加「決策仍成立且
 自我解釋」。模擬出來的生理數值不是 ground truth，不得用來校準門檻——否則就是拿捏造
 的人去 fit 引擎。詳見 [`eval/scenarios/README.md`](../eval/scenarios/README.md)。
+
+**已完成（心率區間分佈）**：Strava 的 Heart Rate Analysis 只存在於它的網站——分佈與
+zone 邊界都不在任何 CSV，`general_preferences.csv` 只給 pace zone。但兩個成分都拿得到：
+逐秒心率在 `activities/*.fit.gz` 的 record 訊息裡，邊界由呼叫端傳入（正是 D-EVIDENCE 的
+形狀）。`computeTimeInZone` 是純算術，不是推估——**實測對照 Strava 自己的面板，五個區間
+逐秒吻合**（Z1 104s／Z2 860s／Z3 1157s／Z4 0／Z5 0，總計 2121s = FIT 的 total_timer_time）。
+
+| 產出 | 位置 |
+|---|---|
+| 純函式（區間重疊／缺值／跳秒都會說出來，不靜靜補值） | `packages/connectors/src/timeInZone.js` |
+| FIT 逐秒心率讀取（讀了就聚合，不留串流） | `parseFit.js` 的 `readFitHeartRateSamples` |
+| 一個活動的分佈 | `providers/strava/intensityDistribution.js` |
+| canonical signal `session_intensity_distribution` | `schemaRegistry.js`（**非 composite**——它可被對帳） |
+| 證據契約 `workout.intensityDistribution` | `schemas/evidence/fitness-evidence.json` |
+
+**刻意只記錄、不消費**：分佈進 `provenance` 與 `limits`，`decideSession` 明說「已列入證據鏈，
+但沒有任何規則讀取它」。要用它訂門檻就得先有運動科學依據——**拿一個人的訓練回頭 fit 引擎
+是紀律 2 禁止的**。
+
+vendor 產出的准入規則同時定下來（`ADMISSION_RULE`）：**有單位、有宣告基準的值才收**。
+Relative Effort（0–300）收，逐區秒數收；「This was harder than your usual effort」不收——
+沒有單位、沒有量表、沒說跟什麼比，進不了任何欄位，也就無法在 `limits` 裡被反駁。
 
 **方言等價**是這層真正的護城河證據：同一天用 `{typeKey}` 或裸字串、`calendarDate` 或
 epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的 canonical evidence。

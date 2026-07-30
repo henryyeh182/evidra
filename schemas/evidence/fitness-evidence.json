@@ -8,11 +8,28 @@
     "profile": {
       "type": "object",
       "properties": {
-        "userId": { "type": "string" },
-        "timezone": { "type": "string" },
-        "fitnessLevel": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
-        "heightCm": { "type": "number", "minimum": 0 },
-        "weightKg": { "type": "number", "minimum": 0 }
+        "userId": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "fitnessLevel": {
+          "type": "string",
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ]
+        },
+        "heightCm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "weightKg": {
+          "type": "number",
+          "minimum": 0
+        }
       }
     },
     "goals": {
@@ -20,21 +37,52 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "type": { "type": "string" },
-          "label": { "type": "string" },
-          "priority": { "type": "number" }
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "number"
+          }
         },
-        "required": ["type"]
+        "required": [
+          "type"
+        ]
       }
     },
     "constraints": {
       "type": "object",
       "properties": {
-        "availableMinutes": { "type": "number", "minimum": 0 },
-        "avoidMovements": { "type": "array", "items": { "type": "string" } },
-        "injuries": { "type": "array", "items": { "type": "object" } },
-        "equipment": { "type": "array", "items": { "type": ["string", "object"] } }
+        "availableMinutes": {
+          "type": "number",
+          "minimum": 0
+        },
+        "avoidMovements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "injuries": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "equipment": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "object"
+            ]
+          }
+        }
       }
     },
     "healthMetrics": {
@@ -54,15 +102,34 @@
               "stress"
             ]
           },
-          "value": { "type": "number" },
-          "unit": { "type": "string" },
-          "recordedAt": { "type": "string", "description": "ISO 8601." },
+          "value": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "recordedAt": {
+            "type": "string",
+            "description": "ISO 8601."
+          },
           "source": {
             "type": "string",
-            "enum": ["apple_health", "garmin", "google_health_connect", "oura", "whoop", "strava", "manual"]
+            "enum": [
+              "apple_health",
+              "garmin",
+              "google_health_connect",
+              "oura",
+              "whoop",
+              "strava",
+              "manual"
+            ]
           }
         },
-        "required": ["type", "value", "recordedAt"]
+        "required": [
+          "type",
+          "value",
+          "recordedAt"
+        ]
       }
     },
     "vendorAssessments": {
@@ -73,17 +140,40 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["vendor_readiness", "body_battery", "recovery_time_minutes", "vendor_acute_load"]
+            "enum": [
+              "vendor_readiness",
+              "body_battery",
+              "recovery_time_minutes",
+              "vendor_acute_load"
+            ]
           },
-          "value": { "type": "number" },
-          "unit": { "type": "string" },
-          "recordedAt": { "type": "string" },
+          "value": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "recordedAt": {
+            "type": "string"
+          },
           "source": {
             "type": "string",
-            "enum": ["apple_health", "garmin", "google_health_connect", "oura", "whoop", "manual"]
+            "enum": [
+              "apple_health",
+              "garmin",
+              "google_health_connect",
+              "oura",
+              "whoop",
+              "manual"
+            ]
           }
         },
-        "required": ["type", "value", "recordedAt", "source"]
+        "required": [
+          "type",
+          "value",
+          "recordedAt",
+          "source"
+        ]
       }
     },
     "workouts": {
@@ -92,21 +182,148 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "type": { "type": "string", "enum": ["strength", "run", "ride", "walk", "mobility", "recovery", "other"] },
-          "name": { "type": "string" },
-          "startedAt": { "type": "string" },
-          "durationMinutes": { "type": "number", "minimum": 0 },
-          "rpe": { "type": "number", "nullable": true, "minimum": 0 },
-          "trainingLoad": { "type": "number", "nullable": true, "minimum": 0 },
-          "muscleGroups": { "type": "array", "items": { "type": "string" } },
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "strength",
+              "run",
+              "ride",
+              "walk",
+              "mobility",
+              "recovery",
+              "other"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "number",
+            "minimum": 0
+          },
+          "rpe": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "trainingLoad": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "muscleGroups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "source": {
             "type": "string",
-            "enum": ["apple_health", "garmin", "google_health_connect", "oura", "whoop", "strava", "manual"]
+            "enum": [
+              "apple_health",
+              "garmin",
+              "google_health_connect",
+              "oura",
+              "whoop",
+              "strava",
+              "manual"
+            ]
           },
-          "metadata": { "type": "object" }
+          "metadata": {
+            "type": "object"
+          },
+          "intensityDistribution": {
+            "type": "object",
+            "nullable": true,
+            "description": "How long the session was spent in each heart-rate zone. Vendors show this and export neither it nor the boundaries it was computed against, so the boundaries arrive through the tool call and the seconds are computed from the recorded stream. Carried per session rather than as a health metric because it describes one workout, not a day.",
+            "properties": {
+              "basis": {
+                "type": "string",
+                "enum": [
+                  "heart_rate_zones"
+                ]
+              },
+              "derivation": {
+                "type": "string",
+                "enum": [
+                  "computed_from_recorded_stream",
+                  "vendor_reported"
+                ],
+                "description": "Whether these seconds were counted here from the athlete's samples or copied from the vendor's own panel. When the two disagree, the caller has to be able to see which one this is."
+              },
+              "boundarySource": {
+                "type": "string",
+                "description": "Whose zone table produced this, e.g. strava_default. A distribution means nothing without the boundaries that made it."
+              },
+              "zones": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "bpmMin": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "bpmMax": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "seconds": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "percent": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "seconds"
+                  ]
+                }
+              },
+              "classifiedSeconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "unmeasuredSeconds": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Seconds the device recorded no heart rate. Named rather than folded into the lowest zone: a strap that was off is not a resting heart rate."
+              },
+              "unclassifiedSeconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "gapSeconds": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "basis",
+              "zones",
+              "classifiedSeconds"
+            ]
+          }
         },
-        "required": ["startedAt", "durationMinutes"]
+        "required": [
+          "startedAt",
+          "durationMinutes"
+        ]
       }
     }
   }

@@ -1,4 +1,5 @@
 export { assertRawProviderEvent, CONNECTOR_PROVIDERS } from "./models.js";
+export { computeTimeInZone, assertValidHeartRateZones } from "./timeInZone.js";
 export {
   normalizedWorkoutToWorkout,
   normalizedHealthMetricToHealthMetric,
@@ -10,6 +11,8 @@ export {
   attachLocalOffsets,
   readStravaFitOffset,
   readFitLocalOffset,
+  readFitHeartRateSamples,
+  readStravaActivityIntensity,
   formatUtcOffset,
   parseStravaActivitiesCsv,
   parseStravaPreferencesCsv,
