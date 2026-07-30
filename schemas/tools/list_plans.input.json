@@ -4,7 +4,8 @@
   "title": "list_plans input",
   "type": "object",
   "properties": {
-    "userId": { "type": "string", "description": "User identifier." }
+    "userId": { "type": "string", "description": "User identifier." },
+    "plans": { "type": "array", "items": { "type": "object" }, "description": "Plans held by the caller." }
   },
-  "required": ["userId"]
+  "required": ["userId", "plans"]
 }

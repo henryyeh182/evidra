@@ -1,100 +1,48 @@
 import { assertValidPlan } from "./models.js";
 
 /**
- * In-memory, versioned plan store. Keeps the current plan plus its prior
- * versions so plan history survives edits. Deliberately dependency-free so it
- * can be swapped for a PostgreSQL-backed repository later without changing the
- * MCP tool surface.
+ * Apply a caller-held preview to a caller-held plan.
+ *
+ * This module intentionally has no store, cache, counter, or repository. The
+ * AI host/external storage owns plan versions and preview retention; the
+ * server only validates the optimistic-concurrency boundary and computes the
+ * next immutable value.
  */
-export function createPlanStore() {
-  /** @type {Map<string, import("./models.js").TrainingPlan>} */
-  const plans = new Map();
-  /** @type {Map<string, import("./models.js").TrainingPlan[]>} */
-  const history = new Map();
-  /** @type {Map<string, import("./models.js").PlanChangePreview>} */
-  const previews = new Map();
-
-  function savePlan(plan) {
-    assertValidPlan(plan);
-    plans.set(plan.id, plan);
-    if (!history.has(plan.id)) {
-      history.set(plan.id, [structuredClone(plan)]);
-    }
-    return plan;
+export function applyPlanPreview(plan, preview) {
+  assertValidPlan(plan);
+  if (!preview || typeof preview !== "object") {
+    throw new Error("A plan change preview is required.");
+  }
+  if (preview.planId !== plan.id) {
+    throw new Error(`Preview belongs to plan ${preview.planId}, not ${plan.id}.`);
+  }
+  if (plan.version !== preview.baseVersion) {
+    throw new Error(
+      `Preview ${preview.previewId} is stale: it was built against version ${preview.baseVersion}, but the supplied plan is version ${plan.version}.`
+    );
+  }
+  if (!preview.resultingPlan) {
+    throw new Error("Preview is missing resultingPlan.");
   }
 
-  function getPlan(planId) {
-    return plans.get(planId) || null;
-  }
+  const committed = structuredClone(preview.resultingPlan);
+  committed.version = plan.version + 1;
+  committed.status = "planned";
+  assertValidPlan(committed);
+  return committed;
+}
 
-  function listPlans(userId) {
-    return [...plans.values()]
-      .filter((plan) => !userId || plan.userId === userId)
-      .map((plan) => ({
-        id: plan.id,
-        userId: plan.userId,
-        goalId: plan.goalId,
-        name: plan.name,
-        startDate: plan.startDate,
-        endDate: plan.endDate,
-        status: plan.status,
-        version: plan.version,
-        weekCount: plan.weeks.length
-      }));
-  }
-
-  function savePreview(preview) {
-    previews.set(preview.previewId, preview);
-    return preview;
-  }
-
-  function getPreview(previewId) {
-    return previews.get(previewId) || null;
-  }
-
-  function commitPreview(previewId) {
-    const preview = previews.get(previewId);
-    if (!preview) {
-      throw new Error(`Unknown preview: ${previewId}`);
-    }
-
-    const current = plans.get(preview.planId);
-    if (!current) {
-      throw new Error(`Plan no longer exists: ${preview.planId}`);
-    }
-    if (current.version !== preview.baseVersion) {
-      throw new Error(
-        `Preview ${previewId} is stale: it was built against version ${preview.baseVersion}, but the plan is now version ${current.version}.`
-      );
-    }
-
-    const committed = structuredClone(preview.resultingPlan);
-    committed.version = current.version + 1;
-    committed.status = "planned";
-
-    plans.set(committed.id, committed);
-    history.get(committed.id).push(structuredClone(committed));
-    previews.delete(previewId);
-
-    return committed;
-  }
-
-  function getVersionHistory(planId) {
-    return (history.get(planId) || []).map((snapshot) => ({
-      version: snapshot.version,
-      status: snapshot.status,
-      startDate: snapshot.startDate,
-      weekdayAvailableMinutes: snapshot.constraints.weekdayAvailableMinutes
-    }));
-  }
-
+export function summarizePlan(plan) {
+  assertValidPlan(plan);
   return {
-    savePlan,
-    getPlan,
-    listPlans,
-    savePreview,
-    getPreview,
-    commitPreview,
-    getVersionHistory
+    id: plan.id,
+    userId: plan.userId,
+    goalId: plan.goalId,
+    name: plan.name,
+    startDate: plan.startDate,
+    endDate: plan.endDate,
+    status: plan.status,
+    version: plan.version,
+    weekCount: plan.weeks.length
   };
 }

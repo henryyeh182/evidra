@@ -4,7 +4,7 @@
   "title": "get_plan input",
   "type": "object",
   "properties": {
-    "planId": { "type": "string", "description": "Plan identifier returned by generate_plan." }
+    "plan": { "type": "object", "description": "The caller-held training plan." }
   },
-  "required": ["planId"]
+  "required": ["plan"]
 }

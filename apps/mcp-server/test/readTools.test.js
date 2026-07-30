@@ -3,8 +3,21 @@ import assert from "node:assert/strict";
 
 import { handleJsonRpcMessage } from "../src/server.js";
 import { assertGrounded } from "../src/knowledgeBase.js";
+import { deprecatedToolAliases, toolDefinitions } from "../src/toolDefinitions.js";
 
 let nextId = 100;
+
+test("public tool descriptions use canonical names", () => {
+  const descriptions = toolDefinitions.flatMap((tool) => [
+    tool.description,
+    ...Object.values(tool.inputSchema?.properties ?? {}).map((property) => property.description)
+  ]).filter(Boolean).join(" ");
+
+  for (const alias of Object.keys(deprecatedToolAliases)) {
+    assert.doesNotMatch(descriptions, new RegExp(`\\b${alias}\\b`));
+  }
+});
+
 async function call(name, args = {}) {
   const response = await handleJsonRpcMessage(
     JSON.stringify({ jsonrpc: "2.0", id: nextId++, method: "tools/call", params: { name, arguments: args } })
@@ -158,8 +171,19 @@ test("evidence passed in drives the decision for a user the server has never see
   assert.equal(state.payload.userId, "external_user_42");
   assert.equal(typeof state.payload.readinessScore, "number");
 
-  await call("generate_plan", { userId: "external_user_42", weeks: 2, startDate: "2026-07-27", evidence });
-  const decision = await call("decide_session", { userId: "external_user_42", date: "2026-07-27", evidence });
+  const decision = await call("decide_session", {
+    userId: "external_user_42",
+    date: "2026-07-27",
+    evidence,
+    scheduledSession: {
+      focus: "Easy run",
+      type: "run",
+      durationMinutes: 45,
+      intensity: "moderate",
+      targetMuscleGroups: ["legs"],
+      exercises: ["exercise_tempo_run"]
+    }
+  });
 
   assert.equal(decision.payload.provenance.evidenceSource, "provided");
   assert.ok(decision.payload.action.from, "a scheduled session was found for the external user");

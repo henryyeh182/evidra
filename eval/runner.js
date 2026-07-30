@@ -27,6 +27,8 @@ const GATES = {
 
 function substitute(value, vars) {
   if (typeof value === "string") {
+    const exact = value.match(/^\{\{(\w+)\}\}$/);
+    if (exact && exact[1] in vars) return vars[exact[1]];
     return value.replace(/\{\{(\w+)\}\}/g, (match, key) => (key in vars ? vars[key] : match));
   }
   if (Array.isArray(value)) {

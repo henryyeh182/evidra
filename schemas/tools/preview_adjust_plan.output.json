@@ -9,7 +9,8 @@
     "baseVersion": { "type": "number" },
     "summary": { "type": "string" },
     "diff": { "type": "array" },
-    "note": { "type": "string" }
+    "note": { "type": "string" },
+    "patch": { "type": "object" }
   },
-  "required": ["previewId", "planId", "baseVersion", "summary", "diff"]
+  "required": ["previewId", "planId", "baseVersion", "summary", "diff", "patch"]
 }

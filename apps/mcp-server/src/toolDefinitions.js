@@ -136,7 +136,7 @@ export const toolDefinitions = [
             exercises: { type: "array", items: { type: "string" } }
           }
         },
-        planId: { type: "string", description: "Local demo only: look up the session in a stored plan instead of supplying it." },
+        plan: { type: "object", description: "Optional caller-held plan metadata; the server does not look up plans." },
         availableMinutes: { type: "number", description: "Override today's available time, e.g. when the user says they are busy." },
         includeStravaFixture: { type: "boolean", description: "Include the local Strava fixture as extra evidence." }
       },
@@ -345,25 +345,26 @@ export const toolDefinitions = [
   {
     name: "get_plan",
     deprecated: true,
-    description: "Return a stored training plan by id, including weeks, sessions, and version history.",
+    description: "Return a caller-supplied training plan. The server does not store plans.",
     inputSchema: {
       type: "object",
       properties: {
-        planId: { type: "string", description: "Plan identifier returned by generate_plan." }
+        plan: { type: "object", description: "The caller-held training plan." }
       },
-      required: ["planId"]
+      required: ["plan"]
     }
   },
   {
     name: "list_plans",
     deprecated: true,
-    description: "List stored training plan summaries for a user.",
+    description: "Summarize caller-supplied training plans. The server does not store plans.",
     inputSchema: {
       type: "object",
       properties: {
-        userId: { type: "string", description: "User identifier." }
+        userId: { type: "string", description: "User identifier." },
+        plans: { type: "array", items: { type: "object" }, description: "Plans held by the caller." }
       },
-      required: ["userId"]
+      required: ["userId", "plans"]
     }
   },
   {
@@ -376,11 +377,11 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Show what a change to a stored plan would do, without applying it. Use this for 'I am busy this week', 'my knee hurts, adjust my plan', 'I want an easier week'. Returns the diff and a previewId. Nothing is changed until commit_adjust_plan is called with that id — the user sees the change before it happens.",
+      "Preview a change to the caller-supplied plan without mutating it. Use this for 'I am busy this week', 'my knee hurts, adjust my plan', 'I want an easier week'. Returns a deterministic preview patch; the AI host or external storage owns retention and commit.",
     inputSchema: {
       type: "object",
       properties: {
-        planId: { type: "string", description: "Plan identifier to modify." },
+        plan: { type: "object", description: "The caller-held plan to modify." },
         changeRequest: {
           type: "object",
           description: "One of: {kind:'reduce_availability', weekdayAvailableMinutes, weekIndexes?}, {kind:'add_injury', bodyRegion, restrictions?, avoidMovements?}, or {kind:'deload_week', weekIndex}.",
@@ -390,7 +391,7 @@ export const toolDefinitions = [
           required: ["kind"]
         }
       },
-      required: ["planId", "changeRequest"]
+      required: ["plan", "changeRequest"]
     }
   },
   {
@@ -404,13 +405,14 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Apply a plan change the user has already seen and approved. Use this after preview_adjust_plan, when the user says 'yes, do it' or 'confirm'. Requires the previewId. A preview built against an older version of the plan is refused rather than overwriting a newer change.",
+      "Validate and materialize a caller-held preview patch after approval. The server stores neither the plan nor the preview; the AI host or external storage must persist the returned plan. A preview built against an older version is refused.",
     inputSchema: {
       type: "object",
       properties: {
-        previewId: { type: "string", description: "Preview identifier returned by preview_adjust_plan." }
+        plan: { type: "object", description: "The current caller-held plan." },
+        preview: { type: "object", description: "The patch returned by preview_adjust_plan." }
       },
-      required: ["previewId"]
+      required: ["plan", "preview"]
     }
   }
 ];

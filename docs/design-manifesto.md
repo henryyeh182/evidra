@@ -248,7 +248,7 @@ Apple Health / Garmin …  →  AI Agent（持有授權與記憶）
 > | 「使用者計畫」列在**我們不存** | 「Decision ≠ Recommendation」說**計畫是決策的基底**，沒有計畫只能推薦 |
 > | Feedback Learning **需保存**「狀態→決策→結果」三元組（護城河章末） | implementation plan 的 Phase 6 寫「我們這端不留三元組」 |
 >
-> 現況：`packages/planning/src/planStore.js` 是**純記憶體**，行程重啟即消失；
+> 現況（2026-07-30）：`packages/planning/src/planStore.js` 已改為**無狀態 patch/preview 驗證器**，不再持有 plan、preview 或版本歷史；
 > `packages/db` 的 schema 寫好但未接 runtime。**決策的基底目前不存在於任何地方。**
 >
 > **使用者已指定此題另開 session 討論，不得在其他 session 展開或自行改寫。**

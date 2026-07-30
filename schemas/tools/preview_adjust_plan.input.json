@@ -4,7 +4,7 @@
   "title": "preview_adjust_plan input",
   "type": "object",
   "properties": {
-    "planId": { "type": "string", "description": "Plan identifier to modify." },
+    "plan": { "type": "object", "description": "The caller-held plan to modify." },
     "changeRequest": {
       "type": "object",
       "description": "One of: {kind:'reduce_availability', weekdayAvailableMinutes, weekIndexes?}, {kind:'add_injury', bodyRegion, restrictions?, avoidMovements?}, or {kind:'deload_week', weekIndex}.",
@@ -14,5 +14,5 @@
       "required": ["kind"]
     }
   },
-  "required": ["planId", "changeRequest"]
+  "required": ["plan", "changeRequest"]
 }

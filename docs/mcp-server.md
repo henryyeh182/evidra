@@ -32,9 +32,9 @@ Endpoints: `POST /mcp` (JSON-RPC), `GET /mcp` (server stream), `GET /health`.
 
 ## Tools
 
-Six tools, all of which either return a decision or maintain the plan a
-decision acts on. See the [Design Manifesto](design-manifesto.md) for why the
-surface is this small.
+Six tools, all of which either return a decision or transform caller-held plan
+state. The server does not retain plans or previews. See the [Design
+Manifesto](design-manifesto.md) for why the surface is this small.
 
 ### `assess_fitness_state` — read-only
 
@@ -102,10 +102,13 @@ server-side.
 
 Builds the periodized plan that later decisions act on.
 
-### `preview_adjust_plan` / `commit_adjust_plan` — write, two-phase
+### `preview_adjust_plan` / `commit_adjust_plan` — stateless two-phase transform
 
-`preview` returns a diff and a `previewId`; nothing changes until `commit` is
-called with it. A commit without a valid preview is refused.
+Both tools receive caller-held state. `preview` returns a deterministic patch
+containing the diff, base version, and resulting plan. `commit` receives the
+current plan plus that patch, validates the optimistic-concurrency version,
+and returns the next plan. The AI host or external storage owns approval,
+history, and persistence; this server retains neither plan nor preview.
 
 ## Evidence
 

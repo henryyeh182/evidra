@@ -4,7 +4,8 @@
   "title": "commit_adjust_plan input",
   "type": "object",
   "properties": {
-    "previewId": { "type": "string", "description": "Preview identifier returned by preview_adjust_plan." }
+    "plan": { "type": "object", "description": "The current caller-held plan." },
+    "preview": { "type": "object", "description": "The patch returned by preview_adjust_plan." }
   },
-  "required": ["previewId"]
+  "required": ["plan", "preview"]
 }

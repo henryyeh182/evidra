@@ -96,7 +96,8 @@
         }
       },
       "capture": {
-        "planId": "$.id"
+        "planId": "$.id",
+        "plan": "$"
       },
       "expect": {
         "ok": true,
@@ -122,7 +123,15 @@
         "arguments": {
           "userId": "user_henry_demo",
           "date": "2026-07-27",
-          "availableMinutes": 25
+          "availableMinutes": 25,
+          "scheduledSession": {
+            "focus": "Easy run",
+            "type": "run",
+            "durationMinutes": 45,
+            "intensity": "moderate",
+            "targetMuscleGroups": ["legs"],
+            "exercises": ["exercise_tempo_run"]
+          }
         }
       },
       "expect": {
@@ -165,7 +174,7 @@
       "call": {
         "tool": "get_plan",
         "arguments": {
-          "planId": "{{planId}}"
+          "plan": "{{plan}}"
         }
       },
       "expect": {
@@ -177,7 +186,7 @@
             "value": "{{planId}}"
           },
           {
-            "path": "$.versionHistory",
+            "path": "$.weeks",
             "op": "isArray"
           }
         ]
@@ -190,7 +199,8 @@
       "call": {
         "tool": "list_plans",
         "arguments": {
-          "userId": "user_henry_demo"
+          "userId": "user_henry_demo",
+          "plans": ["{{plan}}"]
         }
       },
       "expect": {
@@ -211,7 +221,7 @@
       "call": {
         "tool": "preview_adjust_plan",
         "arguments": {
-          "planId": "{{planId}}",
+          "plan": "{{plan}}",
           "changeRequest": {
             "kind": "deload_week",
             "weekIndex": 1
@@ -219,7 +229,8 @@
         }
       },
       "capture": {
-        "previewId": "$.previewId"
+        "previewId": "$.previewId",
+        "preview": "$.patch"
       },
       "expect": {
         "ok": true,
@@ -242,14 +253,15 @@
       "call": {
         "tool": "commit_adjust_plan",
         "arguments": {
-          "previewId": "{{previewId}}"
+          "plan": "{{plan}}",
+          "preview": "{{preview}}"
         }
       },
       "expect": {
         "ok": true,
         "assertions": [
           {
-            "path": "$.version",
+          "path": "$.version",
             "op": "isNumber"
           },
           {
@@ -496,7 +508,7 @@
       },
       "expect": {
         "ok": false,
-        "errorContains": "Unknown plan"
+        "errorContains": "caller-held plan"
       }
     }
   ]

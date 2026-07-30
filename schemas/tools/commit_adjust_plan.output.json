@@ -7,8 +7,7 @@
     "planId": { "type": "string" },
     "version": { "type": "number" },
     "status": { "type": "string" },
-    "versionHistory": { "type": "array" },
     "plan": { "type": "object" }
   },
-  "required": ["planId", "version", "status", "versionHistory", "plan"]
+  "required": ["planId", "version", "status", "plan"]
 }

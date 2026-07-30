@@ -108,21 +108,15 @@ test("MCP server runs the generate -> preview -> commit planning flow", async ()
   assert.equal(plan.weeks.length, 4);
 
   const preview = await callTool(11, "preview_adjust_plan", {
-    planId: plan.id,
+    plan,
     changeRequest: { kind: "reduce_availability", weekdayAvailableMinutes: 25, weekIndexes: [1] }
   });
   assert.ok(preview.previewId);
   assert.ok(preview.diff.length > 0);
 
-  const committed = await callTool(12, "commit_adjust_plan", { previewId: preview.previewId });
+  const committed = await callTool(12, "commit_adjust_plan", { plan, preview: preview.patch });
   assert.equal(committed.version, 2);
-  assert.deepEqual(
-    committed.versionHistory.map((entry) => entry.version),
-    [1, 2]
-  );
-
-  const fetched = await callTool(13, "get_plan", { planId: plan.id });
-  assert.equal(fetched.version, 2);
+  assert.equal(committed.plan.constraints.weekdayAvailableMinutes, 25);
 });
 
 test("MCP server returns JSON-RPC error for unknown tools", async () => {

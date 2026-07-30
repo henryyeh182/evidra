@@ -2,7 +2,8 @@ import { generateSemanticFitnessState } from "../../../packages/semantic-engine/
 import {
   generateTrainingPlan,
   previewPlanChange,
-  createPlanStore
+  applyPlanPreview,
+  summarizePlan
 } from "../../../packages/planning/src/index.js";
 import { loadDemoUserContext, loadExerciseCatalog, latestEvidenceDay } from "./demoData.js";
 import { loadKnowledgeBase } from "./knowledgeBase.js";
@@ -26,10 +27,6 @@ import {
   getTrainingHistoryTool,
   decideExerciseSubstitutionTool
 } from "./readToolHandlers.js";
-
-// Process-lifetime store so preview -> commit and version history persist
-// across tool calls. Swap for a PostgreSQL-backed repository later.
-const planStore = createPlanStore();
 
 function assertUserId(context, userId) {
   if (context.user.id !== userId) {
@@ -211,38 +208,30 @@ export async function generateTrainingPlanTool(args = {}) {
     displayNameFor,
     findGoalAlternative
   });
-  planStore.savePlan(plan);
-
   return jsonContent(plan);
 }
 
 export async function getTrainingPlanTool(args = {}) {
-  const plan = planStore.getPlan(args.planId);
-  if (!plan) {
-    throw new Error(`Unknown plan: ${args.planId}`);
+  if (!args.plan) {
+    throw new Error("get_plan is stateless: pass the caller-held plan.");
   }
-
-  return jsonContent({
-    ...plan,
-    versionHistory: planStore.getVersionHistory(plan.id)
-  });
+  return jsonContent(args.plan);
 }
 
 export async function listTrainingPlansTool(args = {}) {
+  const plans = args.plans || [];
   return jsonContent({
     userId: args.userId,
-    plans: planStore.listPlans(args.userId)
+    plans: plans.filter((plan) => !args.userId || plan.userId === args.userId).map(summarizePlan)
   });
 }
 
 export async function previewPlanChangeTool(args = {}) {
-  const plan = planStore.getPlan(args.planId);
-  if (!plan) {
-    throw new Error(`Unknown plan: ${args.planId}`);
+  if (!args.plan) {
+    throw new Error("preview_adjust_plan is stateless: pass the caller-held plan.");
   }
 
-  const preview = previewPlanChange(plan, args.changeRequest || {});
-  planStore.savePreview(preview);
+  const preview = previewPlanChange(args.plan, args.changeRequest || {});
 
   return jsonContent({
     previewId: preview.previewId,
@@ -250,18 +239,21 @@ export async function previewPlanChangeTool(args = {}) {
     baseVersion: preview.baseVersion,
     summary: preview.summary,
     diff: preview.diff,
-    note: "Call commit_adjust_plan with this previewId to apply the change."
+    patch: preview,
+    note: "Keep this patch and apply it in the AI host or external storage."
   });
 }
 
 export async function commitPlanChangeTool(args = {}) {
-  const committed = planStore.commitPreview(args.previewId);
+  if (!args.plan || !args.preview) {
+    throw new Error("commit_adjust_plan is stateless: pass both the current plan and preview patch.");
+  }
+  const committed = applyPlanPreview(args.plan, args.preview);
 
   return jsonContent({
     planId: committed.id,
     version: committed.version,
     status: committed.status,
-    versionHistory: planStore.getVersionHistory(committed.id),
     plan: committed
   });
 }
@@ -305,25 +297,7 @@ export async function decideSessionTool(args = {}) {
   // user's memory — the knee injury, last week's leg day, yesterday's tabata —
   // so it passes today's session in rather than us keeping a copy of the plan.
   let scheduledSession = args.scheduledSession || null;
-  let planId = args.planId || null;
-
-  if (!scheduledSession) {
-    // Local demo fallback only: look in the process-lifetime plan store.
-    const plans = planId ? [planStore.getPlan(planId)].filter(Boolean) : planStore.listPlans(args.userId);
-    for (const summary of plans) {
-      const plan = planStore.getPlan(summary.id || summary);
-      if (!plan) continue;
-      for (const week of plan.weeks) {
-        const match = week.sessions.find((session) => session.date === date);
-        if (match) {
-          scheduledSession = match;
-          planId = plan.id;
-          break;
-        }
-      }
-      if (scheduledSession) break;
-    }
-  }
+  const planId = args.plan?.id || null;
 
   const trainingLoad = computeTrainingLoad(context.workouts, { asOf: date });
 
@@ -370,7 +344,7 @@ export async function decideSessionTool(args = {}) {
     ...decision,
     provenance: {
       ...provenance,
-      scheduledSessionSource: args.scheduledSession ? "provided" : "demo_plan_store",
+      scheduledSessionSource: args.scheduledSession ? "provided" : "missing",
       proposedSessionSource: args.proposedSession ? "provided" : "none"
     }
   });

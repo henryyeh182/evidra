@@ -117,10 +117,10 @@
         }
       }
     },
-    "planId": {
-      "type": "string",
-      "description": "Local demo only: look up the session in a stored plan instead of supplying it."
-    },
+      "plan": {
+        "type": "object",
+        "description": "Optional caller-held plan metadata; the server never looks it up."
+      },
     "availableMinutes": {
       "type": "number",
       "description": "Override today's available time, e.g. when the user says they are busy."

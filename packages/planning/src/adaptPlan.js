@@ -1,9 +1,15 @@
 import { assertValidPlan, assertValidChangeRequest } from "./models.js";
-
-let previewCounter = 0;
+import { createHash } from "node:crypto";
 
 function clonePlan(plan) {
   return structuredClone(plan);
+}
+
+function previewFingerprint(plan, changeRequest) {
+  return createHash("sha256")
+    .update(JSON.stringify({ plan, changeRequest }))
+    .digest("hex")
+    .slice(0, 16);
 }
 
 function selectWeeks(plan, weekIndexes) {
@@ -178,9 +184,10 @@ export function previewPlanChange(plan, changeRequest) {
   const diff = [];
   const summary = CHANGE_APPLIERS[changeRequest.kind](resultingPlan, changeRequest, diff);
 
-  previewCounter += 1;
   return {
-    previewId: `preview_${plan.id}_${plan.version}_${previewCounter}`,
+    // Deterministic: retries and separate stateless server instances return
+    // the same identifier for the same input, without a process counter.
+    previewId: `preview_${plan.id}_${plan.version}_${previewFingerprint(plan, changeRequest)}`,
     planId: plan.id,
     baseVersion: plan.version,
     changeRequest,
