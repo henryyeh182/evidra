@@ -128,8 +128,9 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 ### 價值：缺口在「誰握著今天原本要做什麼」
 
-**已驗證**：Strava 官方說明頁寫明其 connector 是 read-only，**不提供教練決策或 AI 生成的
-建議**，它把資料交給 AI client 自己推理。
+**已驗證（官方頁原文）**：Strava MCP **Access coming soon**、逐步開放中、**目前只連
+Anthropic Claude**。定位是「問 Claude 關於你的 Strava 表現」，由 **Claude** 去看訓練模式、
+給改進建議。**建議由 Claude 產生，不是 Strava 的引擎產生。**
 
 **已驗證**：本專案的 Decision 定義（CLAUDE.md）是 **from → to，對既有狀態的變更**，
 前提是知道「今天原本要做什麼」。沒有這個前提，能生出來的只有推薦。
@@ -212,8 +213,8 @@ canonical evidence**（方言等價，見 Phase 5）。這一條做不到，多�
 
 #### 先看清楚 Strava 的 MCP 模式是什麼
 
-**已驗證**：Strava 自己 host remote MCP server、**限訂閱者使用**、read-only、
-**明說不提供教練決策或 AI 建議**、上架 Anthropic 目錄（無上架費、無抽成）。
+**已驗證（官方頁原文）**：Strava 自己 host remote MCP server，**Access coming soon**、
+逐步開放、**目前只連 Anthropic Claude**；由 **Claude** 對使用者的 Strava 表現看模式、給建議。
 
 **所以那個 connector 不是新的收入品項，是既有訂閱的加值與留存工具。**
 他們用「你的資料現在可以在 Claude 裡問了」來留住訂閱，把推理讓給 host model。
@@ -225,13 +226,13 @@ canonical evidence**（方言等價，見 Phase 5）。這一條做不到，多�
 
 | | 官方 MCP | 實況 |
 |---|---|---|
-| **Strava** | ✅ 2026-06-01 | 限訂閱者、read-only、**明文不提供教練決策或 AI 建議** |
+| **Strava** | 🟡 逐步開放中 | 官方頁寫 **Access coming soon**、**目前只連 Anthropic Claude**；建議由 **Claude** 產生 |
 | **COROS** | ✅ 2026-05 | `mcp.coros.com` |
 | **Peloton** | ❌ **沒有官方** | 全是社群作品。`@striderlabs/mcp-peloton` 用 **Playwright 瀏覽器自動化**（等於爬網頁）；另有數個接非官方 API 的版本 |
 | **Garmin** | ❌ **沒有官方** | 開發者論壇有正式 feature request；社群版本多個，其中一個 **61 個 tool／7 大類**，建立在逆向工程的 `python-garminconnect` 上，**用帳號密碼登入而非 OAuth**；另有第三方雲端代管的 Garmin Chat Connector |
 
 > **宣言原本拿 Peloton 當對照，但 Peloton 根本沒有官方 MCP**——那個對照講的是社群作品。
-> 已改為 Strava（官方、可查證、且明文不做決策）。
+> 已改為 Strava（官方、可查證）。
 
 **Garmin 論壇那串裡有兩件對我們直接相關的事：**
 
@@ -271,7 +272,7 @@ canonical evidence**（方言等價，見 Phase 5）。這一條做不到，多�
 | # | 模式 | 立論依據（已驗證） | 難點 |
 |---|---|---|---|
 | **1** | **直接對使用者**：目錄上架，訂閱制 | 目錄無上架費無抽成；成本隨人數不隨次數（實測 0 次外部 API），可支援「隨時問」 | 定價天花板——使用者已在付 Claude 訂閱，我們是第二筆。且需先過 C5＋7.1＋7.2＋Team 帳號 |
-| **2** | **賣給來源方**（授權決策引擎給 Strava／Garmin／COROS 等，掛在他們自己的 connector 後面） | Strava 官方**明說不做教練決策**；**Garmin 完全沒有官方 connector**。想給決策就要自建引擎或授權 | 企業銷售，週期長。且對方可能選擇自建 |
+| **2** | **賣給來源方**（授權決策引擎給 Strava／Garmin／COROS 等，掛在他們自己的 connector 後面） | Strava 把建議交給 Claude 產生；**Garmin 完全沒有官方 connector**。想在自家 connector 後面放確定性決策，就要自建或授權 | 企業銷售，週期長。且對方可能選擇自建 |
 | **3** | **賣給握有課表的一方**（教練平台、健身房、企業健康方案） | 決策必須有「今天原本要做什麼」才成立；**這些對象本來就握著課表**，正好補上我們最缺的 C5 | 需要 REST API／SDK（Phase 7 未做），不只 MCP |
 | **4** | **API／SDK**（D-INTERFACE 已列） | 對外介面不該只有 MCP | 尚未開始 |
 
@@ -531,16 +532,17 @@ olympic 服務爆發力。唯一的判斷是複合／單關節：多關節動作
 - **證據由 tool call 傳入，不做 OAuth 拉取**
 - **驗收**：同一使用者接不同來源，決策語意一致；訊號衝突有明確優先序
 
-> **來源方自己在做 connector（2026-07-30 查證，v6 補記）。** Strava 自 2026-06-01 上線
-> 官方 remote MCP server，使用者在 claude.ai 點 Connect 用 Strava 帳號授權；COROS 2026-05
+> **來源方自己在做 connector（2026-07-30 查證，v6 補記）。** Strava 有官方 remote MCP
+> server，**Access coming soon、逐步開放中、目前只連 Anthropic Claude**；COROS 2026-05
 > 亦已推出（`mcp.coros.com`）；Garmin 無官方，論壇有 feature request。
 >
 > **它給什麼**（官方說明頁）：活動歷史、fitness trends、**training load**、**readiness
 > metrics**、目標進度、跨運動比較、裝備。逐秒心率與配速的 full stream。
 >
-> **它明確不給什麼**：官方寫明 connector 是 **read-only**，且**不提供教練決策或 AI 生成
-> 的建議**——它把資料交給 AI client，由 client 自己推理，並註明「AI 客戶端有自己處理資訊
-> 的方式」，結果與 Strava app 內的 Performance Predictions／訓練計畫不同。
+> **建議由誰產生**：官方頁的說法是「問 Claude 關於你的 Strava 表現」，用它來找訓練模式、
+> **給改進建議**、加油打氣。**產生建議的是 Claude，不是 Strava 的引擎。**
+> Strava 供資料，Claude 推理——那是 recommendation 的形狀（憑語言推測、無既有計畫可比對、
+> 換一天問會換一個答案），與 from → to 的 decision 不是同一件事。
 >
 > **兩者是同一條管線上相鄰的兩段，不是競爭關係。** 使用者的 Claude 同時裝著兩個 connector：
 >
@@ -561,7 +563,7 @@ olympic 服務爆發力。唯一的判斷是複合／單關節：多關節動作
 > AI 那層，而且不是我們去 fetch」之上——但**誰把證據送到 Claude 手上，從來不是我們能決定
 > 的**。2026-06 之前那是假設，管線第一段是空的，只能靠使用者手動匯出撐著。Strava 與
 > COROS 上線官方 connector 之後，**該前提對至少兩個來源已從假設變成可觀察的事實**。
-> 加上 Strava 官方寫明 read-only、不提供教練決策或 AI 建議，**兩段不重疊**。
+> 且 Strava 的定位是供資料、由 Claude 推理，**與確定性決策層不是同一段**。
 >
 > **仍然推不出來的**：這不證明決策層本身有價值。決策層要靠 GPT-6 判準與
 > Decision ≠ Recommendation 自己站住，與 Strava 做不做無關。**②講的是管線接得起來，
@@ -901,7 +903,7 @@ CIMD 那個決定要在 Phase 7 就下對。
 | **D-TOOL** | **14 → 6**，依 GPT-6 判準；砍端點不砍能力（已執行）|
 | **D-INTERFACE** | 不只 MCP，還要 REST API ＋ SDK（Phase 7） |
 | **D-GRAPHDB** | 未觸發，in-memory 足夠，不導入 Neo4j |
-| **D-CONNECTOR**（v6） | **不自建任何來源 connector。** Strava（2026-06）、COROS（2026-05）已自行 host 官方 MCP server，給得比我們拉得到的完整（逐秒串流），且官方寫明 read-only、不做教練決策——**與我們相鄰不重疊**。連帶效果：架構原本「證據自己會到 AI 那層」這個我們不擁有的前提，已對兩個來源成為事實。**但這只說明管線接得起來，不代表決策層有價值**，見 Phase 5 補記 |
+| **D-CONNECTOR**（v6） | **不自建任何來源 connector。** Strava（逐步開放中）、COROS（2026-05）已自行 host 官方 MCP server，給得比我們拉得到的完整（逐秒串流）；其定位是供資料、由 Claude 推理——**與確定性決策層相鄰**。連帶效果：架構原本「證據自己會到 AI 那層」這個我們不擁有的前提，已對兩個來源成為事實。**但這只說明管線接得起來，不代表決策層有價值**，見 Phase 5 補記 |
 | **D-PROTOCOL**（v6） | 升 2026-07-28 走 **dual-era**，不是直接切換。依官方相容性矩陣，只支援新版會讓所有舊版客戶端連不上 |
 | **D-REGISTRATION**（v6） | authorization server 以**支援 CIMD** 為選型硬條件。DCR 已 deprecated，只留向後相容 |
 

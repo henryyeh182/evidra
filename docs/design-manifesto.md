@@ -187,7 +187,7 @@ Claude / ChatGPT 回覆使用者
 
 | | 做法 |
 |---|---|
-| **Strava MCP**（2026-06-01 上線） | 官方 remote MCP server，限訂閱者，**read-only**，官方明文**不提供教練決策或 AI 建議**——把資料交給 AI client 自己推理 |
+| **Strava MCP** | 官方頁原文：**Access coming soon**、逐步開放中、**目前只連 Anthropic Claude**。定位是把 Strava 的表現資料開給 Claude，由 **Claude** 去看訓練模式、給改進建議、加油打氣——**建議由 Claude 產生，不是 Strava 的引擎產生** |
 | **COROS**（2026-05） | 同型（`mcp.coros.com`） |
 | **Garmin** | 無官方 connector |
 | **Evidra** | 不持有資料，**在 MCP 與回覆之間放決策層** |
@@ -262,7 +262,7 @@ Apple Health / Garmin …  →  AI Agent（持有授權與記憶）
 | 客戶 | 計價 | 現況（2026-07-30 查證） |
 |---|---|---|
 | AI Agent 開發者（Running / Cycling / PT coach） | API / Intelligence usage | 需要 REST API／SDK，尚未做 |
-| **來源方**（Strava · Garmin · COROS 等） | Intelligence Layer 授權 | **Strava 官方明文不做教練決策；Garmin 連 connector 都沒有**——想給決策就要自建或授權 |
+| **來源方**（Strava · Garmin · COROS 等） | Intelligence Layer 授權 | Strava 把建議交給 Claude 產生；**Garmin 連 connector 都沒有**——想在自家 connector 後面放確定性決策，就要自建或授權 |
 | 握有課表的一方（教練平台 · 健身房 · 企業健康） | Intelligence Layer 授權 | 他們本來就握著課表，正好補上「決策必須有原本要做什麼」這個前提 |
 | 直接對使用者（目錄上架訂閱） | 訂閱 | 使用者已在付 Claude 訂閱，我們是第二筆 |
 
