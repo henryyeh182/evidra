@@ -266,9 +266,14 @@ Apple Health / Garmin …  →  AI Agent（持有授權與記憶）
 | 握有課表的一方（教練平台 · 健身房 · 企業健康） | Intelligence Layer 授權 | 他們本來就握著課表，正好補上「決策必須有原本要做什麼」這個前提 |
 | 直接對使用者（目錄上架訂閱） | 訂閱 | 使用者已在付 Claude 訂閱，我們是第二筆 |
 
-> ⚠️ **訂正**：原表列「AI 平台 Marketplace — 平台分潤」。**與事實不符**：
-> Anthropic Connectors Directory **無上架費、無抽成機制**（2026-07-30 查證）。
-> **上架給的是分發，不是金流**——金流必須自己做。
+| **AI 平台 Marketplace** | 平台分潤 | **保留為商業模式之一。** 第三方 MCP marketplace 已有分潤機制在運作（見 plan）；Anthropic 目錄現階段無抽成，這是**當下的市場現況，不是永久條件** |
+
+> ⚠️ **本文件不記載會變動的市場現況。** 各平台此刻有沒有抽成、費率多少、誰家可以收錢，
+> 一律記在 [implementation plan](fitness-mcp-implementation-plan.md)，那裡可以隨查證更新。
+> **宣言只寫原則**：金流的控制權要在我們手上，不把收入唯一寄託在任何單一平台的政策上。
+>
+> 這條是 2026-07-30 訂正——當時把「Anthropic 目錄沒有抽成」寫進宣言，
+> **等於用一句當下的查證結果封掉一個還在評估的商業模式**。宣言不該這樣用。
 
 商品名是 **Fitness Decision Engine**，不是「Garmin Connector」。
 

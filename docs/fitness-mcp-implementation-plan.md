@@ -221,6 +221,51 @@ canonical evidence**（方言等價，見 Phase 5）。這一條做不到，多�
 **我們沒有既有訂閱可以加值，所以不能直接照抄。** 但它替我們留下了一塊空地：
 **它明講自己不做決策。**
 
+#### 同業盤點：Peloton · Strava · Garmin（2026-07-30 查證）
+
+| | 官方 MCP | 實況 |
+|---|---|---|
+| **Strava** | ✅ 2026-06-01 | 限訂閱者、read-only、**明文不提供教練決策或 AI 建議** |
+| **COROS** | ✅ 2026-05 | `mcp.coros.com` |
+| **Peloton** | ❌ **沒有官方** | 全是社群作品。`@striderlabs/mcp-peloton` 用 **Playwright 瀏覽器自動化**（等於爬網頁）；另有數個接非官方 API 的版本 |
+| **Garmin** | ❌ **沒有官方** | 開發者論壇有正式 feature request；社群版本多個，其中一個 **61 個 tool／7 大類**，建立在逆向工程的 `python-garminconnect` 上，**用帳號密碼登入而非 OAuth**；另有第三方雲端代管的 Garmin Chat Connector |
+
+> **宣言原本拿 Peloton 當對照，但 Peloton 根本沒有官方 MCP**——那個對照講的是社群作品。
+> 已改為 Strava（官方、可查證、且明文不做決策）。
+
+**Garmin 論壇那串裡有兩件對我們直接相關的事：**
+
+1. 討論中提到 Garmin 可能顧慮**與自家 Connect+ 付費服務衝突**——這解釋了為什麼擁有最完整
+   資料的一家反而最慢。
+2. 有使用者回報：**Claude 依照傳入的 Garmin 資料做出會隨資料調整的個人化訓練計畫，
+   表現勝過 Garmin 自己的建議**。
+
+> 第 2 點是**需求存在的證據**，但要看清楚它證明了什麼：它證明使用者要的是「隨資料調整的
+> 計畫」，**不證明那個做法是可靠的**——由模型自由推理產生的計畫，換一天問就會換一個答案，
+> 而且沒有紀錄可回溯。**這正是 from → to ＋ 綁回證據要解決的問題。**
+
+**共同模式**：不論官方或社群，**現有的全部是資料存取層**（Garmin 那個有 61 個 tool，
+就是把 API 端點一個個包出來）。**沒有一個做決策層。**
+
+#### MCP 的金流現況（2026-07-30 查證，會變動，屬於本文件不屬於宣言）
+
+| 管道 | 現況 |
+|---|---|
+| **Anthropic Connectors Directory** | 無上架費、無抽成機制 |
+| **MCPize** | 專做付費 MCP 的 marketplace，**分潤 80–85% 給開發者** |
+| **Apify** | 一級 MCP 代管，pay-per-event，**開發者拿 80%** 扣除平台運算成本 |
+| **Glama** | 免費瀏覽／本機安裝；**代管版本可收費** |
+| **Smithery** | 目錄最大，但創作者付 $30/月且**無分潤** |
+| **付款軌道** | **x402**（USDC 按次付費）· **Stripe MPP**（法幣 session 計費） |
+| **計費基礎建設** | Moesif（按次／訂閱＋超額／**按成功結果計費**）· Nevermined（原生整合進協定） |
+
+**市場脈絡**：MCP SDK 從 2024-11 的每月約 200 萬次下載，到 2026 年初超過每月 9,700 萬次。
+但截至 2026-06，**已上線的數千個 MCP 幾乎全部免費——所以幾乎沒有一個是生意。**
+
+> **對我們的意義**：marketplace 分潤這條路**現在就有人在做**，不是等 Anthropic。
+> 而且「按成功結果計費」這種模式與我們的成本結構相容——但要能計費就要先能計量，
+> 計量的欄位界線見 Phase 8（`userId · 時間 · tool 名 · 次數`，不含健康資料）。
+
 #### 四條路（皆為主張，附各自立論的已驗證事實）
 
 | # | 模式 | 立論依據（已驗證） | 難點 |
@@ -824,6 +869,7 @@ CIMD 那個決定要在 Phase 7 就下對。
 | C1 | **`maxSampleGapSeconds = 30` 沒有出處**——「心率斷超過 30 秒算暫停」的 30 是挑的，已 commit。要有依據，或改成呼叫端必填 | `packages/connectors/src/timeInZone.js:106` |
 | C2 | **`trainingLoad ?? 分鐘數` 仍在編造負荷值**（`rpe ?? 5` 已於 `ec7f887` 移除，這條當時明確劃在範圍外） | `packages/evidence/src/model.js:155` |
 | C3 | **user-journey 缺兩個已完成功能**（提議評估、心率區間分佈）。**沒有 gate 抓得到**——G4 只比對五種決策型別，沒有東西比對「功能 ↔ 對外文件」 | `docs/user-journey.html` |
+| C6 | 🟡 **證據的實際來源形狀沒驗過**——我們的 parser 全部是針對**匯出檔**寫的（`normalize.js` 註解自陳「Garmin Connect export → Fitness Evidence Model」）。但真實流程裡，證據是 Claude 從**別人的 MCP server** 拿到再當參數傳進來的：Strava 官方 connector、Garmin 社群版 61 個 tool 的 API 形狀。**兩者形狀不同，且從未對照過。** 這是「四家對齊」這條護城河能不能兌現的關鍵 | `packages/connectors/src/providers/*/normalize.js` |
 | C5 | 🔴 **計畫沒有持久化**——`planStore` 是純記憶體 `Map`，行程重啟即消失；`packages/db` 的 PostgreSQL schema 寫好但**沒接 runtime**。**決策的基底不存在，就沒有決策可言**（見 3.5） | `packages/planning/src/planStore.js`、`packages/db` |
 | C4 | **G5 一直紅著**：Apple Health 與 Strava 有 parser，但 `schemas/sources/` 缺原始格式契約、`eval/scenarios/` 缺匯出形狀場景。`schemas/README.md` 自訂規則是「registry ＋ source schema ＋ parser ＋ scenario」四件，現在 2/4 | `schemas/sources/`、`eval/scenarios/` |
 
