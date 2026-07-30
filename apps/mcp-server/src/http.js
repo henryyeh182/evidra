@@ -14,6 +14,15 @@ import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 
 import { handleJsonRpcMessage } from "./server.js";
+import {
+  protectedResourceMetadata,
+  canonicalResourceUri,
+  checkTokenClaims,
+  wwwAuthenticate,
+  bearerFromHeaders
+} from "./oauth.js";
+
+const RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
 
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
 
@@ -63,6 +72,30 @@ export function createHttpServer(options = {}) {
   const requireToken = options.token || null;
   const sessions = new Set();
 
+  /**
+   * OAuth 2.1 resource-server configuration. Present means every request needs
+   * a token issued for this resource; absent falls back to the shared secret,
+   * which is a local-development affordance and says so.
+   */
+  const oauth = options.oauth
+    ? {
+        resource: canonicalResourceUri(options.oauth.resource),
+        authorizationServers: options.oauth.authorizationServers || [],
+        scopes: options.oauth.scopes,
+        requiredScopes: options.oauth.requiredScopes,
+        issuers: options.oauth.issuers,
+        // Signature checking belongs to whoever knows the authorization
+        // server's keys. Without a verifier this server refuses tokens rather
+        // than trusting unsigned claims — an unverified JWT is a string an
+        // attacker can write.
+        verify: options.oauth.verify || null
+      }
+    : null;
+
+  if (oauth && oauth.authorizationServers.length === 0) {
+    throw new Error("OAuth requires at least one authorization server; a client has nowhere to go without it.");
+  }
+
   const server = createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
 
@@ -85,6 +118,17 @@ export function createHttpServer(options = {}) {
       return;
     }
 
+    // RFC 9728. Unauthenticated by design: this is the document a client reads
+    // *before* it has any token, so demanding one would deadlock discovery.
+    if (url.pathname === RESOURCE_METADATA_PATH) {
+      if (!oauth) {
+        sendJson(res, 404, { error: "This server is not configured as an OAuth resource server." }, cors);
+        return;
+      }
+      sendJson(res, 200, protectedResourceMetadata(oauth), cors);
+      return;
+    }
+
     if (url.pathname !== endpoint) {
       sendJson(res, 404, { error: `Not found. MCP endpoint is ${endpoint}` }, cors);
       return;
@@ -95,12 +139,44 @@ export function createHttpServer(options = {}) {
       return;
     }
 
-    // Optional shared secret. A tunnel makes this server world-reachable, so a
-    // token is the difference between "my data" and "anyone's".
-    if (requireToken) {
-      const auth = req.headers.authorization || "";
-      const bearer = auth.startsWith("Bearer ") ? auth.slice(7) : url.searchParams.get("token");
-      if (bearer !== requireToken) {
+    if (oauth) {
+      const metadataUrl = new URL(RESOURCE_METADATA_PATH, oauth.resource).href;
+      const deny = (status, error, description) => {
+        sendJson(res, status, { error, error_description: description }, {
+          ...cors,
+          "www-authenticate": wwwAuthenticate({ resourceMetadataUrl: metadataUrl, error, description })
+        });
+      };
+
+      const token = bearerFromHeaders(req.headers);
+      if (!token) {
+        // No token is not an error to explain away — it is the start of the
+        // flow. The header tells the client where to go next.
+        deny(401, "invalid_request", "Authorization header with a Bearer token is required.");
+        return;
+      }
+
+      let claims;
+      try {
+        claims = oauth.verify ? await oauth.verify(token) : null;
+      } catch {
+        claims = null;
+      }
+      if (!claims) {
+        deny(401, "invalid_token", "Token signature could not be verified.");
+        return;
+      }
+
+      const verdict = checkTokenClaims(claims, oauth);
+      if (!verdict.ok) {
+        deny(verdict.status, verdict.error, verdict.description);
+        return;
+      }
+    } else if (requireToken) {
+      // Local-development fallback: a shared secret, header only. It cannot
+      // express an audience, so it is not OAuth and must not be mistaken for
+      // it — but it still beats leaving a tunnelled server open.
+      if (bearerFromHeaders(req.headers) !== requireToken) {
         sendJson(res, 401, { error: "Unauthorized" }, cors);
         return;
       }
