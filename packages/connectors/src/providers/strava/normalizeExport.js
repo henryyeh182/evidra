@@ -17,8 +17,6 @@ import { STRAVA_TYPE_MAP } from "./normalizeActivity.js";
  * day for a training day.
  */
 
-const TYPE_INTENSITY = { run: 6, ride: 5, walk: 3, strength: 7, mobility: 3, recovery: 2 };
-
 function inferMuscleGroups(type) {
   if (type === "run" || type === "ride" || type === "walk") return ["legs"];
   if (type === "strength") return ["full_body"];
@@ -28,10 +26,12 @@ function inferMuscleGroups(type) {
 
 /**
  * RPE, best evidence first: what the athlete said, then heart rate against the
- * athlete's own maximum, then the session's own peak, then the type's typical
- * intensity. `rpeBasis` travels with the number so a decision can say which
- * rung it stood on — an RPE inferred against an unedited 220-age maximum is
- * weaker evidence than one the athlete typed in.
+ * athlete's own maximum, then the session's own peak. When neither exists the
+ * answer is null — an activity's type says what it was, not how hard it felt,
+ * and a per-type constant would read downstream like the athlete reported it.
+ * `rpeBasis` travels with the number so a decision can say which rung it stood
+ * on — an RPE inferred against an unedited 220-age maximum is weaker evidence
+ * than one the athlete typed in.
  */
 function estimateRpe(activity, anchors) {
   if (activity.perceivedExertion !== null && activity.perceivedExertion !== undefined) {
@@ -53,8 +53,7 @@ function estimateRpe(activity, anchors) {
     return { rpe: 4, rpeBasis: basis };
   }
 
-  const type = STRAVA_TYPE_MAP[activity.activityType] || "recovery";
-  return { rpe: TYPE_INTENSITY[type] ?? 5, rpeBasis: "activity_type_default" };
+  return { rpe: null, rpeBasis: "unavailable" };
 }
 
 /**
@@ -71,6 +70,12 @@ function estimateRpe(activity, anchors) {
 function resolveLoad(activity, rpe) {
   if (activity.relativeEffort !== null && activity.relativeEffort !== undefined) {
     return { trainingLoad: Math.round(activity.relativeEffort), loadSource: "relative_effort" };
+  }
+
+  // The duration estimate is only as real as the RPE it scales; with no RPE
+  // there is nothing to scale, and duration alone is not a load.
+  if (typeof rpe !== "number") {
+    return { trainingLoad: null, loadSource: "unavailable" };
   }
 
   const minutes = Math.max(1, Math.round((activity.movingSeconds ?? activity.elapsedSeconds ?? 60) / 60));
@@ -133,7 +138,8 @@ export function normalizeStravaExportActivity(activity, context = {}) {
       // Counts one activity, not one day — never fold into daily steps.
       activitySteps: activity.activitySteps,
       rpeBasis,
-      rpeEstimated: rpeBasis !== "reported",
+      // An absent RPE was not estimated — read `rpeBasis` to tell the two apart.
+      rpeEstimated: rpe !== null && rpeBasis !== "reported",
       loadSource,
       sets
     }

@@ -219,12 +219,17 @@ test("a session without power reports absent load columns as absent, never as ze
   assert.equal(eventById["1000000002"].metadata.loadSource, "relative_effort");
 });
 
-test("with neither power nor heart rate the load is estimated, and says so", () => {
+test("with neither power nor heart rate, RPE and load are absent rather than invented", () => {
   const strength = eventById["1000000004"];
   assert.equal(strength.type, "strength");
-  assert.equal(strength.metadata.loadSource, "duration_estimate");
-  assert.equal(strength.metadata.rpeBasis, "activity_type_default");
-  assert.equal(strength.metadata.rpeEstimated, true);
+  // The activity type says what it was, not how hard it felt.
+  assert.equal(strength.rpe, null);
+  assert.equal(strength.metadata.rpeBasis, "unavailable");
+  // Absent is not the same as estimated, and the metadata must not blur them.
+  assert.equal(strength.metadata.rpeEstimated, false);
+  // Duration alone is not a load, so nothing is scaled into one.
+  assert.equal(strength.trainingLoad, null);
+  assert.equal(strength.metadata.loadSource, "unavailable");
 });
 
 test("a reported RPE outranks anything inferred from heart rate", () => {

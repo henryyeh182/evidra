@@ -24,8 +24,8 @@
  * @property {string} name
  * @property {string} startedAt
  * @property {number} durationMinutes
- * @property {number} rpe
- * @property {number} trainingLoad
+ * @property {number|null} rpe null when no source reported or implied one
+ * @property {number|null} trainingLoad null when nothing supports a load
  * @property {string[]} muscleGroups
  * @property {Object} metadata
  */

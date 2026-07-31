@@ -13,6 +13,11 @@ export const STRAVA_TYPE_MAP = {
   Yoga: "mobility"
 };
 
+/**
+ * RPE, best evidence first: what the athlete said, then heart rate, then the
+ * session's suffer score. When none of those exist the answer is null — the
+ * activity type says what it was, not how hard it felt.
+ */
 function estimateRpe(activity) {
   if (activity.perceived_exertion) {
     return Math.max(1, Math.min(10, Number(activity.perceived_exertion)));
@@ -32,12 +37,17 @@ function estimateRpe(activity) {
     if (activity.suffer_score >= 40) return 6;
   }
 
-  return 5;
+  return null;
 }
 
 function estimateTrainingLoad(activity, rpe) {
   if (activity.suffer_score) {
     return Math.round(activity.suffer_score);
+  }
+
+  // Duration only becomes a load once an RPE scales it; without one, null.
+  if (typeof rpe !== "number") {
+    return null;
   }
 
   const durationMinutes = Math.max(1, Math.round(activity.moving_time / 60));

@@ -53,15 +53,36 @@ test("normalizes point metrics, daily step sums, and per-night sleep", async () 
   }
 });
 
-test("normalizes an Apple Health workout with an estimated training load", async () => {
+test("normalizes an Apple Health workout, taking load from measured energy", async () => {
   const parsed = await parseAppleHealthExport(fixturePath);
   const [workout] = normalizeAppleHealthExport(parsed).filter((e) => e.kind === "workout");
 
   assert.equal(workout.type, "run");
   assert.equal(workout.durationMinutes, 34);
-  assert.equal(workout.trainingLoad, 41); // round(34 * 0.6 * 2)
-  assert.equal(workout.metadata.rpeEstimated, true);
+  assert.equal(workout.trainingLoad, 41); // round(410 kcal / 10)
+  assert.equal(workout.metadata.loadSource, "active_energy");
+  // Apple Health carries no RPE, so none is reported and none is invented.
+  assert.equal(workout.rpe, null);
+  assert.equal(workout.metadata.rpeEstimated, false);
   assert.deepEqual(workout.muscleGroups, ["legs"]);
+});
+
+test("an Apple Health workout with no energy reports no load at all", () => {
+  const [workout] = normalizeAppleHealthExport({
+    workouts: [
+      {
+        workoutActivityType: "HKWorkoutActivityTypeTraditionalStrengthTraining",
+        startDate: "2026-07-30 07:00:00 +0800",
+        duration: "45"
+      }
+    ],
+    records: []
+  }).filter((e) => e.kind === "workout");
+
+  assert.equal(workout.durationMinutes, 45);
+  assert.equal(workout.rpe, null);
+  assert.equal(workout.trainingLoad, null);
+  assert.equal(workout.metadata.loadSource, "unavailable");
 });
 
 test("apple health events fold into a user context and drive semantic state", async () => {

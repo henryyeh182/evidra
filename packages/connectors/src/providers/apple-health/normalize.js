@@ -131,8 +131,6 @@ const WORKOUT_TYPE_MAP = {
   HKWorkoutActivityTypePreparationAndRecovery: "recovery"
 };
 
-const TYPE_INTENSITY = { run: 6, ride: 5, walk: 3, strength: 7, mobility: 3, recovery: 2 };
-
 function inferMuscleGroups(type) {
   if (type === "run" || type === "ride" || type === "walk") return ["legs"];
   if (type === "strength") return ["full_body"];
@@ -143,15 +141,16 @@ function inferMuscleGroups(type) {
 export function normalizeAppleHealthWorkout(workout) {
   const type = WORKOUT_TYPE_MAP[workout.workoutActivityType] || "recovery";
   const durationMinutes = Math.max(1, Math.round(Number(workout.duration || 0)));
-  // Apple Health has no RPE. Prefer the workout's measured active energy as the
-  // training load (real signal); fall back to a duration x per-type-intensity
-  // estimate when energy is missing. Energy-based load can underweight strength
-  // (mechanical load isn't captured by kcal) — flagged via loadSource.
+  // Apple Health has no RPE, so `rpe` stays null — an absent input is reported
+  // absent rather than replaced by a per-type constant. Load uses the workout's
+  // measured active energy when present (real signal); with no energy there is
+  // nothing left to derive a load from, so that is null too. Energy-based load
+  // can underweight strength (mechanical load isn't captured by kcal) — flagged
+  // via loadSource.
   const kcal = workout.totalEnergyBurned ? Number(workout.totalEnergyBurned) : null;
-  const rpe = Math.round(TYPE_INTENSITY[type] ?? 5);
-  const durationLoad = Math.round(durationMinutes * (rpe / 10) * 2);
-  const trainingLoad = kcal ? Math.round(kcal / 10) : durationLoad;
-  const loadSource = kcal ? "active_energy" : "duration_estimate";
+  const rpe = null;
+  const trainingLoad = kcal ? Math.round(kcal / 10) : null;
+  const loadSource = kcal ? "active_energy" : "unavailable";
   const startedAt = appleDateToIso(workout.startDate);
 
   return {
@@ -170,7 +169,7 @@ export function normalizeAppleHealthWorkout(workout) {
       totalDistanceKm: workout.totalDistance ? Number(workout.totalDistance) : null,
       totalEnergyKcal: kcal,
       sourceName: workout.sourceName ?? null,
-      rpeEstimated: true,
+      rpeEstimated: false,
       loadSource
     }
   };
