@@ -130,6 +130,50 @@ source schema 與匯出形狀 scenario 目前只做了 Garmin 一家；Apple Hea
 - [Phase Review](docs/phase-review.md) — 宣告完成前的審查機制
 - [Schemas](schemas/README.md) · [Eval](eval/README.md)
 
+## 接上 Claude Desktop
+
+stdio、本機。遠端 host（Claude app／ChatGPT app）還接不起來——缺遠端 https 部署與
+authorization server，見上面〈現況〉的 OAuth 一列。
+
+**設定檔是每台機器各自的，不會被任何機制同步過去。換一台就要再做一次。**
+
+**1. 取得這台機器的 node 絕對路徑**
+
+```bash
+which node
+```
+
+GUI 啟動的 app 拿到的 PATH 很精簡，設定檔裡**不能寫裸的 `node`**，會找不到。
+
+**2. 編輯 `~/Library/Application Support/Claude/claude_desktop_config.json`**
+
+這個檔案已經有 Claude Desktop 自己寫入的內容（`coworkUserFilesPath`、`preferences`、
+帳號識別碼、視窗版面狀態）。**只在最外層加 `mcpServers`，不要整份覆蓋。**
+
+```json
+{
+  "coworkUserFilesPath": "…原本的，不要動…",
+  "preferences": { "…原本的，不要動…" },
+  "mcpServers": {
+    "fitness-mcp": {
+      "command": "/opt/homebrew/bin/node",
+      "args": ["/absolute/path/to/fitness-mcp/apps/mcp-server/src/stdio.js"]
+    }
+  }
+}
+```
+
+兩個值都要換成這台機器的實際路徑：`command` 用步驟 1 的輸出，`args` 用這份 repo 的絕對位置。
+
+**3. 完全結束 Claude Desktop 再開啟**（關視窗不算）。MCP server 是常駐行程，
+改程式或改設定都不會熱重載。
+
+**4. 驗證**：問一句「今天排的是 VO2max intervals，我跑得動嗎？」，
+應該會看到 `Decide Today's Session` 這個工具被呼叫。
+
+> 這個檔案不進版控：裡面是機器專屬的絕對路徑與帳號狀態，而且 Claude Desktop
+> 會自己覆寫它。進 git 的是上面這段做法。
+
 ## 指令
 
 ```bash
