@@ -272,6 +272,22 @@ function birthDateToIsoDay(value) {
  * because Strava seeds it with 220 - age and most athletes never edit it. The
  * flag is what lets a decision say its Relative Effort rests on an estimate.
  *
+ * `220 - age` appears below only to recognise that seeded default — nothing
+ * here derives a heart rate from it. Sources, because the number is quoted at
+ * users and has to be answerable:
+ *
+ *   - Origin: Fox, Naughton & Haskell (1971). Not derived from a study; a rule
+ *     of thumb drawn from 11 small, largely unpublished data sets.
+ *   - Revision: Tanaka, Monahan & Seals, "Age-predicted maximal heart rate
+ *     revisited", J Am Coll Cardiol 2001;37(1):153-6 (PMID 11153730). A
+ *     meta-analysis of 351 studies / 18,712 subjects giving 208 - 0.7 x age,
+ *     and finding 220 - age systematically underestimates older adults.
+ *     Individual error runs to 10-20 bpm either way.
+ *
+ * So a matched value means "Strava's default, which is an industry convention
+ * with a wide error bar", not "this athlete's maximum". That distinction is
+ * the whole reason the flag exists.
+ *
  * @param {string} text contents of `general_preferences.csv`
  * @param {{ asOf?: Date }} [options]
  */
