@@ -1,26 +1,26 @@
 # Evidra — Fitness Decision Engine
 
 > 這份文件每個 session 自動載入。**動手之前先讀完。**
-> 完整版：[docs/design-manifesto.md](docs/design-manifesto.md)。兩者衝突時以宣言為準。
+> 正本是 [docs/product-spec.md](docs/product-spec.md)（核心需求、架構、概念、使用者情境）；
+> 原則與治理判準在 [docs/design-manifesto.md](docs/design-manifesto.md)。衝突時以規格需求書為準。
 
-## Mission
+## 核心宗旨
 
-**A permissioned Fitness Decision Engine that turns fragmented, user-owned health evidence into explainable training decisions for AI agents.**
+使用者要 AI 的教練能力，但**不要 Claude、也不要我們的 hosted MCP 看見他完整的原始健康資料**。
 
-不提供健康資料，不提供健身內容；**提供的是基於證據與運動科學的決策**。
+所以 host 只當大腦與對話介面，Fitness MCP 只當背後的運動科學計算與安全判斷引擎，
+收最小化證據、算完不留。
 
-## 五個設計原則
+## 三段分工
 
-1. **Data stays with the user** — 不建資料湖、不保存原始健康資料
-2. **Permissioned** — 授權是取得證據的唯一途徑
-3. **Intelligence Layer** — 提供運動科學與決策，不是 App／社群／資料庫
-4. **AI Agent First** — 第一使用者是程式，不做 UI、不搶對話
-5. **Decision, not Content** — 賣判斷，不賣素材
+| 段 | 誰做 | 做什麼 |
+|---|---|---|
+| 1 | 我們 | 把各家資料做成結構化、標準化的一份 |
+| 2 | 我們 | 確定性計算：`acwr = atl / ctl` 就是一個除法，不需要模型 |
+| 3 | Host | 組句子、用白話講給使用者聽 |
 
-## 兩條操作承諾
-
-- **A. 決策自我解釋** — 每個輸出帶 confidence、evidence、signalCoverage、limits
-- **B. 價值以決策品質衡量** — 不是 connector 數、tool 數、動作數
+**我們的程式不呼叫模型來產生決策。** 但模型是前提不是選配——聽懂問題、湊齊證據、
+選工具、講人話全在 host 那邊。這條管的是模型在誰家，不是有沒有模型。
 
 ## Decision ≠ Recommendation（最常失守的一條）
 
@@ -33,13 +33,31 @@
 
 **計畫是決策的基底。** 決策型別：`keep`（也是決策）· `adjust` · `substitute` · `defer` · `advance`
 
-## 五層決策模型
-
-```
-Evidence → Fitness State → Decision（意圖）→ Action（from → to）→ Reason（綁回證據）
-```
+五層：`Evidence → Fitness State → Decision（意圖）→ Action（from → to）→ Reason（綁回證據）`
 
 Decision 與 Action 必須分開：同一意圖在不同器材／時間／傷病下落成不同 Action。
+
+## 邊界：能說什麼，不能說什麼
+
+能說：
+
+> We process only the minimum health-related evidence submitted by the caller,
+> solely to compute the requested fitness decision. We do not retain, sell, use
+> for training, or use it for unrelated purposes.
+
+**不能說 `We never process health data`。** 接收並計算 Evidence 本身就是 transient processing。
+「不 fetch、不持有原始資料」不等於「完全不處理資料」。
+
+內部討論 input 一律稱 **Evidence** 不稱 Data。
+
+## 兩種部署
+
+- **Phase 1（hosted）**：短暫處理最小化 Evidence，不持久化、不保管、不二次利用；
+  不直接連資料供應商、不持有來源 OAuth refresh token；log／trace 遮蔽 payload、token 與健康欄位。
+- **Phase 2（user-controlled）**：connectors、`packages/evidence`、`packages/semantic-engine`
+  與 decision computation 全在使用者控制的環境跑。MCP 變成 local data plane。
+
+**Phase 2 是核心宗旨要的那個版本，不是選配。** 排序依核心宗旨，不依 Phase 編號。
 
 ## 工具准入判準（GPT-6 Test）
 
@@ -48,92 +66,65 @@ Decision 與 Action 必須分開：同一意圖在不同器材／時間／傷病
 否 → 砍掉或降為內部。GPT-6 殺死**知識查詢**，殺不死三樣：
 **證據**（沒有這個人的資料）· **計算**（沒有執行縱向運算）· **保證**（確定性過濾器不會被說服繞過）。
 
-## 架構（不得偏離）
+## 四條反覆失守的紀律
 
-```
-手錶（Garmin · Apple Watch）—— 真正的量測源頭
-   │ Garmin Connect / Connect IQ 向外同步
-   ▼
-Sources（Apple Health · Google Health · Strava · Oura · Whoop）
-   │ 都是下游。Strava 最窄：只有運動當下的資料，沒有睡眠／HRV／靜息心率
-   │ User OAuth 授權 —— 授權對象是 AI 那層，不是我們
-   ▼
-Claude / ChatGPT（Conversation + Reasoning）
-   │ MCP Tool Call —— 證據以參數傳入
-   ▼
-Fitness MCP（Evidence Access + Intelligence Interface）
-   ▼
-Fitness Decision Engine（Recovery · Training Readiness · Workout Adjustment）
-   ▼
-Claude / ChatGPT 回覆使用者
-```
+都因為實際偏移過而寫在這裡。動手前逐條自問。
 
-**我們不 fetch、不持有原始健康資料。** 因此某來源有沒有伺服器 API 與本架構無關。
-
-**邊界精確定義**：hosted Fitness MCP 會 transiently process caller 傳入的
-最小化 Evidence；不得把這件事描述成「完全不處理健康資料」。正式 wording：
-
-> We process only the minimum health-related evidence submitted by the caller,
-> solely to compute the requested fitness decision. We do not retain, sell, use
-> for training, or use it for unrelated purposes.
-
-Phase 1 是 `source connector → minimum Evidence → hosted Fitness MCP → transient
-decision`；Phase 2 才把 `packages/evidence`、`packages/semantic-engine` 與
-decision computation 放進 user-controlled local/private environment，讓 hosted
-service 不接觸 raw health Evidence。完整邊界以
-[`docs/design-manifesto.md`](docs/design-manifesto.md) 為準。
-
-## 核心概念（使用者定調，2026-07-30）
-
-> **知識的輸出現在已經沒有價值**，任何問 AI 馬上有答案。
-> 但要做到**輸入的數據有結構化、標準化**，馬上可以立刻找到 `acwr = atl / ctl`。
-> 這一個除法——來說明近期負荷除以長期負荷。算出的數值 = readiness、分肌群疲勞。
-> **Claude 已經可以組成完整的中文理由句子**，然後用白話回應給 user。
-
-三段分工：**①我們把四家資料做成標準化的一份 → ②我們做確定性計算 → ③Claude 講人話。**
-
-系統內**不含 LLM**——但這條管的是**模型在誰家，不是有沒有模型**。禁的只有「我們的程式
-呼叫模型來產生決策」；模型是前提不是選配，聽懂問題、湊齊證據、選工具、講人話全是 host 在做。
-
-## 三條反覆失守的紀律
-
-這三條都因為實際偏移過而寫在這裡。動手前逐條自問。
-
-### 1. 任何單一來源都必須能用
-
-**沒有使用者需要湊齊 Strava ＋ Apple Watch ＋ Garmin。** 只有 Strava 的跑者靠訓練負荷拿決策；不戴錶睡覺的人靠 HRV 與廠商複合分數拿決策。**這是設計，不是降級。**
-
-談任何來源時講**這組來源能做出什麼決策**，不要講它缺什麼。缺漏只出現在 `signalCoverage.missing` 與 confidence，不當敘事主軸。
-
-> 已偏移三次：用「使用者沒有睡眠資料」論證設計、把 Strava 那排寫成「全空」。
-
-### 2. 不拿單一使用者的資料特性當設計依據
-
-匯入 Apple Health／Garmin 是為了讓 Semantic Fitness Layer **學會讀懂各家 schema**，不是拿來調參。
-
-驗證軸線是**匯出檔的形狀**——完整／sentinel／缺洞／方言等價／有損／稀疏——不是某個運動員的故事。
-可驗證的斷言只有六類：canonical 命名、單位換算、registry ↔ parser 一致、sentinel 不外洩、缺的列進 `signalCoverage.missing`、決策仍成立且自我解釋。
-
-**模擬的生理數值不是 ground truth**，不得用來回頭 fit `readiness < 40` 這類門檻。
-
-### 3. 沒有同意不要動程式
+### 1. 沒有同意不要動程式
 
 使用者問設計問題時，先回答問題。要改程式先說要改什麼、為什麼，**得到同意才動手**。
 
-## 明確不做
+### 2. 輸入不得由我們編造
 
-健身 App · 健身社群 · 聊天介面 · 內容資料庫 · 資料湖
+沒給的值就是沒有。不用預設值代替缺失輸入（沒有 RPE 就是沒有，不是 5），
+缺的走 `signalCoverage.missing` 並下調 confidence。
 
-## 現況（2026-07）
+**確定性門檻必須有出處**——`acwrHigh = 1.4`、`maxSampleGapSeconds = 30` 這類數字
+要嘛附依據，要嘛標為未驗證，要嘛改由呼叫端傳入。**無出處的值不准進 repo。**
 
-- 對外 **6 個決策 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` · `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
-- 247 tests、eval 20 golden cases，全綠
-- schema registry 涵蓋 6 家 ＋ Strava bulk export 方言；parser 實作 3 家（Apple Health／Garmin／Strava，Strava 含 API 與 bulk export 兩種方言）
-- Strava bulk export：CSV 按欄位**索引**解析（5 組同名欄單位不同）；`Activity Date` 是 UTC 無 offset，本地時區只能從 `activities/*.fit.gz` 的 `activity.local_timestamp − timestamp` 還原（opt-in `readLocalTimezone`）
+廠商算好的複合分數（readiness、Body Battery）當一等證據收進來，不重算。
+
+### 3. 任何單一來源都必須能用
+
+**沒有使用者需要湊齊 Strava ＋ Apple Watch ＋ Garmin。** 只有 Strava 的跑者靠訓練負荷拿決策；
+不戴錶睡覺的人靠 HRV 與廠商複合分數拿決策。**這是設計，不是降級。**
+
+談任何來源時講**這組來源能做出什麼決策**，不要講它缺什麼。缺漏只出現在
+`signalCoverage.missing` 與 confidence，不當敘事主軸。
+
+### 4. 不拿單一使用者的資料特性當設計依據
+
+匯入 Apple Health／Garmin 是為了讓 Semantic Fitness Layer **學會讀懂各家 schema**，不是調參。
+
+驗證軸線是**匯出檔的形狀**——完整／sentinel／缺洞／方言等價／有損／稀疏。
+可驗證的斷言只有六類：canonical 命名、單位換算、registry ↔ parser 一致、sentinel 不外洩、
+缺的列進 `signalCoverage.missing`、決策仍成立且自我解釋。
+
+**模擬的生理數值不是 ground truth**，不得用來回頭 fit `readiness < 40` 這類門檻。
+
+## 現況（2026-07-31 查證）
+
+- 對外 **6 個 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` ·
+  `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
+- **248 tests**、eval 20 golden cases，全綠
+- parser 實作 3 家（Apple Health／Garmin／Strava，Strava 含 API 與 bulk export 兩種方言）；
+  schema registry 涵蓋 6 家
+- Strava bulk export：CSV 按欄位**索引**解析（5 組同名欄單位不同）；`Activity Date` 是 UTC 無 offset，
+  本地時區只能從 `activities/*.fit.gz` 的 `activity.local_timestamp − timestamp` 還原
+  （opt-in `readLocalTimezone`）
 - 知識圖譜 889 節點 / 5,785 邊（**內部證據來源，不是對外產品**）
-- transport：stdio ✅ · Streamable HTTP ✅ · OAuth **資源伺服器那一半 ✅**（`oauth.js`），
-  但**簽章驗證器沒填、`serve:http` 進入點沒接線、沒有 authorization server** → 端到端還不能用
-- 協定版本停在 `2025-06-18`；最新規格是 `2026-07-28`（stateless）。升級做法已定：dual-era
+- transport：stdio ✅ · Streamable HTTP ✅；OAuth 只有「檢查 token claims」那一半
+  （`oauth.js`），**簽章驗證器是 `null`、`http.js` 進入點沒傳 `oauth`、沒有 authorization server**
+  → 端到端還不能用
+- 協定停在 `2025-06-18`；最新規格 `2026-07-28`（stateless）。升級走 dual-era
+- `schemas/sources/` 與 `eval/scenarios/` 只有 Garmin 一家 → `review:phase` 的 G5 紅
+- **Phase 2：一行程式都沒有**
+
+## 未決（不得自行改寫）
+
+- **計畫狀態存在哪**：`planStore.js` 已改為無狀態驗證器，`packages/db` schema 未接 runtime。
+  「決策的基底」目前不存在於任何地方。**使用者已指定另開 session 討論。**
+- **計價單位**：成本隨人數變動，不隨呼叫次數。按次計價與成本錯配。
 
 ## 常用指令
 
@@ -149,8 +140,13 @@ npm run serve:http           # HTTP transport
 ## 宣告完成之前
 
 要說某個 Phase／偏差／修正「做完了」，先走 [docs/phase-review.md](docs/phase-review.md)：
-先讀（memory → 本檔 → README → 宣言 → plan → user-journey），再跑 `npm run review:phase`
-的九條 gate，最後回答七道機械驗不到的判斷題（GPT-6 判準、Decision ≠ Recommendation、
-三條紀律…）。**gate 紅的不得宣告完成**——紅的是宣稱與現況的落差，不是待辦功能。
+先讀（memory → 本檔 → product-spec → 宣言 → README → plan → user-journey），
+再跑 `npm run review:phase` 的九條 gate，最後回答機械驗不到的判斷題
+（GPT-6 判準、Decision ≠ Recommendation、四條紀律…）。
+**gate 紅的不得宣告完成**——紅的是宣稱與現況的落差，不是待辦功能。
 
 **MCP server 是常駐行程，改程式不會熱重載**——要驗證改動必須開新 session 或重啟行程。
+
+## 明確不做
+
+健身 App · 健身社群 · 聊天介面 · 內容資料庫 · 資料湖

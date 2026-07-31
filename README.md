@@ -1,103 +1,93 @@
-# Fitness MCP
+# Evidra — Fitness Decision Engine
 
-> **A permissioned Fitness Decision Engine that turns fragmented, user-owned health evidence into explainable training decisions for AI agents.**
+> 使用者用自己已訂閱的 AI App 對話；AI 自動取得使用者授權的運動證據，
+> Fitness MCP 以最小化資料計算訓練決策，AI 再以自然語言提供個人化、可解釋的教練回覆。
 
-一個以使用者資料主權為前提的 Fitness Decision Engine，把分散在各家穿戴裝置、且屬於使用者的健康證據，轉換成 AI Agent 可採用、可解釋的訓練決策。
+**AI host 是教練的大腦與對話介面；Fitness MCP 是教練背後的運動科學計算與安全判斷引擎。**
 
-**不提供健康資料，不提供健身內容；提供的是基於證據與運動科學的決策。**
+最重要的情境是：使用者要 AI 的教練能力，但**不要 Claude、也不要我們的 hosted MCP
+看見他完整的原始健康資料**。
 
-## Architecture
+## 使用者旅程
 
 ```
-User Device / User Accounts
-  Apple Health · Garmin · Oura · Whoop · Strava · Google Health Connect
-        │ User OAuth 授權
-        ▼
-Claude / ChatGPT  (Conversation + Reasoning Layer)
-        │ MCP Tool Call
-        ▼
-Fitness MCP  (Data Access + Fitness Intelligence Interface)
-        ▼
-Fitness Decision Engine
-  Recovery · Training Readiness · Workout Adjustment
-        ▼
-Claude / ChatGPT 回覆使用者
+使用者
+  │ 手機輸入：
+  │「我今天的課表是什麼？」
+  │「昨天運動量很大，今天適合做什麼？」
+  ▼
+Claude / ChatGPT Mobile
+  │ 理解問題、判斷需要哪些資料
+  ▼
+資料來源 connector
+  │ Apple Health / Garmin / Strava
+  ▼
+最小化 Evidence
+  │ 例如：昨日負荷、近 7 日負荷、睡眠、HRV、今日課表
+  ▼
+Fitness MCP
+  ├─ 標準化
+  ├─ 計算 ACWR / readiness / fatigue
+  ├─ 套用確定性規則
+  └─ 產生 Decision / Action / Reason
+  ▼
+Claude / ChatGPT
+  │ 把結構化結果轉成自然語言
+  ▼
+使用者得到個人化教練回覆
 ```
 
-證據由 AI 那層經 tool call 傳入 — **Fitness MCP 不去廠商雲端拉資料，也不持有原始健康資料**。
-系統內**不含 LLM**：語言與推理來自 host，我們提供確定性的領域智慧。
+## 三段分工
 
-### Privacy boundary
+| 段 | 誰做 | 做什麼 |
+|---|---|---|
+| 1 | 我們 | 把各家資料做成結構化、標準化的一份 |
+| 2 | 我們 | 確定性計算：`acwr = atl / ctl` 就是一個除法，不需要模型 |
+| 3 | Host（Claude／ChatGPT） | 組句子、用白話講給使用者聽 |
 
-目前的 hosted MCP 是 **transient data processor**：它會接收並分析 caller
-提交的最小化 Evidence，但不應持久化、不保管 raw health data、不持有來源
-OAuth refresh token，也不應將 Evidence 用於販售、模型訓練、廣告、profiling
-或其他無關目的。
+我們的程式不呼叫模型來產生決策——決策必須是確定性的、可重現的。
+但模型是前提不是選配：聽懂問題、湊齊證據、選工具、講人話全在 host 那邊。
 
-因此產品文件應寫：
+## Decision ≠ Recommendation
+
+| | Recommendation | Decision |
+|---|---|---|
+| 例 | 「建議今天跑 Zone 2」 | 「今天的 VO₂max Intervals → 45 分鐘 Zone 2」 |
+| 結構 | 憑空發出 | from → to，對既有狀態的變更 |
+| 前提 | 不需要 | 必須知道「今天原本要做什麼」 |
+
+決策型別：`keep`（也是決策）· `adjust` · `substitute` · `defer` · `advance`
+
+五層：`Evidence → Fitness State → Decision（意圖）→ Action（from → to）→ Reason（綁回證據）`
+
+每個輸出帶 `confidence`、`evidence`、`signalCoverage`、`limits`。
+缺的訊號列進 `signalCoverage.missing` 並下調信心，**不補造數值**。
+
+## 隱私邊界
+
+對外只能這樣說：
 
 > We process only the minimum health-related evidence submitted by the caller,
 > solely to compute the requested fitness decision. We do not retain, sell, use
 > for training, or use it for unrelated purposes.
 
-不要寫成 `We never process health data`；接收並計算 Evidence 本身就是
-transient processing。
+不能說 `We never process health data`——接收並計算 Evidence 本身就是 transient processing。
 
-部署分成兩種模式：
+### 兩種部署
 
-```text
-Phase 1 — Hosted decision service
+**Phase 1 — Hosted decision service**：hosted MCP 短暫處理最小化 Evidence，
+不持久化、不保管、不二次利用；不直接連資料供應商、不持有來源 OAuth refresh token。
 
-Apple Health / Garmin / Strava
-        → AI host 或 user-controlled local gateway
-        → minimum Evidence
-        → hosted Fitness MCP（transient computation）
-        → Decision / Action / Reason
+**Phase 2 — User-controlled private engine**：source connectors、`packages/evidence`、
+`packages/semantic-engine` 與 decision computation 全部在使用者控制的環境執行，
+hosted service 不接觸 raw health Evidence。**MCP 從遠端資料處理中心變成
+安裝在使用者環境裡的 local data plane。**
 
-Phase 2 — User-controlled private engine
+Phase 2 是核心宗旨要的那個版本，不是選配。兩種模式共用同一套 domain packages。
 
-Apple Health / Garmin / Strava
-        → user device / private gateway / private VPC
-        → connectors + evidence + semantic engine + decision computation
-        → local/private MCP
-        → Claude / ChatGPT 只收到最小化決策結果
-```
+## 對外工具
 
-Phase 1 適合一般 hosted connector；Phase 2 適合高隱私、離線、企業 private
-VPC 或資料 residency 情境。兩種模式共用 domain packages，但 Phase 2 才能
-讓 hosted service 完全不接觸 raw health Evidence。
-
-## Design Principles
-
-1. **Data stays with the user** — 不建資料湖、不保存原始健康資料
-2. **Permissioned** — 授權是取得證據的唯一途徑
-3. **Intelligence Layer** — 提供運動科學與決策，不是 App、社群、資料庫
-4. **AI Agent First** — 第一使用者是程式，不做 UI、不搶對話
-5. **Decision, not Content** — 賣判斷，不賣素材
-
-**Decision ≠ Recommendation**：推薦是憑空發出的建議（任何模型都會）；決策是對既有狀態的變更，帶 `from → to`，需要知道「今天原本該做什麼」。
-
-## Moat
-
-1. **Semantic Fitness Layer** — 異質資料 → 統一 AI 語意狀態
-2. **Fitness Intelligence Engine** — 運動科學模型產生可重現、可解釋的決策
-3. **Fitness Knowledge Graph** — 連結動作、肌群、恢復、訓練目標
-4. **Feedback Learning** — 「狀態 → 決策 → 結果」閉環
-5. **Multi-LLM Interface** — MCP / REST / SDK，共用同一套 Fitness Intelligence
-
-## Not Building
-
-健身 App · 健身社群 · 聊天介面 · 內容資料庫 · 資料湖
-
-## Status
-
-目前：**6 個決策 tool**（stdio + Streamable HTTP）、889 節點知識圖譜、Apple Health／Strava／Garmin 證據正規化、248 tests pass。
-
-各家 schema 的解讀能力有獨立的驗證軸線：`/schemas/sources` 記錄各廠原始格式（含 sentinel 與缺洞），
-`/schemas/evidence` 是統一詞彙，`/eval/scenarios` 用五種匯出形狀（完整／sentinel／方言等價／有損／稀疏）
-確認「registry 宣告的訊號真的解析得出來、單位有換算、缺的誠實說缺」。**那是讀 schema 的能力，不是調參。**
-
-對外工具面全部是決策或決策基底：
+全部是決策或決策的基底。
 
 | Tool | 產出 |
 |---|---|
@@ -105,24 +95,44 @@ VPC 或資料 residency 情境。兩種模式共用 domain packages，但 Phase 
 | `decide_session` | 今日課表 from → to |
 | `decide_exercise_substitution` | 動作替代 from → to |
 | `generate_plan` | 計畫（決策的基底） |
-| `preview_adjust_plan` / `commit_adjust_plan` | 兩階段寫入 |
+| `preview_adjust_plan` / `commit_adjust_plan` | 兩階段調整 |
 
-偏差 D1–D4 已修；**剩 D5（證明增益）**，詳見 [Implementation Plan](docs/fitness-mcp-implementation-plan.md)。
+## 現況
 
-## Documentation
+| 項目 | 現況 |
+|---|---|
+| 對外 tool | 6 個（`tools/list` 實測） |
+| 資料標準化 | `packages/connectors` 實作 3 家（Apple Health／Garmin／Strava，Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 家 |
+| 確定性計算 | `semantic-engine`（readiness／分肌群疲勞）· `training-load`（ATL/CTL/TSB/ACWR）· `decision-engine`（from→to）· `planning` · `knowledge-graph`（889 節點 / 5,785 邊） |
+| 測試 | 248 tests、eval 20 golden cases 全綠 |
+| 傳輸 | stdio ✅ · Streamable HTTP ✅ |
+| OAuth | 只做了「檢查 token claims」那一半；**簽章驗證器沒填、`serve:http` 進入點沒接線、沒有 authorization server** → 遠端連不起來 |
+| 協定版本 | `2025-06-18`；最新規格是 `2026-07-28`（stateless），升級走 dual-era |
+| Phase 2 | **一行程式都沒有** |
 
-- [**Design Manifesto**](docs/design-manifesto.md) — 定位與治理，位階最高
-- [Implementation Plan](docs/fitness-mcp-implementation-plan.md) — 現況、偏差、Phase 順序
+source schema 與匯出形狀 scenario 目前只做了 Garmin 一家；Apple Health 與 Strava
+有 parser 但缺 `schemas/sources/` 契約與 `eval/scenarios/` 場景。
+
+## 明確不做
+
+健身 App · 健身社群 · 聊天介面 · 內容資料庫 · 資料湖
+
+## 文件
+
+- [**產品規格需求書**](docs/product-spec.md) — 核心需求、架構、概念、使用者情境。**正本**
+- [Design Manifesto](docs/design-manifesto.md) — 原則與治理判準
+- [Implementation Plan](docs/fitness-mcp-implementation-plan.md) — 現況、順序、會變動的市場事實
 - [MCP Server](docs/mcp-server.md) — server 與 tool 說明
-- [Phase Review](docs/phase-review.md) — 宣告完成前的審查機制（機械 gate ＋ 判斷題）
+- [Phase Review](docs/phase-review.md) — 宣告完成前的審查機制
 - [Schemas](schemas/README.md) · [Eval](eval/README.md)
 
-## Local Commands
+## 指令
 
 ```bash
 npm test                    # 248 tests
 npm run eval                # golden set 計分
 npm run review:phase        # 階段完成審查（宣告「做完了」之前必跑）
+npm run serve:http          # HTTP transport
 npm run simulate:garmin     # Garmin 各種匯出形狀的讀取報告
 npm run build:graph         # 重建知識圖譜
 npm run audit:graph         # 圖譜品質稽核
