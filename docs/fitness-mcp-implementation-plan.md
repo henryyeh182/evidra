@@ -157,7 +157,7 @@ token rotation，以及 connector directory 的 OAuth、privacy URL、support、
 
 ## 1. 已實作元件
 
-247 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+248 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
@@ -228,7 +228,7 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 1. 那是在測 Claude / ChatGPT 的腦，不是測我們的產品。
 2. 執行它必須呼叫 LLM API，與 **D-LLM「系統內不含 LLM」** 相衝突。
 
-**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 247 個測試）。
+**改為**：承諾 B 的衡量方式從「模型對照」改成「**決策可驗證性**」——決策規則是確定性的，正確與否由測試直接驗證（`assertValidDecision` ＋ 248 個測試）。
 另補上 **MCP client 相容性驗證**（見下）取代連通性層面的疑慮。
 
 > **D1 與 D2 同一個根因**：系統是照「我們有使用者資料庫，AI 來查」設計的（傳統 SaaS），不是照「AI 帶授權證據來，我們回決策」設計的（intelligence layer）。**架構圖畫的是後者，程式蓋的是前者。**
@@ -295,7 +295,7 @@ Anthropic Claude**。定位是「問 Claude 關於你的 Strava 表現」，由 
 |---|---|---|
 | **證據** | ✅ **是，但不是「擁有資料」那個意思**——是**同時讀懂四家並對齊成一份**。見下方訂正 | 已驗證（實測 Apple Health 匯出、Strava 官方頁） |
 | **計算** | ✅ 是。ATL/CTL/TSB、detraining 獨立軸線、個人基線，確定性、零外部 API、0.443ms | 已驗證（實測，Phase 8） |
-| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、247 tests） |
+| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、248 tests） |
 
 **知識圖譜 889 節點不列為護城河。** GPT-6 知道所有動作。它的價值在**不變量**
 （進退階互逆、禁忌把關、plan → catalog 100%）讓替代決策**可被驗證**，不在節點數。
@@ -1015,7 +1015,7 @@ CIMD 那個決定要在 Phase 7 就下對。
   2. header 與 body 不一致時確實回 `-32020`
   3. 不支援的版本回 `-32022` 且列出 `supported`
   4. `server/discover` 回得出支援版本清單
-  5. 既有 247 tests 全綠，且新增 dual-era 雙路徑測試
+  5. 既有 248 tests 全綠，且新增 dual-era 雙路徑測試
 
 ---
 

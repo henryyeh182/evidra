@@ -199,7 +199,7 @@ Phase 2 有地方放，但表還沒建。
 | 對外 tool | 6 個：`assess_fitness_state`／`decide_session`／`decide_exercise_substitution`／`generate_plan`／`preview_adjust_plan`／`commit_adjust_plan` |
 | 資料標準化 | `packages/connectors` 實作 3 家（Apple Health／Garmin／Strava），schema registry 涵蓋 6 家 |
 | 確定性計算 | `semantic-engine`（readiness／分肌群疲勞）· `training-load`（ATL/CTL/TSB/ACWR）· `decision-engine`（from→to）· `planning` · `knowledge-graph`（889 節點） |
-| 測試 | 247 tests、eval 20 golden cases 全綠 |
+| 測試 | 248 tests、eval 20 golden cases 全綠 |
 | 傳輸 | stdio ✅ · Streamable HTTP ✅ |
 | OAuth | 只做了「檢查 token」那一半；**簽章驗證器沒填、`serve:http` 沒接線、沒有 authorization server** → 遠端連不起來 |
 | 協定版本 | 停在 `2025-06-18`；最新規格是 `2026-07-28`（stateless） |
