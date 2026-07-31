@@ -206,6 +206,50 @@ test("without evidence the server asks for evidence instead of answering", async
   }
 });
 
+test("evidence in the wrong shape comes back correctable, not fatal", async () => {
+  // Found driving the real server from Claude Desktop: the host assembled
+  // evidence, got a field wrong, and three calls in a row came back as bare
+  // JSON-RPC errors. The user saw "Failed to call tool" and the host gave up
+  // rather than fixing its payload — it never learned which field was wrong.
+  const wrongCase = await call("decide_session", {
+    evidence: { healthMetrics: [{ type: "sleepDurationHours", value: 7, recordedAt: "2026-07-31T00:00:00Z" }] }
+  });
+
+  assert.equal(wrongCase.isError, true);
+  assert.equal(wrongCase.payload.error, "invalid_evidence");
+  assert.match(wrongCase.payload.problem, /sleepDurationHours/);
+  // The canonical names have to be in the reply, or the next attempt is another guess.
+  assert.match(wrongCase.payload.shape["evidence.healthMetrics[]"].type, /sleep_duration_hours/);
+
+  const missingField = await call("assess_fitness_state", {
+    evidence: { workouts: [{ type: "run", durationMinutes: 45, trainingLoad: 62 }] }
+  });
+
+  assert.equal(missingField.isError, true);
+  assert.match(missingField.payload.problem, /startedAt/);
+});
+
+test("a ratio built on almost no history says so", async () => {
+  // Also found in the field: one session of evidence produced an acute:chronic
+  // ratio of 0.17, which reads as severe detraining and meant only that the
+  // evidence was one day deep. The host happened to catch it; the contract
+  // has to carry it instead of relying on that.
+  const { payload } = await call("decide_session", {
+    evidence: {
+      profile: { timezone: "Asia/Taipei" },
+      healthMetrics: [{ type: "sleep_duration_hours", value: 7, recordedAt: "2026-07-31T00:00:00Z" }],
+      workouts: [{ startedAt: "2026-07-30T10:00:00Z", durationMinutes: 45, type: "run", trainingLoad: 62 }]
+    },
+    date: "2026-07-31",
+    scheduledSession: { type: "run", focus: "VO2max Intervals", intensity: "high", durationMinutes: 60 }
+  });
+
+  const caveat = payload.limits.find((line) => line.includes("acute:chronic ratio"));
+  assert.ok(caveat, "the thin-history caveat travels with the ratio");
+  assert.match(caveat, /1 day of evidence \(1 session\)/);
+  assert.ok(payload.limits.some((line) => line.includes("assumed weekly target")));
+});
+
 test("the demo seed cannot reach a real caller's answer by falling back", async () => {
   // The seed is another person's numbers. It stays reachable for local runs,
   // but only by asking for it outright, and that flag is not in the public

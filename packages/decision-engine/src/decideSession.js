@@ -11,6 +11,12 @@ const EMPTY_COVERAGE = { usable: [], missing: [] };
  * half comes back empty — an unknown gap is reported as no claim, never as
  * "nothing was missing".
  */
+// "1 days of evidence" reads as a bug in the sentence even when the number is
+// right, and these strings are what a host speaks to the user.
+function count(n, noun) {
+  return `${n} ${noun}${n === 1 ? "" : "s"}`;
+}
+
 function normalizeCoverage(signalCoverage) {
   if (!signalCoverage) {
     return { recovery: { ...EMPTY_COVERAGE }, training: { ...EMPTY_COVERAGE } };
@@ -522,6 +528,29 @@ export function decideSession({
     limits.push(
       `Some sessions in the last 7 days carry no training load, ` +
         `so muscle fatigue is read from an incomplete week.`
+    );
+  }
+
+  // The acute:chronic ratio is the one number here that can look authoritative
+  // while resting on almost nothing, because a thin chronic window still divides
+  // cleanly. Caught in the field: a ratio of 0.17 computed from a single session,
+  // which reads as severe detraining and meant only that the evidence was one day
+  // deep. The caveat ships with the ratio rather than being left for the caller
+  // to work out.
+  const acwrCoverage = state.acwrCoverage;
+  if (acwrCoverage && !acwrCoverage.sufficientHistory) {
+    limits.push(
+      `The acute:chronic ratio ${state.acuteChronicWorkloadRatio} is built on ` +
+        `${count(acwrCoverage.historyDays, "day")} of evidence ` +
+        `(${count(acwrCoverage.sessionsInWindow, "session")}) ` +
+        `against a ${acwrCoverage.chronicWindowDays}-day chronic window, so it reflects how little ` +
+        `history was supplied more than how this week compares to a normal one.`
+    );
+  }
+  if (acwrCoverage && acwrCoverage.chronicBasis === "baseline_floor") {
+    limits.push(
+      "Observed chronic load was below the assumed weekly target, so the ratio is measured " +
+        "against that target rather than against this person's own chronic load."
     );
   }
 

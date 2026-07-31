@@ -67,6 +67,13 @@ const METRIC_TYPES = new Set([
   "stress"
 ]);
 
+/**
+ * The accepted metric names, exported so a rejection can hand back the list.
+ * A caller told only that `sleepDurationHours` is unknown has to guess what is
+ * known; a caller shown the six names can correct itself in one turn.
+ */
+export const EVIDENCE_METRIC_TYPES = Object.freeze([...METRIC_TYPES]);
+
 export function assertValidEvidence(evidence) {
   if (!evidence || typeof evidence !== "object") {
     throw new Error("Evidence must be an object.");

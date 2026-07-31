@@ -15,7 +15,8 @@ import {
 } from "../../../packages/training-load/src/index.js";
 import {
   evidenceToUserContext,
-  describeEvidence
+  describeEvidence,
+  EVIDENCE_METRIC_TYPES
 } from "../../../packages/evidence/src/index.js";
 import { todayInTimezone } from "../../../packages/domain/src/dates.js";
 import {
@@ -68,7 +69,17 @@ const EVIDENCE_REQUIREMENTS = {
  */
 async function resolveContext(args) {
   if (args.evidence) {
-    const context = evidenceToUserContext(args.evidence, { userId: args.userId });
+    let context;
+    try {
+      context = evidenceToUserContext(args.evidence, { userId: args.userId });
+    } catch (error) {
+      // Evidence that arrived in the wrong shape is the same kind of failure as
+      // evidence that never arrived: the tool ran and cannot answer. Thrown as a
+      // JSON-RPC error it reads as "Failed to call tool" and the caller gives up
+      // — observed doing exactly that. Handed back with the shape it should have
+      // had, a caller can fix its payload and try again in the same turn.
+      return { invalid: error.message };
+    }
     return {
       context,
       defaultDate: todayInTimezone(context.user.timezone),
@@ -112,9 +123,40 @@ function evidenceRequired(toolName) {
   });
 }
 
+/**
+ * The answer when evidence arrived but not in a shape this server can read.
+ * Says which rule was broken and what the shape is, so the next attempt can be
+ * right rather than being another guess.
+ */
+function invalidEvidence(toolName, problem) {
+  return errorContent({
+    error: "invalid_evidence",
+    tool: toolName,
+    problem,
+    shape: {
+      "evidence.healthMetrics[]": {
+        type: `one of: ${EVIDENCE_METRIC_TYPES.join(", ")}`,
+        value: "number",
+        recordedAt: "ISO 8601 timestamp",
+        source: "optional, e.g. garmin | strava | apple_health"
+      },
+      "evidence.workouts[]": {
+        startedAt: "ISO 8601 timestamp — required",
+        durationMinutes: "number — required",
+        type: "optional, e.g. run | strength | recovery",
+        trainingLoad: "optional; the vendor's own effort figure, used as it stands",
+        muscleGroups: "optional string array"
+      }
+    },
+    note:
+      "Metric names are canonical and case-sensitive: sleepDurationHours is not sleep_duration_hours. Send only what you actually have — omitted signals are reported as missing, never guessed."
+  });
+}
+
 export async function getSemanticFitnessState(args = {}) {
   const resolved = await resolveContext(args);
   if (!resolved) return evidenceRequired("assess_fitness_state");
+  if (resolved.invalid) return invalidEvidence("assess_fitness_state", resolved.invalid);
   const { context, provenance, defaultDate } = resolved;
 
   const date = args.date || defaultDate;
@@ -237,6 +279,7 @@ async function goalAlternativeLookup() {
 export async function generateTrainingPlanTool(args = {}) {
   const resolved = await resolveContext(args);
   if (!resolved) return evidenceRequired("generate_plan");
+  if (resolved.invalid) return invalidEvidence("generate_plan", resolved.invalid);
   const { context } = resolved;
   const { displayNameFor } = await exerciseNaming();
   const findGoalAlternative = await goalAlternativeLookup();
@@ -327,6 +370,7 @@ export const toolHandlers = {
 export async function decideSessionTool(args = {}) {
   const resolved = await resolveContext(args);
   if (!resolved) return evidenceRequired("decide_session");
+  if (resolved.invalid) return invalidEvidence("decide_session", resolved.invalid);
   const { context, provenance, defaultDate } = resolved;
 
   const date = args.date || defaultDate;

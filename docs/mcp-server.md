@@ -41,6 +41,9 @@ optional label the server echoes back and never computes on. A call that
 arrives without evidence gets a tool result carrying `isError` and an
 `evidence_required` payload naming what to go and fetch — not a JSON-RPC error,
 so the host reads it and acts rather than showing the user a failed tool call.
+Evidence that arrives in the wrong shape gets the same treatment as
+`invalid_evidence`, carrying the rule that was broken and the shape it should
+have had, so the caller can correct its payload in the same turn.
 The local demo seed is reachable only by asking for it outright and is absent
 from the public schemas: it is another person's numbers and must never reach a
 real caller's answer by way of a silent fallback.

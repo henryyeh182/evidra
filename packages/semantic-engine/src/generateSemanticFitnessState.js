@@ -57,18 +57,55 @@ function workoutsWithinDays(workouts, anchorDate, days) {
   });
 }
 
+// The chronic half of the acute:chronic ratio looks back this far. Named rather
+// than inlined because the coverage caveat below is derived from it, so the two
+// cannot drift apart.
+const CHRONIC_WINDOW_DAYS = 28;
+
 function calculateTrainingLoad(workouts, anchorDate, baselines = DEFAULT_BASELINES) {
   const recent7d = workoutsWithinDays(workouts, anchorDate, 7);
-  const recent28d = workoutsWithinDays(workouts, anchorDate, 28);
+  const recent28d = workoutsWithinDays(workouts, anchorDate, CHRONIC_WINDOW_DAYS);
   const load7d = recent7d.reduce((sum, workout) => sum + workout.trainingLoad, 0);
   const load28d = recent28d.reduce((sum, workout) => sum + workout.trainingLoad, 0);
   const observedChronicWeeklyLoad = load28d / 4 || 0;
   const chronicWeeklyLoad = Math.max(observedChronicWeeklyLoad, baselines.weeklyTrainingLoadTarget);
 
+  // How far back the supplied evidence actually reaches inside the chronic
+  // window. A 28-day denominator built from one session is not a 28-day
+  // denominator, and the ratio it produces is an artefact of thin data rather
+  // than a reading about this person — observed in the field as an ACWR of 0.17
+  // that a caller had to talk its own user out of believing.
+  //
+  // Half the window is the same rule `packages/training-load/src/trainingLoad.js`
+  // already applies to its CTL curve, kept identical so there is one threshold
+  // with one rationale instead of two magic numbers.
+  const oldest = recent28d.reduce((earliest, workout) => {
+    const startedAt = new Date(workout.startedAt);
+    return !earliest || startedAt < earliest ? startedAt : earliest;
+  }, null);
+  const historyDays = oldest
+    ? Math.min(CHRONIC_WINDOW_DAYS, Math.round(daysBetween(anchorDate, oldest)))
+    : 0;
+  const sufficientHistory = historyDays >= CHRONIC_WINDOW_DAYS * 0.5;
+
+  // When observed load loses to the baseline floor, the ratio is no longer this
+  // person's acute load against their own chronic load — it is their acute load
+  // against a target. Worth saying out loud, because the number still looks like
+  // an ACWR.
+  const chronicBasis =
+    observedChronicWeeklyLoad >= baselines.weeklyTrainingLoadTarget ? "observed" : "baseline_floor";
+
   return {
     trainingLoad7d: load7d,
     trainingLoad28d: load28d,
-    acuteChronicWorkloadRatio: Number((load7d / chronicWeeklyLoad).toFixed(2))
+    acuteChronicWorkloadRatio: Number((load7d / chronicWeeklyLoad).toFixed(2)),
+    coverage: {
+      chronicWindowDays: CHRONIC_WINDOW_DAYS,
+      historyDays,
+      sessionsInWindow: recent28d.length,
+      sufficientHistory,
+      chronicBasis
+    }
   };
 }
 
@@ -384,6 +421,9 @@ export function generateSemanticFitnessState(context, options = {}) {
     trainingLoad7d: trainingLoad.trainingLoad7d,
     trainingLoad28d: trainingLoad.trainingLoad28d,
     acuteChronicWorkloadRatio: trainingLoad.acuteChronicWorkloadRatio,
+    // Travels with the ratio, never separately: whoever reads the number has to
+    // be able to see how much evidence is standing behind it.
+    acwrCoverage: trainingLoad.coverage,
     muscleFatigue,
     recommendedFocus,
     avoid: restrictions,

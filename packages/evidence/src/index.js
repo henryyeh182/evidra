@@ -1,4 +1,9 @@
-export { assertValidEvidence, evidenceToUserContext, describeEvidence } from "./model.js";
+export {
+  assertValidEvidence,
+  evidenceToUserContext,
+  describeEvidence,
+  EVIDENCE_METRIC_TYPES
+} from "./model.js";
 export {
   CANONICAL_SIGNALS,
   VENDOR_SCHEMAS,
