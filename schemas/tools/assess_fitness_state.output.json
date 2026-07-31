@@ -141,7 +141,7 @@
           "type": "string",
           "enum": [
             "provided",
-            "demo_fallback"
+            "demo_seed"
           ]
         }
       },

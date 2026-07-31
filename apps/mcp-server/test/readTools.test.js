@@ -26,7 +26,7 @@ async function call(name, args = {}) {
     throw new Error(response.error.message);
   }
   const text = response.result.content[0].text;
-  return { bytes: text.length, payload: JSON.parse(text) };
+  return { bytes: text.length, payload: JSON.parse(text), isError: Boolean(response.result.isError) };
 }
 
 test("search_exercises answers a structured query and grounds every result", async () => {
@@ -190,14 +190,33 @@ test("evidence passed in drives the decision for a user the server has never see
   assert.ok(decision.payload.reason.length > 0);
 });
 
-test("without evidence the server says it fell back to demo data", async () => {
-  const { payload } = await call("assess_fitness_state", {
-    userId: "user_henry_demo",
-    date: "2026-07-23"
-  });
+test("without evidence the server asks for evidence instead of answering", async () => {
+  // Found driving the real server from Claude Desktop: with no health source
+  // connected the host sent a userId and no evidence, the seed guard threw, and
+  // the user saw "Failed to call tool". A caller that has not sent evidence yet
+  // is a state of the conversation, not a fault — so it comes back as a tool
+  // error the model can read and act on, naming what to go and fetch.
+  for (const tool of ["assess_fitness_state", "decide_session", "generate_plan"]) {
+    const { payload, isError } = await call(tool, { userId: "someone_real" });
 
-  assert.equal(payload.provenance.evidenceSource, "demo_fallback");
-  assert.match(payload.provenance.note, /must pass evidence/);
+    assert.equal(isError, true, `${tool} reports this as a tool error`);
+    assert.equal(payload.error, "evidence_required");
+    assert.equal(payload.tool, tool);
+    assert.ok(Object.keys(payload.accepts).length > 0, `${tool} says what it accepts`);
+  }
+});
+
+test("the demo seed cannot reach a real caller's answer by falling back", async () => {
+  // The seed is another person's numbers. It stays reachable for local runs,
+  // but only by asking for it outright, and that flag is not in the public
+  // schema — so no production call can arrive at it by omission.
+  const askedFor = await call("assess_fitness_state", { useDemoSeed: true, date: "2026-07-23" });
+  assert.equal(askedFor.isError, false);
+  assert.equal(askedFor.payload.provenance.evidenceSource, "demo_seed");
+
+  const publicSchema = toolDefinitions.find((tool) => tool.name === "assess_fitness_state").inputSchema;
+  assert.equal(publicSchema.properties.useDemoSeed, undefined);
+  assert.deepEqual(publicSchema.required, ["evidence"]);
 });
 
 test("a substitution takes the movement as the user said it, not only as an id", async () => {

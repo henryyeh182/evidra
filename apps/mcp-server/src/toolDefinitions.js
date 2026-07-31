@@ -42,10 +42,10 @@ export const toolDefinitions = [
         },
         date: {
           type: "string",
-          description: "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server (demo fallback anchors to the seed's latest day)."
+          description: "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server."
         }
       },
-      required: ["userId"]
+      required: ["evidence"]
     }
   },
   {
@@ -137,10 +137,9 @@ export const toolDefinitions = [
           }
         },
         plan: { type: "object", description: "Optional caller-held plan metadata; the server does not look up plans." },
-        availableMinutes: { type: "number", description: "Override today's available time, e.g. when the user says they are busy." },
-        includeStravaFixture: { type: "boolean", description: "Include the local Strava fixture as extra evidence." }
+        availableMinutes: { type: "number", description: "Override today's available time, e.g. when the user says they are busy." }
       },
-      required: ["userId"]
+      required: ["evidence"]
     }
   },
   {
@@ -343,7 +342,7 @@ export const toolDefinitions = [
         weeks: { type: "number", description: "Number of weeks to plan. Defaults to 4." },
         startDate: { type: "string", description: "Plan start date in YYYY-MM-DD format (ideally a Monday). Defaults to today in the user's timezone." }
       },
-      required: ["userId"]
+      required: ["evidence"]
     }
   },
   {

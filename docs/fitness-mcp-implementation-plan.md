@@ -196,7 +196,9 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 架構圖是 `使用者授權 → AI → tool call 帶證據進來`，實作是 `userId → 我們的檔案`。
 等於我們是資料保管者，違反原則 1，且「permissioned」失去意義（沒有授權動作，只有查表）。
 
-**已修**：`packages/evidence` 定義 Fitness Evidence Model；決策 tool 接受 `evidence` 參數，回應帶 `provenance` 標明來源。demo seed 降為明確標示的本機 fallback。
+**已修**：`packages/evidence` 定義 Fitness Evidence Model；決策 tool 接受 `evidence` 參數，回應帶 `provenance` 標明來源。
+
+**2026-07-31 補完**：`evidence` 改為必填、`userId` 改為選填的回聲標籤，demo seed 從「沒帶證據時的 fallback」改成「明確指定才走」，且該旗標不在對外 schema 裡。起因是接上 Claude Desktop 實測：host 手上沒有健康資料來源，於是帶了 `userId`、沒帶 `evidence`，落進 demo fallback 後被 `assertUserId` 擋下，使用者看到的是 `Failed to call tool`。沒有證據不是錯誤，是對話還沒走到那一步——現在回 `isError` 的 `evidence_required`，列出要去拿什麼。
 
 ### ~~D2 — 沒有任何 tool 產出決策~~ ✅ 已修
 

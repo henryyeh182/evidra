@@ -57,11 +57,11 @@ test("the same call in a different timezone can land on a different day", async 
   }
 });
 
-test("the demo fallback anchors to the seed's own latest day and says so", async () => {
-  const response = await getSemanticFitnessState({ userId: "user_henry_demo" });
+test("the demo seed anchors to its own latest day and says so", async () => {
+  const response = await getSemanticFitnessState({ useDemoSeed: true });
   const payload = readPayload(response);
 
-  assert.equal(payload.provenance.evidenceSource, "demo_fallback");
+  assert.equal(payload.provenance.evidenceSource, "demo_seed");
   assert.equal(payload.date, payload.provenance.dateAnchoredTo);
   assert.match(payload.provenance.dateAnchorReason, /demo seed/);
 });

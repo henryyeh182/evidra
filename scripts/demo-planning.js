@@ -24,7 +24,7 @@ function printPlanSummary(plan) {
 const userId = "user_henry_demo";
 
 console.log("=== 1. Generate a 4-week plan ===");
-const plan = await callTool(1, "generate_plan", { userId, startDate: "2026-07-27", weeks: 4 });
+const plan = await callTool(1, "generate_plan", { useDemoSeed: true, userId, startDate: "2026-07-27", weeks: 4 });
 printPlanSummary(plan);
 
 console.log("\n=== 2. Preview a travel week (reduce week 1 to 25 min/day) ===");

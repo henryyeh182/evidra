@@ -49,6 +49,6 @@
     }
   },
   "required": [
-    "userId"
+    "evidence"
   ]
 }

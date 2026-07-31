@@ -7,7 +7,7 @@ import {
 } from "../../../packages/planning/src/index.js";
 import { loadDemoUserContext, loadExerciseCatalog, latestEvidenceDay } from "./demoData.js";
 import { loadKnowledgeBase } from "./knowledgeBase.js";
-import { jsonContent } from "./content.js";
+import { jsonContent, errorContent } from "./content.js";
 import { decideSession } from "../../../packages/decision-engine/src/index.js";
 import {
   computeTrainingLoad,
@@ -28,19 +28,39 @@ import {
   decideExerciseSubstitutionTool
 } from "./readToolHandlers.js";
 
-function assertUserId(context, userId) {
-  if (context.user.id !== userId) {
-    throw new Error(`Unknown demo user: ${userId}`);
-  }
-}
+/**
+ * What a caller has to send before any of this can compute anything.
+ *
+ * Listed rather than described so the answer to "what do I do now" is machine
+ * readable: a host that reads this knows which connectors to go and ask.
+ */
+const EVIDENCE_REQUIREMENTS = {
+  required: ["evidence"],
+  accepts: {
+    "evidence.healthMetrics":
+      "Recent readings — sleep_duration_hours, sleep_quality, hrv_ms, resting_hr_bpm, stress — each with value, recordedAt, source.",
+    "evidence.workouts":
+      "Completed sessions from the last 7-28 days with startedAt, durationMinutes, type, trainingLoad, muscleGroups.",
+    "evidence.profile": "timezone, fitnessLevel.",
+    "evidence.constraints": "injuries[], equipment[], availableMinutes, avoidMovements[]."
+  },
+  note:
+    "Any single source is enough to decide something: training load alone, or recovery signals alone. Whatever is absent is reported in signalCoverage and lowers confidence — it is never guessed."
+};
 
 /**
  * Resolve the context a call should reason over.
  *
  * The architecture has the AI layer hold the user's authorization and pass
- * evidence in as tool arguments, so inbound `evidence` always wins and nothing
- * is persisted. The demo seed remains only as a fallback for local runs, and
- * the caller is told which one was used rather than left to assume.
+ * evidence in as tool arguments, so `evidence` is the only production input and
+ * nothing is persisted. Returns null when there is nothing to reason over; the
+ * caller turns that into an answer rather than an exception, because "you have
+ * not sent me anything yet" is a state of the conversation, not a fault.
+ *
+ * The demo seed is reachable only by asking for it outright (`useDemoSeed`),
+ * and that flag is deliberately absent from the public tool schemas: seed data
+ * is another person's numbers, and it must not be able to reach a real user's
+ * answer by way of a silent fallback.
  *
  * Also resolves the day a call reasons about when the caller omits `date` — the
  * server owns that (P5), and it is a calendar day in the user's timezone, never
@@ -55,10 +75,14 @@ async function resolveContext(args) {
       provenance: { evidenceSource: "provided", ...describeEvidence(args.evidence) }
     };
   }
+
+  if (!args.useDemoSeed) {
+    return null;
+  }
+
   const context = await loadDemoUserContext({
     includeStravaFixture: Boolean(args.includeStravaFixture)
   });
-  assertUserId(context, args.userId);
 
   // The seed is a snapshot; answering it against the real calendar would only
   // measure how long ago it was written.
@@ -67,15 +91,31 @@ async function resolveContext(args) {
     context,
     defaultDate: seedDay || todayInTimezone(context.user.timezone),
     provenance: {
-      evidenceSource: "demo_fallback",
-      note: "No evidence was supplied; used the local demo seed. Production callers must pass evidence.",
+      evidenceSource: "demo_seed",
+      note: "Local demo seed, requested explicitly. Not a real user; never returned to production callers.",
       ...(seedDay ? { dateAnchoredTo: seedDay, dateAnchorReason: "most recent day in the demo seed" } : {})
     }
   };
 }
 
+/**
+ * The answer when a caller sent no evidence: not a decision, and honest about
+ * why there isn't one.
+ */
+function evidenceRequired(toolName) {
+  return errorContent({
+    error: "evidence_required",
+    tool: toolName,
+    message:
+      "No evidence was supplied, so there is nothing to compute. This server does not fetch, store, or invent health data — the caller passes it in.",
+    ...EVIDENCE_REQUIREMENTS
+  });
+}
+
 export async function getSemanticFitnessState(args = {}) {
-  const { context, provenance, defaultDate } = await resolveContext(args);
+  const resolved = await resolveContext(args);
+  if (!resolved) return evidenceRequired("assess_fitness_state");
+  const { context, provenance, defaultDate } = resolved;
 
   const date = args.date || defaultDate;
   const state = generateSemanticFitnessState(context, { date, timezone: context.user.timezone });
@@ -109,7 +149,6 @@ export async function recommendTodayWorkout(args = {}) {
   const context = await loadDemoUserContext({
     includeStravaFixture: Boolean(args.includeStravaFixture)
   });
-  assertUserId(context, args.userId);
 
   // Deprecated, and demo-seed only: anchor to the seed's own latest day.
   const state = generateSemanticFitnessState(context, {
@@ -135,7 +174,6 @@ export async function getTrainingContext(args = {}) {
   const context = await loadDemoUserContext({
     includeStravaFixture: Boolean(args.includeStravaFixture)
   });
-  assertUserId(context, args.userId);
 
   const exercises = await loadExerciseCatalog();
 
@@ -197,7 +235,9 @@ async function goalAlternativeLookup() {
 }
 
 export async function generateTrainingPlanTool(args = {}) {
-  const { context } = await resolveContext(args);
+  const resolved = await resolveContext(args);
+  if (!resolved) return evidenceRequired("generate_plan");
+  const { context } = resolved;
   const { displayNameFor } = await exerciseNaming();
   const findGoalAlternative = await goalAlternativeLookup();
 
@@ -285,7 +325,9 @@ export const toolHandlers = {
  * rather than inventing a suggestion.
  */
 export async function decideSessionTool(args = {}) {
-  const { context, provenance, defaultDate } = await resolveContext(args);
+  const resolved = await resolveContext(args);
+  if (!resolved) return evidenceRequired("decide_session");
+  const { context, provenance, defaultDate } = resolved;
 
   const date = args.date || defaultDate;
   const state = generateSemanticFitnessState(context, {

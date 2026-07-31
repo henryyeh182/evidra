@@ -56,7 +56,7 @@ test("MCP server calls assess_fitness_state", async () => {
       params: {
         name: "assess_fitness_state",
         arguments: {
-          userId: "user_henry_demo",
+          useDemoSeed: true,
           date: "2026-07-23",
           includeStravaFixture: true
         }
@@ -69,7 +69,7 @@ test("MCP server calls assess_fitness_state", async () => {
   assert.equal(payload.recommendedFocus, "Low-impact Zone 2 cardio + lower body mobility");
   assert.equal(payload.readinessScore, 67);
   assert.ok(payload.reasoning.some((line) => line.includes("Leg fatigue is elevated")));
-  assert.equal(payload.provenance.evidenceSource, "demo_fallback");
+  assert.equal(payload.provenance.evidenceSource, "demo_seed");
 });
 
 test("MCP server still routes a deprecated tool alias to its canonical handler", async () => {
@@ -80,7 +80,7 @@ test("MCP server still routes a deprecated tool alias to its canonical handler",
       method: "tools/call",
       params: {
         name: "recommend_today_workout", // deprecated alias for recommend_workout
-        arguments: { userId: "user_henry_demo", date: "2026-07-23" }
+        arguments: { useDemoSeed: true, date: "2026-07-23" }
       }
     })
   );
@@ -100,7 +100,7 @@ async function callTool(id, name, args) {
 
 test("MCP server runs the generate -> preview -> commit planning flow", async () => {
   const plan = await callTool(10, "generate_plan", {
-    userId: "user_henry_demo",
+    useDemoSeed: true,
     startDate: "2026-07-27",
     weeks: 4
   });

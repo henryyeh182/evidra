@@ -84,7 +84,15 @@ async function callTool(tool, args) {
     return { ok: false, error: response.error };
   }
   const text = response.result?.content?.[0]?.text;
-  return { ok: true, payload: JSON.parse(text) };
+  const payload = JSON.parse(text);
+
+  // A result carrying `isError` is the tool saying it could not answer. It is a
+  // failed call as far as a golden case is concerned, even though the protocol
+  // carried it as a result — otherwise "I need evidence" would score as a pass.
+  if (response.result?.isError) {
+    return { ok: false, error: { message: payload.message || payload.error }, payload };
+  }
+  return { ok: true, payload };
 }
 
 // ---- runner --------------------------------------------------------------

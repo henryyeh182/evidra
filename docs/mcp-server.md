@@ -36,6 +36,15 @@ Six tools, all of which either return a decision or transform caller-held plan
 state. The server does not retain plans or previews. See the [Design
 Manifesto](design-manifesto.md) for why the surface is this small.
 
+`evidence` is the required argument on every decision tool; `userId` is an
+optional label the server echoes back and never computes on. A call that
+arrives without evidence gets a tool result carrying `isError` and an
+`evidence_required` payload naming what to go and fetch — not a JSON-RPC error,
+so the host reads it and acts rather than showing the user a failed tool call.
+The local demo seed is reachable only by asking for it outright and is absent
+from the public schemas: it is another person's numbers and must never reach a
+real caller's answer by way of a silent fallback.
+
 ### `assess_fitness_state` — read-only
 
 Recovery, readiness, and fatigue verdicts, plus training load (ATL/CTL/TSB),
