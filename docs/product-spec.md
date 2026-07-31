@@ -101,6 +101,7 @@ User device / private gateway / private VPC
   ├─ source connectors
   ├─ packages/evidence
   ├─ packages/semantic-engine
+  ├─ packages/db          ← 持久化只存在於這裡
   ├─ decision computation
   └─ local/private MCP server
         │ 只回傳最小化 Decision 結果
@@ -110,6 +111,50 @@ Claude / ChatGPT / internal AI host
 
 這個做法可以理解成：**MCP 不再是遠端資料處理中心，而是安裝在使用者控制的
 環境裡的 local data plane。**
+
+#### 持久化（`packages/db`）只能存在於 Phase 2
+
+Phase 1 的界線明文禁止「把 raw Evidence 寫入 database、file、object storage、queue
+或 analytics」。而 `packages/db` 的 schema 做的正是這件事：
+
+| 表 | 存什麼 |
+|---|---|
+| `raw_provider_events` | provider 的原始 payload（`payload JSONB`） |
+| `normalized_events` | 正規化後的事件 |
+| `health_metrics` | HRV · 睡眠 · 靜息心率 · 壓力 |
+| `workouts` | 完成的訓練紀錄 |
+| `semantic_fitness_states` | 每日 recovery／readiness／fatigue／ACWR |
+| `users`／`goals`／`preferences`／`injuries`／`equipment` | 個人設定與限制 |
+| `connector_accounts` | 授權狀態與 scope（**不存 token**） |
+
+**這些表在 hosted service 裡一張都不能建。** 它們合法的唯一位置是使用者控制的環境
+——那裡「保存」的對象是使用者自己的機器，儲存與刪除都由使用者決定。
+
+因此：
+
+- **Phase 1 hosted 永遠無狀態。** 計畫與決策紀錄由呼叫端持有並隨每次呼叫傳入
+  （`get_plan`／`preview_adjust_plan`／`commit_adjust_plan` 現況已是如此）。
+- **Phase 2 才有持久層。** 這是「計畫是決策的基底」第一次有地方落腳。
+- Phase 2 有持久層不代表使用者或企業環境不需要自己的存取控制、加密、保留與刪除政策。
+
+#### 決策紀錄：我們不留，呼叫端保存（2026-07-31 使用者確認）
+
+「狀態 → 決策 → 結果」三元組 **hosted service 不保存**，由呼叫端持有，並可作為證據回傳。
+Phase 2 只是讓「呼叫端」多了一個選擇：
+
+| 部署 | 呼叫端＝誰 | 三元組存在哪 |
+|---|---|---|
+| Phase 1 hosted | AI host | host 的記憶 |
+| Phase 2 | 使用者控制的環境 | 使用者自己的 `packages/db` |
+
+**兩種情況下 hosted service 都不留。** 我們這端的學習發生在**引擎規則與知識圖譜**
+（跨使用者的通則），不在個人資料。
+
+代價要講清楚：Phase 1 這條路徑的可靠度取決於 AI host 的記憶，不是我們能保證的。
+沒有 Phase 2 環境的使用者（例如只接 Strava 的跑者）就只有這條路。
+
+**還沒做的**：`packages/db/schema.md` 把 plan 與 planned workout 列在 Future Migrations。
+Phase 2 有地方放，但表還沒建。
 
 **Phase 2 是核心宗旨要的那個版本**——只有它能做到「Claude 也看不見完整原始健康資料」。
 
@@ -158,7 +203,7 @@ Claude / ChatGPT / internal AI host
 | 傳輸 | stdio ✅ · Streamable HTTP ✅ |
 | OAuth | 只做了「檢查 token」那一半；**簽章驗證器沒填、`serve:http` 沒接線、沒有 authorization server** → 遠端連不起來 |
 | 協定版本 | 停在 `2025-06-18`；最新規格是 `2026-07-28`（stateless） |
-| Phase 2 | **一行程式都沒有** |
+| Phase 2 | **一行程式都沒有**。`packages/db` 有 schema 與 11 張表，但 `FitnessRepository` 全是未實作的抽象，沒有任何 runtime 程式 import 它 |
 
 ## 9. 要做什麼
 
@@ -172,8 +217,11 @@ Claude / ChatGPT / internal AI host
 
 ### Phase 2：local / private engine
 
-- 把 source connectors、`packages/evidence`、`packages/semantic-engine`、decision computation
-  綁成 local bundle 或 Docker image
+- 把 source connectors、`packages/evidence`、`packages/semantic-engine`、`packages/db`、
+  decision computation 綁成 local bundle 或 Docker image
+- 接上 `packages/db`：`FitnessRepository` 目前每個方法都 `throw "must be implemented"`，
+  需要一個具體 adapter（Postgres／SQLite），且只在使用者環境裡跑
+- 補 plan 與 planned workout 的 migration——決策的基底目前沒有表可以放
 - local stdio 給個人電腦，private HTTP 給 NAS／企業 VPC
 - **手機情境要解的那一段**：手機上的 Claude 怎麼連到使用者家裡的 local engine。
   MCP 官方的 **tunnels**（2026-07-28 隨新規格推出）正是為此——內部工具不需要公開端點、

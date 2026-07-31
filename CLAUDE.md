@@ -54,10 +54,18 @@ Decision 與 Action 必須分開：同一意圖在不同器材／時間／傷病
 
 - **Phase 1（hosted）**：短暫處理最小化 Evidence，不持久化、不保管、不二次利用；
   不直接連資料供應商、不持有來源 OAuth refresh token；log／trace 遮蔽 payload、token 與健康欄位。
-- **Phase 2（user-controlled）**：connectors、`packages/evidence`、`packages/semantic-engine`
-  與 decision computation 全在使用者控制的環境跑。MCP 變成 local data plane。
+- **Phase 2（user-controlled）**：connectors、`packages/evidence`、`packages/semantic-engine`、
+  `packages/db` 與 decision computation 全在使用者控制的環境跑。MCP 變成 local data plane。
 
 **Phase 2 是核心宗旨要的那個版本，不是選配。** 排序依核心宗旨，不依 Phase 編號。
+
+**持久化只能存在於 Phase 2。** `packages/db` 會寫入 provider 原始 payload、HRV／睡眠、
+每日狀態——Phase 1 界線禁止把 raw Evidence 寫進 database，所以那些表在 hosted 一張都不能建。
+**Phase 1 hosted 永遠無狀態**，計畫由呼叫端持有並隨呼叫傳入。
+
+**決策紀錄我們不留**（2026-07-31 使用者確認）：「狀態→決策→結果」三元組由呼叫端保存，
+可作為證據回傳。Phase 1 存在 AI host 的記憶，Phase 2 存在使用者自己的 `packages/db`
+——**兩種情況 hosted 都不留**。我們這端的學習在引擎規則與知識圖譜，不在個人資料。
 
 ## 工具准入判準（GPT-6 Test）
 
@@ -122,8 +130,8 @@ Decision 與 Action 必須分開：同一意圖在不同器材／時間／傷病
 
 ## 未決（不得自行改寫）
 
-- **計畫狀態存在哪**：`planStore.js` 已改為無狀態驗證器，`packages/db` schema 未接 runtime。
-  「決策的基底」目前不存在於任何地方。**使用者已指定另開 session 討論。**
+- **計畫的表還沒做**：持久化位置已定（Phase 2），但 plan 與 planned workout 的 migration
+  列在 `packages/db/schema.md` 的 Future Migrations，還沒寫。
 - **計價單位**：成本隨人數變動，不隨呼叫次數。按次計價與成本錯配。
 
 ## 常用指令

@@ -1,6 +1,16 @@
 # Database Schema
 
-This package contains the first PostgreSQL schema for Phase 1.
+**This schema belongs to Phase 2 — the user-controlled private engine. It must never
+run inside the hosted service.**
+
+`raw_provider_events` stores provider payloads verbatim, and `health_metrics` stores
+HRV, sleep, and resting heart rate. The Phase 1 hosted boundary forbids writing raw
+Evidence to a database, file, object storage, queue, or analytics — so none of these
+tables may exist there. Their only lawful home is an environment the user controls,
+where storage, retention, and deletion are the user's own decisions.
+
+Phase 1 hosted stays stateless: the caller holds the plan and passes it in with every
+request (`get_plan` / `preview_adjust_plan` / `commit_adjust_plan` already work this way).
 
 The schema intentionally models the core semantic pipeline before adding an ORM:
 
@@ -25,7 +35,7 @@ users
 
 ## Why JSONB Exists Here
 
-Some fields are intentionally `JSONB` in Phase 1:
+Some fields are intentionally `JSONB` for now:
 
 - Preference values can be strings, numbers, booleans, or arrays.
 - Injury restrictions are a list of semantic constraints.
@@ -36,9 +46,15 @@ These fields can be normalized later if query patterns demand it.
 
 ## Future Migrations
 
-- Add plan and planned workout tables.
+- **Add plan and planned workout tables.** A decision is a change to an existing plan
+  (`from → to`), so the plan is the substrate every decision is made against. Until
+  these tables exist, Phase 2 has a place to keep it but nothing built to keep it in.
 - Add exercise prescription tables.
 - Add audit logs and consent records.
+
+The state → decision → outcome triple is **not** stored here on our behalf. The caller
+keeps it and may pass it back as evidence; in Phase 2 the caller is the user's own
+environment, so these tables are where it would live — owned by the user, not by us.
 
 ## Connector Events
 

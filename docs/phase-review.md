@@ -41,7 +41,7 @@ npm run review:phase
 | G4 | 五種決策型別在引擎／契約／user-journey 三處一致 | Decision ≠ Recommendation |
 | G5 | 有 parser 的來源，registry／source schema／scenario 都在 | schemas/README 自訂規則 |
 | G6 | runtime 沒有寫死的日曆日 | P5 |
-| G7 | 系統內沒有 LLM，也不落地健康資料 | D-LLM · D-DATA |
+| G7 | 系統內沒有 LLM；hosted runtime 不落地健康資料（`packages/db` 例外——它屬於 Phase 2 的使用者環境） | D-LLM · D-DATA |
 
 再跑既有的三支（它們守的是品質不是定位）：
 

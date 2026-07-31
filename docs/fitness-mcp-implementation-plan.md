@@ -527,7 +527,7 @@ Phase 9 不在主軸上；它唯一的作用是給 7.1 的 authorization server 
 
 | 產出 | 內容 |
 |---|---|
-| ATL / CTL / TSB | 指數移動平均，由傳入證據中的 workouts 現算（不落地，符合 D-DATA） |
+| ATL / CTL / TSB | 指數移動平均，由傳入證據中的 workouts 現算（hosted 不落地，符合 D-DATA） |
 | ACWR ramp-rate | 急慢性負荷比，作為升載安全閥 |
 | 負荷分區 | `LOAD_ZONES`，資料不足時回 `insufficient_history` 而非猜一個分區 |
 | **detraining 獨立軸線** | 見下 |
@@ -551,7 +551,8 @@ Phase 9 不在主軸上；它唯一的作用是給 7.1 的 authorization server 
 `toolHandlers` 注入 semantic-engine 的 `options.baselines`。`DEFAULT_BASELINES`
 （含原本的 `hrvMs: 52`）降為**證據不足時的 fallback**，不再是唯一來源。
 
-> 與 D-DATA 一致：基線是**每次呼叫現算**的，我們這端不保存任何人的基線。
+> 與 D-DATA 一致：基線是**每次呼叫現算**的，**hosted service 不保存任何人的基線**。
+> Phase 2 若要把基線落地，那是使用者控制環境裡的事，不改變 hosted 這一側。
 
 #### ✅ 4.3 知識圖譜語意關係 — 已完成
 
@@ -812,16 +813,15 @@ epoch timestamp 寫成兩份匯出，正規化後必須產生**完全相同**的
 
 ### Phase 6 — Feedback Learning（護城河 #4）
 
-> 🔴 **與宣言衝突，未結（v6 標記，本文件暫不改）。**
-> 宣言 L55：「Feedback Learning 需保存狀態→決策→結果三元組——那是決策紀錄，非原始健康
-> 資料，符合資料主權界線」。本節寫的是相反的。**宣言位階最高，所以要改的是計畫。**
-> 但使用者已指定此項**另開新 session 討論**（牽動 MCP session 機制），因此 v6 只標記衝突、
-> 不擅自改寫下面的內容。見「待決事項」。
+> ✅ **已結（2026-07-31 使用者確認）。** 依 [product spec](product-spec.md) §5。
 
-> ⚠️ 受 D-DATA「不保存」約束，閉環設計需重新定義：**我們這端不留三元組**。
+**hosted service 不保存三元組，由呼叫端保存。**
+
 - 「狀態→決策→結果」由**呼叫端**保存，並可作為證據回傳
+- 「呼叫端」在兩種部署下是不同的角色：Phase 1 是 **AI host 的記憶**，
+  Phase 2 是**使用者控制環境裡的 `packages/db`**。兩者都不是 hosted service
 - 我們這端的學習發生在**引擎規則與知識圖譜**（跨使用者的通則），不在個人資料
-- **驗收**：規則能依回傳的結果證據調整，且不需保存任何個人紀錄
+- **驗收**：規則能依回傳的結果證據調整，且 hosted service 不保存任何個人紀錄
 
 ### Phase 7 — Multi-LLM Interface（護城河 #5）🟡 部分完成
 
@@ -903,7 +903,7 @@ authorization server，等於一上線就走在 deprecated 路徑上。**
 **連上的人數** 與 **呼叫次數**。Anthropic 目錄上架後會提供 server health 與 usage metrics，
 這兩個數字平台會給，不必自建。
 
-> **計量不違反 D-DATA。** 要保存的是 `userId · 時間 · tool 名 · 次數`，不含任何健康資料。
+> **計量不違反 D-DATA。** hosted 要保存的是 `userId · 時間 · tool 名 · 次數`，不含任何健康資料。
 > 這條界線要守住——不能因為「已經有 metering 表了」就開始往裡面放別的東西。
 
 #### 上架給的是分發，不是金流
@@ -938,7 +938,7 @@ authorization server，等於一上線就走在 deprecated 路徑上。**
 | 10 | **測試帳號＋範例資料**，資料要夠完整讓審查者跑完每個 tool | ❌ 未備 |
 | 11 | 三組可運作的範例 prompt | ❌ 未寫 |
 | 12 | 自行用 MCP Inspector ＋ Claude custom connector 跑過每個 tool | ❌ 未做 |
-| 13 | Data handling 一欄須申報**是否處理個人健康資料** | 🟡 **要據實申報**。我們不保存（D-DATA），但證據確實經手，申報要照實寫 |
+| 13 | Data handling 一欄須申報**是否處理個人健康資料** | 🟡 **要據實申報**。上架的是 hosted service：它不保存（D-DATA），但證據確實經手。照 [product spec](product-spec.md) §6 的正式 wording 寫——「只處理呼叫端送進來的最小化健康證據，不留存、不販售、不訓練、不作無關用途」，**不得寫成「完全不碰健康資料」** |
 | 14 | 七項 compliance 聲明（含 prompt injection、對話資料蒐集、first-party API） | 🟡 D-DATA／D-EVIDENCE 對我們有利，但要逐條對答案 |
 
 > **政策面對我們無阻礙的部分**：禁止金流、禁止 AI 生成影音、禁止廣告——三條都與我們無關。
@@ -1071,7 +1071,7 @@ CIMD 那個決定要在 Phase 7 就下對。
 |---|---|
 | **D-POSITION** | Permissioned Fitness Decision Engine，不做 App／社群／內容庫 |
 | **D-EVIDENCE** | 證據由 AI 那層經 tool call 傳入；**我們不 fetch、不持有原始資料** |
-| **D-DATA** | 我們**自身不保存**；負荷曲線／基線／決策紀錄由 **AI agent 記憶並可回溯**。長期指標由傳入證據現算後回傳 |
+| **D-DATA**（2026-07-31 修訂） | **hosted service 不保存任何個人資料；Phase 2 的持久層在使用者控制的環境裡。** 長期指標（負荷曲線、基線）一律由傳入證據現算後回傳，hosted 不落地。計畫與決策紀錄由**呼叫端**保存：Phase 1 是 AI agent 的記憶，Phase 2 是使用者自己的 `packages/db`。**兩者都不是 hosted service**——`raw_provider_events`、`health_metrics`、`semantic_fitness_states` 這類表在 hosted 一張都不能建。舊版寫「我們自身不保存」，那句話在 Phase 2 落地後會讀成「使用者也不能存」，與 [product spec](product-spec.md) §5 衝突 |
 | **D-LLM** | **管的是「模型在誰家」，不是「有沒有模型」。** 禁的只有一件事：**我們自己的程式不呼叫模型來產生決策**（為了確定性、可稽核、換模型不受影響、零外部 API 成本）。**模型是前提不是選配**——聽懂使用者的話、湊齊各 connector 的證據、決定呼叫哪個 tool、把結構化決策講成人話，全是 host 在做。沒有模型就得做 App（介面、手動輸入、自建資料管線），原則 4「不做 UI、不搶對話」就是靠 host 才成立。**因此「呼叫模型 API＝違反 D-LLM」是誤讀**，見 4.5-B2 |
 | **D-NUTRITION** | 從架構圖移除，暫不提供營養決策 |
 | **D-TOOL** | **14 → 6**，依 GPT-6 判準；砍端點不砍能力（已執行）|

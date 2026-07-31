@@ -142,10 +142,26 @@ hosted MCP 會短暫處理最小化 Evidence，但不持久化、不保管、不
 
 ### Phase 2：User-controlled private engine
 
-source connectors、`packages/evidence`、`packages/semantic-engine` 與 decision computation
-全部在使用者控制的環境執行，hosted service 不接觸 raw health Evidence。
+source connectors、`packages/evidence`、`packages/semantic-engine`、`packages/db` 與
+decision computation 全部在使用者控制的環境執行，hosted service 不接觸 raw health Evidence。
 
 **MCP 不再是遠端資料處理中心，而是安裝在使用者控制的環境裡的 local data plane。**
+
+**持久化只存在於 Phase 2。** `packages/db` 的 schema 會寫入 provider 原始 payload
+（`raw_provider_events`）、HRV／睡眠／靜息心率（`health_metrics`）與每日狀態
+（`semantic_fitness_states`）——這些表在 hosted service 裡一張都不能建，因為 Phase 1
+界線禁止把 raw Evidence 寫入 database。它們合法的唯一位置是使用者自己的機器。
+
+因此 **Phase 1 hosted 永遠無狀態**：計畫與決策紀錄由呼叫端持有並隨每次呼叫傳入。
+**Phase 2 才有持久層**，那是「計畫是決策的基底」第一次有地方落腳。
+
+### 決策紀錄：我們不留（2026-07-31 使用者確認）
+
+「狀態 → 決策 → 結果」三元組 **hosted service 不保存**，由呼叫端持有並可作為證據回傳。
+Phase 2 只是讓「呼叫端」多一個選擇——Phase 1 是 AI host 的記憶，Phase 2 是使用者
+自己控制的 `packages/db`。**兩種情況 hosted service 都不留。**
+
+我們這端的學習發生在**引擎規則與知識圖譜**（跨使用者的通則），不在個人資料。
 
 **Phase 2 是核心宗旨要的那個版本**——只有它能做到「Claude 也看不見完整原始健康資料」。
 它不是高隱私情境的選配，是主線。
@@ -166,7 +182,7 @@ source connectors、`packages/evidence`、`packages/semantic-engine` 與 decisio
 
 | 題目 | 狀況 |
 |---|---|
-| **計畫狀態存在哪** | `planStore.js` 已於 `1d28ba6` 改為無狀態驗證器，`packages/db` schema 未接 runtime。**「決策的基底」目前不存在於任何地方。** 使用者已指定另開 session 討論 |
+| **計畫的表還沒做** | 持久化的位置已定（Phase 2，見上節），但 `packages/db/schema.md` 把 plan 與 planned workout 列在 Future Migrations，還沒寫。**Phase 2 有地方放，東西還沒做出來** |
 | **計價單位** | 成本隨**人數**變動（authorization server 按月活躍使用者計費），不隨呼叫次數（單次決策 0.443ms、零次外部 API 呼叫）。按次計價與成本錯配，未決 |
 
 ## 明確不做

@@ -79,9 +79,13 @@ Claude / ChatGPT
 不持久化、不保管、不二次利用；不直接連資料供應商、不持有來源 OAuth refresh token。
 
 **Phase 2 — User-controlled private engine**：source connectors、`packages/evidence`、
-`packages/semantic-engine` 與 decision computation 全部在使用者控制的環境執行，
+`packages/semantic-engine`、`packages/db` 與 decision computation 全部在使用者控制的環境執行，
 hosted service 不接觸 raw health Evidence。**MCP 從遠端資料處理中心變成
 安裝在使用者環境裡的 local data plane。**
+
+**持久化只存在於 Phase 2。** `packages/db` 會寫入 provider 原始 payload、HRV／睡眠、
+每日狀態——Phase 1 界線禁止把 raw Evidence 寫進 database，那些表在 hosted 一張都不能建。
+所以 Phase 1 hosted 永遠無狀態，計畫由呼叫端持有並隨每次呼叫傳入；Phase 2 才有持久層。
 
 Phase 2 是核心宗旨要的那個版本，不是選配。兩種模式共用同一套 domain packages。
 
