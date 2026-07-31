@@ -29,7 +29,7 @@ printPlanSummary(plan);
 
 console.log("\n=== 2. Preview a travel week (reduce week 1 to 25 min/day) ===");
 const preview = await callTool(2, "preview_adjust_plan", {
-  planId: plan.id,
+  plan,
   changeRequest: { kind: "reduce_availability", weekdayAvailableMinutes: 25, weekIndexes: [1], reason: "Business travel" }
 });
 console.log(preview.summary);
@@ -38,7 +38,11 @@ for (const entry of preview.diff) {
 }
 
 console.log("\n=== 3. Commit the change ===");
-const committed = await callTool(3, "commit_adjust_plan", { previewId: preview.previewId });
-console.log(`Committed plan is now version ${committed.version}.`);
-console.log(`Version history: ${committed.versionHistory.map((entry) => `v${entry.version}(${entry.weekdayAvailableMinutes}m)`).join(", ")}`);
+// The caller holds both the plan and the patch — the server keeps neither.
+const committed = await callTool(3, "commit_adjust_plan", { plan, preview: preview.patch });
+console.log(`Committed plan is now version ${committed.version} (${committed.status}).`);
+console.log(
+  `Weekday availability: v${plan.version} ${plan.constraints.weekdayAvailableMinutes}m` +
+    ` → v${committed.version} ${committed.plan.constraints.weekdayAvailableMinutes}m`
+);
 printPlanSummary(committed.plan);
