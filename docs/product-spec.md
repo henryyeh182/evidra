@@ -248,8 +248,12 @@ Phase 2 有地方放，但表還沒建。
 - connector directory 需要的：OAuth、privacy URL、support、測試帳號、範例 prompts
 - 合規：GDPR controller/processor 角色、DPA、DPIA、資料主體權利流程、retention、
   跨境傳輸、subprocessor、非醫療診斷聲明、incident response、token rotation
-- 計價：實測單次決策 0.443ms、零次外部 API 呼叫，成本隨**人數**變動
-  （authorization server 按月活躍使用者計費），不隨呼叫次數。**按次計價與成本錯配，未決。**
+- 計價：**暫定按月活躍使用者（per-MAU）**（2026-07-31 決定）。實測單次決策 0.443ms、
+  零次外部 API 呼叫，成本隨**人數**變動（authorization server 按月活躍使用者計費），
+  不隨呼叫次數；按次計價會與成本錯配，也會讓使用者省著問。
+  **定案條件**：Claude／Codex 出明確的 MCP server 商業與計價文件後回頭定。
+- 當前重點：**先把產品備齊，找到一個能上架的平台**，讓使用者用自己的 AI 工具串接。
+  商業模式採哪一種有利、哪一種快，尚未決定——不拿未定的商業模式去推導技術決策。
 - 商業模式方向（使用者 2026-07-30 提出）：decision API／MCP usage pricing · marketplace 分潤 ·
   B2B license 給 AI coach app · wearable／health-data 平台授權 · enterprise wellness
 

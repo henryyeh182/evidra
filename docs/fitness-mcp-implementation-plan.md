@@ -489,7 +489,7 @@ canonical evidence**（方言等價，見 Phase 5）。這一條做不到，多�
 | 5 多來源正規化 | 🟡 進行中 | 3/6 來源有解析器（Apple Health／Garmin／Strava，Strava 兩種方言）；心率區間分佈 | 其餘 3 家（Oura／Whoop／Google Health Connect）只有 registry 宣告；**G5 紅**：Apple Health 與 Strava 缺 source schema 與 scenario（4/4 只做到 2/4） |
 | 6 Feedback Learning | 🔴 未開始 | — | 全部。**且與宣言衝突未解**，使用者指定另開 session 討論（4.5-B1） |
 | 7 Multi-LLM Interface | 🟡 部分完成 | stdio；Streamable HTTP；OAuth 資源伺服器那一半 | 7.1 三缺口（簽章驗證器空著／進入點沒接線／沒有 authorization server）；7.2 公開部署；REST API；SDK |
-| 8 商業化 | 🔴 未開始 | 成本已實測；上架清單已查證 | 14 項上架前置只有 icon ✅、tool annotations ✅；計價單位未定（4.5-A2） |
+| 8 商業化 | 🔴 未開始 | 成本已實測；上架清單已查證；**計價單位暫定 per-MAU（2026-07-31）** | 14 項上架前置只有 icon ✅、tool annotations ✅；計價定案待 Claude／Codex 的 MCP server 商業文件 |
 | 9 協定升級 2026-07-28 | 🔴 未開始（v6 新增） | — | 全部。做法已定：dual-era |
 
 **下一步的順序由 user journey 決定，不由 Phase 編號決定**（見 3.5「開發主軸」）：
@@ -872,7 +872,11 @@ authorization server，等於一上線就走在 deprecated 路徑上。**
 
 - Marketplace 上架（商品名 **Fitness Decision Engine**）
 - 責任邊界條款：非醫療用途
-- 計價單位：**未定**——原本寫死「＝decision tool 呼叫」，量測後發現與成本結構不符，見下
+- 計價單位：**暫定 per-MAU（按月活躍使用者）**，2026-07-31 使用者決定。
+  原本寫死「＝decision tool 呼叫」，量測後發現與成本結構不符（見下），改為與成本同軸。
+  **定案條件**：Claude／Codex 出明確的 MCP server 商業與計價文件後回頭定。
+- 當前重點：先把產品備齊、找到一個能上架的平台，讓使用者用自己的 AI 工具串接。
+  採哪一種商業模式較有利／較快，尚未決定
 
 #### 一次決策的實際成本（實測，非估計）
 
@@ -1020,23 +1024,23 @@ CIMD 那個決定要在 Phase 7 就下對。
 > 來源：2026-07-30 工作紀錄。列在這裡是因為**沒有任何 gate 抓得到它們**——
 > `npm run review:phase` 九條 gate 全綠也不代表這些消失了。
 
-### A. 要使用者決定的四項
+### A. 要使用者決定的（A2 已於 2026-07-31 結案）
 
 | # | 事項 | 卡在哪 |
 |---|---|---|
 | A1 | **Authorization server 選哪家**（Auth0／WorkOS／Clerk／自建） | resource server 已寫好，沒有 AS 就無法端到端。**v6 已給出硬判準：必須支援 CIMD**（見 D-REGISTRATION），這條先前沒有 |
-| A2 | **計價單位** | 宣言 L184「商業單位 = Decision Tools」vs 實測成本隨人數（per-MAU）。兩者要對齊，Phase 8 現在寫「未定」 |
+| ~~A2~~ | ~~**計價單位**~~ | ✅ **已決（2026-07-31）：暫定 per-MAU**，與實測成本同軸。宣言舊句「商業單位 = Decision Tools」已於宣言改寫時移除，衝突消失。定案條件：Claude／Codex 出明確的 MCP server 商業與計價文件 |
 | A3 | **max HR 171 是年齡估計**（220−49） | 資料裡觀察到的最高 150，但那 7 筆全是穩態有氧，是下限不是上限。維持估計值、還是做一次最大努力測試 |
 | A5 | **理由句子由誰組**——核心概念（3.5）說語言那層是 Claude 的；引擎現在自己寫中文模板句。要不要改成只回結構化數值與觸發的規則 | 影響 `decideSession.js` 全部 `reason.push(...)`、schema 契約、G3 gate |
 | A4 | **四個 tool 要不要改名**（`decide_session` → `decide_training_session` 等，牽動 6 處） | 判準是「遮住 connector 名稱後看不看得出是健身領域」，四個沒過。`deprecatedToolAliases` 已在，改名不會斷既有呼叫端 |
 
-### B. 計畫與宣言衝突三處（宣言位階最高 → 要改的是計畫）
+### B. 計畫與宣言衝突（B1、B3 已於 2026-07-31 結案；B2 仍未決）
 
 | # | 宣言 | 計畫現況 | 狀態 |
 |---|---|---|---|
-| B1 | L55 需保存「狀態→決策→結果」三元組（決策紀錄非原始健康資料） | Phase 6「我們這端不留三元組」 | 🔴 **另開 session 討論**，v6 只標記 |
+| ~~B1~~ | ~~L55 需保存「狀態→決策→結果」三元組~~ | Phase 6「我們這端不留三元組」 | ✅ **已結（2026-07-31）**：宣言 L55 已於改寫時移除，使用者確認採 Phase 6 的寫法。呼叫端保存——Phase 1 是 AI host，Phase 2 是使用者環境的 `packages/db` |
 | B2 | **宣言內部先自相矛盾**：L40「模型無關——換模型、新模型出現，我們不受影響」vs L188 第一里程碑「證明沒有這個 MCP，Claude／ChatGPT 的 fitness decision quality 會明顯下降」 | D5 取消評測，理由二「呼叫 LLM API 違反 D-LLM」 | 🔴 **要改的是宣言，不是計畫。** 理由二不成立，而且錯兩層：①L42 明文例外——開發期評測是開發工具；②**更根本的是誤讀 D-LLM**——它管的是模型在誰家，不是碰到模型就違規。**整個產品本來就跑在模型上面**，開發時呼叫一次模型 API 與它無關 → 撤掉。但**理由一（測的是模型不是產品）在 v6 更強了**，見 R1。若模型無關成立，「這個模型少了我們會差多少」就不是關於我們的量測——**L188 是否該改，只有使用者能決定，不得自行改宣言** |
-| B3 | L184「商業單位 = Decision Tools，工具面的定義就是商業模型的定義」 | Phase 8 計價單位改「未定」 | 🟡 同 A2 |
+| ~~B3~~ | ~~L184「商業單位 = Decision Tools」~~ | Phase 8 計價單位 = per-MAU | ✅ **已結**，同 A2。該句已從宣言移除 |
 
 ### C. 未結的技術債
 
