@@ -56,8 +56,11 @@ if (args.json) {
       `parsed       ${counts.workouts} workouts · ${counts.healthMetrics} metrics · ` +
         `${counts.vendorAssessments} vendor assessments`
     );
-    console.log(`signals      read:    ${state.signalCoverage.usable.join(", ") || "(none)"}`);
-    console.log(`             missing: ${state.signalCoverage.missing.join(", ") || "(none)"}`);
+    const list = (values) => values.join(", ") || "(none)";
+    console.log(`recovery     read:    ${list(state.signalCoverage.recovery.usable)}`);
+    console.log(`             missing: ${list(state.signalCoverage.recovery.missing)}`);
+    console.log(`training     read:    ${list(state.signalCoverage.training.usable)}`);
+    console.log(`             missing: ${list(state.signalCoverage.training.missing)}`);
 
     const { from, to } = decision.action;
     console.log(

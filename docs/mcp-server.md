@@ -84,10 +84,27 @@ Returns the five-layer decision:
     "At moderate intensity the session is no longer \"Tempo Run\"; it becomes \"Moderate run\"."
   ],
   "confidence": "medium",
-  "signalCoverage": { "usable": ["hrv"], "missing": ["sleep"] },
-  "limits": ["No sleep signal was available, so confidence is lowered."]
+  "signalCoverage": {
+    "recovery": { "usable": ["hrv"], "missing": ["sleep"] },
+    "training": { "usable": [], "missing": ["trainingLoad"] }
+  },
+  "limits": [
+    "No sleep signal was available, so confidence is lowered.",
+    "Some sessions in the last 7 days carry no training load, so muscle fatigue is read from an incomplete week."
+  ]
 }
 ```
+
+`signalCoverage` is split in two because the gaps are different in kind:
+`recovery` is about how fresh today's sleep/HRV/resting-HR/stress readings are,
+`training` about whether every session in the last 7 days carried a training
+load. A session without one is left out of muscle fatigue rather than counted as
+zero, and `training.missing` is how the caller learns that happened.
+
+The load is the vendor's own effort figure — Garmin's `activityTrainingLoad`,
+Strava's Relative Effort, Apple Health's active energy — and is used as it
+stands. RPE is carried as evidence but is not a term in any sum, so a source
+that never reports one loses nothing.
 
 `decision.type` is one of `keep` · `adjust` · `substitute` · `defer` ·
 `advance`. A `keep` is still a decision and still carries its evidence.

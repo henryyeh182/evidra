@@ -92,8 +92,8 @@ test("a user with no sleep is not silently treated as well-rested", () => {
   const a = generateSemanticFitnessState(withSleep, { date: DATE, timezone: "UTC" });
   const b = generateSemanticFitnessState(withoutSleep, { date: DATE, timezone: "UTC" });
 
-  assert.ok(a.signalCoverage.usable.includes("sleep"));
-  assert.ok(b.signalCoverage.missing.includes("sleep"), "the gap is reported, not papered over");
+  assert.ok(a.signalCoverage.recovery.usable.includes("sleep"));
+  assert.ok(b.signalCoverage.recovery.missing.includes("sleep"), "the gap is reported, not papered over");
   // The score is renormalized over what is present rather than filled with 50.
   assert.notEqual(b.recoveryScore, 50);
 });
@@ -102,7 +102,7 @@ test("a vendor composite carries the score when raw physiology is absent", () =>
   const context = evidenceToUserContext({ ...base, ...SOURCE_MIXES["garmin (no sleep, has composites)"] });
   const state = generateSemanticFitnessState(context, { date: DATE, timezone: "UTC" });
 
-  assert.ok(state.signalCoverage.usable.includes("bodyBattery"));
+  assert.ok(state.signalCoverage.recovery.usable.includes("bodyBattery"));
   assert.equal(state.confidence, "high", "the device maker already integrated what we cannot see");
 });
 

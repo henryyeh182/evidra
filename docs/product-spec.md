@@ -190,7 +190,7 @@ Phase 2 有地方放，但表還沒建。
 **五層**：Evidence → Fitness State → Decision（意圖）→ Action（from → to）→ Reason（綁回證據）
 
 **每個輸出帶** confidence、evidence、signalCoverage、limits。缺的訊號列進
-`signalCoverage.missing` 並下調信心，不補造數值。
+`signalCoverage` 的缺漏清單並下調信心，不補造數值。
 
 ## 8. 現在有什麼（2026-07-30 查證）
 

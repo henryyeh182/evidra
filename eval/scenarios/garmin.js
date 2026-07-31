@@ -124,7 +124,7 @@ const hrvIsNeverInvented = {
     if (evidence.healthMetrics.some((metric) => metric.type === "hrv_ms")) {
       return "an hrv_ms reading was manufactured from the export";
     }
-    return state.signalCoverage.missing.includes("hrv") || "hrv was not reported as missing";
+    return state.signalCoverage.recovery.missing.includes("hrv") || "hrv was not reported as missing";
   }
 };
 
@@ -238,7 +238,7 @@ export const GARMIN_SCENARIOS = [
           );
           if (recent.length > 0) return "a NONE-level readiness record was emitted as a score";
           return (
-            !state.signalCoverage.usable.includes("vendorReadiness") ||
+            !state.signalCoverage.recovery.usable.includes("vendorReadiness") ||
             "vendor readiness was used on days Garmin had none"
           );
         }
@@ -246,12 +246,12 @@ export const GARMIN_SCENARIOS = [
       {
         name: "the nights that were never recorded are reported as missing sleep",
         run: ({ state }) =>
-          state.signalCoverage.missing.includes("sleep") || `missing was ${state.signalCoverage.missing.join(", ")}`
+          state.signalCoverage.recovery.missing.includes("sleep") || `missing was ${state.signalCoverage.recovery.missing.join(", ")}`
       },
       {
         name: "what Garmin can still supply off-wrist is read instead of giving up",
         run: ({ state }) => {
-          const usable = state.signalCoverage.usable;
+          const usable = state.signalCoverage.recovery.usable;
           return (
             (usable.includes("bodyBattery") && usable.includes("recoveryTime")) ||
             `usable signals were ${usable.join(", ")}`
@@ -361,7 +361,7 @@ export const GARMIN_SCENARIOS = [
         run: ({ state, evidence }) => {
           if (evidence.healthMetrics.length === 0) return "a sparse but real export produced no canonical signals";
           return (
-            state.signalCoverage.usable.length > 0 ||
+            state.signalCoverage.recovery.usable.length > 0 ||
             "nothing at all was usable from a sparse but real export"
           );
         }

@@ -11,10 +11,7 @@
       "type": "string"
     },
     "planId": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "evidence": {
       "type": "array",
@@ -171,7 +168,56 @@
       ]
     },
     "signalCoverage": {
-      "type": "object"
+      "type": "object",
+      "description": "Signal coverage in two groups. `recovery` covers the freshness of sleep/HRV/resting-HR/stress and vendor composites; `training` covers whether every session in the last 7 days carried a training load. A gap in either lowers confidence, and they are kept apart so a caller can tell which half is unread. The load is the vendor's own effort figure and is used as it stands — RPE is carried as evidence but is not a term in any sum, so a source that never reports one is not penalised.",
+      "properties": {
+        "recovery": {
+          "type": "object",
+          "properties": {
+            "usable": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "missing": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "usable",
+            "missing"
+          ]
+        },
+        "training": {
+          "type": "object",
+          "properties": {
+            "usable": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "missing": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "usable",
+            "missing"
+          ]
+        }
+      },
+      "required": [
+        "recovery",
+        "training"
+      ]
     },
     "limits": {
       "type": "array",

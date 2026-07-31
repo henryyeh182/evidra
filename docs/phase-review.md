@@ -71,7 +71,7 @@ npm test && npm run eval && npm run audit:graph
 ### Q3 · 任何單一來源都必須能用
 
 這次的改動，對**只有 Strava 的跑者**、對**不戴錶睡覺的人**，是否仍產得出決策？
-敘述時有沒有把某組來源寫成「缺這缺那」——缺漏只該出現在 `signalCoverage.missing` 與
+敘述時有沒有把某組來源寫成「缺這缺那」——缺漏只該出現在 `signalCoverage.recovery.missing`／`signalCoverage.training.missing` 與
 confidence，不當敘事主軸。
 
 > 已偏移三次。這題不是形式。
@@ -83,7 +83,7 @@ confidence，不當敘事主軸。
 
 ### Q5 · 退化是否誠實
 
-證據不足時是回退化標記（`insufficient_history`／`signalCoverage.missing`／`limits`），
+證據不足時是回退化標記（`insufficient_history`／`signalCoverage.*.missing`／`limits`），
 還是猜一個看起來合理的數值？替代品沒保住原本的訓練刺激時，有沒有寫進 `limits`？
 
 ### Q6 · 承諾 B

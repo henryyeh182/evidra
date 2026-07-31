@@ -367,7 +367,7 @@
         <h4>狀態判定，並誠實說出看不到什麼</h4>
         <p>
           恢復分數只用<strong>當下夠新的訊號</strong>計算，權重在有效訊號之間重新正規化——
-          缺的不用中性值填補，而是列進 <code>signalCoverage.missing</code> 並下調信心。
+          缺的不用中性值填補，而是列進 <code>signalCoverage.recovery.missing</code> 或 <code>signalCoverage.training.missing</code> 並下調信心。
         </p>
         <div class="readout">
           <div class="row"><span class="k">recovery</span><span class="v">70</span></div>

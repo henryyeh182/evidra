@@ -44,7 +44,7 @@
  * @property {{ from: SessionShape | null, to: SessionShape | null, changed: string[] }} action
  * @property {string[]} reason
  * @property {"low" | "medium" | "high"} confidence
- * @property {{ usable: string[], missing: string[] }} signalCoverage
+ * @property {{ recovery: { usable: string[], missing: string[] }, training: { usable: string[], missing: string[] } }} signalCoverage
  * @property {string[]} limits
  */
 

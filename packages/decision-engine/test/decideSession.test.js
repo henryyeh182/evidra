@@ -28,7 +28,10 @@ function state(overrides = {}) {
     avoid: [],
     availableTimeMinutes: 60,
     confidence: "medium",
-    signalCoverage: { usable: ["hrv", "sleep"], missing: ["stress"] },
+    signalCoverage: {
+      recovery: { usable: ["hrv", "sleep"], missing: ["stress"] },
+      training: { usable: ["trainingLoad"], missing: [] }
+    },
     ...overrides
   };
 }
@@ -225,11 +228,59 @@ test("without a scheduled session there is no decision to make", () => {
 test("missing signals are surfaced as limits, not hidden", () => {
   const result = decideSession({
     scheduledSession: session(),
-    state: state({ signalCoverage: { usable: ["hrv"], missing: ["sleep", "stress"] } })
+    state: state({
+      signalCoverage: {
+        recovery: { usable: ["hrv"], missing: ["sleep", "stress"] },
+        training: { usable: ["rpe", "trainingLoad"], missing: [] }
+      }
+    })
   });
 
   assert.ok(result.limits.some((line) => line.includes("sleep")));
   assert.equal(result.confidence, "medium");
+});
+
+test("an incomplete training week is surfaced as its own limit", () => {
+  const result = decideSession({
+    scheduledSession: session(),
+    state: state({
+      signalCoverage: {
+        recovery: { usable: ["hrv", "sleep"], missing: [] },
+        training: { usable: [], missing: ["trainingLoad"] }
+      }
+    })
+  });
+
+  const line = result.limits.find((l) => l.includes("training load"));
+  assert.ok(line, "a gap in the training half must reach the caller too");
+  assert.match(line, /muscle fatigue is read from an incomplete week/);
+  // The recovery half was clean, so it must not manufacture a recovery limit.
+  assert.ok(!result.limits.some((l) => /confidence is lowered/.test(l)));
+});
+
+test("a state saved before coverage was split is read as recovery, not as complete", () => {
+  // Phase 1 is stateless: the caller holds the state and sends it back. One
+  // saved under the old flat shape must not read as "training was fine".
+  const result = decideSession({
+    scheduledSession: session(),
+    state: state({ signalCoverage: { usable: ["hrv"], missing: ["sleep"] } })
+  });
+
+  assert.deepEqual(result.signalCoverage.recovery, { usable: ["hrv"], missing: ["sleep"] });
+  assert.deepEqual(result.signalCoverage.training, { usable: [], missing: [] });
+  assert.ok(result.limits.some((l) => l.includes("sleep")));
+});
+
+test("a state with no coverage at all claims nothing in either group", () => {
+  const result = decideSession({
+    scheduledSession: session(),
+    state: state({ signalCoverage: undefined })
+  });
+
+  assert.deepEqual(result.signalCoverage, {
+    recovery: { usable: [], missing: [] },
+    training: { usable: [], missing: [] }
+  });
 });
 
 test("a decision that changes nothing cannot claim to be an adjustment", () => {

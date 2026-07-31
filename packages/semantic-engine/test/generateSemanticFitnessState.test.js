@@ -53,8 +53,8 @@ test("generateSemanticFitnessState is deterministic for the golden sample user",
     },
     {
       recoveryScore: 89,
-      readinessScore: 76,
-      fatigueScore: 24,
+      readinessScore: 71,
+      fatigueScore: 29,
       trainingLoad7d: 198,
       trainingLoad28d: 198,
       acuteChronicWorkloadRatio: 0.55,
@@ -84,9 +84,9 @@ test("stale recovery signals are excluded and confidence drops to low", () => {
 
   const state = generateSemanticFitnessState(context, { date: "2026-07-25", timezone: "Asia/Taipei" });
 
-  assert.deepEqual(state.signalCoverage.usable, ["restingHeartRate"]);
-  assert.ok(state.signalCoverage.missing.includes("hrv"));
-  assert.ok(state.signalCoverage.missing.includes("sleep"));
+  assert.deepEqual(state.signalCoverage.recovery.usable, ["restingHeartRate"]);
+  assert.ok(state.signalCoverage.recovery.missing.includes("hrv"));
+  assert.ok(state.signalCoverage.recovery.missing.includes("sleep"));
   assert.equal(state.confidence, "low");
   assert.equal(state.sleepQuality, null);
   assert.ok(state.reasoning.some((line) => line.includes("No fresh reading")));
@@ -101,7 +101,7 @@ test("recovery renormalizes over present signals instead of using neutral filler
 
   const state = generateSemanticFitnessState(context, { date: "2026-07-25", timezone: "Asia/Taipei" });
 
-  assert.deepEqual(state.signalCoverage.usable, ["restingHeartRate"]);
+  assert.deepEqual(state.signalCoverage.recovery.usable, ["restingHeartRate"]);
   assert.equal(state.recoveryScore, 100);
 });
 
@@ -112,7 +112,7 @@ test("no fresh recovery signal falls back to a neutral score with empty coverage
 
   const state = generateSemanticFitnessState(context, { date: "2026-07-25", timezone: "Asia/Taipei" });
 
-  assert.deepEqual(state.signalCoverage.usable, []);
+  assert.deepEqual(state.signalCoverage.recovery.usable, []);
   assert.equal(state.recoveryScore, 50);
   assert.equal(state.confidence, "low");
 });
@@ -138,4 +138,81 @@ test("a stated time constraint is passed through untouched", () => {
   const state = generateSemanticFitnessState(context, { date: "2026-07-25", timezone: "Asia/Taipei" });
 
   assert.equal(state.availableTimeMinutes, 30);
+});
+
+// --- training-side coverage ----------------------------------------------
+//
+// A session skipped for want of a load used to vanish without trace: the muscle
+// groups it would have loaded simply read as rested, while coverage still said
+// nothing was missing and confidence still said "high".
+
+function contextWithLastWorkoutUnloaded() {
+  const copy = JSON.parse(JSON.stringify(context));
+  const last = copy.workouts.at(-1);
+  last.trainingLoad = null;
+  return { copy, date: last.startedAt.slice(0, 10) };
+}
+
+test("a full week of loaded sessions reports training coverage as complete", () => {
+  const date = context.workouts.at(-1).startedAt.slice(0, 10);
+  const state = generateSemanticFitnessState(context, { date, timezone: "Asia/Taipei" });
+
+  assert.deepEqual(state.signalCoverage.training.usable, ["trainingLoad"]);
+  assert.deepEqual(state.signalCoverage.training.missing, []);
+});
+
+test("a session with no load is reported missing, not quietly dropped", () => {
+  const { copy, date } = contextWithLastWorkoutUnloaded();
+  const state = generateSemanticFitnessState(copy, { date, timezone: "Asia/Taipei" });
+
+  assert.deepEqual(state.signalCoverage.training.missing, ["trainingLoad"]);
+  // Strict on purpose: one unloaded session is enough to make the week partial.
+  assert.deepEqual(state.signalCoverage.training.usable, []);
+});
+
+test("a session with no RPE still produces muscle fatigue from the vendor load", () => {
+  // Garmin never reports an RPE. Its activityTrainingLoad is the vendor's own
+  // effort figure and is taken as it stands, so fatigue is fully computable.
+  const copy = JSON.parse(JSON.stringify(context));
+  for (const workout of copy.workouts) workout.rpe = null;
+  const date = copy.workouts.at(-1).startedAt.slice(0, 10);
+
+  const rated = generateSemanticFitnessState(context, { date, timezone: "Asia/Taipei" });
+  const unrated = generateSemanticFitnessState(copy, { date, timezone: "Asia/Taipei" });
+
+  assert.deepEqual(unrated.muscleFatigue, rated.muscleFatigue, "RPE is not a term in the sum");
+  assert.deepEqual(unrated.signalCoverage.training.missing, [], "a missing RPE is not a coverage gap");
+  assert.equal(unrated.confidence, rated.confidence, "and it must not cost the source its confidence");
+});
+
+test("an incomplete training week cannot report high confidence", () => {
+  const { copy, date } = contextWithLastWorkoutUnloaded();
+  const loaded = generateSemanticFitnessState(context, { date, timezone: "Asia/Taipei" });
+  const unloaded = generateSemanticFitnessState(copy, { date, timezone: "Asia/Taipei" });
+
+  assert.equal(loaded.confidence, "high", "recovery signals alone would support high");
+  assert.notEqual(unloaded.confidence, "high");
+});
+
+test("the reasoning names how many sessions were left out of muscle fatigue", () => {
+  const { copy, date } = contextWithLastWorkoutUnloaded();
+  const loaded = generateSemanticFitnessState(context, { date, timezone: "Asia/Taipei" });
+  const unloaded = generateSemanticFitnessState(copy, { date, timezone: "Asia/Taipei" });
+
+  const line = unloaded.reasoning.find((r) => r.includes("sessions in the last 7 days"));
+  assert.ok(line, "the skip has to be stated, not inferred from a shorter list");
+  assert.match(line, /^1 of \d+ sessions .* carry no training load/);
+
+  // ...and the muscle groups that session would have loaded really did vanish.
+  const lost = Object.keys(loaded.muscleFatigue).filter((g) => !(g in unloaded.muscleFatigue));
+  assert.ok(lost.length > 0, "the fixture must actually lose a muscle group for this to prove anything");
+});
+
+test("recovery and training gaps stay in separate groups", () => {
+  const { copy, date } = contextWithLastWorkoutUnloaded();
+  const state = generateSemanticFitnessState(copy, { date, timezone: "Asia/Taipei" });
+
+  // The recovery half is untouched by a training-side gap, and vice versa.
+  assert.deepEqual(state.signalCoverage.recovery.missing, []);
+  assert.ok(state.signalCoverage.training.missing.length > 0);
 });

@@ -51,7 +51,7 @@ test("mapSemanticStateToRow maps generated semantic state to database column nam
   assert.equal(row.user_id, "user_henry_demo");
   assert.equal(row.state_date, "2026-07-23");
   assert.equal(row.recovery_score, 89);
-  assert.equal(row.readiness_score, 76);
+  assert.equal(row.readiness_score, 71);
   assert.equal(row.recommended_focus, "Low-impact Zone 2 cardio + lower body mobility");
   assert.ok(Array.isArray(row.avoid));
   assert.ok(Array.isArray(row.reasoning));

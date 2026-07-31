@@ -1,5 +1,37 @@
 import { assertValidDecision } from "./models.js";
 
+const EMPTY_COVERAGE = { usable: [], missing: [] };
+
+/**
+ * Signal coverage in the two-group shape, whatever the caller had.
+ *
+ * The state travels with the call, so a caller holding one produced before
+ * coverage was split still sends the flat `{usable, missing}`. That shape only
+ * ever described recovery signals, so it is read as recovery and the training
+ * half comes back empty — an unknown gap is reported as no claim, never as
+ * "nothing was missing".
+ */
+function normalizeCoverage(signalCoverage) {
+  if (!signalCoverage) {
+    return { recovery: { ...EMPTY_COVERAGE }, training: { ...EMPTY_COVERAGE } };
+  }
+
+  if (Array.isArray(signalCoverage.usable) || Array.isArray(signalCoverage.missing)) {
+    return {
+      recovery: {
+        usable: signalCoverage.usable ?? [],
+        missing: signalCoverage.missing ?? []
+      },
+      training: { ...EMPTY_COVERAGE }
+    };
+  }
+
+  return {
+    recovery: { ...EMPTY_COVERAGE, ...(signalCoverage.recovery ?? {}) },
+    training: { ...EMPTY_COVERAGE, ...(signalCoverage.training ?? {}) }
+  };
+}
+
 // Deterministic thresholds. These are the training-science rules, kept as data
 // so they can be tuned and reviewed without touching control flow.
 const RULES = {
@@ -190,7 +222,7 @@ export function decideSession({
         "Nothing is scheduled today, so there is no prior state to change. This is a recommendation question, not a decision."
       ],
       confidence: state.confidence || "low",
-      signalCoverage: state.signalCoverage || { usable: [], missing: [] },
+      signalCoverage: normalizeCoverage(state.signalCoverage),
       limits: ["Without a plan only a recommendation is possible; a decision needs a scheduled session."]
     };
     assertValidDecision(result);
@@ -482,9 +514,15 @@ export function decideSession({
     reason.push(`Readiness ${readiness} and target-muscle fatigue ${fatigue.value || 0} are both within range, so the session runs as planned.`);
   }
 
-  const coverage = state.signalCoverage || { usable: [], missing: [] };
-  if (coverage.missing?.length > 0) {
-    limits.push(`No ${coverage.missing.join(", ")} signal was available, so confidence is lowered.`);
+  const coverage = normalizeCoverage(state.signalCoverage);
+  if (coverage.recovery.missing.length > 0) {
+    limits.push(`No ${coverage.recovery.missing.join(", ")} signal was available, so confidence is lowered.`);
+  }
+  if (coverage.training.missing.length > 0) {
+    limits.push(
+      `Some sessions in the last 7 days carry no training load, ` +
+        `so muscle fatigue is read from an incomplete week.`
+    );
   }
 
   // Per-session intensity distribution is carried, not consumed. Saying so is

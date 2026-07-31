@@ -85,7 +85,17 @@ Decision 與 Action 必須分開：同一意圖在不同器材／時間／傷病
 ### 2. 輸入不得由我們編造
 
 沒給的值就是沒有。不用預設值代替缺失輸入（沒有 RPE 就是沒有，不是 5），
-缺的走 `signalCoverage.missing` 並下調 confidence。
+缺的走 `signalCoverage.recovery.missing`／`signalCoverage.training.missing` 並下調 confidence。
+
+`signalCoverage` 分兩組：`recovery` 是今天的睡眠／HRV／靜息心率／壓力夠不夠新，
+`training` 是近 7 天每一筆訓練有沒有帶負荷。**嚴格定義：全部都有才算 usable**，
+一筆缺就整組進 missing。沒有負荷的訓練不計入分肌群疲勞，
+`training.missing` 就是呼叫端得知這件事的唯一途徑。
+
+**分肌群疲勞 = `trainingLoad × decay`，不再乘 `rpe/10`。** 廠商算好的負荷
+（Garmin `activityTrainingLoad`、Strava Relative Effort、Apple Health 活動能量）
+本身已含強度，`training-load` 也是直接用同一個數字算 ATL／CTL／ACWR。
+RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的來源不會被扣分。
 
 **確定性門檻必須有出處**——`acwrHigh = 1.4`、`maxSampleGapSeconds = 30` 這類數字
 要嘛附依據，要嘛標為未驗證，要嘛改由呼叫端傳入。**無出處的值不准進 repo。**
@@ -98,7 +108,7 @@ Decision 與 Action 必須分開：同一意圖在不同器材／時間／傷病
 不戴錶睡覺的人靠 HRV 與廠商複合分數拿決策。**這是設計，不是降級。**
 
 談任何來源時講**這組來源能做出什麼決策**，不要講它缺什麼。缺漏只出現在
-`signalCoverage.missing` 與 confidence，不當敘事主軸。
+`signalCoverage.recovery.missing`／`signalCoverage.training.missing` 與 confidence，不當敘事主軸。
 
 ### 4. 不拿單一使用者的資料特性當設計依據
 
@@ -106,7 +116,7 @@ Decision 與 Action 必須分開：同一意圖在不同器材／時間／傷病
 
 驗證軸線是**匯出檔的形狀**——完整／sentinel／缺洞／方言等價／有損／稀疏。
 可驗證的斷言只有六類：canonical 命名、單位換算、registry ↔ parser 一致、sentinel 不外洩、
-缺的列進 `signalCoverage.missing`、決策仍成立且自我解釋。
+缺的列進 `signalCoverage` 對應那一組的 `missing`、決策仍成立且自我解釋。
 
 **模擬的生理數值不是 ground truth**，不得用來回頭 fit `readiness < 40` 這類門檻。
 
@@ -114,7 +124,7 @@ Decision 與 Action 必須分開：同一意圖在不同器材／時間／傷病
 
 - 對外 **6 個 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` ·
   `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
-- **253 tests**、eval 20 golden cases，全綠
+- **262 tests**、eval 20 golden cases，全綠
 - parser 實作 3 家（Apple Health／Garmin／Strava，Strava 含 API 與 bulk export 兩種方言）；
   schema registry 涵蓋 6 家
 - Strava bulk export：CSV 按欄位**索引**解析（5 組同名欄單位不同）；`Activity Date` 是 UTC 無 offset，

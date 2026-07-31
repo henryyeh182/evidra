@@ -23,10 +23,7 @@
       "type": "number"
     },
     "sleepQuality": {
-      "type": [
-        "number",
-        "null"
-      ]
+      "type": ["number", "null"]
     },
     "trainingLoad7d": {
       "type": "number"
@@ -81,23 +78,54 @@
     },
     "signalCoverage": {
       "type": "object",
+      "description": "Signal coverage in two groups. `recovery` covers the freshness of sleep/HRV/resting-HR/stress and vendor composites; `training` covers whether every session in the last 7 days carried a training load. A gap in either lowers confidence, and they are kept apart so a caller can tell which half is unread. The load is the vendor's own effort figure and is used as it stands — RPE is carried as evidence but is not a term in any sum, so a source that never reports one is not penalised.",
       "properties": {
-        "usable": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "recovery": {
+          "type": "object",
+          "properties": {
+            "usable": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "missing": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "usable",
+            "missing"
+          ]
         },
-        "missing": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "training": {
+          "type": "object",
+          "properties": {
+            "usable": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "missing": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "usable",
+            "missing"
+          ]
         }
       },
       "required": [
-        "usable",
-        "missing"
+        "recovery",
+        "training"
       ]
     },
     "reasoning": {

@@ -72,25 +72,66 @@ function calculateTrainingLoad(workouts, anchorDate, baselines = DEFAULT_BASELIN
   };
 }
 
+// Muscle fatigue, plus an account of what it could not read. A session skipped
+// for want of a load leaves a muscle group looking rested when nobody measured
+// it, so the skip has to travel with the number rather than disappear.
+//
+// The session's training load is taken as it stands and not scaled again. It
+// already carries the session's intensity — Garmin's activityTrainingLoad,
+// Strava's Relative Effort, Apple Health's active energy are each the vendor's
+// own effort figure, and `trainingLoad.js` spends the same number raw when it
+// builds ATL, CTL and the acute:chronic ratio. Multiplying it here by an
+// RPE-derived factor both double-counted intensity and made fatigue impossible
+// to compute for any source that reports no RPE, which is most of them.
+//
+// RPE is still collected as evidence; it is simply not a term in this sum.
 function calculateMuscleFatigue(workouts, anchorDate) {
   const fatigue = {};
+  const window = workoutsWithinDays(workouts, anchorDate, 7);
+  let skipped = 0;
 
-  for (const workout of workoutsWithinDays(workouts, anchorDate, 7)) {
+  for (const workout of window) {
     const ageDays = daysBetween(anchorDate, new Date(workout.startedAt));
     const decay = Math.max(0.15, 1 - ageDays / 5);
-    // No reported RPE, no fatigue contribution. Skipped rather than counted as
-    // zero: zero is a claim that the session cost nothing, and nobody said that.
-    if (typeof workout.rpe !== "number") continue;
-    const fatigueContribution = workout.trainingLoad * (workout.rpe / 10) * decay;
+    // No load, no fatigue contribution. Skipped rather than counted as zero:
+    // zero is a claim that the session cost nothing, and nobody said that.
+    if (typeof workout.trainingLoad !== "number") {
+      skipped += 1;
+      continue;
+    }
+    const fatigueContribution = workout.trainingLoad * decay;
 
     for (const muscleGroup of workout.muscleGroups) {
       fatigue[muscleGroup] = (fatigue[muscleGroup] || 0) + fatigueContribution;
     }
   }
 
-  return Object.fromEntries(
-    Object.entries(fatigue).map(([muscleGroup, value]) => [muscleGroup, clamp(value)])
-  );
+  return {
+    fatigue: Object.fromEntries(
+      Object.entries(fatigue).map(([muscleGroup, value]) => [muscleGroup, clamp(value)])
+    ),
+    coverage: buildTrainingCoverage(window),
+    skipped,
+    considered: window.length
+  };
+}
+
+// Training-side coverage, deliberately strict: a signal counts as usable only
+// when every session in the window carries it. One session without a load is
+// enough to make the muscle-fatigue picture incomplete, and a caller reading
+// `usable` should not have to guess whether it meant "all" or "some".
+//
+// Only `trainingLoad` appears here, because only `trainingLoad` is read. RPE is
+// carried as evidence but no longer enters any sum, and reporting a gap that
+// changes no number would just make well-served sources look deficient.
+function buildTrainingCoverage(window) {
+  if (window.length === 0) {
+    // No sessions is not a missing signal — there was nothing to report.
+    return { usable: [], missing: [] };
+  }
+
+  const complete = window.every((workout) => typeof workout.trainingLoad === "number");
+  return complete ? { usable: ["trainingLoad"], missing: [] } : { usable: [], missing: ["trainingLoad"] };
 }
 
 // Sleep score from the freshest available duration/quality readings. Weights
@@ -248,16 +289,20 @@ function chooseRecommendedFocus({ readinessScore, muscleFatigue, restrictions, i
 
 // Confidence reflects how well we can actually see today: fresh recovery
 // signals plus recent training history. Sparse wearers get an honest "low".
-function assessConfidence(coverage, recentWorkoutCount) {
+function assessConfidence(coverage, trainingCoverage, recentWorkoutCount) {
   const hasHrv = coverage.usable.includes("hrv");
   const hasSleep = coverage.usable.includes("sleep");
   const hasVendorComposite =
     coverage.usable.includes("vendorReadiness") || coverage.usable.includes("bodyBattery");
-  if (hasVendorComposite && coverage.usable.length >= 2 && recentWorkoutCount >= 1) {
+  // Not an empirical threshold: with a session left out of muscle fatigue, part
+  // of the picture is simply unread, and "high" would be claiming otherwise.
+  const trainingIncomplete = trainingCoverage.missing.length > 0;
+
+  if (!trainingIncomplete && hasVendorComposite && coverage.usable.length >= 2 && recentWorkoutCount >= 1) {
     // The device maker already integrated the signals we cannot see.
     return "high";
   }
-  if (hasHrv && hasSleep && coverage.usable.length >= 3 && recentWorkoutCount >= 2) {
+  if (!trainingIncomplete && hasHrv && hasSleep && coverage.usable.length >= 3 && recentWorkoutCount >= 2) {
     return "high";
   }
   if (coverage.usable.length >= 2 && recentWorkoutCount >= 1) {
@@ -266,7 +311,7 @@ function assessConfidence(coverage, recentWorkoutCount) {
   return "low";
 }
 
-function buildReasoning({ recovery, readinessScore, trainingLoad, muscleFatigue, restrictions, recommendedFocus }) {
+function buildReasoning({ recovery, training, readinessScore, trainingLoad, muscleFatigue, restrictions, recommendedFocus }) {
   const usableSignals = recovery.coverage.usable
     .map((name) => `${name} ${recovery.signals[name]}`)
     .join(", ");
@@ -280,6 +325,13 @@ function buildReasoning({ recovery, readinessScore, trainingLoad, muscleFatigue,
 
   if (recovery.coverage.missing.length > 0) {
     reasoning.push(`No fresh reading for: ${recovery.coverage.missing.join(", ")}; those signals were excluded and confidence lowered.`);
+  }
+
+  if (training.skipped > 0) {
+    reasoning.push(
+      `${training.skipped} of ${training.considered} sessions in the last 7 days carry no training load, ` +
+        `so they are absent from muscle fatigue — the groups they would have loaded read lower than they were trained.`
+    );
   }
 
   if ((muscleFatigue.legs || 0) > 60) {
@@ -302,7 +354,8 @@ export function generateSemanticFitnessState(context, options = {}) {
   const timezone = options.timezone || context.user.timezone;
   const anchorDate = new Date(`${date}T23:59:59${timezone === "Asia/Taipei" ? "+08:00" : "Z"}`);
   const trainingLoad = calculateTrainingLoad(context.workouts, anchorDate, options.baselines);
-  const muscleFatigue = calculateMuscleFatigue(context.workouts, anchorDate);
+  const training = calculateMuscleFatigue(context.workouts, anchorDate);
+  const muscleFatigue = training.fatigue;
   const recovery = calculateRecoveryScore(
     context.healthMetrics,
     anchorDate,
@@ -339,10 +392,17 @@ export function generateSemanticFitnessState(context, options = {}) {
       primaryGoal: context.goals.sort((a, b) => a.priority - b.priority)[0]?.type || "general_fitness",
       score: readinessScore >= 55 ? 0.76 : 0.52
     },
-    signalCoverage: recovery.coverage,
-    confidence: assessConfidence(recovery.coverage, recentWorkoutCount),
+    // Two groups, not one list: a missing HRV and a session without an RPE are
+    // both gaps, but they are gaps in different halves of the picture and a
+    // caller has to be able to tell which half it is looking at.
+    signalCoverage: {
+      recovery: recovery.coverage,
+      training: training.coverage
+    },
+    confidence: assessConfidence(recovery.coverage, training.coverage, recentWorkoutCount),
     reasoning: buildReasoning({
       recovery,
+      training,
       readinessScore,
       trainingLoad,
       muscleFatigue,

@@ -348,7 +348,7 @@ test("a Strava-export-only athlete still gets a decision, and it explains itself
   });
 
   assert.ok(Number.isFinite(state.readinessScore));
-  assert.ok(state.signalCoverage.missing.includes("sleep"), "the gap is reported, not papered over");
+  assert.ok(state.signalCoverage.recovery.missing.includes("sleep"), "the gap is reported, not papered over");
   assert.ok(decision.decision.type);
   assert.ok(decision.reason.length > 0);
   assert.ok(["low", "medium", "high"].includes(decision.confidence));

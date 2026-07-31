@@ -61,7 +61,26 @@ Claude / ChatGPT
 五層：`Evidence → Fitness State → Decision（意圖）→ Action（from → to）→ Reason（綁回證據）`
 
 每個輸出帶 `confidence`、`evidence`、`signalCoverage`、`limits`。
-缺的訊號列進 `signalCoverage.missing` 並下調信心，**不補造數值**。
+缺的訊號列進 `signalCoverage` 並下調信心，**不補造數值**。
+
+`signalCoverage` 分兩組，因為缺的性質不同：
+
+```json
+"signalCoverage": {
+  "recovery": { "usable": ["hrv"], "missing": ["sleep"] },
+  "training": { "usable": ["trainingLoad"], "missing": [] }
+}
+```
+
+- `recovery.missing` —— 今天的睡眠／HRV／靜息心率／壓力沒有夠新的讀數
+- `training.missing` —— 近 7 天有訓練沒帶負荷
+
+**嚴格定義：那一組每一筆都有才算 `usable`**，一筆缺就進 `missing`。
+沒有負荷的訓練不計入分肌群疲勞（不當成 0，因為沒人說它不累），
+`training.missing` 是呼叫端得知這件事的唯一途徑，confidence 也會跟著降。
+
+分肌群疲勞是 `trainingLoad × decay`，**不乘 RPE**——廠商算好的負荷本身已含強度，
+`training-load` 算 ATL／CTL／ACWR 用的也是同一個數字。RPE 仍當證據收，但不參與計算。
 
 ## 隱私邊界
 
@@ -108,7 +127,7 @@ Phase 2 是核心宗旨要的那個版本，不是選配。兩種模式共用同
 | 對外 tool | 6 個（`tools/list` 實測） |
 | 資料標準化 | `packages/connectors` 實作 3 家（Apple Health／Garmin／Strava，Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 家 |
 | 確定性計算 | `semantic-engine`（readiness／分肌群疲勞）· `training-load`（ATL/CTL/TSB/ACWR）· `decision-engine`（from→to）· `planning` · `knowledge-graph`（889 節點 / 5,785 邊） |
-| 測試 | 253 tests、eval 20 golden cases 全綠 |
+| 測試 | 262 tests、eval 20 golden cases 全綠 |
 | 傳輸 | stdio ✅ · Streamable HTTP ✅ |
 | OAuth | 只做了「檢查 token claims」那一半；**簽章驗證器沒填、`serve:http` 進入點沒接線、沒有 authorization server** → 遠端連不起來 |
 | 協定版本 | `2025-06-18`；最新規格是 `2026-07-28`（stateless），升級走 dual-era |
@@ -177,7 +196,7 @@ GUI 啟動的 app 拿到的 PATH 很精簡，設定檔裡**不能寫裸的 `node
 ## 指令
 
 ```bash
-npm test                    # 253 tests
+npm test                    # 262 tests
 npm run eval                # golden set 計分
 npm run review:phase        # 階段完成審查（宣告「做完了」之前必跑）
 npm run serve:http          # HTTP transport

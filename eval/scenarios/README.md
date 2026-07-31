@@ -24,7 +24,7 @@
 2. **單位**：`sleepTimeSeconds / 3600 = 小時`、`duration ms → 分鐘`，與 registry 宣告一致。
 3. **Registry ↔ Parser 一致**：`VENDOR_SCHEMAS.garmin` 宣告的每個 signal，完整匯出時必須產出。
 4. **Sentinel**：`-1`／`0`／`NONE` 不得成為讀數。
-5. **誠實**：沒有的訊號出現在 `signalCoverage.missing`，不是被填成中間值。
+5. **誠實**：沒有的訊號出現在 `signalCoverage.recovery.missing`／`signalCoverage.training.missing`，不是被填成中間值。
 6. **決策仍成立**：不論形狀多殘缺，`decide_session` 仍回得出帶 `reason` 與 `evidence` 的決策
    （manifesto 承諾 A）。**不斷言決策內容或數值。**
 
