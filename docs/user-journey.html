@@ -408,14 +408,14 @@
           <div class="arrow">→</div>
           <div class="side to">
             <div class="tag">To — 今日執行</div>
-            <div class="title">VO₂max Intervals</div>
+            <div class="title">Easy run</div>
             <div class="meta">60 min · <b>low</b></div>
           </div>
         </div>
         <div class="readout">
           <div class="row"><span class="k">decision.type</span><span class="v mint">adjust</span></div>
           <div class="row"><span class="k">decision.intent</span><span class="v mint">reduce_today_intensity</span></div>
-          <div class="row"><span class="k">action.changed</span><span class="v">["intensity"]</span></div>
+          <div class="row"><span class="k">action.changed</span><span class="v">["focus", "intensity"]</span></div>
         </div>
         <p class="note">
           決策型別有五種：<code>keep</code>（照原定執行，也是決策）·
@@ -431,13 +431,13 @@
       <div class="layer-body">
         <h4>理由綁回證據，不是事後編的說法</h4>
         <div class="reasons">
-          <div class="reason"><i>01</i><span>Readiness 50 低於 60，需調降強度。</span></div>
-          <div class="reason"><i>02</i><span>legs 疲勞 92 已達上限，同一肌群今日不宜再受刺激。</span></div>
+          <div class="reason"><i>01</i><span>Readiness 50 is below 60, so intensity comes down.</span></div>
+          <div class="reason"><i>02</i><span>legs fatigue is 92, at the ceiling: that muscle group takes no further stimulus today.</span></div>
         </div>
         <div class="readout" style="margin-top:14px">
           <div class="row"><span class="k">evidence</span><span class="v">readiness=50 · muscle_fatigue.legs=92 · acwr=1.02</span></div>
           <div class="row"><span class="k">confidence</span><span class="v">high</span></div>
-          <div class="row"><span class="k">limits</span><span class="v dim">缺少 sleep、stress 訊號，信心下調</span></div>
+          <div class="row"><span class="k">limits</span><span class="v dim">No sleep, stress signal was available, so confidence is lowered</span></div>
         </div>
         <p class="note">
           每條理由都指得回具體訊號值。這份紀錄離開 Evidra 之後仍然看得懂——

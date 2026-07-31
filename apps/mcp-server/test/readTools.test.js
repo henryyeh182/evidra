@@ -199,3 +199,31 @@ test("without evidence the server says it fell back to demo data", async () => {
   assert.equal(payload.provenance.evidenceSource, "demo_fallback");
   assert.match(payload.provenance.note, /must pass evidence/);
 });
+
+test("a substitution takes the movement as the user said it, not only as an id", async () => {
+  // Regression, found running the real MCP server: agents pass the movement the
+  // way their user named it, and the handler took canonical ids alone — so
+  // "back squat" came back as a tool error the user could see.
+  const spoken = await call("decide_exercise_substitution", {
+    exerciseId: "back squat",
+    conditions: ["knee_injury"],
+    availableEquipment: ["dumbbell"],
+    avoidContraindications: ["knee"]
+  });
+  const canonical = await call("decide_exercise_substitution", {
+    exerciseId: "exercise_back_squat",
+    conditions: ["knee_injury"],
+    availableEquipment: ["dumbbell"],
+    avoidContraindications: ["knee"]
+  });
+
+  assert.equal(spoken.payload.action.from.exercise_id, "exercise_back_squat");
+  assert.deepEqual(spoken.payload.action, canonical.payload.action, "both spellings decide the same thing");
+});
+
+test("an unresolvable movement says what form the argument takes", async () => {
+  await assert.rejects(
+    () => call("decide_exercise_substitution", { exerciseId: "interpretive dance" }),
+    /canonical exercise_\* id/
+  );
+});

@@ -21,17 +21,17 @@ const ATL_DAYS = 7;
 
 /** Ramp-rate guidance. ACWR outside ~0.8–1.3 is where injury risk climbs. */
 export const LOAD_ZONES = {
-  fresh: { maxTsb: Infinity, minTsb: 5, label: "fresh", note: "恢復充分，可承受高強度" },
-  neutral: { maxTsb: 5, minTsb: -10, label: "neutral", note: "負荷與恢復平衡" },
-  productive: { maxTsb: -10, minTsb: -30, label: "productive", note: "有效訓練壓力，需留意恢復" },
-  overreaching: { maxTsb: -30, minTsb: -Infinity, label: "overreaching", note: "過度負荷，建議減量" }
+  fresh: { maxTsb: Infinity, minTsb: 5, label: "fresh", note: "Well recovered; can carry high intensity." },
+  neutral: { maxTsb: 5, minTsb: -10, label: "neutral", note: "Load and recovery are in balance." },
+  productive: { maxTsb: -10, minTsb: -30, label: "productive", note: "Productive training stress; watch recovery." },
+  overreaching: { maxTsb: -30, minTsb: -Infinity, label: "overreaching", note: "Overloaded; back the volume off." }
 };
 
 // Detraining is not a TSB band, and treating it as one inverted the reading.
 // TSB is a difference (CTL - ATL): across a layoff ATL collapses within about a
 // fortnight and then CTL keeps bleeding, so TSB peaks near week two and falls
 // back toward zero. Under the old `TSB >= 25` rule a two-week break scored
-// "fresh — 可承受高強度" and a six-month break scored "neutral — 負荷與恢復平衡";
+// "fresh — can carry high intensity" and a six-month break scored "neutral";
 // the longer someone had been away, the healthier they looked.
 //
 // Fitness lost is a question about CTL's own level, so it is measured against
@@ -155,10 +155,10 @@ export function computeTrainingLoad(workouts = [], options = {}) {
     ctlPeak,
     ctlLossPct,
     note: detrainingActive
-      ? `距離上次訓練 ${daysSinceLastSession} 天，慢性負荷自近期高點 ${ctlPeak} 降至 ${today?.ctl ?? 0}（-${ctlLossPct}%），體能基礎已流失，回歸需降載。`
+      ? `${daysSinceLastSession} days since the last session; chronic load has fallen from a recent peak of ${ctlPeak} to ${today?.ctl ?? 0} (-${ctlLossPct}%). Fitness has decayed, so coming back needs a lighter load.`
       : daysSinceLastSession === null
-        ? "沒有訓練紀錄可判斷體能基礎，無法評估是否需要回歸降載。"
-        : `距離上次訓練 ${daysSinceLastSession} 天，慢性負荷自高點下降 ${ctlLossPct}%，未達回歸降載門檻。`
+        ? "No training history, so whether fitness has decayed cannot be assessed."
+        : `${daysSinceLastSession} days since the last session; chronic load is down ${ctlLossPct}% from its peak, below the threshold for easing back.`
   };
 
   // Days of evidence actually covering the chronic window drives confidence:
@@ -187,7 +187,7 @@ export function computeTrainingLoad(workouts = [], options = {}) {
       ? detraining.note
       : sufficient
         ? zone.note
-        : `僅 ${historyDays} 天訓練史（需 ≥ ${Math.round(CTL_DAYS * 0.5)} 天），負荷曲線尚未收斂，此區間判定不可靠。`,
+        : `Only ${historyDays} days of training history (needs >= ${Math.round(CTL_DAYS * 0.5)}); the load curves have not converged, so this zone reading is unreliable.`,
     detraining,
     coverage: {
       historyDays,

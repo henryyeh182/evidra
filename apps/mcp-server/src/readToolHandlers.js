@@ -204,9 +204,15 @@ export async function getTrainingHistoryTool(args = {}) {
  */
 export async function decideExerciseSubstitutionTool(args = {}) {
   const { graph } = await loadKnowledgeBase();
-  const original = graph.getExercise(args.exerciseId);
+  // Agents say what their user said — "back squat", not exercise_back_squat.
+  // `getExercise` takes ids alone, so every natural phrasing came back as an
+  // error the user could see; `resolveExercise` is the sanctioned free-text
+  // entry point and accepts canonical ids unchanged.
+  const original = graph.resolveExercise(args.exerciseId);
   if (!original) {
-    throw new Error(`Unknown exercise: ${args.exerciseId}`);
+    throw new Error(
+      `Unknown exercise: ${args.exerciseId}. Pass the movement name as the user said it, or a canonical exercise_* id.`
+    );
   }
 
   const conditions = args.conditions || [];
@@ -232,10 +238,10 @@ export async function decideExerciseSubstitutionTool(args = {}) {
       decision: { type: "keep", intent: "no_safe_substitute_found" },
       action: { from: { exercise_id: original.id, name: original.name }, to: null, changed: [] },
       reason: [
-        `找不到同時滿足條件（${conditions.join("、") || "無"}）與器材限制的替代動作，維持原動作並建議降低負荷。`
+        `No substitute satisfies both the reported conditions (${conditions.join(", ") || "none"}) and the equipment on hand; the original movement stays, at a reduced load.`
       ],
       confidence: "low",
-      limits: ["替代選項不足，建議由教練人工判斷。"]
+      limits: ["Too few substitute options; this one needs a coach's judgement."]
     };
     return jsonContent(assertGrounded(payload, graph));
   }
@@ -256,9 +262,9 @@ export async function decideExerciseSubstitutionTool(args = {}) {
     })),
     reason: [
       chosen.reason,
-      ...(avoid.length ? [`已硬性排除對 ${avoid.join("、")} 有禁忌的動作。`] : []),
+      ...(avoid.length ? [`Movements contraindicated for ${avoid.join(", ")} were hard-filtered out.`] : []),
       ...(chosen.preservesTrainingGoal
-        ? [`替代動作仍服務原本的訓練目標（${original.trainingGoals.join("、")}）。`]
+        ? [`The substitute still serves the original training goal (${original.trainingGoals.join(", ")}).`]
         : [])
     ],
     confidence: original.confidence >= 0.9 ? "high" : "medium",
@@ -268,7 +274,7 @@ export async function decideExerciseSubstitutionTool(args = {}) {
     limits: chosen.preservesTrainingGoal
       ? []
       : [
-          `訓練刺激已改變：原動作服務 ${original.trainingGoals.join("、")}，替代動作服務 ${chosen.trainingGoals.join("、")}。`
+          `The training stimulus changed: the original served ${original.trainingGoals.join(", ")}, the substitute serves ${chosen.trainingGoals.join(", ")}.`
         ]
   };
 

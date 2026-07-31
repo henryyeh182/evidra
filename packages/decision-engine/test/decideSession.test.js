@@ -40,8 +40,34 @@ test("low readiness turns a hard session into a lower-intensity one (from -> to)
   assert.equal(result.decision.intent, "reduce_today_intensity");
   assert.equal(result.action.from.intensity, "high");
   assert.equal(result.action.to.intensity, "moderate");
-  assert.deepEqual(result.action.changed, ["intensity"]);
+  assert.deepEqual(result.action.changed, ["focus", "intensity"]);
   assert.ok(result.reason.some((line) => line.includes("52")), "reason cites the readiness value");
+});
+
+test("a session renamed by an intensity cut no longer claims the stimulus it lost", () => {
+  // Regression, found running the real MCP server: only `intensity` changed, so
+  // the action came back reading "VO2max Intervals, 60 min, low" — a name that
+  // promises a stimulus the decision just removed, and not a session anyone can
+  // execute as written.
+  const result = decideSession({
+    scheduledSession: session({ focus: "VO2max Intervals", durationMinutes: 60 }),
+    state: state({ readinessScore: 51, muscleFatigue: { legs: 96 } })
+  });
+
+  assert.equal(result.action.from.focus, "VO2max Intervals", "the plan as written is preserved");
+  assert.equal(result.action.to.intensity, "low");
+  assert.equal(result.action.to.focus, "Easy run", "the name follows the intensity");
+  assert.ok(result.action.changed.includes("focus"));
+});
+
+test("an unchanged intensity leaves the session's name alone", () => {
+  const result = decideSession({
+    scheduledSession: session({ focus: "Tempo Run", intensity: "moderate", durationMinutes: 60 }),
+    state: state({ availableTimeMinutes: 30 })
+  });
+
+  assert.equal(result.action.to.focus, "Tempo Run", "a time cut is no reason to rename the session");
+  assert.ok(!result.action.changed.includes("focus"));
 });
 
 test("every decision is grounded in evidence it actually names", () => {
@@ -151,7 +177,7 @@ test("a caller-supplied budget is marked as the override it is", () => {
 test("an unknown time budget never becomes a reason to shorten the session", () => {
   // Regression: with no availableMinutes supplied, an upstream default of 30
   // reached the engine as if it were a real constraint. A 60-minute session was
-  // cut to 30 and the athlete was told "可用時間僅 30 分鐘" — a reason bound to
+  // cut to 30 and the athlete was told "only 30 minutes are available" — a reason bound to
   // evidence they had never given. Unknown is unknown.
   const result = decideSession({
     scheduledSession: session({ intensity: "moderate", durationMinutes: 60 }),
@@ -161,12 +187,12 @@ test("an unknown time budget never becomes a reason to shorten the session", () 
   assert.equal(result.action.to.durationMinutes, 60, "duration survives an unstated budget");
   assert.ok(!result.action.changed.includes("durationMinutes"));
   assert.ok(
-    !result.reason.some((line) => line.includes("可用時間")),
+    !result.reason.some((line) => /minutes are available/.test(line)),
     "nothing may be asserted about time we were never told"
   );
   assert.ok(!result.evidence.some((item) => item.signal === "available_minutes"));
   assert.ok(
-    result.limits.some((line) => line.includes("可用時間")),
+    result.limits.some((line) => /available-time/.test(line)),
     "what we did not know is surfaced, not hidden"
   );
 });
@@ -193,7 +219,7 @@ test("without a scheduled session there is no decision to make", () => {
 
   assert.equal(result.decision.intent, "no_scheduled_session");
   assert.equal(result.action.from, null);
-  assert.ok(result.limits.some((line) => line.includes("推薦")));
+  assert.ok(result.limits.some((line) => /recommendation/.test(line)));
 });
 
 test("missing signals are surfaced as limits, not hidden", () => {
@@ -246,7 +272,7 @@ test("an active restriction blocks advancing, however good readiness looks", () 
 
   assert.notEqual(result.decision.type, "advance", "never push intensity while a restriction is active");
   assert.equal(result.action.to.intensity, "moderate");
-  assert.ok(result.reason.some((line) => line.includes("不提升強度")));
+  assert.ok(result.reason.some((line) => /intensity is not raised/.test(line)));
 });
 
 test("a maxed-out muscle group is acted on even when readiness already cut a step", () => {
@@ -356,7 +382,7 @@ test("a rested but detrained athlete is eased back, not sent into the planned ha
   assert.ok(result.action.changed.includes("intensity"));
   assert.ok(result.action.changed.includes("durationMinutes"));
   assert.ok(
-    result.reason.some((line) => /62 天/.test(line)),
+    result.reason.some((line) => /62 days/.test(line)),
     "the decision has to name the break it is reacting to"
   );
   assert.ok(
@@ -489,8 +515,8 @@ test("a proposal above the ceiling is refused, and the refusal names the axis", 
   });
 
   assert.equal(result.proposal.verdict, "rejected");
-  assert.ok(result.proposal.violations.some((v) => v.includes("強度")), "names the intensity axis");
-  assert.ok(result.proposal.violations.some((v) => v.includes("時長")), "names the duration axis");
+  assert.ok(result.proposal.violations.some((v) => /intensity/.test(v)), "names the intensity axis");
+  assert.ok(result.proposal.violations.some((v) => /duration/.test(v)), "names the duration axis");
   // Refusing the proposal must not leave the athlete without an answer.
   assert.equal(result.action.to.intensity, "low");
   assertValidDecision(result);
@@ -529,7 +555,7 @@ test("a proposal cannot switch off an injury restriction", () => {
   });
 
   assert.equal(result.proposal.verdict, "rejected");
-  assert.ok(result.proposal.violations.some((v) => v.includes("受限動作")));
+  assert.ok(result.proposal.violations.some((v) => /restricted movements/.test(v)));
 });
 
 test("a proposal aimed at an already-fatigued muscle group is caught", () => {

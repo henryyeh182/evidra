@@ -76,13 +76,16 @@ Returns the five-layer decision:
   "decision": { "type": "adjust", "intent": "reduce_today_intensity" },
   "action": {
     "from": { "focus": "Tempo Run", "intensity": "high" },
-    "to":   { "focus": "Tempo Run", "intensity": "moderate" },
-    "changed": ["intensity"]
+    "to":   { "focus": "Moderate run", "intensity": "moderate" },
+    "changed": ["focus", "intensity"]
   },
-  "reason": ["Readiness 52 低於 60，需調降強度。"],
+  "reason": [
+    "Readiness 52 is below 60, so intensity comes down.",
+    "At moderate intensity the session is no longer \"Tempo Run\"; it becomes \"Moderate run\"."
+  ],
   "confidence": "medium",
   "signalCoverage": { "usable": ["hrv"], "missing": ["sleep"] },
-  "limits": ["缺少 sleep 訊號，信心下調。"]
+  "limits": ["No sleep signal was available, so confidence is lowered."]
 }
 ```
 

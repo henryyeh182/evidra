@@ -9,7 +9,7 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Report how the user is doing today: recovery, readiness, muscle-group fatigue and training load, each with the evidence behind it and an honest list of what could not be seen. Use this for 'how am I doing today', 'have I recovered', 'am I overtraining', 'how is my training load'. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. This reports state only. To decide what to do about a session that is already planned, use decide_session.",
+      "Report how the user is doing today: recovery, readiness, muscle-group fatigue and training load, each with the evidence behind it and an honest list of what could not be seen. Use this for 'how am I doing today', 'have I recovered', 'am I overtraining', 'how is my training load'. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. This reports state only — it never says what to train. If the user has a session scheduled and wants to know whether to do it, use decide_session; if they have no plan at all, use generate_plan.",
     inputSchema: {
       type: "object",
       properties: {
@@ -81,7 +81,7 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Decide what today's scheduled session should become, given today's evidence. Returns a decision with from -> to: the session as planned, what it should change to, and the evidence and rules behind the change. Use this for 'what should I train today', 'am I ready for today's session', 'should I adjust today's workout'. If the user proposes their own alternative — 'today was cardio, can I do stretching instead?' — pass that as `proposedSession` and it comes back accepted or refused, with the reason. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. This is a decision, not a suggestion: it requires a scheduled session and decides about an existing plan rather than inventing one. Do NOT re-derive or override the intensity, duration or movements it returns — injury filtering and load limits are enforced server-side and are decisions, not advice. To look up state alone, use assess_fitness_state.",
+      "Decide what today's scheduled session should become, given today's evidence. Returns a decision with from -> to: the session as planned, what it should change to, and the evidence and rules behind the change. Use this for questions about a session that is already on the books: 'am I ready for today's session', 'today's plan says intervals — should I still do them', 'should I adjust today's workout', 'I only have 30 minutes today'. `scheduledSession` is what makes this a decision: called without it, this tool returns no_scheduled_session and decides nothing, so for an open-ended 'what should I train today' with no plan in hand, call generate_plan instead. If the user proposes their own alternative — 'today was cardio, can I do stretching instead?' — pass that as `proposedSession` and it comes back accepted or refused, with the reason. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. This is a decision, not a suggestion: it requires a scheduled session and decides about an existing plan rather than inventing one. Do NOT re-derive or override the intensity, duration or movements it returns — injury filtering and load limits are enforced server-side and are decisions, not advice. To look up state alone, use assess_fitness_state.",
     inputSchema: {
       type: "object",
       properties: {
@@ -153,11 +153,15 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Decide what a movement the user cannot do today should be replaced with. Returns a decision with from -> to: the original exercise, the one it becomes, and the evidence behind the swap, including whether the training stimulus survived the change. Use this for 'my knee hurts when I squat', 'I have no barbell today', 'what can I do instead of X'. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. Injury contraindications are a hard filter applied server-side — do NOT override or reason past the result. Do NOT use this to browse exercises.",
+      "Decide what a movement the user cannot do today should be replaced with. Returns a decision with from -> to: the original exercise, the one it becomes, and the evidence behind the swap, including whether the training stimulus survived the change. Use this for 'my knee hurts when I squat', 'I have no barbell today', 'what can I do instead of X'. Pass `exerciseId` as the movement the user named, in their own words — the server resolves names and aliases to the catalog itself. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. Injury contraindications are a hard filter applied server-side — do NOT override or reason past the result. Do NOT use this to browse exercises.",
     inputSchema: {
       type: "object",
       properties: {
-        exerciseId: { type: "string", description: "The exercise being replaced." },
+        exerciseId: {
+          type: "string",
+          description:
+            "The exercise being replaced. Accepts the movement as the user said it ('back squat', 'bench'), a catalog name, or a canonical exercise_* id — all are resolved server-side."
+        },
         conditions: { type: "array", items: { type: "string" }, description: "Situation, e.g. ['knee_injury', 'no_equipment']." },
         availableEquipment: { type: "array", items: { type: "string" }, description: "Equipment the user actually has." },
         avoidContraindications: { type: "array", items: { type: "string" }, description: "Joints to protect, e.g. ['knee']." }

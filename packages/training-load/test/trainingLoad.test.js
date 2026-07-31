@@ -67,7 +67,7 @@ test("too little history is reported as such, not dressed up as a verdict", () =
 
   assert.equal(result.zone, "insufficient_history");
   assert.equal(result.coverage.sufficient, false);
-  assert.match(result.zoneNote, /尚未收斂/);
+  assert.match(result.zoneNote, /have not converged/);
 });
 
 test("no workouts at all yields zeroes rather than NaN", () => {
@@ -148,7 +148,7 @@ function trainingThenSilence(gapDays) {
 test("a long layoff reads as detraining rather than as balance", () => {
   // Regression: detraining used to be a TSB band at `TSB >= 25`. TSB is a
   // difference, so once ATL bottoms out it tracks CTL back down toward zero —
-  // six months off scored "neutral" (負荷與恢復平衡) and two weeks off scored
+  // six months off scored "neutral" and two weeks off scored
   // "fresh". The longer someone had been away, the healthier they looked.
   for (const gap of [30, 60, 90, 180]) {
     const { workouts, asOf } = trainingThenSilence(gap);
@@ -179,5 +179,5 @@ test("no workout history says so instead of reading as trained or detrained", ()
 
   assert.equal(result.detraining.active, false);
   assert.equal(result.detraining.daysSinceLastSession, null);
-  assert.match(result.detraining.note, /沒有訓練紀錄/);
+  assert.match(result.detraining.note, /No training history/);
 });

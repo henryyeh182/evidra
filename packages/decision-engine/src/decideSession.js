@@ -23,6 +23,16 @@ const RULES = {
 
 const INTENSITY_ORDER = ["low", "moderate", "high"];
 
+// How a session is named once its intensity has been pulled down. The planned
+// focus describes a stimulus ("VO₂max Intervals"); at low intensity that name
+// no longer describes what the athlete is being told to do, and an action whose
+// `to` reads "VO₂max Intervals, 60 min, low" is not executable as written.
+// Derived from intensity and type alone — no zone, no pace, nothing the
+// evidence does not carry.
+const INTENSITY_LABEL = { low: "Easy", moderate: "Moderate", high: "Hard" };
+const relabelForIntensity = (session) =>
+  `${INTENSITY_LABEL[session.intensity]} ${session.type}`;
+
 // What a deferred session becomes. Deliberately equipment-free so the swap
 // holds whatever the athlete has, and low-impact so it stays valid under the
 // joint restrictions that often accompany a low-readiness day.
@@ -176,10 +186,12 @@ export function decideSession({
       state: stateSummary,
       decision: { type: "keep", intent: "no_scheduled_session" },
       action: { from: null, to: null, changed: [] },
-      reason: ["今天沒有排定的課表，無既有狀態可調整——這是推薦問題，不是決策問題。"],
+      reason: [
+        "Nothing is scheduled today, so there is no prior state to change. This is a recommendation question, not a decision."
+      ],
       confidence: state.confidence || "low",
       signalCoverage: state.signalCoverage || { usable: [], missing: [] },
-      limits: ["沒有計畫就只能推薦；請先建立訓練計畫，決策才成立。"]
+      limits: ["Without a plan only a recommendation is possible; a decision needs a scheduled session."]
     };
     assertValidDecision(result);
     return result;
@@ -218,7 +230,7 @@ export function decideSession({
     to.exercises = to.exerciseIds.map((id) => speak(id));
     escalate("substitute", "remove_contraindicated_movements");
     reason.push(
-      `移除受限動作 ${blockedIds.map((id) => speak(id)).join("、")}（限制：${restrictions.join("；")}）`
+      `Removed restricted movements: ${blockedIds.map((id) => speak(id)).join(", ")} (restrictions: ${restrictions.join("; ")}).`
     );
   }
 
@@ -251,27 +263,27 @@ export function decideSession({
     to.durationMinutes = Math.min(to.durationMinutes, RULES.recoveryCapMinutes);
     escalate("defer", "swap_to_recovery");
     reason.push(
-      `Readiness ${readiness} 低於 ${RULES.readinessRest}，今日不宜訓練負荷，改為 ${RULES.recoveryCapMinutes} 分鐘以內的恢復課表。`
+      `Readiness ${readiness} is below ${RULES.readinessRest}: no training load today, swapped to a recovery session of at most ${RULES.recoveryCapMinutes} minutes.`
     );
   } else {
     if (readiness < RULES.readinessReduce && from.intensity !== "low") {
-      demand(1, `Readiness ${readiness} 低於 ${RULES.readinessReduce}，需調降強度。`);
+      demand(1, `Readiness ${readiness} is below ${RULES.readinessReduce}, so intensity comes down.`);
     }
 
     // 3. Fatigue in the muscles this session actually targets. A maxed-out
     //    group warrants two steps: one notch off a hard day still leaves it
     //    training the same fatigued tissue.
     if (fatigue.group && fatigue.value >= RULES.muscleFatigueMaxed) {
-      demand(2, `${fatigue.group} 疲勞 ${fatigue.value} 已達上限，同一肌群今日不宜再受刺激。`);
+      demand(2, `${fatigue.group} fatigue is ${fatigue.value}, at the ceiling: that muscle group takes no further stimulus today.`);
     } else if (fatigue.group && fatigue.value >= RULES.muscleFatigueHigh) {
-      demand(1, `${fatigue.group} 疲勞 ${fatigue.value} 偏高，避免今日高強度刺激同一肌群。`);
+      demand(1, `${fatigue.group} fatigue is ${fatigue.value}, high enough to rule out hard work on the same muscle group today.`);
     } else if (fatigue.group && fatigue.value >= RULES.muscleFatigueModerate && from.intensity === "high") {
-      reason.push(`${fatigue.group} 疲勞 ${fatigue.value} 中等，保留強度但需留意主觀感受。`);
+      reason.push(`${fatigue.group} fatigue is ${fatigue.value}, moderate: intensity is kept, but watch how it feels.`);
     }
 
     // 4. Acute load spike.
     if (state.acuteChronicWorkloadRatio > RULES.acwrHigh) {
-      demand(1, `急慢性負荷比 ${state.acuteChronicWorkloadRatio} 高於 ${RULES.acwrHigh}，近期負荷上升過快。`);
+      demand(1, `Acute:chronic workload ratio ${state.acuteChronicWorkloadRatio} is above ${RULES.acwrHigh}: load has been ramping too fast.`);
     }
 
     // 5. Coming back from a break. Nothing above can see this. An athlete two
@@ -288,7 +300,7 @@ export function decideSession({
         detraining.ctlLossPct >= RULES.returnSevereCtlLossPct;
       demand(
         severe ? 2 : 1,
-        `距離上次訓練 ${detraining.daysSinceLastSession} 天，慢性負荷較高點下降 ${detraining.ctlLossPct}%，體能基礎已流失，回歸首堂需降載。`,
+        `${detraining.daysSinceLastSession} days since the last session and chronic load is down ${detraining.ctlLossPct}% from its peak: fitness has decayed, so the first session back is scaled down.`,
         "ease_back_after_break"
       );
 
@@ -296,13 +308,26 @@ export function decideSession({
       // would just move the overload from intensity to time.
       const cap = Math.max(15, Math.round(from.durationMinutes * RULES.returnDurationFactor));
       if (to.durationMinutes > cap) {
-        reason.push(`回歸首堂時長由 ${from.durationMinutes} 分鐘降至 ${cap} 分鐘（原定的 ${Math.round(RULES.returnDurationFactor * 100)}%）。`);
+        reason.push(`First session back: duration cut from ${from.durationMinutes} to ${cap} minutes (${Math.round(RULES.returnDurationFactor * 100)}% of planned).`);
         to.durationMinutes = cap;
       }
     }
 
     for (let step = 0; step < stepsDown; step += 1) {
       to.intensity = lowerIntensity(to.intensity);
+    }
+
+    // The name has to follow the intensity. Leaving it alone produced an action
+    // that contradicted itself — "VO₂max Intervals, 60 min, low" is not a
+    // session anyone can execute, and the athlete reading it cannot tell
+    // whether to run the intervals or not. Same reasoning as the recovery swap
+    // above, which already rewrites `focus` when the session's nature changes.
+    if (to.intensity !== from.intensity) {
+      const relabelled = relabelForIntensity(to);
+      if (relabelled !== to.focus) {
+        reason.push(`At ${to.intensity} intensity the session is no longer "${from.focus}"; it becomes "${relabelled}".`);
+        to.focus = relabelled;
+      }
     }
   }
 
@@ -327,7 +352,7 @@ export function decideSession({
       source: budget.source
     });
     if (to.durationMinutes > budget.minutes) {
-      reason.push(`可用時間僅 ${budget.minutes} 分鐘，時長需縮短。`);
+      reason.push(`Only ${budget.minutes} minutes are available, so the session is shortened.`);
       to.durationMinutes = budget.minutes;
       escalate("adjust", "fit_time_budget");
     }
@@ -335,7 +360,7 @@ export function decideSession({
     // Says only what it knows: no budget was supplied, so no time-based cut was
     // made. It must not claim the duration is unchanged — another rule may have
     // shortened it for reasons that have nothing to do with the clock.
-    limits.push("未取得今日可用時間，未依時間限制裁切時長。");
+    limits.push("No available-time figure was supplied, so no time-based cut was made.");
   }
 
   // 7. Room to progress: only when nothing above pulled anything down, and only
@@ -357,7 +382,7 @@ export function decideSession({
   ) {
     to.intensity = raiseIntensity(to.intensity);
     escalate("advance", "increase_today_intensity");
-    reason.push(`Readiness ${readiness} 充足且 ${fatigue.group || "目標肌群"} 疲勞低，強度可由 ${from.intensity} 提升為 ${to.intensity}。`);
+    reason.push(`Readiness ${readiness} is ample and ${fatigue.group || "the target muscle group"} fatigue is low, so intensity steps up from ${from.intensity} to ${to.intensity}.`);
   }
 
   if (
@@ -366,7 +391,7 @@ export function decideSession({
     readiness >= RULES.readinessAdvance &&
     from.intensity !== "high"
   ) {
-    reason.push(`Readiness ${readiness} 雖高，但有活動中的限制（${restrictions.join("；")}），不提升強度。`);
+    reason.push(`Readiness ${readiness} is high, but active restrictions (${restrictions.join("; ")}) are in force, so intensity is not raised.`);
   }
 
   // 8. The athlete proposed something.
@@ -390,11 +415,11 @@ export function decideSession({
 
     if (INTENSITY_ORDER.indexOf(wanted.intensity) > INTENSITY_ORDER.indexOf(to.intensity)) {
       violations.push(
-        `提議強度 ${wanted.intensity} 高於今日上限 ${to.intensity}。`
+        `Proposed intensity ${wanted.intensity} exceeds today's ceiling of ${to.intensity}.`
       );
     }
     if (wanted.durationMinutes > to.durationMinutes) {
-      violations.push(`提議時長 ${wanted.durationMinutes} 分鐘超過今日上限 ${to.durationMinutes} 分鐘。`);
+      violations.push(`Proposed duration ${wanted.durationMinutes} minutes exceeds today's ceiling of ${to.durationMinutes} minutes.`);
     }
 
     // The fatigue rules above were judged against the *scheduled* session's
@@ -405,7 +430,7 @@ export function decideSession({
     const wantedFatigue = targetFatigue(proposedSession, state.muscleFatigue);
     if (wantedFatigue.group && wantedFatigue.value >= RULES.muscleFatigueHigh && wanted.intensity !== "low") {
       violations.push(
-        `提議刺激 ${wantedFatigue.group}，該肌群疲勞 ${wantedFatigue.value} 偏高，非低強度不宜。`
+        `The proposal targets ${wantedFatigue.group}, whose fatigue is ${wantedFatigue.value}: only low intensity is admissible there today.`
       );
     }
 
@@ -420,14 +445,14 @@ export function decideSession({
     });
     if (wantedBlocked.length > 0) {
       violations.push(
-        `提議包含受限動作 ${wantedBlocked.map((id) => speak(id)).join("、")}（限制：${restrictions.join("；")}）。`
+        `The proposal includes restricted movements: ${wantedBlocked.map((id) => speak(id)).join(", ")} (restrictions: ${restrictions.join("; ")}).`
       );
     }
 
     if (violations.length === 0) {
       proposal = { verdict: "accepted", violations: [] };
       reason.push(
-        `提議的「${wanted.focus || wanted.type}」在今日上限（${to.intensity} 強度、${to.durationMinutes} 分鐘）之內，採用。`
+        `The proposed "${wanted.focus || wanted.type}" sits within today's ceiling (${to.intensity} intensity, ${to.durationMinutes} minutes), so it is accepted.`
       );
       // The proposal becomes the action. Everything the rules capped still
       // holds — it passed those caps, that is why it was accepted.
@@ -444,7 +469,7 @@ export function decideSession({
       // the alternative was refused.
       proposal = { verdict: "rejected", violations };
       for (const violation of violations) reason.push(violation);
-      limits.push("提議未被採用，行動維持引擎依證據判定的內容。");
+      limits.push("The proposal was not accepted; the action stays what the evidence supports.");
     }
   }
 
@@ -454,12 +479,12 @@ export function decideSession({
     intent = "proceed_as_planned";
   }
   if (type === "keep" && reason.length === 0) {
-    reason.push(`Readiness ${readiness}、目標肌群疲勞 ${fatigue.value || 0}，均在可執行範圍，照原定課表執行。`);
+    reason.push(`Readiness ${readiness} and target-muscle fatigue ${fatigue.value || 0} are both within range, so the session runs as planned.`);
   }
 
   const coverage = state.signalCoverage || { usable: [], missing: [] };
   if (coverage.missing?.length > 0) {
-    limits.push(`缺少 ${coverage.missing.join("、")} 訊號，信心下調。`);
+    limits.push(`No ${coverage.missing.join(", ")} signal was available, so confidence is lowered.`);
   }
 
   // Per-session intensity distribution is carried, not consumed. Saying so is
@@ -471,8 +496,8 @@ export function decideSession({
   if (distributions.length > 0) {
     const sources = [...new Set(distributions.map((entry) => entry.boundarySource).filter(Boolean))];
     limits.push(
-      `${distributions.length} 筆訓練帶有心率區間分佈（邊界來源：${sources.join("、") || "未標示"}），` +
-        `已列入證據鏈，但目前沒有任何決策規則讀取它——不以單一使用者的資料訂門檻。`
+      `${distributions.length} sessions carry a heart-rate zone distribution (boundary source: ${sources.join(", ") || "unlabelled"}). ` +
+        `They are recorded as evidence, but no decision rule reads them — thresholds are not set from one athlete's data.`
     );
   }
 
