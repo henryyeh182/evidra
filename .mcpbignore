@@ -1,0 +1,31 @@
+# What must not travel inside the packed .mcpb.
+#
+# `mcpb pack` does not read .gitignore. It applies its own built-in exclusion
+# list (.git, node_modules/.cache, *.log, .env*, ...) plus this file, and it
+# treats .gitignore itself as just another file to leave out. So every path
+# that .gitignore protects has to be repeated here or it ships.
+
+# Real personal health exports: Apple Health, Garmin, and anything derived from
+# them. Packing these would publish a real person's health record inside an
+# extension that other people install. This entry is the reason the file exists.
+data/private/
+
+# Read by tests and import scripts, never on the server's import path.
+data/vendor/
+schemas/
+
+# Tests.
+**/test/
+*.test.js
+
+# Development surface: none of it is reachable from the entry point.
+docs/
+eval/
+scripts/
+.claude/
+CLAUDE.md
+
+# Kept: manifest.json, README.md (the submission requires its Privacy Policy
+# section to travel with the bundle), apps/, packages/, and data/seeds +
+# data/fixtures, which the server reads at runtime through knowledgeBase.js
+# and demoData.js.
