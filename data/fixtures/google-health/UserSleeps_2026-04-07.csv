@@ -1,0 +1,3 @@
+sleep_id,sleep_type,minutes_in_sleep_period,minutes_after_wake_up,minutes_to_fall_asleep,minutes_asleep,minutes_awake,minutes_longest_awakening,minutes_to_persistent_sleep,start_utc_offset,sleep_start,end_utc_offset,sleep_end,data_source,algorithm_version,sleep_created,sleep_last_updated
+174720184634792456,STAGES,384,0,0,337,46,0,0,+08:00,2026-07-19T15:32:04Z,+08:00,2026-07-19T21:56:04Z,UNKNOWN,none,2026-07-20T00:31:47Z,2026-07-20T00:38:52Z
+404254996482453457,STAGES,420,0,0,412,6,0,0,+08:00,2026-07-24T16:02:31Z,+08:00,2026-07-24T23:50:00Z,UNKNOWN,none,2026-07-26T07:41:21Z,2026-07-26T07:41:21Z

@@ -105,6 +105,70 @@ export const VENDOR_SCHEMAS = {
     ]
   },
 
+  // Google Health's Takeout export ("Google Health" in Google Takeout) is a
+  // *different dialect* of the same platform, not Health Connect's record types
+  // in files. It is also not a Garmin export even when every value in it arrived
+  // by Garmin sync: the schema is Google/Fitbit's (per-signal CSVs plus
+  // month-sliced JSON), verified zero filename overlap against a real Garmin
+  // export. Values and dialect travel separately — see `quirks`.
+  google_health_export: {
+    label: "Google Health (Takeout export)",
+    access: "user_export",
+    dialectOf: "google_health_connect",
+    signals: [
+      {
+        from: "daily_resting_heart_rate.beats per minute",
+        to: "resting_hr_bpm",
+        convert: identity,
+        scale: "bpm"
+      },
+      // The export spells sleep in minutes where Health Connect uses stage
+      // seconds — same fact, different unit, one canonical landing.
+      { from: "UserSleeps.minutes_asleep", to: "sleep_duration_hours", convert: (min) => hours(min * 60), scale: "minutes" },
+      { from: "sleep_score.overall_score", to: "sleep_quality", convert: identity, scale: "0-100" },
+      { from: "Stress Score.STRESS_SCORE", to: "stress", convert: identity, scale: "0-100", requires: "CALCULATION_FAILED === false" },
+      { from: "steps.steps", to: "steps", convert: identity, scale: "count", aggregate: "daily_max_across_sources" }
+    ],
+
+    /**
+     * Traps in the export itself. Each one was observed in a real 480-file
+     * export (2026-03-31 → 2026-07-30, values Garmin-synced) before being
+     * written down here.
+     */
+    quirks: {
+      valuesAreNotTheDialect:
+        "Every heart-rate row in the observed export says `data source: Garmin Connect™ Health Kit`, yet the file layout is pure Google/Fitbit Takeout. Detect the dialect from the file shape (per-signal CSVs, month-sliced JSON), never from where the values originated.",
+      syncLosesTheComposites:
+        "When values arrive by Garmin sync, Fitbit's own composites are empty shells: sleep_score.csv and Stress Score.csv are header-only, tracker_cardio_load is 0 on every exercise, and Garmin's readiness/Body Battery do not cross either. The export nominally contains four recovery signals and actually delivers one (resting HR). Availability over the observed export: daily resting HR 47/120 days, sleep 2 nights, sleep score 0, stress 0.",
+      midnightTimestampsEncodeTheOffset:
+        "daily_resting_heart_rate.csv stamps each day at *local midnight expressed in UTC* (2026-03-31T16:00:00Z = 2026-04-01 00:00 +08:00). Bucketing by the UTC date misfiles every single row for any athlete east of Greenwich. The time-of-day is itself the offset: 24:00 − 16:00 = +8. Decode it; never read the UTC date.",
+      monthlyJsonDatesAreMMDDYY:
+        "Global Export Data/*.json spells dates as `04/06/26 00:00:00` — US month-first, two-digit year, no zone. The same resting-heart-rate fact appears in daily_resting_heart_rate.csv as an ISO instant; both spellings must land identically.",
+      zeroIsNotMeasured:
+        "0 is the not-measured sentinel throughout: `value: 0.0` in the monthly JSON, resting HR 0, tracker_avg_heart_rate 0, tracker_cardio_load 0. UNSPECIFIED plays the same role in enum-ish columns. A literal read turns an unworn tracker into a flatlined athlete.",
+      stepsArriveFromTwoRecordersAtOnce:
+        "steps_*.csv interleaves rows from `Garmin Connect™ Health Kit` and `Phone Health Kit` covering the same hours of the same day. Summing all rows double-counts every dual-recorded day; the honest daily figure is the max of the per-source sums.",
+      napsAreNotMarked:
+        "UserSleeps_*.csv has no main-sleep flag (the Fitbit API's isMainSleep does not survive into this export). A nap row is indistinguishable from a night except by duration, so every row is emitted and no row is silently dropped.",
+      exercisesAreUtcWithOffsetColumn:
+        "UserExercises/UserSleeps timestamps are UTC instants with the local offset in a separate `utc_offset` column (+08:00). Unlike Strava's export the offset is right there — no FIT file archaeology required."
+    },
+
+    /**
+     * Files in the export that carry evidence. The other ~20 folders (Discover,
+     * Fitbit Premium, Menstrual Health, Social, account data …) are not read.
+     */
+    files: {
+      "Physical Activity_GoogleData/daily_resting_heart_rate.csv": "one row per measured day, stamped at local midnight in UTC",
+      "Physical Activity_GoogleData/steps_*.csv": "intra-day step intervals, month-sliced, multi-recorder",
+      "Health Fitness Data_GoogleData/UserExercises_*.csv": "one row per session; 46 columns; tracker_* vs manually_logged_* blocks",
+      "Health Fitness Data_GoogleData/UserSleeps_*.csv": "one row per sleep, minutes-denominated, with per-row UTC offsets",
+      "Sleep Score/sleep_score.csv": "Fitbit's overnight composite — header-only when values are Garmin-synced",
+      "Stress Score/Stress Score.csv": "Fitbit's stress composite with a CALCULATION_FAILED flag — header-only when Garmin-synced",
+      "Global Export Data/resting_heart_rate-*.json": "the monthly-JSON spelling of the daily resting HR fact, MM/DD/YY-dated, 0.0-sentinelled"
+    }
+  },
+
   oura: {
     label: "Oura Ring",
     access: "oauth_cloud",

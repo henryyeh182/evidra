@@ -29,6 +29,12 @@ export {
   normalizeAppleHealthExport
 } from "./providers/apple-health/index.js";
 export {
+  parseGoogleHealthExport,
+  buildGoogleHealthEvidence,
+  deriveExportOffsetMinutes,
+  decodeMidnightOffsetMinutes
+} from "./providers/google-health/index.js";
+export {
   buildGarminEvidence,
   normalizeGarminReadiness,
   normalizeGarminDailySummary,

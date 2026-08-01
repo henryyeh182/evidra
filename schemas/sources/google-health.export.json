@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/sources/google-health.export",
+  "title": "Google Health Takeout export (raw, parsed rows)",
+  "description": "The subset of a Google Health Takeout export that packages/connectors/src/providers/google-health reads, as rows straight off the CSV/JSON split — field names are Google/Fitbit's, not ours. This is the Takeout dialect of the google_health_connect platform: per-signal CSVs plus month-sliced JSON, NOT Health Connect record types, and not a Garmin export even when every value arrived by Garmin sync (observed: zero filename overlap with a real Garmin export; every heart-rate row labelled 'Garmin Connect™ Health Kit'). Every field is optional because the export is full of holes and hollow files: measured over one real 480-file export, daily resting HR covered 47/120 days, sleep 2 nights, and the Fitbit composites (sleep_score.csv, Stress Score.csv) were header-only because Garmin-synced values never get scored by Fitbit. 0 and UNSPECIFIED are not-measured sentinels throughout.",
+  "type": "object",
+  "properties": {
+    "dailyRestingHeartRate": {
+      "type": "array",
+      "description": "Rows of Physical Activity_GoogleData/daily_resting_heart_rate.csv. One row per measured day — absent days are simply absent.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "description": "Local midnight expressed as a UTC instant (2026-03-31T16:00:00Z = 00:00 +08:00 on 2026-04-01). The UTC date is the wrong day for any athlete east of Greenwich; the time-of-day encodes the offset."
+          },
+          "beats per minute": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "description": "Float in the file ('59.0'). 0 is the not-measured sentinel, not a heart rate."
+          },
+          "data source": {
+            "type": ["string", "null"],
+            "description": "Recorder label, e.g. 'Garmin Connect™ Health Kit'. Provenance of the value, not the dialect."
+          }
+        }
+      }
+    },
+    "restingHeartRateMonthly": {
+      "type": "array",
+      "description": "Entries of Global Export Data/resting_heart_rate-*.json — the second spelling of the same daily fact. Both spellings must normalize identically.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "dateTime": {
+            "type": "string",
+            "description": "US month-first, two-digit year, no zone: '04/06/26 00:00:00'."
+          },
+          "value": {
+            "type": "object",
+            "properties": {
+              "date": { "type": ["string", "null"] },
+              "value": {
+                "type": ["number", "null"],
+                "minimum": 0,
+                "description": "0.0 is the not-measured sentinel — the observed export is wall-to-wall 0.0 here while the CSV spelling carries the real values."
+              },
+              "error": { "type": ["number", "null"] }
+            }
+          }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "description": "Rows of Physical Activity_GoogleData/steps_*.csv (month-sliced): intra-day intervals, true UTC instants. The same hours of the same day arrive from more than one recorder ('Garmin Connect™ Health Kit' and 'Phone Health Kit'); summing every row double-counts the day.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": { "type": "string", "description": "ISO 8601 UTC instant, sometimes with fractional seconds." },
+          "steps": { "type": ["number", "null"], "minimum": 0 },
+          "data source": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "exercises": {
+      "type": "array",
+      "description": "Rows of Health Fitness Data_GoogleData/UserExercises_*.csv (46 columns; only the ones read are contracted). tracker_* and manually_logged_* are parallel blocks; observed Garmin-synced sessions land as log_type MANUAL with the tracker_* block populated.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "exercise_id": { "type": ["string", "number"] },
+          "exercise_start": { "type": "string", "description": "UTC instant." },
+          "exercise_end": { "type": ["string", "null"], "description": "UTC instant." },
+          "utc_offset": { "type": ["string", "null"], "description": "The session's local offset, e.g. '+08:00' — carried in-row, unlike Strava's export." },
+          "activity_name": { "type": ["string", "null"], "description": "Human label: 'Outdoor Run', 'Bike', 'Hike', …" },
+          "log_type": { "type": ["string", "null"], "description": "MANUAL / TRACKER / AUTO_DETECTED. Garmin-synced sessions arrive as MANUAL." },
+          "tracker_total_calories": { "type": ["number", "null"], "minimum": 0, "description": "Active energy for the session. 0 means not measured." },
+          "tracker_total_distance_mm": { "type": ["number", "null"], "minimum": 0, "description": "Millimetres." },
+          "tracker_avg_heart_rate": { "type": ["number", "null"], "minimum": 0, "description": "0 is the not-worn sentinel." },
+          "tracker_peak_heart_rate": { "type": ["number", "null"], "minimum": 0, "description": "0 is the not-worn sentinel." },
+          "tracker_cardio_load": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "description": "Fitbit's own training-load composite (Cardio Load). 0 means Fitbit never computed it — true of every Garmin-synced session observed. When present it is the vendor's load and is used as-is, not recomputed."
+          },
+          "manually_logged_total_calories": { "type": ["number", "null"], "minimum": 0 },
+          "manually_logged_total_distance_mm": { "type": ["number", "null"], "minimum": 0 }
+        }
+      }
+    },
+    "sleeps": {
+      "type": "array",
+      "description": "Rows of Health Fitness Data_GoogleData/UserSleeps_*.csv. Minutes-denominated where Health Connect speaks stage seconds. No main-sleep flag survives into this export, so a nap is indistinguishable from a night except by duration — every row is emitted.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sleep_id": { "type": ["string", "number"] },
+          "sleep_type": { "type": ["string", "null"], "description": "STAGES or CLASSIC — two recorders of the same fact." },
+          "minutes_asleep": { "type": ["number", "null"], "minimum": 0 },
+          "minutes_awake": { "type": ["number", "null"], "minimum": 0 },
+          "start_utc_offset": { "type": ["string", "null"] },
+          "sleep_start": { "type": ["string", "null"], "description": "UTC instant." },
+          "end_utc_offset": { "type": ["string", "null"] },
+          "sleep_end": { "type": ["string", "null"], "description": "UTC instant. With end_utc_offset this yields the local wake-up day the night belongs to." }
+        }
+      }
+    },
+    "sleepScores": {
+      "type": "array",
+      "description": "Rows of Sleep Score/sleep_score.csv — Fitbit's overnight composite. Header-only in the observed export: Fitbit does not score Garmin-synced nights. Contracted from the header plus Fitbit's published takeout format.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sleep_log_entry_id": { "type": ["string", "number"] },
+          "timestamp": { "type": ["string", "null"], "description": "ISO 8601." },
+          "overall_score": { "type": ["number", "null"], "minimum": 0, "description": "0-100." },
+          "deep_sleep_in_minutes": { "type": ["number", "null"], "minimum": 0 },
+          "resting_heart_rate": { "type": ["number", "null"], "minimum": 0, "description": "Present in the file but not mapped — daily_resting_heart_rate.csv is the resting-HR source; mapping both would double-emit the same day." },
+          "restlessness": { "type": ["number", "null"], "minimum": 0 }
+        }
+      }
+    },
+    "stressScores": {
+      "type": "array",
+      "description": "Rows of Stress Score/Stress Score.csv — Fitbit's stress composite. Header-only in the observed export for the same Garmin-sync reason.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "DATE": { "type": ["string", "null"], "description": "Calendar date." },
+          "STRESS_SCORE": { "type": ["number", "null"], "minimum": 0, "description": "0-100. 0 alongside CALCULATION_FAILED means Fitbit gave up, not that the athlete was serene." },
+          "STATUS": { "type": ["string", "null"] },
+          "CALCULATION_FAILED": { "type": ["boolean", "null"], "description": "When true the row's score is not evidence." }
+        }
+      }
+    }
+  }
+}

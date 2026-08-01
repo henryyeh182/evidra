@@ -10,13 +10,17 @@
 
 ## 場景的軸線是「匯出檔的形狀」
 
-| Scenario | 這個形狀在考什麼 |
-|---|---|
-| `complete_export` | registry 宣告 Garmin 有的訊號，完整匯出時是否真的解析得出來；單位是否換算 |
-| `sentinels_and_gaps` | `level: NONE`、`restingHeartRate: 0`、`averageStressLevel: -1`、整晚沒有 sleep record —— sentinel 不得變成生理值 |
-| `dialect_equivalence` | 同一天用兩種寫法（`{typeKey}` vs 裸字串、`calendarDate` vs epoch）必須正規化成**完全相同**的 canonical evidence |
-| `lossy_export` | Garmin 常缺的欄位（無 EPOC load、有睡眠時長無評分、bodyBattery 缺 HIGHEST）—— 只能縮小宣稱，不得填補 |
-| `sparse_wear` | 一週只戴一兩次 —— 沒有紀錄的日子不得憑空生出讀數，coverage 要誠實縮水 |
+五種形狀，每個來源各考一次自己的方言版本：
+
+| Scenario | Garmin 的形狀考什麼 | Google Health Takeout 的形狀考什麼 |
+|---|---|---|
+| `complete_export` | registry 宣告的訊號完整匯出時真的解析得出來；單位換算 | 同左，含 Fitbit 複合分數（sleep_score、Stress Score、Cardio Load）都在的樣子 |
+| `sentinels_and_gaps` | `level: NONE`、`restingHeartRate: 0`、`averageStressLevel: -1`、整晚沒有 sleep record | `0.0` bpm、`CALCULATION_FAILED` 的 stress 列、睡眠檔沒有那一晚的列——手機還在計步 |
+| `dialect_equivalence` | 同一天 `{typeKey}` vs 裸字串、`calendarDate` vs epoch | 同一個每日靜息心率寫成 ISO CSV（local midnight 以 UTC 表示）vs 按月 JSON（`04/06/26`）|
+| `lossy_export` | 無 EPOC load、有時長無評分、bodyBattery 缺 HIGHEST | Garmin 同步的現實：複合分數檔只剩表頭、cardio_load 全 0、session 心率全 0——load 退回 active energy 並說明 |
+| `sparse_wear` | 一週只戴一兩次 | 錶三天量一次（實測匯出 120 天只有 47 天有靜息心率），手機持續計步 |
+
+共同紀律：沒有紀錄的日子不得憑空生出讀數，coverage 要誠實縮水。
 
 ## 斷言的類型（只有這幾種）
 
@@ -32,20 +36,26 @@
 
 ```bash
 npm run simulate:garmin
+npm run simulate:google-health
 ```
 
 ```bash
 npm run simulate:garmin -- --scenario sentinels_and_gaps --json
+npm run simulate:google-health -- --scenario lossy_export --json
 ```
 
-同一份 runner 由 [`../test/garminScenarios.test.js`](../test/garminScenarios.test.js)
+同一份 runner 由 [`../test/garminScenarios.test.js`](../test/garminScenarios.test.js)／
+[`../test/googleHealthScenarios.test.js`](../test/googleHealthScenarios.test.js)
 在 `npm test` 內執行，所以 CLI 印出來的就是被斷言的內容。
 
 ## 檔案
 
 - [`garmin.js`](garmin.js) — 場景（形狀 ＋ 檢查）與 Garmin dialect 的 renderer
-- [`run.js`](run.js) — 走完整條路徑：raw → `/schemas/sources` 驗證 → 正規化 →
+- [`run.js`](run.js) — Garmin 的完整路徑：raw → `/schemas/sources` 驗證 → 正規化 →
   `/schemas/evidence` 驗證 → 經 JSON-RPC 呼叫 `assess_fitness_state` / `decide_session`
+- [`google-health.js`](google-health.js) — Google Health Takeout 的場景與 renderer
+  （產出的是檔案 bundle：CSV ＋ 按月 JSON，多一步 `parseGoogleHealthExport`）
+- [`google-health.run.js`](google-health.run.js) — 同一條路徑的 Google Health 版
 
 ## 加一個新來源時
 

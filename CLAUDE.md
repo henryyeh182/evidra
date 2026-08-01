@@ -120,22 +120,28 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 **模擬的生理數值不是 ground truth**，不得用來回頭 fit `readiness < 40` 這類門檻。
 
-## 現況（2026-07-31 查證）
+## 現況（2026-08-01 查證）
 
 - 對外 **6 個 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` ·
   `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
-- **262 tests**、eval 20 golden cases，全綠
-- parser 實作 3 家（Apple Health／Garmin／Strava，Strava 含 API 與 bulk export 兩種方言）；
-  schema registry 涵蓋 6 家
+- **284 tests**、eval 20 golden cases，全綠
+- parser 實作 4 家（Apple Health／Garmin／Strava／Google Health Takeout；Strava 含 API 與
+  bulk export 兩種方言）；schema registry 涵蓋 6 個平台
 - Strava bulk export：CSV 按欄位**索引**解析（5 組同名欄單位不同）；`Activity Date` 是 UTC 無 offset，
   本地時區只能從 `activities/*.fit.gz` 的 `activity.local_timestamp − timestamp` 還原
   （opt-in `readLocalTimezone`）
+- Google Health Takeout（＝ Fitbit 形狀的匯出，跟 Health Connect API 是同平台不同方言）：
+  每日檔的 timestamp 是「本地午夜以 UTC 表示」（16:00Z ＝ +08:00 的 00:00，時刻本身就編碼了
+  offset）；按月 JSON 日期是 `MM/DD/YY`；`0`／`0.0`／`UNSPECIFIED` 全是 not-measured sentinel；
+  同一天的步數會同時來自 Garmin 與手機兩個 recorder（取單一 recorder 最大值，不相加）；
+  Garmin 同步進來的值不會有 Fitbit 複合分數（sleep_score／Stress Score 只剩表頭、cardio_load 全 0）
 - 知識圖譜 889 節點 / 5,785 邊（**內部證據來源，不是對外產品**）
 - transport：stdio ✅ · Streamable HTTP ✅；OAuth 只有「檢查 token claims」那一半
   （`oauth.js`），**簽章驗證器是 `null`、`http.js` 進入點沒傳 `oauth`、沒有 authorization server**
   → 端到端還不能用
 - 協定停在 `2025-06-18`；最新規格 `2026-07-28`（stateless）。升級走 dual-era
-- `schemas/sources/` 與 `eval/scenarios/` 只有 Garmin 一家 → `review:phase` 的 G5 紅
+- `schemas/sources/` 與 `eval/scenarios/` 有 Garmin 與 Google Health Takeout 兩家；
+  Apple Health／Strava 仍缺 → `review:phase` 的 G5 紅
 - **Phase 2：一行程式都沒有**
 
 ## 未決（不得自行改寫）
