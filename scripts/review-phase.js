@@ -81,9 +81,12 @@ function has(relativePath) {
 }
 
 /** 回報漂移時附上行號，否則收到的人得自己找。 */
-function locate(relativePath, text, needle) {
-  const index = text.indexOf(needle);
-  if (index < 0) return relativePath;
+/**
+ * 位置要用這一處 match 的 index，不能拿字串回頭去找第一次出現的地方——同一份
+ * 文件寫了三次 `262 tests` 時，三筆 finding 會全部指向第一行，修完那一行還是紅的。
+ */
+function locate(relativePath, text, index) {
+  if (!Number.isInteger(index) || index < 0) return relativePath;
   return `${relativePath}:${text.slice(0, index).split("\n").length}`;
 }
 
@@ -113,7 +116,14 @@ gate(
   () => {
     const findings = [];
 
-    const tap = execFileSync("node", ["--test"], { cwd: rootDir, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+    // 明確指定 TAP，不要靠預設 reporter。這條比對死過一次：node --test 的預設
+    // 輸出從 TAP 換成 spec（`ℹ pass 288`）之後就再也對不到 `# pass`，而下面的
+    // Number.isFinite 讓它安靜地跳過——CLAUDE.md 寫 284、實測 288，G1 照樣綠。
+    const tap = execFileSync("node", ["--test", "--test-reporter=tap"], {
+      cwd: rootDir,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"]
+    });
     const actualTests = Number(/^# pass (\d+)$/m.exec(tap)?.[1]);
     const graph = readJson("data/seeds/exercises-graph.json");
     const actualNodes = graph.exercises.length;
@@ -132,13 +142,21 @@ gate(
       { pattern: /parser\s*實作\s*(\d+)\s*家/g, actual: actualParsers, label: "parser 家數" }
     ];
 
+    // 量不到就是紅的，不是跳過。一條「無法測量」的宣稱與一條「已驗證相符」的
+    // 宣稱在輸出上長得一樣，才是這支工具最危險的失敗——它會讓人以為查過了。
+    for (const { actual, label } of claims) {
+      if (!Number.isFinite(actual)) {
+        findings.push(`量不到「${label}」的實測值，所以這條宣稱這次根本沒有被檢查`);
+      }
+    }
+
     for (const docPath of CLAIM_DOCS.filter(has)) {
       const text = read(docPath);
       for (const { pattern, actual, label } of claims) {
         for (const match of text.matchAll(pattern)) {
           const claimed = Number(match[1].replace(/,/g, ""));
           if (Number.isFinite(actual) && claimed !== actual) {
-            findings.push(`${locate(docPath, text, match[0])} 寫 ${label} ${claimed}，實測 ${actual}`);
+            findings.push(`${locate(docPath, text, match.index)} 寫 ${label} ${claimed}，實測 ${actual}`);
           }
         }
       }
