@@ -151,13 +151,48 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 - **計價單位定案**：已暫定 per-MAU（見下）。定案條件是 Claude／Codex 出明確的
   MCP server 商業與計價文件。
 
-## 計價與當前重點（2026-07-31）
+## 選定的方向（2026-08-01 定案，`D-CHANNEL`）
+
+> **MCP-native distribution：以 Claude Connectors Directory 為第一上架目標，
+> 維持 decision engine 定位 ＋ ChatGPT Health。不做 marketplace，不做 model router。**
+
+**目標通路只有 host 內建目錄兩個**——Anthropic Connectors Directory ＋ ChatGPT（含 Health）。
+使用者在自己已付費的 AI App 裡直接開啟，這才是通路。
+
+**不做 marketplace。** Shopify App Store 能抽成，是因為它持有金流、商家關係與交易資料。
+要複製那個位置就得當健康資料的中介與權限保管者——**那是資料湖**，是「明確不做」的最後一項。
+
+**不做 model router／多模型層。** 三段分工第 3 段在 host。**MCP 本身就是 model-agnostic
+的實現**：同一支 server 誰都叫得動，而且模型成本不在我們家。自建等於把第 3 段搬回來還要
+自己付 token。唯一例外是既有的開放：**開發期 eval 呼叫模型 API 不受此限**。
+
+**不是通路的東西**（別再重新推導一次）：官方 registry／Smithery／mcp.so／PulseMCP 是
+**開發者 discovery**（官方 registry 自陳給 subregistry 消費、不給 end user），順手曝光即可；
+GPTs／Copilot／Gemini Gems／AgentExchange／Zapier 的使用者是自動化建構者；
+Trainerize／Mindbody／Wellhub 屬「賣給握有課表的一方」，需 REST／SDK；
+wearable dev platform 要直連供應商，**違反 Phase 1 界線**，僅 Phase 2 適用。
+
+**Claude 先的理由**：Anthropic 送審表單的「Data handling」步驟**明文詢問是否處理
+personal health data → 是揭露事項，不是禁區**；OpenAI Apps SDK 則**明寫不得處理 PHI**。
+ChatGPT 那側**平行查證不平行開工**，未解的是「Health 內第三方 app 能否讀到 Apple Health
+數值」與 PHI 條款適用範圍。
+
+**上架路徑有兩條，只有一條要 Team 帳號**：remote MCP 的送審 portal 在 admin settings，
+個人方案進不去；**MCPB desktop extension 走獨立表單、個人 Pro 即可，且 `stdio` 已綠**。
+**所以不必為了上架先升 Team**——先走 MCPB，確定要 remote 時再升。
+
+完整盤點、門檻清單與價格比較見
+[implementation plan §3.5「通路決策」](docs/fitness-mcp-implementation-plan.md)。
+
+## 計價（2026-07-31）
 
 **計價暫定按月活躍使用者（per-MAU），不按呼叫次數。** 成本結構決定的：單次決策 0.443 ms、
 零次外部 API 呼叫，唯一隨規模走的是人數。按次計價會與成本錯配，也會讓使用者省著問。
 
-**當前重點是把產品備齊、找到一個能上架的平台**，讓使用者用自己的 AI 工具串接起來。
-商業模式哪一種有利、哪一種快，還沒決定——不要拿未定的商業模式去推導技術決策。
+**商業模式哪一種有利、哪一種快，還沒決定——不要拿未定的商業模式去推導技術決策。**
+已知限制：ChatGPT Apps SDK **只准販售實體商品**，數位訂閱須導向自有網域外部結帳；
+Anthropic Software Directory Policy **通篇無分潤或付費條文**（金流自理，與「金流控制權
+在我們手上」一致）。
 
 ## 常用指令
 

@@ -157,7 +157,7 @@ token rotation，以及 connector directory 的 OAuth、privacy URL、support、
 
 ## 1. 已實作元件
 
-262 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+288 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
@@ -297,7 +297,7 @@ Anthropic Claude**。定位是「問 Claude 關於你的 Strava 表現」，由 
 |---|---|---|
 | **證據** | ✅ **是，但不是「擁有資料」那個意思**——是**同時讀懂四家並對齊成一份**。見下方訂正 | 已驗證（實測 Apple Health 匯出、Strava 官方頁） |
 | **計算** | ✅ 是。ATL/CTL/TSB、detraining 獨立軸線、個人基線，確定性、零外部 API、0.443ms | 已驗證（實測，Phase 8） |
-| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、262 tests） |
+| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、288 tests） |
 
 **知識圖譜 889 節點不列為護城河。** GPT-6 知道所有動作。它的價值在**不變量**
 （進退階互逆、禁忌把關、plan → catalog 100%）讓替代決策**可被驗證**，不在節點數。
@@ -422,6 +422,135 @@ canonical evidence**（方言等價，見 Phase 5）。這一條做不到，多�
 | **2** | **賣給來源方**（授權決策引擎給 Strava／Garmin／COROS 等，掛在他們自己的 connector 後面） | Strava 把建議交給 Claude 產生；**Garmin 完全沒有官方 connector**。想在自家 connector 後面放確定性決策，就要自建或授權 | 企業銷售，週期長。且對方可能選擇自建 |
 | **3** | **賣給握有課表的一方**（教練平台、健身房、企業健康方案） | 決策必須有「今天原本要做什麼」才成立；**這些對象本來就握著課表**，正好補上我們最缺的 C5 | 需要 REST API／SDK（Phase 7 未做），不只 MCP |
 | **4** | **API／SDK**（D-INTERFACE 已列） | 對外介面不該只有 MCP | 尚未開始 |
+
+#### 通路決策：MCP-native distribution（2026-08-01 使用者定案）
+
+**目標通路只有兩個，都是 host 內建目錄：Anthropic Connectors Directory ＋ ChatGPT（含 Health）。**
+
+**明確排除兩件事：**
+
+- **不做 marketplace。** Shopify App Store 能抽 15%，是因為它持有金流、商家關係與交易資料
+  （查證：lifetime 累計 100 萬美元 0%，2025 年中由「每年重置」改為「一次性上限」，
+  超過後 15%）。要複製那個位置，就得當健康資料的中介與權限保管者——**那是資料湖**，
+  是宣言「明確不做」的最後一項。真要有 marketplace，我們是上面的模組，不是底下的平台。
+- **不做 model router／多模型層。** 三段分工第 3 段在 host。**MCP 本身就是 model-agnostic
+  的實現**：同一支 server，Claude／ChatGPT／任何 host 都叫得動，而且模型成本不在我們家。
+  自建 router 等於把第 3 段搬回來還要自己付 token。（外部參照：Shopify App 開發商 ABConvert
+  自陳月付 token 費約 40–50 萬台幣，天下雜誌 2026。**那是自建的價目表。**）
+  唯一例外仍是宣言第 38 行既有的開放：**開發期 eval 呼叫模型 API 不受此限**。
+
+**通路盤點（2026-08-01 查證）：**
+
+| 類別 | 標的 | 判定 |
+|---|---|---|
+| **host 內建目錄** | **Anthropic Connectors Directory**（841 integrations，2026-07-23）· **ChatGPT App Directory／Health** | ✅ **唯一的通路**——使用者在自己已付費的 AI App 裡直接開啟 |
+| 開發者 discovery | 官方 registry（9,652 servers，2026-05-24）· Smithery 7,000+ · mcp.so 19,700+ · PulseMCP · Awesome MCP | ❌ 不是通路。官方 registry 自陳**是給 subregistry 消費、不給 end user**。順手上架當曝光，零成本，不是策略 |
+| agent／workflow 市集 | OpenAI GPTs · Copilot Agents · Gemini Gems · AgentExchange · Zapier · LangChain Hub · CrewAI | ❌ 使用者是自動化建構者，不是每週訓練的人 |
+| 健身 B2B SaaS | Trainerize · Mindbody（ABC Fitness 2024 併購，2025 營收 $620M）· Wellhub | ⏸ 屬上表第 3 條「賣給握有課表的一方」，需 REST／SDK（Phase 7），不是現在 |
+| 臨床 marketplace | Epic：**App Orchard 已於 2022-12 關閉**，現為 Vendor Services（付費）＋ Showroom（策展）＋ Connection Hub（免費目錄） | ⏸ 不在範圍 |
+| wearable dev platform | Garmin Connect Developer Program（無授權費，enterprise vetting 約 $5,000）· Connect IQ · Fitbit · Oura · WHOOP | ⛔ **要直接連資料供應商，違反 Phase 1 界線**。只有 Phase 2 才談得上 |
+
+**兩個通路的門檻（皆已查證）：**
+
+| | Anthropic Connectors Directory | ChatGPT |
+|---|---|---|
+| 政策 | Software Directory Policy（2026-04-15 起取代舊 MCP Directory Policy） | Apps SDK app submission guidelines |
+| 硬性要求 | OAuth 2.0 remote auth · 公開 privacy policy（**缺件即退**）· tool annotations（`readOnlyHint`／`destructiveHint`／`title`）· 驗證聯絡與支援管道 · 測試帳號＋範例資料 · **3 個可運作範例 prompt** · API／網域所有權驗證 | 開發者身分驗證 · privacy policy · 最小化收集 · tool annotation（**標註錯誤是常見退件原因**）|
+| 分潤／計價 | **政策通篇無分潤或付費條文**，只禁廣告模式 → 金流自理（與宣言「金流控制權在我們手上」一致） | **只准販售實體商品**；數位訂閱／服務禁止站內販售，須導向自有網域結帳 → **per-MAU 訂閱只能走外部結帳** |
+| 已知阻擋 | 🔴 **R5：提交入口需 Team／Enterprise 組織，個人方案進不去** | 🔴 submission guidelines 明寫**不得收集或處理 PHI**，但 ChatGPT Health 又要求 app「只收最小必要資料」——兩套標準，**消費性穿戴資料落在哪邊未查證** |
+
+**為什麼 ChatGPT Health 值得同時押（2026-08-01 查證的事實）：**
+
+Health 於 **2026-07-23** 對 US、18+、web／iOS 全面開放，可連 **Apple Health**、MyFitnessPal
+與 Epic／Oracle 病歷；**Oura、WHOOP、Garmin、Strava 全部經由 Apple Health 進入**。
+Health 內的 app 需通過**額外安全審查**，且要求只收最小必要資料——**這條要求與 evidence
+minimization 是同一件事**。
+
+> **這直接打在「evidence 沒有供應者」那個死結上**：Claude 的 connector 目錄裡沒有任何健康
+> 資料來源、Strava connector 需付費訂閱、沒有 Garmin、Apple Health 結構上不可能有 host
+> connector。Apple Health 作為匯流點在 ChatGPT 這一側是既成事實。
+
+**但有一個未驗證點，在它解開之前不投入工程：**
+
+> ❓ **ChatGPT Health 裡的第三方 app，能不能把 Apple Health 的數值當作 tool input 拿到？**
+> 已知的是 Health 支援哪些來源、Health 內 app 要額外審查；**未知的是 app 讀不讀得到那些值**。
+> 能讀 → ChatGPT 升為主線；不能讀 → 它只是另一個 Claude Desktop。
+> （OpenAI 的 help 文對 WebFetch 回 403，需改由瀏覽器或開發者文件查。）
+
+**因此排序是「Claude 先、ChatGPT 平行查證」，不是二選一**——兩邊要做的東西高度重疊
+（OAuth、privacy policy、tool annotation、範例 prompt），**先做的部分不會浪費，是無悔投資**。
+另有一項不重疊且更前面：R5 的組織方案。
+
+**對照 `review:phase` 實跑（2026-08-01）：G2b／G3／G5 三條紅，剛好全部是上架前置。**
+這不是巧合——G2b 的判準文字自己寫著「分發不是靠人逛目錄，是靠 host 在一堆 connector 裡挑；
+tool 描述就是分發面」。
+
+| Gate | 缺口 | 與上架的關係 |
+|---|---|---|
+| G2b | `commit_adjust_plan` 無觸發語句 | 目錄要「3 個可運作範例 prompt」；描述對不上使用者語彙，host 不會挑中 |
+| G3 | `commit_adjust_plan.output.json` 缺 `versionHistory` | 承諾 A：決策要能自我解釋 |
+| G5 | apple-health／strava **各缺** source schema ＋ scenario（4 項） | **Apple Health 是整個穿戴生態的匯流點**，主線來源沒有可對帳的契約 |
+
+#### 上架路徑有兩條，只有一條需要 Team 帳號（2026-08-01 查證）
+
+送審文件（`claude.com/docs/connectors/building/submission`）原文兩句，決定了整個順序：
+
+> "A Team or Enterprise organization. **Admin settings aren't available on individual plans.**"
+>
+> "Desktop extensions (MCPB) use a **separate submission form** and **don't require the portal**."
+
+**R5 只擋 remote MCP，不擋 desktop extension。** MCPB 同樣列進 Connectors Directory。
+
+| | Remote MCP server（Phase 1 hosted） | **MCPB desktop extension** |
+|---|---|---|
+| 帳號 | **Team／Enterprise**；Team 無 custom role，**送審權限只有 Owner** | **個人 Pro 即可** |
+| 送審入口 | `claude.ai/admin-settings/directory/submissions/new` | 獨立表單 `clau.de/desktop-extention-submission` |
+| 技術前置 | **OAuth 2.0 ＋ authorization server**（現況：簽章驗證器 `null`、`http.js` 未接線）＋ HTTPS 端點 ＋ Docker 化 | **`stdio` 已綠**；主要是打包 ＋ manifest |
+| privacy policy | 必要 | 必要：README 一節 ＋ `manifest.json`（`manifest_version` 0.2+）的 `privacy_policies` 陣列 ＋ HTTPS URL |
+| 對應 Phase | Phase 1 hosted | **接近 Phase 2 的 local data plane**——宣言稱那才是核心宗旨要的版本 |
+| 觸及面 | 所有 Claude 介面 | 只有 Claude Desktop |
+
+**因此順序是：先走 MCPB（不花錢、落差最小、方向靠近主線），用它真的走完一次審查；
+確定要走 remote 時再升 Team。**
+
+**Pro vs Team Standard（2026-08-01 查於 claude.com/pricing）：**
+
+| | Pro | Team Standard seat |
+|---|---|---|
+| 年繳 | $17／月 | $20／席／月 |
+| 月繳 | $20／月 | $25／席／月 |
+| **最低席次** | 1 | **2**（上限 150 人） |
+| 含 Claude Code | ✅ | ✅ |
+| 用量 | — | 與 Pro 同級（Premium seat 才是 5×） |
+| Admin settings | ❌ | ✅ |
+
+**單席只差 $3，但最低 2 席**，實付差額：年繳 $40 vs $17（每月多 $23）、月繳 $50 vs $20。
+
+> ⚠️ **來源衝突，結帳頁為準。** 官網 pricing 頁寫最低 2 席、Standard 含 Claude Code；
+> 多家第三方部落格（2026）寫最低 5 席、Claude Code 只在 Premium seat（$100–125／席）。
+> 若第三方為真，差距從 2.3 倍變 6 倍。**不替此事下結論，升級前自行在結帳頁確認。**
+
+#### 兩邊對健康資料的態度是相反的——這是「Claude 先」的主要理由
+
+| | Anthropic | OpenAI |
+|---|---|---|
+| 健康資料 | **送審表單的「Data handling」步驟明文詢問** connector 是否處理 personal health data → **是揭露事項，不是禁區** | Apps SDK submission guidelines **明寫不得收集或處理 PHI**；ChatGPT Health 另要求「只收最小必要資料」→ **兩套標準，消費性穿戴資料落在哪邊未查證** |
+
+#### Connectors Directory 送審的完整要求（2026-08-01 查證）
+
+- 每個 tool 需 `title` ＋ 適用的 `readOnlyHint`／`destructiveHint`；**portal 會自動 sync
+  server 的 tool，未標註者被單獨分組** → 對應 G2b／G3
+- 認證：OAuth 2.0（支援 DCR、CIMD、或 Anthropic 保管的 static client ID）
+- privacy policy **缺件或不完整即刻退件**
+- listing 文案上限：名稱 100 字 · tagline 55 字 · 描述 2,000 字 · 1–5 個分類
+- **URL slug 發布後永久固定**
+- 測試帳號需資料填滿，且**必須自己跑過每一個 tool**（MCP Inspector 或 custom connector）
+- **七項 compliance 聲明全部必勾**：directory guidelines · first-party API usage ·
+  financial transactions · AI media generation · **prompt injection** ·
+  **conversation data collection** · public documentation
+- 送審前跑 pre-submission checklist（`/docs/connectors/building/review-criteria`）
+- MCP Apps（帶互動 UI）另需 3–5 張 PNG carousel 截圖（寬 ≥1000px，不得含 prompt）
+  ——**Evidra 不做 UI，不適用**
 
 #### 這裡有一個結構性的優勢，四條路都吃得到
 
@@ -1017,7 +1146,7 @@ CIMD 那個決定要在 Phase 7 就下對。
   2. header 與 body 不一致時確實回 `-32020`
   3. 不支援的版本回 `-32022` 且列出 `supported`
   4. `server/discover` 回得出支援版本清單
-  5. 既有 262 tests 全綠，且新增 dual-era 雙路徑測試
+  5. 既有 288 tests 全綠，且新增 dual-era 雙路徑測試
 
 ---
 
@@ -1084,6 +1213,7 @@ CIMD 那個決定要在 Phase 7 就下對。
 | **D-INTERFACE** | 不只 MCP，還要 REST API ＋ SDK（Phase 7） |
 | **D-GRAPHDB** | 未觸發，in-memory 足夠，不導入 Neo4j |
 | **D-CONNECTOR**（v6） | **不自建任何來源 connector。** Strava（逐步開放中）、COROS（2026-05）已自行 host 官方 MCP server，給得比我們拉得到的完整（逐秒串流）；其定位是供資料、由 Claude 推理——**與確定性決策層相鄰**。連帶效果：架構原本「證據自己會到 AI 那層」這個我們不擁有的前提，已對兩個來源成為事實。**但這只說明管線接得起來，不代表決策層有價值**，見 Phase 5 補記 |
+| **D-CHANNEL**（2026-08-01） | **MCP-native distribution：目標通路只有 host 內建目錄兩個——Anthropic Connectors Directory ＋ ChatGPT（含 Health）。** 排除 marketplace（要持有金流與使用者關係＝資料湖，牴觸「明確不做」）與 model router（第 3 段在 host；MCP 本身即 model-agnostic，自建等於把成本搬回來）。registry／Smithery／mcp.so 是**開發者 discovery 不是通路**，順手曝光即可。wearable dev platform 要直連供應商，**違反 Phase 1 界線**，僅 Phase 2 適用。健身 B2B SaaS 歸入「賣給握有課表的一方」，需 REST／SDK。排序：Claude 先（門檻是一張可列完的清單），ChatGPT **平行查證不平行開工**——未解的是「Health 內第三方 app 能否讀到 Apple Health 數值」與 PHI 條款適用範圍。詳見 3.5「通路決策」 |
 | **D-PROTOCOL**（v6） | 升 2026-07-28 走 **dual-era**，不是直接切換。依官方相容性矩陣，只支援新版會讓所有舊版客戶端連不上 |
 | **D-REGISTRATION**（v6） | authorization server 以**支援 CIMD** 為選型硬條件。DCR 已 deprecated，只留向後相容 |
 
@@ -1095,7 +1225,7 @@ CIMD 那個決定要在 Phase 7 就下對。
 | **R2 定位滑回內容庫** | 🟢 已發生一次（早期蓋出檢索層），D3 已收回；靠 GPT-6 判準持續守 |
 | **R3 健康建議責任邊界** | 🟡 B2B 讓責任鏈更長，需 tool description ＋ 合約兩層聲明非醫療用途 |
 | **R4 KG 關係品質** | 🟢 進退階與訓練目標皆已補齊並有不變量把關（4.3）。**殘留**：匯入的 861 個節點只有相似度邊，且已驗證無法由規則升級為語意**邊**（訓練目標走的是節點屬性，不是邊） |
-| **R5 上架前提未備**（v6） | 🔴 提交入口需 **Team／Enterprise 組織**，個人方案進不去；privacy policy 缺件即退件。**這兩項與程式無關，寫再多程式也繞不過**，見 Phase 8 清單 |
+| **R5 上架前提未備**（v6，2026-08-01 降級） | 🟡 **原判斷成立但範圍縮小**：Team／Enterprise 組織只擋 **remote MCP** 的送審 portal（官方原文：admin settings 個人方案沒有），**MCPB desktop extension 走獨立表單、個人 Pro 即可**。privacy policy 缺件即退件則兩條路都適用，仍與程式無關。**因此不必為了上架先升 Team**——先走 MCPB，確定要 remote 時再升（Pro $17 vs Team Standard $20×最低 2 席，每月多 $23，年繳計）。詳見 3.5「上架路徑有兩條」 |
 
 ## 7. 工程原則（沿用，位階次於宣言）
 
