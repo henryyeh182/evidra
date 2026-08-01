@@ -290,3 +290,68 @@ test("an unresolvable movement says what form the argument takes", async () => {
     /canonical exercise_\* id/
   );
 });
+
+// The evidence a caller has to get right is not only the metric arrays: `date`
+// and `profile.timezone` are caller-supplied strings too, and both used to
+// escape the guard above and surface as bare JSON-RPC errors. Found by replaying
+// a real Claude Desktop session — three "Failed to call tool" toasts in a row,
+// after which the host stopped using the tools and answered from its own
+// judgement instead. Anything a caller can correct has to come back correctable.
+const WORKING_EVIDENCE = {
+  healthMetrics: [{ type: "sleep_duration_hours", value: 7, recordedAt: "2026-07-31T00:00:00Z" }],
+  workouts: [{ startedAt: "2026-07-30T10:00:00Z", durationMinutes: 45, type: "run", trainingLoad: 62 }]
+};
+
+test("a date written the way a person says it is correctable, not fatal", async () => {
+  for (const [tool, argument] of [
+    ["assess_fitness_state", "date"],
+    ["decide_session", "date"],
+    ["generate_plan", "startDate"]
+  ]) {
+    // "today" is what an agent writes when it has not been told the format;
+    // "2026-8-1" is the same date with the zero-padding dropped. Both reached
+    // the load curve and threw `Invalid time value`.
+    for (const written of ["today", "2026-8-1", "Aug 1, 2026", "2026-08-32"]) {
+      const { payload, isError } = await call(tool, {
+        evidence: WORKING_EVIDENCE,
+        [argument]: written
+      });
+
+      assert.equal(isError, true, `${tool} reports ${written} as a tool error`);
+      assert.equal(payload.error, "invalid_date");
+      // The format has to be in the reply, or the next attempt is another guess.
+      assert.match(payload.shape[argument], /YYYY-MM-DD/);
+    }
+  }
+});
+
+test("the dates that already worked keep working", async () => {
+  // The guard must not narrow what callers may send. A full ISO instant is
+  // read for its calendar day exactly as before, and an absent date still means
+  // "the server works today out" — that resolution is the server's job (P5).
+  for (const date of ["2026-07-31", "2026-07-31T13:00:00+08:00", "", null, undefined]) {
+    const { isError } = await call("decide_session", { evidence: WORKING_EVIDENCE, date });
+    assert.equal(isError, false, `date ${JSON.stringify(date)} still answers`);
+  }
+});
+
+test("a timezone that is not an IANA name is correctable, not fatal", async () => {
+  // "Taipei" and "GMT+8" are one spelling away from a zone that works, and the
+  // day cannot be resolved without one — so this is reported like any other
+  // unreadable evidence, naming the form that would have worked.
+  for (const timezone of ["Taipei", "GMT+8", "Mars/Olympus"]) {
+    const { payload, isError } = await call("assess_fitness_state", {
+      evidence: { ...WORKING_EVIDENCE, profile: { timezone } }
+    });
+
+    assert.equal(isError, true, `${timezone} reports as a tool error`);
+    assert.equal(payload.error, "invalid_evidence");
+    assert.match(payload.problem, /IANA/);
+    assert.match(payload.shape["evidence.profile"].timezone, /Asia\/Taipei/);
+  }
+
+  const usable = await call("assess_fitness_state", {
+    evidence: { ...WORKING_EVIDENCE, profile: { timezone: "Asia/Taipei" } }
+  });
+  assert.equal(usable.isError, false, "a real zone still answers");
+});

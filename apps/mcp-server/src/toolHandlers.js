@@ -18,7 +18,7 @@ import {
   describeEvidence,
   EVIDENCE_METRIC_TYPES
 } from "../../../packages/evidence/src/index.js";
-import { todayInTimezone } from "../../../packages/domain/src/dates.js";
+import { isCalendarDay, todayInTimezone } from "../../../packages/domain/src/dates.js";
 import {
   searchExercisesTool,
   getExerciseTool,
@@ -70,8 +70,15 @@ const EVIDENCE_REQUIREMENTS = {
 async function resolveContext(args) {
   if (args.evidence) {
     let context;
+    let defaultDate;
     try {
       context = evidenceToUserContext(args.evidence, { userId: args.userId });
+      // Resolving the day belongs inside the guard: `profile.timezone` is a
+      // caller-supplied string, and an unreadable zone ("Taipei", "GMT+8"
+      // instead of "Asia/Taipei") threw from here as a bare JSON-RPC error —
+      // the same "Failed to call tool" dead end, over a field the caller could
+      // have fixed in one turn.
+      defaultDate = todayInTimezone(context.user.timezone);
     } catch (error) {
       // Evidence that arrived in the wrong shape is the same kind of failure as
       // evidence that never arrived: the tool ran and cannot answer. Thrown as a
@@ -82,7 +89,7 @@ async function resolveContext(args) {
     }
     return {
       context,
-      defaultDate: todayInTimezone(context.user.timezone),
+      defaultDate,
       provenance: { evidenceSource: "provided", ...describeEvidence(args.evidence) }
     };
   }
@@ -134,6 +141,10 @@ function invalidEvidence(toolName, problem) {
     tool: toolName,
     problem,
     shape: {
+      "evidence.profile": {
+        timezone: "optional IANA zone name, e.g. Asia/Taipei — not an abbreviation or offset. Defaults to UTC.",
+        fitnessLevel: "optional, e.g. beginner | intermediate | advanced"
+      },
       "evidence.healthMetrics[]": {
         type: `one of: ${EVIDENCE_METRIC_TYPES.join(", ")}`,
         value: "number",
@@ -153,7 +164,31 @@ function invalidEvidence(toolName, problem) {
   });
 }
 
+/**
+ * The answer when a day argument is not a day this system can read.
+ *
+ * Agents write dates the way their user says them. "today" and "2026-8-1"
+ * reached the load curve and threw `Invalid time value`, which the host showed
+ * as "Failed to call tool" — fatal, for an argument the caller could have
+ * corrected immediately had anyone told it the format.
+ */
+function invalidDate(toolName, argument, value) {
+  return errorContent({
+    error: "invalid_date",
+    tool: toolName,
+    problem: `${argument} was ${JSON.stringify(value)}, which is not a calendar day.`,
+    shape: { [argument]: "YYYY-MM-DD, e.g. 2026-08-01" },
+    note:
+      "Relative words are not resolved here — the server does not know the caller's clock. Omit the argument to get today in the athlete's timezone, which is the server's own job to work out."
+  });
+}
+
 export async function getSemanticFitnessState(args = {}) {
+  // Falsy mirrors `args.date || defaultDate` below: an absent or empty date
+  // still means "the server works today out", exactly as before.
+  if (args.date && !isCalendarDay(args.date)) {
+    return invalidDate("assess_fitness_state", "date", args.date);
+  }
   const resolved = await resolveContext(args);
   if (!resolved) return evidenceRequired("assess_fitness_state");
   if (resolved.invalid) return invalidEvidence("assess_fitness_state", resolved.invalid);
@@ -277,6 +312,9 @@ async function goalAlternativeLookup() {
 }
 
 export async function generateTrainingPlanTool(args = {}) {
+  if (args.startDate && !isCalendarDay(args.startDate)) {
+    return invalidDate("generate_plan", "startDate", args.startDate);
+  }
   const resolved = await resolveContext(args);
   if (!resolved) return evidenceRequired("generate_plan");
   if (resolved.invalid) return invalidEvidence("generate_plan", resolved.invalid);
@@ -368,6 +406,9 @@ export const toolHandlers = {
  * rather than inventing a suggestion.
  */
 export async function decideSessionTool(args = {}) {
+  if (args.date && !isCalendarDay(args.date)) {
+    return invalidDate("decide_session", "date", args.date);
+  }
   const resolved = await resolveContext(args);
   if (!resolved) return evidenceRequired("decide_session");
   if (resolved.invalid) return invalidEvidence("decide_session", resolved.invalid);

@@ -34,8 +34,10 @@ export function calendarDayInTimezone(instant, timezone) {
     });
   } catch {
     // Falling back to UTC would hand back a confidently wrong day. The caller
-    // named a zone; if it cannot be read, say so rather than guess.
-    throw new Error(`Unknown timezone: ${zone}`);
+    // named a zone; if it cannot be read, say so rather than guess — and name
+    // the form that works, since the usual mistakes ("Taipei", "GMT+8") are a
+    // spelling away from a zone that does.
+    throw new Error(`Unknown timezone: ${zone}. Expected an IANA zone name, e.g. Asia/Taipei.`);
   }
 
   return formatter.format(date);
@@ -50,4 +52,30 @@ export function calendarDayInTimezone(instant, timezone) {
  */
 export function todayInTimezone(timezone, now = new Date()) {
   return calendarDayInTimezone(now, timezone);
+}
+
+/**
+ * Whether a caller-supplied value names a day this system can reason about.
+ *
+ * Agents write dates the way people say them — "today", "2026-8-1",
+ * "Aug 1, 2026" — and every one of those used to reach `new Date()` deep in the
+ * load curve and throw `Invalid time value`, which surfaced to the user as
+ * "Failed to call tool". Checking here lets the caller be told what a day looks
+ * like while it can still fix the argument.
+ *
+ * A leading calendar day is enough, so a full ISO instant keeps working exactly
+ * as it did — the day is what the engines read, and narrowing that now would
+ * change answers rather than fix a fault.
+ *
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+export function isCalendarDay(value) {
+  if (typeof value !== "string") return false;
+  const day = value.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+  // Rejects days the calendar does not have: 2026-02-30 rolls forward to March
+  // rather than failing, so the round trip is what catches it.
+  const parsed = new Date(`${day}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === day;
 }
