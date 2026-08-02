@@ -446,10 +446,12 @@ export function buildGarminExport(scenario, { asOf, dialect } = {}) {
       level: day.readiness?.level ?? "NONE",
       recoveryTime: day.recoveryTimeMinutes ?? 0,
       ...(spelling.omitAcuteLoad ? {} : { acuteLoad: acuteLoadAt(index) }),
-      // 511 on every single day, which is what a real export carries when the
-      // device does not measure HRV: 2^9-1, a not-measured sentinel wearing the
-      // shape of a number. Measured across 330 consecutive days. A parser that
-      // mapped it would report a rock-steady HRV to an athlete who has none.
+      // 511 on every single day: 2^9-1, a not-established sentinel wearing the
+      // shape of a number. Measured across 330 consecutive days of a real
+      // export, where the watch was slept in on 4 nights and never twice
+      // running — Garmin needs a sustained run before it will report HRV status
+      // at all. A parser that mapped it would report a rock-steady HRV to an
+      // athlete who has never established one.
       hrvWeeklyAverage: 511
     });
 
