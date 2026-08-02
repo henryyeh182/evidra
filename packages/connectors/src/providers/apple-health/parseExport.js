@@ -2,20 +2,76 @@ import { createReadStream } from "node:fs";
 import { createInterface } from "node:readline";
 
 // Apple Health exports (`apple_health_export/export.xml`) are frequently
-// hundreds of MB. We stream line by line rather than loading the whole file,
-// and pull attributes off the opening <Record ...> / <Workout ...> tags — the
-// fields we need all live on the opening tag, so nested <MetadataEntry> lines
-// can be ignored. Dependency-free on purpose (no XML library).
+// hundreds of MB. We stream line by line rather than loading the whole file.
+// Dependency-free on purpose (no XML library).
+//
+// Record fields all live on the opening tag, so their nested <MetadataEntry>
+// lines can be ignored. Workouts cannot be read that way: in the dialect Apple
+// writes today, a workout's energy and distance are not attributes at all but
+// nested <WorkoutStatistics> elements, and a parser that only read the opening
+// tag reported every session as having no load. So a workout stays open until
+// </Workout> and collects the statistics underneath it.
 
 const ATTR_RE = /(\w+)="([^"]*)"/g;
 
 function parseAttributes(line) {
   const attrs = {};
   let match;
+  ATTR_RE.lastIndex = 0;
   while ((match = ATTR_RE.exec(line)) !== null) {
     attrs[match[1]] = match[2];
   }
   return attrs;
+}
+
+/**
+ * Feed one line into the parse state.
+ *
+ * Kept separate so the streaming reader and the in-memory string reader agree
+ * on every dialect question by construction rather than by being kept in sync.
+ */
+function consumeLine(line, state) {
+  if (line.includes("<Record ")) {
+    const attrs = parseAttributes(line);
+    if (!state.recordTypes || state.recordTypes.has(attrs.type)) {
+      state.records.push(attrs);
+    }
+    return;
+  }
+
+  if (line.includes("<Workout ")) {
+    const workout = parseAttributes(line);
+    workout.statistics = {};
+    // A workout with no children closes on its own line and has no statistics.
+    if (/\/>\s*$/.test(line)) state.workouts.push(workout);
+    else state.openWorkout = workout;
+    return;
+  }
+
+  if (state.openWorkout && line.includes("<WorkoutStatistics")) {
+    const stat = parseAttributes(line);
+    if (stat.type) state.openWorkout.statistics[stat.type] = stat;
+    return;
+  }
+
+  if (state.openWorkout && line.includes("</Workout>")) {
+    state.workouts.push(state.openWorkout);
+    state.openWorkout = null;
+  }
+}
+
+function newState(recordTypes) {
+  return { records: [], workouts: [], openWorkout: null, recordTypes };
+}
+
+function finish(state) {
+  // A truncated export can end mid-workout. Keep what was read rather than
+  // dropping the session entirely.
+  if (state.openWorkout) {
+    state.workouts.push(state.openWorkout);
+    state.openWorkout = null;
+  }
+  return { records: state.records, workouts: state.workouts };
 }
 
 /**
@@ -27,27 +83,16 @@ function parseAttributes(line) {
  * @returns {Promise<{ records: object[], workouts: object[] }>}
  */
 export async function parseAppleHealthExport(filePath, options = {}) {
-  const { recordTypes } = options;
-  const records = [];
-  const workouts = [];
+  const state = newState(options.recordTypes);
 
   const rl = createInterface({
     input: createReadStream(filePath, { encoding: "utf8" }),
     crlfDelay: Infinity
   });
 
-  for await (const line of rl) {
-    if (line.includes("<Record ")) {
-      const attrs = parseAttributes(line);
-      if (!recordTypes || recordTypes.has(attrs.type)) {
-        records.push(attrs);
-      }
-    } else if (line.includes("<Workout ")) {
-      workouts.push(parseAttributes(line));
-    }
-  }
+  for await (const line of rl) consumeLine(line, state);
 
-  return { records, workouts };
+  return finish(state);
 }
 
 /**
@@ -58,14 +103,7 @@ export async function parseAppleHealthExport(filePath, options = {}) {
  * @returns {{ records: object[], workouts: object[] }}
  */
 export function parseAppleHealthExportString(xml) {
-  const records = [];
-  const workouts = [];
-  for (const line of xml.split(/\r?\n/)) {
-    if (line.includes("<Record ")) {
-      records.push(parseAttributes(line));
-    } else if (line.includes("<Workout ")) {
-      workouts.push(parseAttributes(line));
-    }
-  }
-  return { records, workouts };
+  const state = newState(undefined);
+  for (const line of xml.split(/\r?\n/)) consumeLine(line, state);
+  return finish(state);
 }

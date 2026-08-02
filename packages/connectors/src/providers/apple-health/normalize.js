@@ -51,16 +51,26 @@ function pointMetricEvent(record) {
   };
 }
 
+/**
+ * A phone and a watch both count the same day's steps, and a synced Garmin
+ * writes a third copy. Summing every record inflates those days; nothing in the
+ * export ranks the recorders, so the day is the largest per-recorder sum —
+ * never a double count, never below the best single recorder. Same rule the
+ * Google Health connector applies to the same problem.
+ */
 function dailySumEvents(records) {
   const events = [];
   for (const [hkType, map] of Object.entries(DAILY_SUM_METRICS)) {
-    const perDay = new Map();
+    const perDay = new Map(); // day → (sourceName → sum)
     for (const record of records) {
       if (record.type !== hkType) continue;
       const day = dayOf(appleDateToIso(record.startDate || record.endDate));
-      perDay.set(day, (perDay.get(day) || 0) + Number(record.value || 0));
+      const recorder = record.sourceName || "unknown";
+      const bySource = perDay.get(day) || new Map();
+      bySource.set(recorder, (bySource.get(recorder) || 0) + Number(record.value || 0));
+      perDay.set(day, bySource);
     }
-    for (const [day, total] of perDay) {
+    for (const [day, bySource] of perDay) {
       const recordedAt = `${day}T23:59:59`;
       events.push({
         kind: "health_metric",
@@ -68,11 +78,14 @@ function dailySumEvents(records) {
         source: "apple_health",
         sourceRecordId: `${hkType}:${day}`,
         type: map.type,
-        value: Math.round(total),
+        value: Math.round(Math.max(...bySource.values())),
         unit: map.unit,
         recordedAt,
         confidence: 0.9,
-        metadata: { aggregation: "daily_sum" }
+        metadata: {
+          aggregation: "daily_max_across_sources",
+          recorders: [...bySource.keys()].sort()
+        }
       });
     }
   }
@@ -128,8 +141,57 @@ const WORKOUT_TYPE_MAP = {
   HKWorkoutActivityTypeCoreTraining: "strength",
   HKWorkoutActivityTypeYoga: "mobility",
   HKWorkoutActivityTypeFlexibility: "mobility",
-  HKWorkoutActivityTypePreparationAndRecovery: "recovery"
+  HKWorkoutActivityTypePreparationAndRecovery: "recovery",
+  HKWorkoutActivityTypeCooldown: "recovery"
 };
+
+const ACTIVE_ENERGY = "HKQuantityTypeIdentifierActiveEnergyBurned";
+const DISTANCE_TYPES = [
+  "HKQuantityTypeIdentifierDistanceWalkingRunning",
+  "HKQuantityTypeIdentifierDistanceCycling",
+  "HKQuantityTypeIdentifierDistanceSwimming"
+];
+
+function numberOrNull(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/**
+ * Active energy, in kilocalories, from either dialect.
+ *
+ * Older exports put `totalEnergyBurned` on the <Workout> tag. Current ones put
+ * it in a nested <WorkoutStatistics> instead, and reading only the tag reported
+ * every session as loadless. Apple writes kilocalories as "Cal"; anything else
+ * is left alone rather than converted on a guess.
+ */
+function activeEnergyKcal(workout) {
+  const onTag = numberOrNull(workout.totalEnergyBurned);
+  if (onTag !== null) return onTag;
+
+  const stat = workout.statistics?.[ACTIVE_ENERGY];
+  if (!stat) return null;
+  const unit = (stat.unit || "").toLowerCase();
+  if (unit && unit !== "cal" && unit !== "kcal") return null;
+  return numberOrNull(stat.sum);
+}
+
+/** Distance in km, from either dialect. */
+function distanceKm(workout) {
+  const onTag = numberOrNull(workout.totalDistance);
+  if (onTag !== null) return onTag;
+
+  for (const type of DISTANCE_TYPES) {
+    const stat = workout.statistics?.[type];
+    if (!stat) continue;
+    const unit = (stat.unit || "").toLowerCase();
+    if (unit && unit !== "km") continue;
+    const sum = numberOrNull(stat.sum);
+    if (sum !== null) return sum;
+  }
+  return null;
+}
 
 function inferMuscleGroups(type) {
   if (type === "run" || type === "ride" || type === "walk") return ["legs"];
@@ -147,7 +209,7 @@ export function normalizeAppleHealthWorkout(workout) {
   // nothing left to derive a load from, so that is null too. Energy-based load
   // can underweight strength (mechanical load isn't captured by kcal) — flagged
   // via loadSource.
-  const kcal = workout.totalEnergyBurned ? Number(workout.totalEnergyBurned) : null;
+  const kcal = activeEnergyKcal(workout);
   const rpe = null;
   const trainingLoad = kcal ? Math.round(kcal / 10) : null;
   const loadSource = kcal ? "active_energy" : "unavailable";
@@ -166,7 +228,7 @@ export function normalizeAppleHealthWorkout(workout) {
     trainingLoad,
     muscleGroups: inferMuscleGroups(type),
     metadata: {
-      totalDistanceKm: workout.totalDistance ? Number(workout.totalDistance) : null,
+      totalDistanceKm: distanceKm(workout),
       totalEnergyKcal: kcal,
       sourceName: workout.sourceName ?? null,
       rpeEstimated: false,

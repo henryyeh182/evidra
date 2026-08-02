@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/sources/apple-health.export",
+  "title": "Apple Health export (raw)",
+  "description": "The subset of an `apple_health_export/export.xml` that packages/connectors/src/providers/apple-health reads, after parseExport.js has turned tags into objects. Names are Apple's, not ours. Everything is optional: a real export is mostly holes, and the holes are the point. Measured over one real export — 379,702 <Record> tags and 228 <Workout> tags spanning 2017-11-23 to 2026-07-25, 29 distinct record types, of which this connector reads 4. Coverage of what we read, over that export: stepCount 44,745 records across 2,708 days; restingHeartRate 115 records across 115 days; sleepAnalysis 21 records across 2 days; heartRateVariabilitySDNN 19 records across 7 days. Recovery signals are that sparse in a real phone-first export, and a caller sees it as recovery.missing rather than as invented numbers.",
+  "type": "object",
+  "properties": {
+    "records": {
+      "type": "array",
+      "description": "Attributes lifted off each opening <Record> tag. Nested <MetadataEntry> children carry nothing this connector needs.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "HealthKit identifier. Only four are read: HKQuantityTypeIdentifierHeartRateVariabilitySDNN, HKQuantityTypeIdentifierRestingHeartRate, HKQuantityTypeIdentifierStepCount, HKCategoryTypeIdentifierSleepAnalysis. The other 25 types in the export — walking asymmetry, headphone audio exposure, basal energy — are read by nobody and are not part of this contract."
+          },
+          "value": {
+            "type": "string",
+            "description": "Numeric as a string for quantity types; a HKCategoryValue* name for category types. Over the measured export no read record had a missing, non-numeric, zero, or negative value — unlike Garmin, Apple does not write not-measured sentinels into <Record>. Absence is expressed by the record simply not existing."
+          },
+          "unit": {
+            "type": "string",
+            "description": "ms for SDNN, count/min for resting heart rate, count for steps. Absent on category records such as sleep, which have no unit."
+          },
+          "startDate": {
+            "type": "string",
+            "description": "\"YYYY-MM-DD HH:MM:SS ±HHMM\", e.g. \"2026-07-20 08:30:00 +0800\". appleDateToIso converts it to ISO 8601. All 379,702 records in the measured export matched this format with no exceptions, and all carried one single offset (+0800) — a export that crossed time zones would carry several, which the format handles and nothing downstream assumes away."
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Same format. Used as the fallback when startDate is absent, and as the night key for sleep — a sleep interval belongs to the day it ends on."
+          },
+          "sourceName": {
+            "type": "string",
+            "description": "The device or app that wrote the record. Load-bearing for steps: the same day arrives from a phone, a watch, and any third-party app syncing in. Over the measured export, step records came from 6 distinct writers, and 109 of 2,708 step days (4.0%) had two or more. Summing them double-counts those days, so the connector takes the largest per-recorder sum instead."
+          }
+        }
+      }
+    },
+    "workouts": {
+      "type": "array",
+      "description": "Attributes off each opening <Workout> tag, plus the nested <WorkoutStatistics> children collected under `statistics`. Reading only the opening tag is not enough in this dialect — see `statistics`.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "workoutActivityType": {
+            "type": "string",
+            "description": "HKWorkoutActivityType* name. Types absent from the connector's map fall back to \"recovery\", which is wrong for a hard session — the measured export contains 9 HKWorkoutActivityTypeMixedCardio sessions that land there. Recorded here as a known limitation, not as intended behaviour."
+          },
+          "duration": {
+            "type": "string",
+            "description": "Numeric as a string. Present on 100% of workouts in the measured export."
+          },
+          "durationUnit": {
+            "type": "string",
+            "description": "\"min\" on every workout measured. The connector reads `duration` as minutes; an export carrying another unit would need converting rather than trusting."
+          },
+          "totalEnergyBurned": {
+            "type": "string",
+            "description": "Active energy in kilocalories, in the older dialect that put it on the tag. Present on 0.0% of workouts in the measured export — see `statistics`. Still read first when present, so both dialects work."
+          },
+          "totalDistance": {
+            "type": "string",
+            "description": "Distance in km, older dialect. Also 0.0% in the measured export."
+          },
+          "sourceName": {
+            "type": "string",
+            "description": "The app or device that wrote the workout. Present on 100% of workouts measured, and worth keeping: which writer produced a session explains whether it carries energy at all."
+          },
+          "startDate": { "type": "string", "description": "Same format as records." },
+          "endDate": { "type": "string", "description": "Same format as records." },
+          "statistics": {
+            "type": "object",
+            "description": "Nested <WorkoutStatistics> elements, keyed by their `type`. This is where a current Apple export puts a workout's energy and distance, and a parser that read only the opening tag reported every session as having no load. Coverage over the measured export: ActiveEnergyBurned on 227 of 228 workouts (99.6%), HeartRate on 89 (39.0%), DistanceWalkingRunning or DistanceCycling on 80 (35.1%).",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string", "description": "The HKQuantityTypeIdentifier this statistic summarizes." },
+                "sum": {
+                  "type": "string",
+                  "description": "Total over the workout, for additive quantities such as energy and distance. **`0` is a not-measured sentinel, not zero calories.** 92 of the 227 workouts carrying an ActiveEnergyBurned statistic have sum=\"0\", every one of them written by a single third-party app rather than by the watch. Those sessions are reported as having no load, which is what they have."
+                },
+                "average": { "type": "string", "description": "Present on averaged quantities such as heart rate. Not read today." },
+                "minimum": { "type": "string", "description": "Not read today." },
+                "maximum": { "type": "string", "description": "Not read today." },
+                "unit": {
+                  "type": "string",
+                  "description": "\"Cal\" for energy — HealthKit's spelling of kilocalories — and \"km\" for distance, on every statistic measured. A statistic in any other unit is left alone rather than converted on a guess."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
