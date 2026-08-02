@@ -7,12 +7,15 @@
   "long_description": "Evidra turns the evidence a caller already holds into a training decision: not advice invented from nothing, but a from -> to change against the session already on the books, with the evidence and rules behind it. The server computes; it does not fetch, store, or retain evidence, and it calls no model of its own.",
   "icon": "icon.png",
   "author": {
-    "name": "Henry"
+    "name": "Henry Yeh"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/henryyeh182/fitness-mcp"
-  },
+  "homepage": "https://github.com/henryyeh182/evidra",
+  "documentation": "https://github.com/henryyeh182/evidra/blob/main/README.md",
+  "support": "https://github.com/henryyeh182/evidra/issues",
+  "privacy_policies": [
+    "https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md"
+  ],
+  "license": "LicenseRef-Proprietary",
   "keywords": [
     "fitness",
     "training",
