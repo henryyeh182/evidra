@@ -533,6 +533,36 @@
       裝置在手腕上，它整合了我們看不到的訊號。
     </p>
 
+    <h4 style="margin-top:38px;font-size:18px;font-weight:620">但表上的 ✓ 不代表那家量到了</h4>
+    <p class="lede" style="margin-bottom:22px">
+      每支錶有它原生的主力 App——Apple Watch 對 Apple Health、Garmin 對 Garmin Connect、
+      Pixel Watch 對 Google Health。<strong>其餘都是同步副本。</strong>
+      而 Apple Health 與 Google Health 既是來源也是<strong>目的地</strong>：
+      別家的 App 同樣往裡面寫。所以「這筆資料來自 Apple Health」講的是它從哪匯出，
+      不是誰量的。
+    </p>
+    <div class="readout">
+      <div class="row"><span class="k">Garmin 同步進 Apple Health</span><span class="v">睡眠 · 靜息心率 · 步數 · 訓練</span></div>
+      <div class="row"><span class="k">同步不含</span><span class="v stop">HRV</span></div>
+      <div class="row"><span class="k">於是那份匯出裡的 HRV</span><span class="v">全部來自一支兩年前就停用的 Apple Watch</span></div>
+    </div>
+    <p class="lede" style="margin-top:22px;margin-bottom:22px">
+      只看「有沒有 HRV」，會得到「有」——然後把課表建在一個這個人早就不再產生的訊號上。
+      所以每一筆讀數都帶著<strong>誰寫的</strong>與<strong>最後一次是什麼時候</strong>，一路送到工具輸出：
+    </p>
+    <div class="readout">
+      <div class="row"><span class="k">hrv_ms</span><span class="v stop">Apple Watch · 最後 2023-08-03</span></div>
+      <div class="row"><span class="k">sleep_duration_hours</span><span class="v">Garmin Connect · 最後 2026-07-15</span></div>
+      <div class="row"><span class="k">resting_hr_bpm</span><span class="v">Garmin Connect ＋ Apple Watch</span></div>
+    </div>
+    <p class="note">
+      這也讓「缺」分得出種類。Garmin 的 HRV 欄位整整 330 天都回同一個哨兵值，
+      不是因為錶測不了，是因為<strong>要連續戴著入睡才會建立</strong>——
+      而那份匯出裡有效睡眠只有 4 天。<strong>「你的錶做不到」是死路，
+      「連續戴著睡就會有」是可以行動的</strong>；會回報訊號缺的系統，
+      該說得出是哪一種。
+    </p>
+
     <h4 style="margin-top:38px;font-size:18px;font-weight:620">沒有人需要湊齊來源</h4>
     <p class="lede" style="margin-bottom:22px">
       每一組來源都能產出決策，差別在<strong>用什麼證據做</strong>，不在夠不夠格。
@@ -608,13 +638,17 @@
         <h4>保證</h4>
         <p>模型可以被說服繞過安全規則；確定性過濾器不會。傷病硬過濾與兩階段寫入都屬此類。</p>
       </div>
+      <div class="finding ok">
+        <h4>來源</h4>
+        <p>每筆讀數帶著誰寫的、最後一次是什麼時候。它分得出「這個訊號還在」與「這個訊號兩年前就停了」——而那兩件事在原始資料裡長得一模一樣。</p>
+      </div>
       <div class="finding gap">
         <h4>還沒到位的　我們的工</h4>
-        <p>OAuth 2.1 與雲端部署尚未完成，所以目前只能在本機連上，marketplace 上架做不到。這一項做得完。</p>
+        <p>OAuth 2.1 與遠端部署尚未完成。<strong>那擋的是手機</strong>：手機只支援 remote。桌機這條路不經過它——desktop extension 走 stdio，已經可以裝。</p>
       </div>
       <div class="finding gap">
         <h4>還沒到位的　不是我們的工</h4>
-        <p>手機上的 Apple Health 要 Claude app 具備 HealthKit 權限，Garmin Connect 的授權對象也是 host。上面那項做完，這兩項不會跟著出現。</p>
+        <p>手機上的 Apple Health 要 host app 具備 HealthKit 權限，Garmin Connect 的授權對象也是 host。上面那項做完，這兩項不會跟著出現——所以今天走得通的路徑是使用者口述的證據。</p>
       </div>
     </div>
 
