@@ -22,7 +22,7 @@
           },
           "recoveryTime": { "type": "number", "nullable": true, "minimum": 0, "description": "Minutes Garmin still considers owed before full recovery." },
           "acuteLoad": { "type": "number", "nullable": true, "minimum": 0, "description": "Garmin's 7-day acute training load." },
-          "hrvWeeklyAverage": { "type": "number", "nullable": true, "description": "Present in most exports but frequently constant across weeks — stale, so not mapped to hrv_ms." }
+          "hrvWeeklyAverage": { "type": "number", "nullable": true, "description": "**511 is a not-measured sentinel, not a millisecond figure**, the same kind of value as restingHeartRate 0 and averageStressLevel -1. Measured across 330 consecutive days of one real export (2025-10-18 to 2026-07-26, three TrainingReadinessDTO files): every single day reads 511, and hrvFactorPercent reads 0 alongside it — Garmin itself is weighting HRV at nothing. A real weekly average sits in the tens of milliseconds. Never mapped to hrv_ms: an athlete whose device does not measure HRV must come back as hrv missing, not as a suspiciously steady reading. A device that does measure it would vary day to day, and that is what tells the two apart." }
         }
       }
     },

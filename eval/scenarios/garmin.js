@@ -446,7 +446,11 @@ export function buildGarminExport(scenario, { asOf, dialect } = {}) {
       level: day.readiness?.level ?? "NONE",
       recoveryTime: day.recoveryTimeMinutes ?? 0,
       ...(spelling.omitAcuteLoad ? {} : { acuteLoad: acuteLoadAt(index) }),
-      hrvWeeklyAverage: 58 // constant across the export, exactly as Garmin ships it
+      // 511 on every single day, which is what a real export carries when the
+      // device does not measure HRV: 2^9-1, a not-measured sentinel wearing the
+      // shape of a number. Measured across 330 consecutive days. A parser that
+      // mapped it would report a rock-steady HRV to an athlete who has none.
+      hrvWeeklyAverage: 511
     });
 
     const batteryStats = day.bodyBattery

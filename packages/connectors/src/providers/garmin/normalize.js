@@ -13,7 +13,8 @@
  *   bodyBattery       76%
  *   acuteLoad         70%
  *   readiness score    5%   ← Garmin cannot compute it without valid sleep
- *   hrvWeeklyAverage  100% but constant — stale, not a signal
+ *   hrvWeeklyAverage  100% present, and 511 on all 330 days — a not-measured
+ *                     sentinel, never mapped to hrv_ms
  *
  * A user who does not wear the watch overnight loses Garmin's own readiness
  * score. Reading recoveryTime and bodyBattery instead is what keeps a decision
