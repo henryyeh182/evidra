@@ -1,6 +1,9 @@
 node_modules/
 dist/
 build/
+# Packed desktop extension. A build artifact — rebuild with `mcpb pack`, and
+# ship it through a release, not through the repo.
+*.mcpb
 .env
 .env.local
 .DS_Store
