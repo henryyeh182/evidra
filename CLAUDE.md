@@ -124,7 +124,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 - 對外 **6 個 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` ·
   `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
-- **292 tests**、eval 20 golden cases，全綠
+- **299 tests**、eval 20 golden cases，全綠
 - parser 實作 4 家（Apple Health／Garmin／Strava／Google Health Takeout；Strava 含 API 與
   bulk export 兩種方言）；schema registry 涵蓋 6 個平台
 - Strava bulk export：CSV 按欄位**索引**解析（5 組同名欄單位不同）；`Activity Date` 是 UTC 無 offset，
@@ -140,8 +140,9 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
   （`oauth.js`），**簽章驗證器是 `null`、`http.js` 進入點沒傳 `oauth`、沒有 authorization server**
   → 端到端還不能用
 - 協定停在 `2025-06-18`；最新規格 `2026-07-28`（stateless）。升級走 dual-era
-- `schemas/sources/` 與 `eval/scenarios/` 有 Garmin 與 Google Health Takeout 兩家；
-  Apple Health／Strava 仍缺 → `review:phase` 的 G5 紅
+- `schemas/sources/` 與 `eval/scenarios/` 有 Garmin、Google Health Takeout、Apple Health 三家；
+  **Strava 仍缺 → `review:phase` 的 G5 紅**。Strava 卡在 `data/private/` 沒有真實匯出：
+  可用率那類「在真實匯出上量出來」的數字寫不出來，硬寫就是編造
 - **Phase 2：一行程式都沒有**
 
 ## 未決（不得自行改寫）

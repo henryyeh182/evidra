@@ -157,7 +157,7 @@ token rotation，以及 connector directory 的 OAuth、privacy URL、support、
 
 ## 1. 已實作元件
 
-292 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+299 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
@@ -297,7 +297,7 @@ Anthropic Claude**。定位是「問 Claude 關於你的 Strava 表現」，由 
 |---|---|---|
 | **證據** | ✅ **是，但不是「擁有資料」那個意思**——是**同時讀懂四家並對齊成一份**。見下方訂正 | 已驗證（實測 Apple Health 匯出、Strava 官方頁） |
 | **計算** | ✅ 是。ATL/CTL/TSB、detraining 獨立軸線、個人基線，確定性、零外部 API、0.443ms | 已驗證（實測，Phase 8） |
-| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、292 tests） |
+| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、299 tests） |
 
 **知識圖譜 889 節點不列為護城河。** GPT-6 知道所有動作。它的價值在**不變量**
 （進退階互逆、禁忌把關、plan → catalog 100%）讓替代決策**可被驗證**，不在節點數。
@@ -489,7 +489,7 @@ tool 描述就是分發面」。
 |---|---|---|
 | ~~G2b~~ | ~~`commit_adjust_plan` 無觸發語句~~ | **2026-08-02 修復**：描述加上 `Use this after preview_adjust_plan` 與使用者語彙 |
 | ~~G3~~ | ~~`commit_adjust_plan.output.json` 缺 `versionHistory`~~ | **2026-08-02 修復**：runtime 產生 `versionHistory`（無狀態、無時間戳），契約隨之補齊 |
-| G5 | apple-health／strava **各缺** source schema ＋ scenario（4 項） | **Apple Health 是整個穿戴生態的匯流點**，主線來源沒有可對帳的契約 |
+| G5 | ~~apple-health~~ ／ strava **缺** source schema ＋ scenario（2 項） | **2026-08-02：Apple Health 已補齊**（契約 ＋ 5 個匯出形狀場景，量測自一份真實 153MB 匯出）。Strava 仍缺，且 `data/private/` 沒有真實 Strava 匯出可量測 |
 
 #### 上架路徑有兩條，只有一條需要 Team 帳號（2026-08-01 查證）
 
@@ -1146,7 +1146,7 @@ CIMD 那個決定要在 Phase 7 就下對。
   2. header 與 body 不一致時確實回 `-32020`
   3. 不支援的版本回 `-32022` 且列出 `supported`
   4. `server/discover` 回得出支援版本清單
-  5. 既有 292 tests 全綠，且新增 dual-era 雙路徑測試
+  5. 既有 299 tests 全綠，且新增 dual-era 雙路徑測試
 
 ---
 
