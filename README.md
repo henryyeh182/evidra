@@ -111,6 +111,8 @@ retain, delete, or export, because nothing is stored.
 
 Evidra is not a medical device and does not provide medical advice.
 
+Privacy questions and requests: **evidramcp@icloud.com**
+
 ## 隱私邊界
 
 對外只能這樣說：
