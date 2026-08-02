@@ -3,6 +3,7 @@ import {
   generateTrainingPlan,
   previewPlanChange,
   applyPlanPreview,
+  buildVersionHistory,
   summarizePlan
 } from "../../../packages/planning/src/index.js";
 import { loadDemoUserContext, loadExerciseCatalog, latestEvidenceDay } from "./demoData.js";
@@ -375,7 +376,8 @@ export async function commitPlanChangeTool(args = {}) {
     planId: committed.id,
     version: committed.version,
     status: committed.status,
-    plan: committed
+    plan: committed,
+    versionHistory: buildVersionHistory(args.plan, args.preview, committed)
   });
 }
 

@@ -7,7 +7,28 @@
     "planId": { "type": "string" },
     "version": { "type": "number" },
     "status": { "type": "string" },
-    "plan": { "type": "object" }
+    "plan": { "type": "object" },
+    "versionHistory": {
+      "type": "array",
+      "description": "How the plan reached this version, as from -> to. The server holds no history, so the earlier entries are the ones carried by the supplied plan and the last entry is the commit just made. Keep the array to keep the chain.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "version": { "type": "number", "description": "The version this entry produced." },
+          "fromVersion": { "type": "number", "description": "The version it was built against." },
+          "previewId": { "type": "string", "description": "The preview that was committed." },
+          "change": {
+            "type": ["string", "null"],
+            "description": "The kind of change requested, or null when the preview did not name one."
+          },
+          "summary": {
+            "type": ["string", "null"],
+            "description": "What the change did, in the preview's own words."
+          }
+        },
+        "required": ["version", "fromVersion", "previewId"]
+      }
+    }
   },
-  "required": ["planId", "version", "status", "plan"]
+  "required": ["planId", "version", "status", "plan", "versionHistory"]
 }

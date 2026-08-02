@@ -32,6 +32,36 @@ export function applyPlanPreview(plan, preview) {
   return committed;
 }
 
+/**
+ * Describe how this plan reached its current version, as from -> to.
+ *
+ * A committed plan that only reports `version: 4` cannot be questioned: nothing
+ * says what 3 was, what changed, or why. This is that record.
+ *
+ * Stateless, like everything else here: the server keeps no history, so the
+ * entries carried by the caller-supplied plan are the earlier ones, and this
+ * appends the commit being made now. A caller that keeps nothing still gets the
+ * entry for this change; a caller that keeps the returned array gets the chain.
+ *
+ * No timestamp, deliberately. Nothing else in this package invents a value the
+ * caller did not supply, and a clock reading would make the same inputs stop
+ * producing the same output.
+ */
+export function buildVersionHistory(plan, preview, committed) {
+  const previous = Array.isArray(plan.versionHistory) ? plan.versionHistory : [];
+
+  return [
+    ...previous,
+    {
+      version: committed.version,
+      fromVersion: preview.baseVersion,
+      previewId: preview.previewId,
+      change: preview.changeRequest?.kind ?? null,
+      summary: preview.summary ?? null
+    }
+  ];
+}
+
 export function summarizePlan(plan) {
   assertValidPlan(plan);
   return {

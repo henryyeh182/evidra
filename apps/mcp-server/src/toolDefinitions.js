@@ -408,7 +408,7 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Validate and materialize a caller-held preview patch after approval. The server stores neither the plan nor the preview; the AI host or external storage must persist the returned plan. A preview built against an older version is refused.",
+      "Validate and materialize a caller-held preview patch after approval. Use this after preview_adjust_plan, once the user has agreed to what the preview showed: 'yes, do that', 'apply it', 'go ahead and change my plan', 'sounds good, update it'. Approval is the trigger — never call this on the strength of a preview the user has not seen and accepted. The server stores neither the plan nor the preview; the AI host or external storage must persist the returned plan. A preview built against an older version is refused.",
     inputSchema: {
       type: "object",
       properties: {
