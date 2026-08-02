@@ -201,6 +201,8 @@ export function describeEvidence(evidence) {
     ...new Set(withDistribution.map((workout) => workout.intensityDistribution.boundarySource).filter(Boolean))
   ];
 
+  const writers = signalWriters(metrics);
+
   return {
     metricCount: metrics.length,
     metricTypes: types,
@@ -208,6 +210,50 @@ export function describeEvidence(evidence) {
     earliest: dates[0] || null,
     latest: dates[dates.length - 1] || null,
     intensityDistributionCount: withDistribution.length,
-    ...(boundarySources.length > 0 ? { intensityBoundarySources: boundarySources } : {})
+    ...(boundarySources.length > 0 ? { intensityBoundarySources: boundarySources } : {}),
+    ...(Object.keys(writers).length > 0 ? { signalWriters: writers } : {})
   };
+}
+
+/**
+ * Who wrote each signal, and when they last did.
+ *
+ * "The evidence contains HRV" is not enough to plan around. In one real export
+ * the only HRV came from a watch retired two years earlier, while sleep and
+ * resting heart rate arrived from a different vendor syncing in — same file,
+ * same `source: apple_health`, two eras. A reader given only counts and types
+ * would have believed HRV was still available.
+ *
+ * Per signal rather than per export, because the whole point is that different
+ * signals can come from different devices and stop at different times: comparing
+ * one signal's `latest` against another's is what makes a retired device visible.
+ */
+function signalWriters(metrics) {
+  const perType = new Map();
+
+  for (const metric of metrics) {
+    const writers = metric.metadata?.recorders?.length
+      ? metric.metadata.recorders
+      : metric.metadata?.sourceName
+        ? [metric.metadata.sourceName]
+        : [];
+
+    const entry = perType.get(metric.type) || { writers: new Set(), latest: null };
+    for (const writer of writers) entry.writers.add(writer);
+    if (metric.recordedAt && (entry.latest === null || metric.recordedAt > entry.latest)) {
+      entry.latest = metric.recordedAt;
+    }
+    perType.set(metric.type, entry);
+  }
+
+  const described = {};
+  for (const [type, entry] of perType) {
+    // A signal whose writer nobody recorded says so, rather than being left out
+    // and read as absent.
+    described[type] = {
+      writers: [...entry.writers].sort(),
+      latest: entry.latest
+    };
+  }
+  return described;
 }

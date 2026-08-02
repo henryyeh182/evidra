@@ -1,3 +1,12 @@
+// `source` names the vendor an export came from; `metadata` is where a
+// connector records what it learned reading it — which device actually wrote a
+// reading, how a day was aggregated, where a session's load came from. These
+// conversions used to list their fields and leave metadata off the list, so all
+// of that died at this boundary and nothing downstream could ever have known
+// it. Apple Health is the case that makes it matter: it is a destination as
+// much as a source, so "this came from Apple Health" says nothing about whether
+// an Apple Watch measured it or another vendor synced it in.
+
 export function normalizedWorkoutToWorkout(event) {
   if (event.kind !== "workout") {
     throw new Error(`Expected workout event, received ${event.kind}.`);
@@ -13,7 +22,8 @@ export function normalizedWorkoutToWorkout(event) {
     trainingLoad: event.trainingLoad,
     muscleGroups: event.muscleGroups,
     source: event.source,
-    sourceRecordId: event.sourceRecordId
+    sourceRecordId: event.sourceRecordId,
+    ...(event.metadata ? { metadata: event.metadata } : {})
   };
 }
 
@@ -30,7 +40,8 @@ export function normalizedHealthMetricToHealthMetric(event) {
     recordedAt: event.recordedAt,
     source: event.source,
     sourceRecordId: event.sourceRecordId,
-    confidence: event.confidence
+    confidence: event.confidence,
+    ...(event.metadata ? { metadata: event.metadata } : {})
   };
 }
 

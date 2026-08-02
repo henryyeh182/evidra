@@ -114,6 +114,7 @@
           },
           "source": {
             "type": "string",
+            "description": "The vendor the reading was exported from. Not the same as the device that measured it: Apple Health and Google Health are destinations as much as sources, and another vendor's app may have written the reading. See `metadata`.",
             "enum": [
               "apple_health",
               "garmin",
@@ -123,6 +124,27 @@
               "strava",
               "manual"
             ]
+          },
+          "id": {
+            "type": "string",
+            "description": "Stable across re-imports of the same reading, so a caller can deduplicate."
+          },
+          "sourceRecordId": {
+            "type": "string",
+            "description": "How the vendor identifies this reading in its own export."
+          },
+          "confidence": {
+            "type": "number",
+            "description": "How much the connector trusts the reading, 0-1. Reflects the parse, not the physiology."
+          },
+          "metadata": {
+            "type": "object",
+            "description": "What the connector learned while reading the export. Shape is per connector, but two keys recur and mean the same thing everywhere: `sourceName`, the single device or app that wrote the reading, and `recorders`, the sorted list of writers when a day or a night was assembled from more than one. Together with `aggregation` they are how a caller tells a natively measured signal from one synced in by another vendor — and therefore whether the signal will still be there tomorrow.",
+            "properties": {
+              "sourceName": { "type": ["string", "null"] },
+              "recorders": { "type": "array", "items": { "type": "string" } },
+              "aggregation": { "type": "string" }
+            }
           }
         },
         "required": [

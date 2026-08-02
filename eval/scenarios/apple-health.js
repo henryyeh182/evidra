@@ -457,6 +457,21 @@ export const APPLE_HEALTH_SCENARIOS = [
         }
       },
       {
+        name: "the writers survive all the way into the tool output, not just the evidence",
+        run: ({ state }) => {
+          const writers = state.provenance?.signalWriters;
+          if (!writers) return "provenance carried no signalWriters, so a host cannot see who wrote anything";
+          const hrv = writers.hrv_ms;
+          const sleep = writers.sleep_duration_hours;
+          if (!hrv?.writers?.length) return "hrv reached the output with no writer named";
+          if (!sleep?.writers?.length) return "sleep reached the output with no writer named";
+          return (
+            hrv.latest < sleep.latest ||
+            `hrv last written ${hrv.latest} does not read as older than sleep at ${sleep.latest}, so a host cannot see the retired device`
+          );
+        }
+      },
+      {
         name: "the retired watch's HRV is not confused with today's readings",
         run: ({ events }) => {
           const readings = metricsOf(events, "hrv_ms");
