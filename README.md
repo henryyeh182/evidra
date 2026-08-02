@@ -88,7 +88,7 @@ Claude / ChatGPT
 > 底下的〈隱私邊界〉是給我們自己看的判準，兩者不要合併。
 > 完整政策：https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md
 
-Evidra runs locally on your own machine and stores nothing.
+Evidra runs locally on your own machine and does not retain your evidence.
 
 We process only the minimum health-related evidence submitted by the caller, solely to
 compute the requested fitness decision. We do not retain, sell, use for training, or use
@@ -97,19 +97,24 @@ it for unrelated purposes.
 Evidra never fetches your data — it only sees what the calling AI assistant passes into a
 tool call: recovery signals for today, recent training load, the session you had scheduled,
 and context you state yourself. As a desktop extension, this is verifiable from the code
-that ships inside it:
+shipped in it:
 
-- **No network requests.** No outbound HTTP, fetch, socket, or DNS calls. Your evidence is
-  never transmitted anywhere by Evidra.
-- **No writes to disk.** No database, no cache, no log file, no history.
+- **Evidra itself performs no outbound network requests.** No outbound HTTP, fetch, socket,
+  or DNS calls, and it transmits your evidence nowhere.
+- **Evidra itself does not persist your evidence.** No database, no cache, no log file,
+  no history.
 - **No dependencies.** Node.js standard library only — no analytics, telemetry, or SDKs.
 - **No model calls.** Decisions are deterministic arithmetic and explicit rules.
 - **No accounts.** No sign-up, no login, no user identifier.
 
-Evidence exists in memory for the duration of a single tool call. There is nothing to
-retain, delete, or export, because nothing is stored.
+These statements describe Evidra's own behaviour, not the computer it runs on, the AI
+assistant that calls it, or the operating system and Node.js runtime underneath it.
 
-Evidra is not a medical device and does not provide medical advice.
+Evidence exists in memory for the duration of a single tool call. Nothing is written to
+durable storage, so there is nothing for us to keep, delete, or export on request.
+
+Evidra is not a medical device and does not provide medical advice. It is intended for
+general fitness and training purposes only.
 
 Privacy questions and requests: **evidramcp@icloud.com**
 
