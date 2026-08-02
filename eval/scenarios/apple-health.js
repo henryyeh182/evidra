@@ -210,6 +210,40 @@ function multiRecorderExport(asOf) {
   return exportXml(lines);
 }
 
+/**
+ * The shape a real export takes when the athlete changed watches.
+ *
+ * Apple Health is a destination as much as a source. Here an Apple Watch wrote
+ * HRV and nothing else, two years ago, and a Garmin syncing in writes today's
+ * sleep, resting heart rate and workouts — but no HRV at all. Both are labelled
+ * apple_health, and only `sourceName` distinguishes them.
+ */
+function syncedNotNativeExport(asOf) {
+  const lines = [];
+  const RETIRED_WATCH = "Poheng's Apple Watch";
+  const SYNCED = "Connect";
+
+  // The retired watch's era: HRV only, long ago.
+  for (let daysAgo = 700; daysAgo < 707; daysAgo += 1) {
+    lines.push(hrv(shiftDay(asOf, daysAgo), 55));
+  }
+
+  // Today's era: everything except HRV, synced in from another vendor.
+  for (let daysAgo = 0; daysAgo < 14; daysAgo += 1) {
+    const day = shiftDay(asOf, daysAgo);
+    lines.push(steps(day, 7900, SYNCED));
+    lines.push(restingHr(day, 52).replace('sourceName="Watch"', `sourceName="${SYNCED}"`));
+    lines.push(...sleepStages(day).map((line) => line.replace('sourceName="Watch"', `sourceName="${SYNCED}"`)));
+    if (daysAgo % 2 === 1) {
+      lines.push(
+        workout({ day, type: "HKWorkoutActivityTypeRunning", minutes: 40, kcal: 420, km: 7, sourceName: SYNCED })
+      );
+    }
+  }
+
+  return exportXml(lines.map((line) => line.replace('sourceName="Watch"', `sourceName="${RETIRED_WATCH}"`)));
+}
+
 function sparseWearExport(asOf) {
   const lines = [];
   for (let daysAgo = 0; daysAgo < 21; daysAgo += 1) {
@@ -226,6 +260,7 @@ export const APPLE_HEALTH_EXPORTS = {
   legacy: (asOf) => completeExport(asOf, { dialect: "on_tag" }),
   sentinels: sentinelExport,
   multiRecorder: multiRecorderExport,
+  syncedNotNative: syncedNotNativeExport,
   sparse: sparseWearExport
 };
 
@@ -386,6 +421,55 @@ export const APPLE_HEALTH_SCENARIOS = [
           return (
             day.metadata.recorders?.length === 3 ||
             `expected 3 recorders, got ${JSON.stringify(day.metadata.recorders)}`
+          );
+        }
+      }
+    ]
+  },
+  {
+    id: "synced_not_native",
+    label: "Synced, not native — a retired Apple Watch and a Garmin syncing in",
+    purpose:
+      "A signal being in an Apple Health export does not mean an Apple Watch measured it. In a real export the only HRV came from a watch that stopped writing in 2023, while every sleep record arrived from Garmin Connect syncing in from 2025-11-12. Told only that \"Apple Health has HRV\", a caller would believe a signal is available that this athlete has not produced in two years. Which device wrote a reading has to survive.",
+    build: APPLE_HEALTH_EXPORTS.syncedNotNative,
+    checks: [
+      speaksCanonicalVocabulary,
+      everySignalIsLabelledAppleHealth,
+      {
+        name: "every reading says which device wrote it",
+        run: ({ events }) => {
+          const anonymous = events
+            .filter((event) => event.kind === "health_metric")
+            .filter((event) => !event.metadata?.sourceName && !event.metadata?.recorders?.length);
+          return (
+            anonymous.length === 0 ||
+            `${anonymous.length} readings arrived with no writer: ${[...new Set(anonymous.map((e) => e.type))].join(", ")}`
+          );
+        }
+      },
+      {
+        name: "sleep synced in from another vendor says so, rather than passing as the watch's",
+        run: ({ events }) => {
+          const nights = metricsOf(events, "sleep_duration_hours");
+          if (nights.length === 0) return "no sleep was parsed";
+          const unattributed = nights.filter((night) => !night.metadata?.recorders?.includes("Connect"));
+          return unattributed.length === 0 || `${unattributed.length} nights did not name the syncing app`;
+        }
+      },
+      {
+        name: "the retired watch's HRV is not confused with today's readings",
+        run: ({ events }) => {
+          const readings = metricsOf(events, "hrv_ms");
+          if (readings.length === 0) return "no hrv was parsed";
+          const fromSync = readings.filter((reading) => reading.metadata?.sourceName === "Connect");
+          if (fromSync.length > 0) return `${fromSync.length} hrv readings were attributed to the syncing app`;
+          const newest = readings.map((reading) => reading.recordedAt).sort().at(-1);
+          const oldestNight = metricsOf(events, "sleep_duration_hours")
+            .map((night) => night.recordedAt)
+            .sort()[0];
+          return (
+            newest < oldestNight ||
+            `hrv at ${newest} is not older than the synced era starting ${oldestNight}, so the two eras are indistinguishable`
           );
         }
       }

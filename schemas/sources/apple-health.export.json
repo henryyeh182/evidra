@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "fitness-mcp/sources/apple-health.export",
   "title": "Apple Health export (raw)",
-  "description": "The subset of an `apple_health_export/export.xml` that packages/connectors/src/providers/apple-health reads, after parseExport.js has turned tags into objects. Names are Apple's, not ours. Everything is optional: a real export is mostly holes, and the holes are the point. Measured over one real export — 379,702 <Record> tags and 228 <Workout> tags spanning 2017-11-23 to 2026-07-25, 29 distinct record types, of which this connector reads 4. Coverage of what we read, over that export: stepCount 44,745 records across 2,708 days; restingHeartRate 115 records across 115 days; sleepAnalysis 21 records across 2 days; heartRateVariabilitySDNN 19 records across 7 days. Recovery signals are that sparse in a real phone-first export, and a caller sees it as recovery.missing rather than as invented numbers.",
+  "description": "The subset of an `apple_health_export/export.xml` that packages/connectors/src/providers/apple-health reads, after parseExport.js has turned tags into objects. Names are Apple's, not ours. Everything is optional: a real export is mostly holes, and the holes are the point. Measured over one real export — 379,700 <Record> tags and 30 <Workout> tags spanning 2017-11-23 to 2026-07-25, 29 distinct record types, of which this connector reads 4. Coverage of what we read: stepCount 44,745 records across 2,708 days; restingHeartRate 115 records across 115 days; sleepAnalysis 21 records across 2 days; heartRateVariabilitySDNN 19 records across 7 days. Recovery signals are that sparse in a real export, and a caller sees it as recovery.missing rather than as invented numbers. Read `sourceName` before reading anything into that sparsity: see the note on it below.",
   "type": "object",
   "properties": {
     "records": {
@@ -33,7 +33,7 @@
           },
           "sourceName": {
             "type": "string",
-            "description": "The device or app that wrote the record. Load-bearing for steps: the same day arrives from a phone, a watch, and any third-party app syncing in. Over the measured export, step records came from 6 distinct writers, and 109 of 2,708 step days (4.0%) had two or more. Summing them double-counts those days, so the connector takes the largest per-recorder sum instead."
+            "description": "The device or app that wrote the record, and the only field that says where a signal actually came from. Apple Health is a destination as much as a source: a watch writes to it, and so does every app that syncs into it. **A signal being present in an Apple Health export does not mean an Apple Watch measured it.** In the measured export, `Connect` — Garmin Connect syncing in — begins on 2025-11-12 and accounts for all 21 sleep records and 109 of 115 resting heart rates, while the only 19 HRV records come from an Apple Watch that stopped writing on 2023-08-03. So the same file holds two device eras two years apart, and Garmin's sync carries no HRV at all. A caller told only that \"Apple Health has HRV\" would believe a signal is available that this user has not produced since 2023. Also load-bearing for steps: 6 distinct writers, and 109 of 2,708 step days (4.0%) had two or more, so the connector takes the largest per-recorder sum rather than summing them."
           }
         }
       }
@@ -46,7 +46,7 @@
         "properties": {
           "workoutActivityType": {
             "type": "string",
-            "description": "HKWorkoutActivityType* name. Types absent from the connector's map fall back to \"recovery\", which is wrong for a hard session — the measured export contains 9 HKWorkoutActivityTypeMixedCardio sessions that land there. Recorded here as a known limitation, not as intended behaviour."
+            "description": "HKWorkoutActivityType* name. The measured export contains Running, Walking, Hiking and Cycling. Types absent from the connector's map fall back to \"recovery\", which would be wrong for a hard session — HKWorkoutActivityTypeMixedCardio and HKWorkoutActivityTypeHighIntensityIntervalTraining land there today. Recorded as a known limitation: the honest mapping needs a workout type the domain does not have, so it is written down rather than guessed."
           },
           "duration": {
             "type": "string",
@@ -72,14 +72,14 @@
           "endDate": { "type": "string", "description": "Same format as records." },
           "statistics": {
             "type": "object",
-            "description": "Nested <WorkoutStatistics> elements, keyed by their `type`. This is where a current Apple export puts a workout's energy and distance, and a parser that read only the opening tag reported every session as having no load. Coverage over the measured export: ActiveEnergyBurned on 227 of 228 workouts (99.6%), HeartRate on 89 (39.0%), DistanceWalkingRunning or DistanceCycling on 80 (35.1%).",
+            "description": "Nested <WorkoutStatistics> elements, keyed by their `type`. This is where a current Apple export puts a workout's energy and distance, and a parser that read only the opening tag reported every session as having no load. Coverage over the measured export: ActiveEnergyBurned and a Distance* statistic on all 30 workouts (100%), whether written by the watch directly or synced in from Garmin Connect.",
             "additionalProperties": {
               "type": "object",
               "properties": {
                 "type": { "type": "string", "description": "The HKQuantityTypeIdentifier this statistic summarizes." },
                 "sum": {
                   "type": "string",
-                  "description": "Total over the workout, for additive quantities such as energy and distance. **`0` is a not-measured sentinel, not zero calories.** 92 of the 227 workouts carrying an ActiveEnergyBurned statistic have sum=\"0\", every one of them written by a single third-party app rather than by the watch. Those sessions are reported as having no load, which is what they have."
+                  "description": "Total over the workout, for additive quantities such as energy and distance. **`0` is a not-measured sentinel, not zero calories.** Every workout written by a watch or synced from Garmin Connect in the measured export carries a real total, so the rate here is 0% — but a third-party gym app writing into HealthKit in that same export produced sum=\"0\" on session after session. Any app can write a workout, and one that measures no energy still writes the statistic. Reported as no load, which is what it is."
                 },
                 "average": { "type": "string", "description": "Present on averaged quantities such as heart rate. Not read today." },
                 "minimum": { "type": "string", "description": "Not read today." },

@@ -92,28 +92,39 @@ function dailySumEvents(records) {
   return events;
 }
 
+/**
+ * Sum "asleep" intervals per night, keyed by the wake (endDate) calendar day.
+ *
+ * Apple Health is a destination as much as a source: a night here may have been
+ * measured by the watch, or synced in from another vendor's app hours later.
+ * The stages are recorded per writer for the same reason steps are — a caller
+ * that cannot tell which device produced a night cannot tell whether the
+ * signal is still available tomorrow.
+ */
 function sleepEvents(records) {
-  // Sum "asleep" intervals per night, keyed by the wake (endDate) calendar day.
-  const perNight = new Map();
+  const perNight = new Map(); // night → { hours, recorders:Set }
   for (const record of records) {
     if (record.type !== SLEEP_TYPE) continue;
     if (!String(record.value || "").includes("Asleep")) continue; // skip InBed / Awake
     const startIso = appleDateToIso(record.startDate);
     const endIso = appleDateToIso(record.endDate);
     const night = dayOf(endIso);
-    perNight.set(night, (perNight.get(night) || 0) + Math.max(0, durationHours(startIso, endIso)));
+    const entry = perNight.get(night) || { hours: 0, recorders: new Set() };
+    entry.hours += Math.max(0, durationHours(startIso, endIso));
+    entry.recorders.add(record.sourceName || "unknown");
+    perNight.set(night, entry);
   }
-  return [...perNight].map(([night, hours]) => ({
+  return [...perNight].map(([night, entry]) => ({
     kind: "health_metric",
     id: stableId("apple_health", "sleep_duration_hours", night),
     source: "apple_health",
     sourceRecordId: `${SLEEP_TYPE}:${night}`,
     type: "sleep_duration_hours",
-    value: Number(hours.toFixed(2)),
+    value: Number(entry.hours.toFixed(2)),
     unit: "hours",
     recordedAt: `${night}T07:00:00`,
     confidence: 0.85,
-    metadata: { aggregation: "per_night" }
+    metadata: { aggregation: "per_night", recorders: [...entry.recorders].sort() }
   }));
 }
 

@@ -48,6 +48,7 @@ test("a scenario exists for every export shape the connector must survive", () =
     "legacy_dialect",
     "sentinels_and_gaps",
     "multi_recorder_steps",
+    "synced_not_native",
     "sparse_wear"
   ]) {
     assert.ok(ids.has(required), `no scenario covers ${required}`);
