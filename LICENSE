@@ -1,10 +1,10 @@
 Evidra — Terms of Use
 Copyright (c) 2026 Henry Yeh. All rights reserved.
 
-Evidra (the "Software") is proprietary. It is made available for use, not for
-copying or redistribution. These terms govern your use of the Software,
-including the Evidra desktop extension and any bundle, archive, or source code
-distributed as part of it.
+Evidra (the "Software") is proprietary. It is made available for your own use,
+not for redistribution. These terms govern your use of the Software, including
+the Evidra desktop extension and any bundle, archive, or code distributed as
+part of it.
 
 1. GRANT
 
@@ -12,13 +12,21 @@ distributed as part of it.
    license to install and run the Software on computers you own or control, for
    your own personal or internal use.
 
+   This grant includes the copying that using the Software necessarily involves:
+   installing it, loading and running it, and making a reasonable number of
+   copies for backup or archival purposes. Copies your operating system, runtime,
+   or host application makes on your behalf in the ordinary course of installing
+   or running the Software are permitted. Backup copies remain subject to these
+   terms and must be destroyed when this license ends.
+
 2. RESTRICTIONS
 
-   Except as permitted by applicable law that cannot be contractually waived,
-   you may not:
+   Except as necessary to install, execute, and back up the Software for the
+   licensed use described in Section 1, and except as permitted by applicable law
+   that cannot be contractually waived, you may not:
 
-   (a) copy, publish, distribute, sublicense, sell, rent, or lend the Software
-       or any part of it;
+   (a) publish, distribute, sublicense, sell, rent, lend, or otherwise make the
+       Software or any part of it available to a third party;
    (b) modify the Software, or create derivative works from it;
    (c) incorporate the Software or any part of it into another product or
        service, whether or not that product or service is offered commercially;
@@ -43,10 +51,11 @@ distributed as part of it.
 
 5. NO MEDICAL ADVICE
 
-   The Software computes training decisions from athletic evidence. It is not a
-   medical device and does not diagnose, treat, or provide medical advice. You
-   are responsible for your own training decisions and for consulting a
-   qualified professional about symptoms, injuries, or medical conditions.
+   The Software computes training decisions from athletic evidence and is
+   intended for general fitness and training purposes only. It is not a medical
+   device and does not diagnose, treat, or provide medical advice. You are
+   responsible for your own training decisions and for consulting a qualified
+   professional about symptoms, injuries, or medical conditions.
 
 6. NO WARRANTY
 
@@ -64,4 +73,18 @@ distributed as part of it.
 8. TERMINATION
 
    This license terminates automatically if you breach these terms. On
-   termination you must stop using the Software and remove your copies.
+   termination you must stop using the Software and remove your copies,
+   including any backup copies made under Section 1.
+
+9. SURVIVAL
+
+   Sections 3 (Reservation of Rights), 5 (No Medical Advice), 6 (No Warranty),
+   and 7 (Limitation of Liability) survive any termination or expiry of this
+   license and remain in effect. Section 2 (Restrictions) also survives with
+   respect to any copy of the Software that remains in your possession.
+
+10. SEVERABILITY
+
+   If any provision of these terms is held unenforceable, it is to be enforced
+   to the greatest extent permitted, and the remaining provisions stay in full
+   effect.

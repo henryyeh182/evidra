@@ -7,8 +7,8 @@
 
 Evidra is a calculator, not a data service. It receives the health-related evidence
 your AI assistant passes into a tool call, computes a training decision from it, returns
-the result, and forgets it. Running as a desktop extension, it does all of this on your
-own machine.
+the result, and does not retain it. Running as a desktop extension, it does all of this
+on your own machine.
 
 ## What Evidra receives
 
@@ -33,14 +33,25 @@ it for unrelated purposes.
 Receiving and computing on evidence is itself processing, and we describe it as such.
 What we do not do is keep it.
 
+### Legal basis
+
+The legal basis for processing is performance of the requested computation initiated by
+the user. Evidra processes evidence only when you ask your AI assistant a question that
+requires a decision, and only for that computation.
+
+Where the evidence you submit concerns your health, we rely on your explicit consent,
+given by choosing to submit it for that computation. You can withdraw it at any time by
+not submitting further evidence, or by removing the extension. Because nothing is
+retained, withdrawal leaves nothing behind for us to erase.
+
 ## What Evidra does not do
 
-As a desktop extension, verifiable from the source code that ships inside the extension:
+As a desktop extension, verifiable from the code shipped in the extension:
 
-- **No network requests.** The extension contains no outbound HTTP, fetch, socket, or DNS
-  calls. Your evidence is never transmitted anywhere by Evidra.
-- **No writes to disk.** The extension writes nothing but its protocol responses. There is
-  no database, no cache, no log file, no history.
+- **Evidra itself performs no outbound network requests.** Its code contains no outbound
+  HTTP, fetch, socket, or DNS calls, and it transmits your evidence nowhere.
+- **Evidra itself does not persist your evidence.** It writes nothing but its protocol
+  responses. There is no database, no cache, no log file, no history.
 - **No third-party code.** The extension has zero dependencies and runs on the Node.js
   standard library alone. No analytics, no telemetry, no crash reporting, no SDKs.
 - **No model calls.** Decisions are deterministic arithmetic and explicit rules. Evidra
@@ -48,11 +59,21 @@ As a desktop extension, verifiable from the source code that ships inside the ex
 - **No accounts.** Evidra has no sign-up, no login, and no user identifier. We do not know
   who you are.
 
+These statements describe Evidra's own behaviour. They are not statements about the
+computer it runs on, the AI assistant that calls it, or the operating system and Node.js
+runtime underneath it, none of which are under our control.
+
 Evidence exists only in memory for the duration of a single tool call.
 
 ## Data retention
 
-None. There is nothing to retain, delete, or export, because nothing is stored.
+Evidra does not retain your evidence. Nothing is written to durable storage, so there is
+nothing for us to keep, delete, or export on request.
+
+Because Evidra does not retain personal information, requests to access, correct, or
+delete stored data generally do not apply. If you believe we hold something about you,
+write to the address below and we will tell you what we have, which we expect to be
+nothing.
 
 Your AI assistant is a separate matter: the conversation containing your evidence and
 Evidra's results lives in that assistant's history under its own privacy policy, not ours.
@@ -60,8 +81,8 @@ If you want that removed, remove it there.
 
 ## Sharing
 
-We share nothing, because we hold nothing. No sale of data, no advertising, no data
-brokers, no model training, and no transfer to any third party.
+We have nothing to share, because we do not retain your evidence. No sale of data, no
+advertising, no data brokers, no model training, and no transfer to any third party.
 
 ## Children
 
@@ -69,9 +90,10 @@ Evidra is not directed at children under 13 and we knowingly collect nothing fro
 
 ## Not medical advice
 
-Evidra computes training decisions from athletic evidence. It is not a medical device and
-does not diagnose, treat, or provide medical advice. Talk to a qualified professional about
-symptoms, injuries, or medical conditions.
+Evidra computes training decisions from athletic evidence. It is intended for general
+fitness and training purposes only. It is not a medical device and does not diagnose,
+treat, or provide medical advice. Talk to a qualified professional about symptoms,
+injuries, or medical conditions.
 
 ## Future hosted service
 

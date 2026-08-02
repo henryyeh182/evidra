@@ -7,7 +7,7 @@ Evidra is an MCP server. It turns the evidence you already have into a training
 decision — not advice invented from nothing, but a *from → to* change against the
 session already on your calendar, with the evidence and the rule behind it.
 
-It runs on your own machine. It stores nothing.
+It runs on your own machine, and it does not retain your evidence.
 
 ---
 
@@ -47,9 +47,9 @@ action depending on your equipment, your schedule, and your injuries.
 | 2 | Evidra | Deterministic computation — `acwr = atl / ctl` is a division, not a prediction |
 | 3 | Your AI assistant | Turn the structured result into plain language |
 
-**Evidra calls no model to produce a decision.** The same evidence produces the same
-decision every time, and every number is traceable. The language you read is your
-assistant's; the judgment is arithmetic.
+**Evidra calls no model to produce a decision.** Under the same version of Evidra,
+identical inputs produce an identical decision, and every number is traceable. The
+language you read is your assistant's; the judgment is arithmetic.
 
 ---
 
@@ -97,19 +97,21 @@ instead, and `training.missing` is how you find out.
 
 ## Privacy Policy
 
-Evidra runs locally and stores nothing.
+Evidra runs locally and does not retain your evidence.
 
 > We process only the minimum health-related evidence submitted by the caller, solely to
 > compute the requested fitness decision. We do not retain, sell, use for training, or use
 > it for unrelated purposes.
 
-As a desktop extension, this is verifiable from the code that ships inside it:
-**no network requests, no writes to disk, no dependencies, no telemetry, no model calls,
-no accounts.** Evidence exists in memory for the duration of one tool call.
+As a desktop extension, this is verifiable from the code shipped in it: **Evidra itself
+performs no outbound network requests, does not persist your evidence, and has no
+dependencies, telemetry, model calls, or accounts.** Evidence exists in memory for the
+duration of one tool call.
 
 Full policy: [PRIVACY.md](PRIVACY.md)
 
-Evidra is not a medical device and does not provide medical advice.
+Evidra is not a medical device and does not provide medical advice. It is intended for
+general fitness and training purposes only.
 
 ---
 
