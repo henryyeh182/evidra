@@ -292,4 +292,23 @@ Anthropic Policy 禁「software that transfers money… **on behalf of users**�
 ## 相關但不在本檔
 
 - 完整盤點、門檻清單與價格比較：[implementation plan §3.5「通路決策」](fitness-mcp-implementation-plan.md)
-- remote portal 的 11 個步驟：交接 `journal/2026-08-03-evidra-mbp-rd.md`
+---
+
+## Anthropic remote portal 的 11 個步驟（2026-08-03 查證，將來走 remote 直接照這個準備）
+
+**進 portal 要 Team 或 Enterprise**（admin settings，個人方案沒有）。MCPB 不需要，走獨立表單。
+
+1. **Introduction**
+2. **Connection** — server URL 必須 `https://`；transport 選 streamable HTTP 或 SSE；所有人同一 URL 還是各自不同
+3. **Tools** — 從連上的 server 自動同步，缺 `title`／annotations 會被標記
+4. **Listing** — name ≤100 字元、tagline ≤55、description ≤2000、1–5 個 category、文件 URL、隱私政策 URL、support 聯絡、icon、**永久 slug**
+5. **Use cases** — 主要用途、使用者連線前需要什麼、讀資料／寫資料／兩者
+6. **Company**
+7. **Authentication** — OAuth with DCR／client ID metadata document／Anthropic 持有的 static client ID；或使用者自帶 URL／credential；或無認證
+8. **Data handling** — API 是自己的／經同意代理夥伴的／不受控的第三方；**是否處理 personal health data**（**揭露事項，不是禁區**）；是否有 sponsored content
+9. **Test & launch** — test account 要詳細到 reviewer 能端到端跑完，且要確認自己已用 MCP Inspector 或 custom connector 跑過每個 tool
+10. **Compliance** — **七項政策確認全部必填**：directory guidelines／first-party API usage／financial transactions／AI media generation／prompt injection／conversation data collection／public documentation
+11. **Review**
+
+**對照**：MCPB 表單只有 8 題，**一題都沒問** data handling、personal health data、OAuth、test account、pricing
+——那些全在這個 portal。所以授權檢查、evidence、per-MAU 三件事**不阻擋 MCPB 送審**，純屬 remote 階段。
