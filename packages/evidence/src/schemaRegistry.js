@@ -29,6 +29,31 @@ export const CANONICAL_SIGNALS = {
   // workout. They exist because an activity-only source carries no physiology
   // at all — its entire evidentiary contribution is how hard each session was,
   // and a decision built on that has to be able to name it.
+  //
+  // ---------------------------------------------------------------------------
+  // Read this before touching anything with "intensity" in its name.
+  //
+  // The word is used here for three things that do not share a denominator, and
+  // reasoning about one as though it were another is the mistake this note
+  // exists to stop. Grouped by what the number is actually made of:
+  //
+  //   Power-relative — the denominator is the athlete's FTP. Heart rate plays
+  //   no part and neither do zones. Exists only when the session recorded a
+  //   weighted average power, which over one real Strava export was 5 of 7
+  //   activities: `session_intensity_factor`, `session_training_load`.
+  //
+  //   Heart-rate based — `session_relative_effort` (a vendor score, formula
+  //   unpublished) and `session_intensity_distribution`, which is not merely
+  //   related to zones but *is* a zone table applied to a heart-rate trace.
+  //
+  //   No mathematical basis at all — the caller's `scheduledSession.intensity`,
+  //   a low/moderate/high label describing a session that has not happened yet.
+  //   No vendor supplies it and none can: it is the plan, not a measurement.
+  //   It is not in this vocabulary, and it is listed here because it is the one
+  //   people reach for first when they read the word.
+  //
+  // The split that matters for trust is `composite` versus `derived`, below.
+  // ---------------------------------------------------------------------------
   session_relative_effort: { unit: "score", domain: "load", composite: true, perSession: true },
   session_training_load: { unit: "tss", domain: "load", composite: true, perSession: true },
   session_intensity_factor: { unit: "percent_of_threshold", domain: "load", composite: true, perSession: true },
@@ -36,6 +61,23 @@ export const CANONICAL_SIGNALS = {
   // rules it does not publish; this one is arithmetic over the athlete's own
   // recorded samples against boundaries that travel with the answer. It can be
   // checked — and was, against Strava's own panel, to the second.
+  //
+  // It is made of two inputs with two different owners, and conflating them is
+  // how this stops being checkable:
+  //
+  //   the per-second heart rate — recorded by the device, shipped inside
+  //   `activities/*.fit.gz` in a Strava bulk export;
+  //
+  //   the zone boundaries — **published by the vendor**, not computed by us.
+  //   Strava shows them on its Heart Rate Analysis panel (Z1 <111, Z2 112-139,
+  //   Z3 140-152, Z4 153-166, Z5 167+ for the athlete this was checked against)
+  //   and ships them in no CSV. They therefore arrive through the tool call as
+  //   evidence the athlete authorized. **They are quoted, never derived** — in
+  //   particular never rebuilt from `Maximum Heartrate`, which for that same
+  //   athlete is Strava's unedited 220-age default.
+  //
+  // So the vendor owns the boundaries, the device owns the samples, and the
+  // only thing this system contributes is the counting.
   session_intensity_distribution: {
     unit: "seconds_per_zone",
     domain: "load",
@@ -289,7 +331,9 @@ export const VENDOR_SCHEMAS = {
       maxHeartRateMayBeAgeEstimate:
         "`Maximum Heartrate` defaults to 220 - age unless the athlete overrode it. Relative Effort inherits that estimate, so a Relative Effort built on an unedited default deserves lower confidence than one built on a measured max.",
       heartRateZonesAreNotInTheExport:
-        "Strava's Heart Rate Analysis — seconds and percent per zone — exists only on the site. Neither the distribution nor the zone boundaries are in any CSV; `general_preferences.csv` carries pace zones and leaves heart rate out. The per-second heart rate is in `activities/*.fit.gz` though, so given boundaries from the caller the distribution is recomputable: `readStravaActivityIntensity` reproduced Strava's own panel to the second across all five zones on a real 35-minute session. Boundaries must arrive through the tool call — that is evidence the athlete authorized, not something to infer from Maximum Heartrate."
+        "Strava's Heart Rate Analysis — seconds and percent per zone — exists only on the site. Neither the distribution nor the zone boundaries are in any CSV; `general_preferences.csv` carries pace zones and leaves heart rate out. The per-second heart rate is in `activities/*.fit.gz` though, so given boundaries from the caller the distribution is recomputable: `readStravaActivityIntensity` reproduced Strava's own panel to the second across all five zones on a real 35-minute session. Boundaries must arrive through the tool call — that is evidence the athlete authorized, not something to infer from Maximum Heartrate.",
+      heartRateZoneBoundariesAreVendorData:
+        "The boundaries themselves are Strava's, in the same sense Garmin's Body Battery is Garmin's: the athlete's zones as that vendor publishes them, quoted rather than reconstructed. Read against the panel they came from — Z1 <111, Z2 112-139, Z3 140-152, Z4 153-166, Z5 167+ — the panel's own labelling leaves 167 belonging to no zone (Z4 stops at 166, Z5 reads `>167`); the boundaries are recorded here with Z5 inclusive from 167 so no second falls between two zones, which is asserted in packages/connectors/test/timeInZone.test.js. That is the only liberty taken with them. Nothing else about a zone table is ours to decide, and `session_intensity_distribution` is `derived` rather than `composite` precisely because the counting — not the boundaries — is the part this system performs."
     },
 
     /**
