@@ -142,13 +142,25 @@ GitHub 在這件事出現三次但都不是它本身：repo 放原始碼與文�
 
 缺的只有 `server.json` ＋ 一次 `mcp-publisher` 登入。
 
-**要填的是 v0.1.1 那顆，不是 v0.1.0。** v0.1.0 仍在（sha `6affeab9…caa9351`，bundle 內 README 停在
-288 tests），刻意沒有覆蓋——已照舊 checksum 驗過的人不會對不上。v0.1.1 是純打包發布：
-server 未變，同樣 87 檔，只有 bundle 內的 README 更新到 328。
+**要填的是 v0.1.1 那顆，不是 v0.1.0。** v0.1.0 仍在（sha `6affeab9…caa9351`），刻意沒有覆蓋
+——已照舊 checksum 驗過的人不會對不上。
 
-**重打包必驗**（照 CLAUDE.md）：用 `unzip -l` 直接看 archive，**不要信 `mcpb pack` 自報的
-ignored 數字**。2026-08-03 打 v0.1.1 時實驗過的五項：`data/private`／`*.test.js`／`schemas/`／
-`data/vendor`／`.env` 命中數皆為 0，檔案清單與前一顆逐項相同。
+**v0.1.1 不是純打包發布。** v0.1.0 打包後又有 9 個 commit 動到 runtime，bundle 內 **10 個程式檔**
+與 v0.1.0 不同，含兩個行為修正（`cc43122`：缺 `type`／`intensity` 時不再宣稱做了沒做的變更；
+`96f820f`：沒有負荷的場次改為進 `signalCoverage.training.missing`）。所以 **0.1.1 這個版本號是對的**
+——第三位就是給 bug 修正用的。
+
+### ⚠️ 驗兩顆 bundle 不能只比檔名
+
+2026-08-03 曾把 v0.1.1 誤判成「只換了 README」，並把那句話寫進公開的 release notes（後已改）。
+成因：只 diff 了 `unzip -l` 的**檔名清單**，兩邊都 87 檔、名字逐項相同 → 當成內容相同。
+**檔名一致不等於內容一致。** 當時大小 244,579 → 251,337 bytes（+6.7KB）就在同一份輸出裡，是反證。
+
+正確做法兩件，缺一不可：
+
+1. **內容比對**：兩顆都解開後 `diff -rq`，看的是檔案內容
+2. **安全掃描**：用 `unzip -l` 直接看 archive，**不要信 `mcpb pack` 自報的 ignored 數字**。
+   打 v0.1.1 時驗過的五項：`data/private`／`*.test.js`／`schemas/`／`data/vendor`／`.env` 命中數皆為 0
 
 ---
 
