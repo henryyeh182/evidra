@@ -269,8 +269,11 @@ evidra 只有三個檔，和這裡的關係各不相同——**唯一真正重�
   那顆 bundle 就過時了；重打包時要照舊驗證（`unzip -l` 直接看 archive，
   不要信 `mcpb pack` 自報的 ignored 數字）。
 
-**已知漂移（無害，等下次重出 Release 時順手修）**：v0.1.0 bundle 內的 README 停在打包當時的
-測試數，repo 已經往前走。不影響執行。
+**那個已知漂移已修（2026-08-03）**：v0.1.0 bundle 內的 README 停在 288 tests，
+已由 **v0.1.1** 取代——純打包發布，server 未變、同樣 87 檔，只有 README 更新到 328。
+`/releases/latest` 現在指向 `v0.1.1`，sha `af6c142b09378ca9ee28b8a1ddec4d6de2018f2c7b3e9e8d739ac8be185f1217`。
+**v0.1.0 刻意保留不覆蓋**（已照舊 checksum 驗過的人不會對不上）。
+**送官方 registry 要填 v0.1.1 那顆。**
 
 ## 常用指令
 
