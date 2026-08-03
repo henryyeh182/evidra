@@ -55,6 +55,44 @@ Anthropic 主動挑人——**這是報名表達興趣，不是審查流程的�
 **要不要為了進優先清單改 MIT，是使用者的商業決定，不得自行改寫。**
 改 MIT 等於 decision engine／知識圖譜／四家 parser 要公開。
 
+### 已定稿的欄位：MCP Server Description（2026-08-03，使用者定稿）
+
+表單原問句（PDF 第 4 頁）：
+
+> **MCP Server Description \*** — Briefly describe what your MCP server does and its core functionality (50 words max).
+
+問的是**做什麼 ＋ 核心功能**，所以定稿不寫 feature list、不寫賣點：
+
+> An exercise-science MCP server for AI assistants. Evidra takes caller-supplied evidence
+> and returns a from→to change for today's scheduled session, together with the supporting
+> evidence and decision rule. Missing signals are reported, never silently inferred.
+
+**35 字**，上限 50。
+
+**第一句是分類，不是標語**：MCP server ／ 給 AI assistant 用 ／ 運動科學引擎——
+讀者一眼排除 chatbot 與 fitness app。第二句是 `Evidence → 決策` 的資料流，
+主詞動詞受詞一路到底，不用名詞子句（早期稿寫 `what today's scheduled session should
+become as a from→to change`，讀者要先扛一個子句再回頭接 `as a...`，已棄用）。
+`decision rule` 讓 decision 這個字留在句子裡——回傳的是**變更**，而變更由**決策規則**產生。
+
+**`silently` 那個字是量出來的，不要拿掉。** 「missing signals 不會被推估」字面上不成立——
+引擎有三處會拿母體基準或中性值頂替缺席的證據，三處都在 tool 路徑上：
+
+| 位置 | 缺什麼時 | 頂替成什麼 |
+|---|---|---|
+| `generateSemanticFitnessState.js:3` | 呼叫端沒傳 baselines（`toolHandlers.js:199` 就沒傳） | `hrvMs: 52`／`restingHrBpm: 57`／`weeklyTrainingLoadTarget: 360` |
+| 同檔 `:76` | 觀察到的慢性負荷低於 360 | `Math.max(observed, 360)`，ACWR 改對著 360 量，標記 `chronicBasis: "baseline_floor"` |
+| 同檔 `:263` | 完全沒有新鮮的恢復訊號 | 中性分數（註解：「neutral score, but say so via coverage」） |
+
+三處都會說出來（第二處進 `decideSession.js:600` 的 `limits`，第三處進 reasoning 的
+「Recovery score **defaults to** X」），所以真正的不變量是**推估不會沉默**，不是不推估。
+
+**這與紀律 2 不衝突**：原始輸入不被捏造（沒有 RPE 就是沒有，`model.js` 的 `?? null`），
+母體基準頂替發生在**導出分數**那層。兩件事都真，是不同層。
+
+**其餘必填欄位尚未定案**，這節只涵蓋 Description 一題——GitHub Link 填哪個 repo 仍與 MIT
+決定綁著（見上方兩條紅），`manifest.json` 的 `author.url` 未補。**不要因為這節存在就以為表單可以送了。**
+
 ---
 
 ## Smithery（2026-08-03 一手）
