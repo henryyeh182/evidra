@@ -138,7 +138,7 @@ GitHub 在這件事出現三次但都不是它本身：repo 放原始碼與文�
 |---|---|
 | artifact 掛在 GitHub／GitLab Release | ✅ `v0.1.0` 的 `evidra.mcpb` |
 | `identifier` 網址**須含 "mcp"** | ✅ `.mcpb` 副檔名即可（文件明說可來自副檔名） |
-| 須附 `fileSha256` | ✅ `6affeab9…633ce`，已公布在 release notes |
+| 須附 `fileSha256` | ✅ `6affeab9…caa9351`，已公布在 release notes（完整值：`6affeab9f60707ad1f7dda50921369f3c5e1e529f06de255df74c3988caa9351`）|
 
 缺的只有 `server.json` ＋ 一次 `mcp-publisher` 登入。
 
