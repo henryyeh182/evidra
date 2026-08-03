@@ -177,6 +177,31 @@ GPTs／Copilot／Gemini Gems／AgentExchange／Zapier 的使用者是自動化�
 Trainerize／Mindbody／Wellhub 屬「賣給握有課表的一方」，需 REST／SDK；
 wearable dev platform 要直連供應商，**違反 Phase 1 界線**，僅 Phase 2 適用。
 
+### Smithery／mcp.so 的上架與界線（2026-08-03 一手查證）
+
+**分類不變：曝光通路，不是收入通路。三家都沒有創作者分潤，金流方向是往外流。**
+
+**Smithery 有兩條發佈路徑，只有一條可以用：**
+
+| 路徑 | 誰在跑我們的程式 | 可否 |
+|---|---|---|
+| **Local MCPB bundle** | **使用者自己的機器**——官方原文「Smithery distributes a pre-built MCPB bundle that clients download and run locally」 | ✅ **可以**。不碰他們的伺服器，Phase 1 界線不受影響 |
+| Smithery hosted | 他們的伺服器 | ❌ Evidence 流經第三方，log／trace 遮蔽與不持久化都無法保證 |
+| URL（bring your own hosting） | 他們**代理**到我們的上游（"Smithery proxies to your upstream server"） | ❌ **代理一樣經手 Evidence**，與 hosted 同罪 |
+
+**看到「免 infra 的 remote endpoint」不要直接用**——要用就只用 MCPB 那條。
+MCPB 路徑文件明載：**無開源要求、無公開 repo 要求、無強制審查**（"Get verified" 是選配）。
+現有的 `evidra.mcpb` 就是它要的東西，只差 config schema 與 server page metadata。
+
+**mcp.so 的「marketplace」是品牌用語，這次有一手證據**：submit 頁是表單（repo URL ＋ 名稱），
+並提供 **$39 一次性刊登費**（免審上架、verified badge、featured 版位、dofollow 連結）。
+**金流是我們付給它買曝光，不是使用者付錢買我們的產品，也沒有分潤。**
+自報 DR 72／12 個月 2.2M unique visitors／266K MAU，但招商文案自己寫
+「in front of **developers** building agents」——**受眾自承是開發者**。
+→ **免費送審可做；$39 先不要**，買的是開發者向的 SEO 曝光，終端使用者不在那裡。
+
+**這一段不改變主線**：MCPB 送審表單仍是第一優先，以上都排在它後面。
+
 **Claude 先的理由**：Anthropic 送審表單的「Data handling」步驟**明文詢問是否處理
 personal health data → 是揭露事項，不是禁區**；OpenAI Apps SDK 則**明寫不得處理 PHI**。
 ChatGPT 那側**平行查證不平行開工**，未解的是「Health 內第三方 app 能否讀到 Apple Health
