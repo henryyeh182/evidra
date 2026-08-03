@@ -161,7 +161,7 @@ Phase 2 是核心宗旨要的那個版本，不是選配。兩種模式共用同
 | 項目 | 現況 |
 |---|---|
 | 對外 tool | 6 個（`tools/list` 實測） |
-| 資料標準化 | `packages/connectors` 實作 3 家（Apple Health／Garmin／Strava，Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 家 |
+| 資料標準化 | `packages/connectors` 實作 4 家（Apple Health／Garmin／Strava／Google Health Takeout，Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 家 |
 | 確定性計算 | `semantic-engine`（readiness／分肌群疲勞）· `training-load`（ATL/CTL/TSB/ACWR）· `decision-engine`（from→to）· `planning` · `knowledge-graph`（889 節點 / 5,785 邊） |
 | 測試 | 323 tests、eval 20 golden cases 全綠 |
 | 傳輸 | stdio ✅ · Streamable HTTP ✅ |
@@ -169,8 +169,16 @@ Phase 2 是核心宗旨要的那個版本，不是選配。兩種模式共用同
 | 協定版本 | `2025-06-18`；最新規格是 `2026-07-28`（stateless），升級走 dual-era |
 | Phase 2 | **一行程式都沒有** |
 
-source schema 與匯出形狀 scenario 做了 Garmin、Google Health Takeout、Apple Health 三家；
-Strava 有 parser 但缺 `schemas/sources/` 契約與 `eval/scenarios/` 場景。
+source schema 與匯出形狀 scenario **四家齊備**（Garmin／Google Health Takeout／Apple Health／Strava）。
+
+**這個版本走到哪裡**：v0.1.0 是第一次公開發布。決策邏輯有確定性測試與 eval 覆蓋——
+同一個版本下，同樣的證據永遠得到同樣的決策，而且每個決策都指得出憑據與規則。
+**但它還沒有經過長期真實訓練週期的驗證。**
+
+**證據由呼叫端提供。** Evidra 不會代替使用者連上 Apple Health、Garmin、Strava
+或任何其他服務，也不需要綁定帳號——它讀的是呼叫時交給它的東西，可以單純是
+「昨天練了什麼、睡了多久」。已經匯出的資料也能當輸入評估。
+沒提供的訊號會列進 `signalCoverage` 並下調 confidence，**不會用預設值補**。
 
 ## 明確不做
 
