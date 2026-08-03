@@ -157,7 +157,7 @@ token rotation，以及 connector directory 的 OAuth、privacy URL、support、
 
 ## 1. 已實作元件
 
-309 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+315 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
@@ -297,7 +297,7 @@ Anthropic Claude**。定位是「問 Claude 關於你的 Strava 表現」，由 
 |---|---|---|
 | **證據** | ✅ **是，但不是「擁有資料」那個意思**——是**同時讀懂四家並對齊成一份**。見下方訂正 | 已驗證（實測 Apple Health 匯出、Strava 官方頁） |
 | **計算** | ✅ 是。ATL/CTL/TSB、detraining 獨立軸線、個人基線，確定性、零外部 API、0.443ms | 已驗證（實測，Phase 8） |
-| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、309 tests） |
+| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、315 tests） |
 
 **知識圖譜 889 節點不列為護城河。** GPT-6 知道所有動作。它的價值在**不變量**
 （進退階互逆、禁忌把關、plan → catalog 100%）讓替代決策**可被驗證**，不在節點數。
@@ -1146,7 +1146,7 @@ CIMD 那個決定要在 Phase 7 就下對。
   2. header 與 body 不一致時確實回 `-32020`
   3. 不支援的版本回 `-32022` 且列出 `supported`
   4. `server/discover` 回得出支援版本清單
-  5. 既有 309 tests 全綠，且新增 dual-era 雙路徑測試
+  5. 既有 315 tests 全綠，且新增 dual-era 雙路徑測試
 
 ---
 

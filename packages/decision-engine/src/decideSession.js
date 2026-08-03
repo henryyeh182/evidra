@@ -68,8 +68,16 @@ const INTENSITY_ORDER = ["low", "moderate", "high"];
 // Derived from intensity and type alone — no zone, no pace, nothing the
 // evidence does not carry.
 const INTENSITY_LABEL = { low: "Easy", moderate: "Moderate", high: "Hard" };
+// `type` is optional on the input contract, and a session that omits it used to
+// produce the literal string "Easy undefined" in `action.to.focus` — the field
+// the athlete actually reads. Nothing is invented to fill the gap: with no type
+// the name carries only the intensity, which is the part that changed anyway.
+// The intensity itself is guaranteed by `intensityStated`, which is what lets
+// the relabel run at all.
 const relabelForIntensity = (session) =>
-  `${INTENSITY_LABEL[session.intensity]} ${session.type}`;
+  session.type
+    ? `${INTENSITY_LABEL[session.intensity]} ${session.type}`
+    : `${INTENSITY_LABEL[session.intensity]} session`;
 
 // What a deferred session becomes. Deliberately equipment-free so the swap
 // holds whatever the athlete has, and low-impact so it stays valid under the
@@ -279,8 +287,29 @@ export function decideSession({
   //    100/100 the day after a hard run went unmentioned and unacted on. Rules
   //    are now independent, the largest demand wins, and every rule that fires
   //    contributes its reason.
+  // Every rule below acts by moving the session's intensity down from where it
+  // was planned, which requires knowing where that was. `intensity` is optional
+  // on the input contract and no connector can fill it — it describes a session
+  // that has not happened, so it exists only in the caller's plan. With it
+  // absent, `lowerIntensity(undefined)` used to return "low" (indexOf gives -1,
+  // and the clamp reads that as the bottom of the scale), and the athlete was
+  // told their intensity had come down to low from a value nobody supplied.
+  // That reads entirely plausible, which is what made it worth guarding.
+  const intensityStated = INTENSITY_ORDER.includes(from.intensity);
+
   let stepsDown = 0;
+  let intensityUnstatedBlockedARule = false;
   const demand = (steps, text, asIntent = "reduce_today_intensity") => {
+    if (!intensityStated) {
+      // The reason strings name both the observation and the remedy ("...so
+      // intensity comes down"), and the remedy is not available here. Reporting
+      // one without the other would be prose contradicting `limits`, so the
+      // rule is recorded as blocked instead. The readings that triggered it —
+      // readiness, target-muscle fatigue, ACWR, days idle — are already in
+      // `evidence`, so nothing is hidden by not restating them.
+      intensityUnstatedBlockedARule = true;
+      return;
+    }
     stepsDown = Math.max(stepsDown, steps);
     reason.push(text);
     escalate("adjust", asIntent);
@@ -351,6 +380,12 @@ export function decideSession({
       }
     }
 
+    if (intensityUnstatedBlockedARule) {
+      limits.push(
+        "The evidence called for this session's intensity to come down, but the scheduled session states no intensity, so none was changed. Supply `scheduledSession.intensity` (low, moderate or high) to get that part of the decision."
+      );
+    }
+
     for (let step = 0; step < stepsDown; step += 1) {
       to.intensity = lowerIntensity(to.intensity);
     }
@@ -410,8 +445,15 @@ export function decideSession({
   //    guard: a well-rested returning athlete scores high readiness and low
   //    fatigue, which is precisely this rule's entry condition. Being fresh is
   //    not the same as being ready to progress.
+  //
+  //    Stepping up has the same prerequisite as stepping down: you cannot move
+  //    a value you were never given. `raiseIntensity(undefined)` lands on "low"
+  //    for the same reason its counterpart does, so an unstated intensity would
+  //    be reported as having *risen* to low — and the sentence below would read
+  //    "steps up from undefined to low".
   if (
     type === "keep" &&
+    intensityStated &&
     !detraining?.active &&
     restrictions.length === 0 &&
     readiness >= RULES.readinessAdvance &&
@@ -517,7 +559,15 @@ export function decideSession({
     intent = "proceed_as_planned";
   }
   if (type === "keep" && reason.length === 0) {
-    reason.push(`Readiness ${readiness} and target-muscle fatigue ${fatigue.value || 0} are both within range, so the session runs as planned.`);
+    // "Both within range" is a claim about the evidence, and it is false when a
+    // rule fired and could not be applied. Saying it anyway would turn a
+    // withheld adjustment into an all-clear, which is the opposite of what the
+    // readings showed.
+    reason.push(
+      intensityUnstatedBlockedARule
+        ? `The session is unchanged, but not because the evidence was clear: readiness ${readiness} and target-muscle fatigue ${fatigue.value || 0} called for a lower intensity that could not be applied. See limits.`
+        : `Readiness ${readiness} and target-muscle fatigue ${fatigue.value || 0} are both within range, so the session runs as planned.`
+    );
   }
 
   const coverage = normalizeCoverage(state.signalCoverage);

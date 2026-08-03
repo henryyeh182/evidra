@@ -633,3 +633,88 @@ test("no proposal, no proposal field — the shape does not change for callers w
   const result = decideSession({ scheduledSession: session(), state: state() });
   assert.equal("proposal" in result, false);
 });
+
+// --- an incomplete scheduledSession ----------------------------------------
+//
+// `type` and `intensity` are both optional on decide_session's input contract,
+// and no connector can supply either: they describe a session that has not
+// happened, so they exist only in the caller's plan. Both omissions used to
+// produce output that read as though the value had been known.
+
+test("a session with no type is not relabelled to the literal string undefined", () => {
+  const result = decideSession({
+    scheduledSession: session({ type: undefined, focus: "VO₂max Intervals" }),
+    state: state({ readinessScore: 55 })
+  });
+
+  assert.equal(result.action.to.focus, "Moderate session");
+  assert.doesNotMatch(JSON.stringify(result), /undefined/);
+});
+
+test("a session with no type keeps the intensity in its name — only the modality is dropped", () => {
+  const result = decideSession({
+    scheduledSession: session({ type: undefined, intensity: "moderate" }),
+    state: state({ readinessScore: 55 })
+  });
+
+  assert.equal(result.action.to.intensity, "low");
+  assert.equal(result.action.to.focus, "Easy session");
+});
+
+test("an unstated intensity is not read as low", () => {
+  // lowerIntensity(undefined) lands on the bottom of the scale, so this used to
+  // tell the athlete their intensity had come down to low from a value nobody
+  // supplied — plausible enough that nothing would have caught it.
+  const result = decideSession({
+    scheduledSession: session({ intensity: undefined }),
+    state: state({ readinessScore: 55 })
+  });
+
+  assert.equal(result.action.to.intensity, undefined);
+  assert.ok(
+    result.reason.every((line) => !/intensity comes down/.test(line)),
+    "the decision claimed an intensity change it could not make"
+  );
+});
+
+test("an unstated intensity is reported as a limit, naming the field that would fix it", () => {
+  const result = decideSession({
+    scheduledSession: session({ intensity: undefined }),
+    state: state({ readinessScore: 55 })
+  });
+
+  const limit = result.limits.find((line) => /states no intensity/.test(line));
+  assert.ok(limit, "nothing told the caller why the intensity was left alone");
+  assert.match(limit, /scheduledSession\.intensity/);
+});
+
+test("a withheld intensity cut is not reported as an all-clear", () => {
+  // The decision lands on `keep` because nothing changed, and the stock `keep`
+  // reason says the readings were within range. Here they were not.
+  const result = decideSession({
+    scheduledSession: session({ intensity: undefined }),
+    state: state({ readinessScore: 55 })
+  });
+
+  assert.equal(result.decision.type, "keep");
+  assert.ok(
+    result.reason.every((line) => !/within range/.test(line)),
+    "a session held back by a missing field was reported as evidence-clear"
+  );
+  assert.ok(result.reason.some((line) => /could not be applied/.test(line)));
+});
+
+test("an unstated intensity does not suppress a genuine all-clear", () => {
+  const result = decideSession({
+    scheduledSession: session({ intensity: undefined }),
+    state: state({ readinessScore: 85, muscleFatigue: { legs: 10 } })
+  });
+
+  assert.equal(result.decision.type, "keep");
+  assert.ok(result.reason.some((line) => /within range/.test(line)));
+  assert.equal(
+    result.limits.some((line) => /states no intensity/.test(line)),
+    false,
+    "a limit was reported for a rule that never fired"
+  );
+});
