@@ -224,8 +224,9 @@ ChatGPT 那側**平行查證不平行開工**，未解的是「Health 內第三�
 
 ### MCPB 送審表單的實情（2026-08-03 讀過全文）
 
-> 表單存 `data/private/MCPB Desktop Extensions Submission Form.pdf`（**空白表單的存檔，不是填好的送審件**；
-> 帶使用者 email 所以不進版控 → **只有 mbp-rd 有**）。以下結論已抄在這裡，不必回頭開檔。
+> 表單存 `docs/MCPB Desktop Extensions Submission Form.pdf`，**進版控**（本 repo 是私有的，
+> 所以跨機 clone 就有，填表時不必再登入 Google 匯出一次）。那是**空白表單的存檔，不是填好的送審件**。
+> **不要複製到 `evidra`**——那是 public repo，PDF 第 2／3／5 頁帶著使用者 email。
 
 **表單只有 8 題**，且**一題都沒問** data handling、personal health data、OAuth、
 test account、pricing——那些全在 remote portal（11 步）。要打勾的 MCP Directory T&C
