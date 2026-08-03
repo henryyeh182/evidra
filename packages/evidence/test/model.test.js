@@ -77,3 +77,89 @@ test("describeEvidence reports what actually arrived", () => {
   assert.deepEqual(summary.metricTypes, ["hrv_ms"]);
   assert.equal(summary.latest, "2026-07-27T06:00:00+08:00");
 });
+
+test("a session that arrived without a load is carried as unmeasured", () => {
+  const context = evidenceToUserContext({
+    workouts: [{ type: "strength", startedAt: "2026-07-26T18:00:00+08:00", durationMinutes: 45 }]
+  });
+
+  // Not 45. A load derived from duration reads downstream as a measured load,
+  // and `signalCoverage.training` could then never report the gap.
+  assert.equal(context.workouts[0].trainingLoad, null);
+});
+
+test("provenance says what each session's load stood on", () => {
+  const summary = describeEvidence({
+    workouts: [
+      {
+        type: "run",
+        startedAt: "2026-07-25T08:00:00+08:00",
+        durationMinutes: 60,
+        trainingLoad: 120,
+        metadata: { loadSource: "relative_effort", rpeBasis: "athlete_max_hr_age_estimate" }
+      },
+      {
+        type: "run",
+        startedAt: "2026-07-24T08:00:00+08:00",
+        durationMinutes: 40,
+        trainingLoad: 70,
+        metadata: { loadSource: "relative_effort", rpeBasis: "reported" }
+      },
+      {
+        type: "strength",
+        startedAt: "2026-07-23T08:00:00+08:00",
+        durationMinutes: 45,
+        metadata: { loadSource: "unavailable", rpeBasis: "unavailable" }
+      }
+    ]
+  });
+
+  assert.deepEqual(summary.loadSources, { relative_effort: 2, unavailable: 1 });
+  assert.deepEqual(summary.rpeBasis, {
+    athlete_max_hr_age_estimate: 1,
+    reported: 1,
+    unavailable: 1
+  });
+});
+
+test("a source that said nothing is not folded into one that said 'none'", () => {
+  const summary = describeEvidence({
+    workouts: [
+      { type: "run", startedAt: "2026-07-25T08:00:00+08:00", durationMinutes: 60, trainingLoad: 120 },
+      {
+        type: "strength",
+        startedAt: "2026-07-24T08:00:00+08:00",
+        durationMinutes: 45,
+        metadata: { loadSource: "unavailable" }
+      }
+    ]
+  });
+
+  // The first session carries a load with no stated origin — silence, not a
+  // finding of "no load available".
+  assert.deepEqual(summary.loadSources, { unstated: 1, unavailable: 1 });
+  assert.deepEqual(summary.rpeBasis, { unstated: 2 });
+});
+
+test("an estimated RPE with no named basis is still not counted as reported", () => {
+  const summary = describeEvidence({
+    workouts: [
+      {
+        type: "run",
+        startedAt: "2026-07-25T08:00:00+08:00",
+        durationMinutes: 60,
+        rpe: 7,
+        metadata: { rpeEstimated: true }
+      }
+    ]
+  });
+
+  assert.deepEqual(summary.rpeBasis, { estimated: 1 });
+});
+
+test("evidence with no sessions claims nothing about loads", () => {
+  const summary = describeEvidence({ healthMetrics: [], workouts: [] });
+
+  assert.equal("loadSources" in summary, false);
+  assert.equal("rpeBasis" in summary, false);
+});

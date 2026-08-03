@@ -161,7 +161,13 @@ export function evidenceToUserContext(evidence, options = {}) {
       // Absent stays absent. A caller reporting "no RPE" was being overruled
       // with a 5, which then read downstream as something the athlete had said.
       rpe: workout.rpe ?? null,
-      trainingLoad: workout.trainingLoad ?? Math.round(workout.durationMinutes * 1.0),
+      // Absent stays absent here too. A session that arrived without a load was
+      // being given one derived from its duration, which then read downstream
+      // as a measured load: muscle fatigue counted it, and
+      // `signalCoverage.training` reported `trainingLoad` as read for every
+      // caller — the one channel that was supposed to say otherwise could never
+      // fire. A session nobody measured is now carried as unmeasured.
+      trainingLoad: workout.trainingLoad ?? null,
       muscleGroups: workout.muscleGroups || [],
       source: workout.source || "manual",
       // Absent stays absent. There is no sensible default for "how long was
@@ -202,6 +208,7 @@ export function describeEvidence(evidence) {
   ];
 
   const writers = signalWriters(metrics);
+  const { loadSources, rpeBasis } = workoutBases(workouts);
 
   return {
     metricCount: metrics.length,
@@ -211,8 +218,52 @@ export function describeEvidence(evidence) {
     latest: dates[dates.length - 1] || null,
     intensityDistributionCount: withDistribution.length,
     ...(boundarySources.length > 0 ? { intensityBoundarySources: boundarySources } : {}),
-    ...(Object.keys(writers).length > 0 ? { signalWriters: writers } : {})
+    ...(Object.keys(writers).length > 0 ? { signalWriters: writers } : {}),
+    // Only when sessions arrived: empty objects on an evidence set with no
+    // workouts would read as "asked and found nothing".
+    ...(workouts.length > 0 ? { loadSources, rpeBasis } : {})
   };
+}
+
+/**
+ * What each session's load and RPE stood on.
+ *
+ * `signalCoverage.training` says whether every session carried a load. It does
+ * not say what kind of load, and the kinds are not interchangeable: an ACWR
+ * built on Garmin's EPOC or Strava's Relative Effort rests on the vendor's own
+ * effort figure, while one built on `duration_estimate` rests on a stopwatch.
+ * Same field, different footing — and until now a reader could not tell which
+ * without opening the evidence it was never sent.
+ *
+ * Counted rather than listed per session, because the question a reader has is
+ * how much of the window stands on each footing, not which session is which.
+ */
+function workoutBases(workouts) {
+  const loadSources = {};
+  const rpeBasis = {};
+
+  for (const workout of workouts) {
+    const metadata = workout.metadata || {};
+
+    // `unavailable` and `unstated` are kept apart on purpose: the first is a
+    // source that looked and had no load, the second is nobody having said.
+    // Folding them together would turn silence into a finding.
+    const source = typeof metadata.loadSource === "string" ? metadata.loadSource : "unstated";
+    loadSources[source] = (loadSources[source] || 0) + 1;
+
+    // An RPE that arrived without a basis is not counted as reported. A number
+    // in the field says the caller had one, not that the athlete gave it, and
+    // that difference is the whole reason this is here.
+    const basis =
+      typeof metadata.rpeBasis === "string"
+        ? metadata.rpeBasis
+        : metadata.rpeEstimated === true
+          ? "estimated"
+          : "unstated";
+    rpeBasis[basis] = (rpeBasis[basis] || 0) + 1;
+  }
+
+  return { loadSources, rpeBasis };
 }
 
 /**

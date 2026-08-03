@@ -65,8 +65,13 @@ const CHRONIC_WINDOW_DAYS = 28;
 function calculateTrainingLoad(workouts, anchorDate, baselines = DEFAULT_BASELINES) {
   const recent7d = workoutsWithinDays(workouts, anchorDate, 7);
   const recent28d = workoutsWithinDays(workouts, anchorDate, CHRONIC_WINDOW_DAYS);
-  const load7d = recent7d.reduce((sum, workout) => sum + workout.trainingLoad, 0);
-  const load28d = recent28d.reduce((sum, workout) => sum + workout.trainingLoad, 0);
+  // A session without a load adds nothing to the sum — it cannot, nobody
+  // measured it. The gap is reported through `signalCoverage.training` rather
+  // than smuggled into the total as a number.
+  const sumLoad = (sum, workout) =>
+    typeof workout.trainingLoad === "number" ? sum + workout.trainingLoad : sum;
+  const load7d = recent7d.reduce(sumLoad, 0);
+  const load28d = recent28d.reduce(sumLoad, 0);
   const observedChronicWeeklyLoad = load28d / 4 || 0;
   const chronicWeeklyLoad = Math.max(observedChronicWeeklyLoad, baselines.weeklyTrainingLoadTarget);
 
