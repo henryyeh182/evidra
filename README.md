@@ -11,6 +11,27 @@ It runs on your own machine, and it does not retain your evidence.
 
 ---
 
+## Where this is
+
+v0.1.0 is the first public release.
+
+The decision logic is covered by a deterministic test and evaluation suite:
+under the same version of Evidra, the same evidence produces the same decision,
+and every decision cites the evidence and the rule behind it. It has not yet
+been validated over extended real-world training blocks.
+
+**You supply the evidence.** Evidra does not connect to Apple Health, Garmin,
+Strava, or any other service on your behalf, and it is not waiting for you to
+link an account. It reads what you or your assistant hand it in the call —
+which can be as ordinary as saying what you trained yesterday and how you
+slept. If you already have exported data from those services, Evidra can
+evaluate that as input as well.
+
+Signals you do not supply are reported in `signalCoverage` and lower the
+decision's confidence. They are never filled in with defaults.
+
+---
+
 ## Decision, not recommendation
 
 This distinction is the whole product.
