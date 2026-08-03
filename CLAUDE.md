@@ -200,7 +200,18 @@ MCPB 路徑文件明載：**無開源要求、無公開 repo 要求、無強制�
 「in front of **developers** building agents」——**受眾自承是開發者**。
 → **免費送審可做；$39 先不要**，買的是開發者向的 SEO 曝光，終端使用者不在那裡。
 
-**這一段不改變主線**：MCPB 送審表單仍是第一優先，以上都排在它後面。
+**兩家的開源要求方向相反**——這是「兩邊都要上架」成立的關鍵：
+
+| | Anthropic MCPB 表單 | Smithery MCPB |
+|---|---|---|
+| 公開 GitHub repo | 「primarily considering」四項之一 | **無要求** |
+| MIT／開源 | 同一份清單裡 | **無要求** |
+| 審查 | 主動挑人，不保證納入 | **無強制審查**（"Get verified" 選配） |
+
+**2026-08-03 使用者定：Anthropic MCPB ＋ Smithery MCPB 兩邊都要可以上架**——
+同一顆 `evidra.mcpb` 走兩條通路，不是二選一。**閉源不影響 Smithery，
+只影響 Anthropic 的優先順位**，所以 Smithery 那條不必等 MIT 的決定，兩條可以並行。
+仍該排在後面的只有 mcp.so。
 
 **Claude 先的理由**：Anthropic 送審表單的「Data handling」步驟**明文詢問是否處理
 personal health data → 是揭露事項，不是禁區**；OpenAI Apps SDK 則**明寫不得處理 PHI**。
@@ -210,6 +221,27 @@ ChatGPT 那側**平行查證不平行開工**，未解的是「Health 內第三�
 **上架路徑有兩條，只有一條要 Team 帳號**：remote MCP 的送審 portal 在 admin settings，
 個人方案進不去；**MCPB desktop extension 走獨立表單、個人 Pro 即可，且 `stdio` 已綠**。
 **所以不必為了上架先升 Team**——先走 MCPB，確定要 remote 時再升。
+
+### MCPB 送審表單的實情（2026-08-03 讀過全文）
+
+> 表單存 `data/private/MCPB Desktop Extensions Submission Form.pdf`（**空白表單的存檔，不是填好的送審件**；
+> 帶使用者 email 所以不進版控 → **只有 mbp-rd 有**）。以下結論已抄在這裡，不必回頭開檔。
+
+**表單只有 8 題**，且**一題都沒問** data handling、personal health data、OAuth、
+test account、pricing——那些全在 remote portal（11 步）。要打勾的 MCP Directory T&C
+也沒有健康資料／金流／授權條款。→ **授權檢查、evidence、per-MAU 三件事不阻擋 MCPB 送審。**
+
+**但表單第 2 頁有另一組要求**（跟 submission guide 那五項通用要求**不是同一組**，別混）：
+Publicly available on GitHub ／ **MIT licensed** ／ Node.js ／
+`manifest.json` 的 `author` 指向 GitHub profile。**現況兩條紅**：`LICENSE` 是
+「All rights reserved」專有授權；`author` 只有 `{"name": "Henry Yeh"}` 沒有 `url`。
+
+**強制？否**（Terms／Policy 全文無開源條款，closed-source 不接受明確限縮在 **plugins**）。
+**優先？是**（表單原文 "we're **primarily considering** extensions that: ... MIT licensed"）。
+→ 閉源送得出去，但不在優先清單。且表單自陳
+"does not guarantee inclusion"、Anthropic 主動挑人——**這是報名，不是審查流程的開始**。
+
+**要不要為了進優先清單改 MIT，是使用者的商業決定，不得自行改寫。**
 
 完整盤點、門檻清單與價格比較見
 [implementation plan §3.5「通路決策」](docs/fitness-mcp-implementation-plan.md)。
