@@ -114,7 +114,7 @@ confidence，不當敘事主軸。
 | 4.3 三層命名 | `assertUniqueExerciseNaming` ＋ eval plan → catalog gate | ✅ |
 | 4.3 訓練目標 | `assertValidTrainingGoals` 四條不變量 ＋ `audit:graph` 兩條 gate | ✅ |
 | Garmin 方言 | source schema ＋ registry ↔ parser 一致測試 ＋ scenarios | ✅ |
-| Strava bulk export 方言 | `stravaExport.test.js`（含 registry ↔ parser 一致） | 🟡 **G5 紅**：缺 source schema 與 scenario；且與 Strava API 方言之間**沒有等價測試** |
+| Strava bulk export 方言 | `stravaExport.test.js`（含 registry ↔ parser 一致）＋ source schema ＋ 6 個 scenario | ✅ G5 綠。**與 Strava API 方言之間仍無等價測試**——兩個方言各自對得上契約，但沒有一條斷言說同一場活動兩種寫法會正規化成同一份證據 |
 | P5 預設日期由 server 解析 | G6 ＋ `packages/domain/test/dates.test.js` | ✅ |
 
 **這張表的用法**：🟡 那幾列是下次有人動到相關程式時，最可能無聲壞掉的地方。

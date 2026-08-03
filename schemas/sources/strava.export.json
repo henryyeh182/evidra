@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/sources/strava.export",
+  "title": "Strava bulk data export (raw)",
+  "description": "The subset of a Strava \"Download Request\" archive that packages/connectors/src/providers/strava reads, after parseExport.js has turned CSV rows into objects. Names are Strava's, not ours. Measured over one real export: 39 CSVs, of which 3 carry evidence, and 7 activities spanning 2026-06-26 to 2026-07-26 — 5 runs, 1 ride, 1 hike. That export is small, and every rate quoted below is a rate over 7 activities: read them as what this dialect does, not as how often it does it. Two traps are load-bearing enough to state before any field. First, activities.csv repeats five header names with different units, so every column is addressed by index and the header row is verified before a value is read — see `activityId`. Second, `Activity Date` is UTC and nothing in the CSV carries an offset, so a calendar day cannot be derived from it alone — see `timezoneKnown`. What this export cannot answer at all: there is no sleep, no HRV and no resting heart rate anywhere in the archive. Checked across all 39 CSVs of the measured export and found in none of them. That is a property of the source, not a gap in this parser, and a Strava-only athlete is served from training load alone.",
+  "type": "object",
+  "required": ["activities"],
+  "properties": {
+    "activities": {
+      "type": "array",
+      "description": "One entry per row of `activities.csv`. The file has 103 columns in the measured export and this connector reads 27 of them; the rest are weather, social and gear fields no decision consults.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "activityId": {
+            "type": ["string", "null"],
+            "description": "Column 0. The key an activity is deduplicated on — the same session arriving twice (re-download, or an export after an API sync) overwrites rather than doubles the athlete's load. Positional addressing starts here: five header names appear twice with different units in the measured export — `Elapsed Time` at 5 and 15, `Distance` at 6 and 17, `Max Heart Rate` at 7 and 30, `Relative Effort` at 8 and 37, `Commute` at 9 and 50. The leading block is localized display (Distance = 5.67 km), the later block is raw metric (Distance = 5671.4 m). Reading by name would take whichever the CSV reader happened to keep. parseExport.js therefore asserts the header row against its column map and throws before reading any value, which is the one failure mode positional parsing has."
+          },
+          "activityDateUtcRaw": {
+            "type": ["string", "null"],
+            "description": "Column 1, verbatim: \"Jul 26, 2026, 1:45:16 AM\". Parsed by hand rather than by `new Date()`, which would read it in the host's local zone and shift a Taipei athlete's history by the server's offset. All 7 activities in the measured export matched this format."
+          },
+          "startedAtUtc": {
+            "type": ["string", "null"],
+            "description": "`activityDateUtcRaw` as an explicit ISO instant ending in Z. The value is UTC — verified against the matching FIT file, whose `activity.timestamp` is identical and whose `local_timestamp` sits +8h away on all 7 activities measured. It is an instant, never a training day: see `timezoneKnown`."
+          },
+          "timezoneKnown": {
+            "type": "boolean",
+            "description": "False unless the offset was recovered from the activity's `.fit.gz`, which is opt-in (`readLocalTimezone`) because it opens one file per activity. Nothing in the CSV says where the athlete was, so with this false no consumer may infer a calendar day from `startedAtUtc`. With `readLocalTimezone` the measured export recovered 7 of 7 offsets, all +08:00. **No activity in the measured export crossed a day boundary** — every UTC day equalled its local day — so the cross-day case is guarded by design rather than observed here: an activity starting at 23:41Z belongs to the next day in +08:00, and reading the Z day would file it against the wrong training day."
+          },
+          "utcOffsetSeconds": {
+            "type": ["number", "null"],
+            "description": "Recovered offset, present only when `timezoneKnown`. A fixed offset is all a FIT file can prove, so a fixed offset is all that is claimed — not a timezone name. It is per-activity because an athlete who travels genuinely has different offsets across their history."
+          },
+          "startedAtLocal": {
+            "type": ["string", "null"],
+            "description": "`startedAtUtc` rendered with the recovered offset, e.g. \"2026-07-26T09:45:16+08:00\". Present only when `timezoneKnown`. This is the form normalization prefers, because it makes the calendar day correct without anyone downstream having to know the athlete's timezone."
+          },
+          "activityType": {
+            "type": ["string", "null"],
+            "description": "Column 3. Strava's own name. The measured export contains Run, Ride and Hike. STRAVA_TYPE_MAP folds these into the domain's vocabulary — Hike and Walk both become `walk`, TrailRun becomes `run`, VirtualRide becomes `ride`. Types absent from the map fall back to `recovery`, which would understate a hard session; the map is not extended on a guess, because the domain's WorkoutType union is the thing that would have to change."
+          },
+          "movingSeconds": {
+            "type": ["number", "null"],
+            "description": "Column 16, the metric block. Preferred over `elapsedSeconds` for duration. Present on all 7 activities measured."
+          },
+          "elapsedSeconds": {
+            "type": ["number", "null"],
+            "description": "Column 15. The fallback when moving time is absent."
+          },
+          "relativeEffort": {
+            "type": ["number", "null"],
+            "description": "Column 37 — **the load signal this connector actually uses**. Heart-rate derived, and present on 7 of 7 activities measured (100%), including the two that recorded no power. It is the same quantity the Strava API calls `suffer_score`, so the two Strava dialects put numbers on one scale. Chosen over `trainingLoad` for exactly those two reasons: always there, and comparable across dialects. Note the duplicate at column 8 — same name, and the reason this file is read by index."
+          },
+          "trainingLoad": {
+            "type": ["number", "null"],
+            "description": "Column 88. FTP-relative TSS, present only when the session recorded weighted average power — 5 of 7 measured; absent on the hike and the ride, which had none. Verified against the measured export: it is floor((movingSeconds x NP x IF) / (FTP x 3600) x 100), reproduced on all 5 sessions that carry it. Kept in metadata rather than used as the load series, because a signal that exists on some sessions and not others cannot be a series, and because it drifts silently when the FTP in general_preferences.csv is stale."
+          },
+          "intensityFactor": {
+            "type": ["number", "null"],
+            "description": "Column 89, headed `Intensity`. Also 5 of 7. Verified as round(NP / FTP x 100) on all 5 — an exact match on every one, against FTP 173 W. Comparable within one athlete only."
+          },
+          "weightedAveragePower": {
+            "type": ["number", "null"],
+            "description": "Column 46. Normalized power. Its presence is what decides whether `trainingLoad` and `intensityFactor` exist at all, so it is read alongside them rather than inferred from them."
+          },
+          "perceivedExertion": {
+            "type": ["number", "null"],
+            "description": "Column 43. What the athlete typed in, when they typed one. **Empty on all 7 activities in the measured export**, which is the ordinary case — Strava does not prompt for it. An absent RPE stays absent; see `rpeBasis` in the normalized event for how an inferred one is labelled."
+          },
+          "averageHeartRate": {
+            "type": ["number", "null"],
+            "description": "Column 31. Present on all 7 measured. Together with the athlete's maximum it is what an RPE is inferred from when none was reported."
+          },
+          "maxHeartRate": {
+            "type": ["number", "null"],
+            "description": "Column 30, the metric block; column 7 is the display duplicate. This is the session's peak, not the athlete's ceiling — the athlete's ceiling comes from general_preferences.csv."
+          },
+          "distanceMeters": {
+            "type": ["number", "null"],
+            "description": "Column 17, always metres. Column 6 is the same name in kilometres or miles depending on `measurementPreference`, and is not read."
+          },
+          "elevationGainMeters": { "type": ["number", "null"], "description": "Column 20. Present on all 7 measured." },
+          "calories": { "type": ["number", "null"], "description": "Column 34. Present on all 7 measured; carried as metadata, not used as load." },
+          "activitySteps": {
+            "type": ["number", "null"],
+            "description": "Column 85. Steps within this one activity, 6 of 7 measured. **Never fold into a daily step count** — this counts a session, not a day, and the export has no daily series to add it to."
+          },
+          "averageWatts": { "type": ["number", "null"], "description": "Column 33. Present on 6 of 7 — one more than carry normalized power, so its presence does not imply `trainingLoad` exists." },
+          "averageCadence": { "type": ["number", "null"], "description": "Column 29." },
+          "averageSpeedMetersPerSecond": { "type": ["number", "null"], "description": "Column 19, always m/s." },
+          "totalWorkJoules": { "type": ["number", "null"], "description": "Column 38." },
+          "totalWeightLiftedKg": { "type": ["number", "null"], "description": "Column 51. Empty in the measured export, which logged no strength sessions." },
+          "poolLengthMeters": { "type": ["number", "null"], "description": "Column 87." },
+          "totalSets": { "type": ["number", "null"], "description": "Column 100." },
+          "totalReps": { "type": ["number", "null"], "description": "Column 101." },
+          "commute": { "type": ["boolean", "null"], "description": "Column 50, the numeric spelling (0.0 / 1.0). Column 9 is the string spelling (\"false\") — a fifth duplicate name, and a fifth reason to read by index." },
+          "name": { "type": ["string", "null"], "description": "Column 2. Strava's auto-generated names encode a local time of day (\"Morning Hike\", \"Evening Run\"), which is a hint about the offset and not a substitute for reading it." },
+          "description": { "type": ["string", "null"], "description": "Column 4. Free text, empty throughout the measured export." },
+          "gear": { "type": ["string", "null"], "description": "Column 11." },
+          "filename": {
+            "type": ["string", "null"],
+            "description": "Column 12, e.g. \"activities/20588763590.fit.gz\". The only route to a local offset, and the only reason this connector opens anything other than a CSV. All 7 activities in the measured export had a file present."
+          },
+          "uploadId": { "type": ["string", "null"], "description": "`filename` with its directory and extensions stripped. Kept separate from `activityId` because they differ." }
+        }
+      }
+    },
+    "anchors": {
+      "type": ["object", "null"],
+      "description": "general_preferences.csv, a single row. Null when the file is absent, which is a real answer rather than a set of defaults: without it, an RPE is inferred against the session's own peak heart rate instead of the athlete's ceiling.",
+      "properties": {
+        "functionalThresholdPowerWatts": {
+          "type": ["number", "null"],
+          "description": "\"173 W\" -> 173 in the measured export. Everything `trainingLoad` and `intensityFactor` say is expressed against this number, so a stale FTP moves both without either changing shape."
+        },
+        "maxHeartRateBpm": { "type": ["number", "null"], "description": "\"171\" in the measured export." },
+        "maxHeartRateIsAgeEstimate": {
+          "type": ["boolean", "null"],
+          "description": "True when `maxHeartRateBpm` equals 220 - age, meaning it is Strava's seeded default rather than a measured maximum. **True in the measured export**: 171 against a 1977 date of birth is exactly 220 - 49, and the athlete never edited it. That matters because Relative Effort is heart-rate derived, so this athlete's entire load series rests on a rule of thumb — Fox, Naughton & Haskell (1971), which Tanaka et al. (J Am Coll Cardiol 2001;37(1):153-6, PMID 11153730) revised to 208 - 0.7 x age with individual error of 10-20 bpm either way. The flag exists so a decision can say so instead of implying the number was measured."
+        },
+        "dateOfBirth": { "type": ["string", "null"], "description": "\"Jul 7, 1977\" -> \"1977-07-07\". Read only to evaluate the flag above." },
+        "weightKg": { "type": ["number", "null"], "description": "\"78.0 kg\" -> 78." },
+        "athleteType": { "type": ["string", "null"], "description": "\"Runner\" in the measured export." },
+        "measurementPreference": {
+          "type": ["string", "null"],
+          "description": "\"Metric\" or \"Imperial\". Without it the export's leading display columns have no unit at all — which is the reason those columns are not read."
+        }
+      }
+    },
+    "structuredSets": {
+      "type": "array",
+      "description": "structured_details.csv — per-set strength data, the only file in the archive that reaches exercise level. **Header row only in the measured export: 0 data rows.** Strava fills it only for logged strength sessions, so empty is the ordinary answer and not a parse failure.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "activityId": { "type": ["string", "null"], "description": "Joins back to an activity." },
+          "exerciseName": { "type": ["string", "null"] },
+          "repetitions": { "type": ["number", "null"] },
+          "durationSeconds": { "type": ["number", "null"] },
+          "weightKg": { "type": ["number", "null"] },
+          "startOffsetMs": { "type": ["number", "null"] },
+          "supersetId": { "type": ["string", "null"] },
+          "rpe": { "type": ["number", "null"], "description": "Per-set RPE. The one place in the archive an athlete-reported exertion can appear when the activity-level column is empty." }
+        }
+      }
+    },
+    "files": {
+      "type": "object",
+      "description": "Which of the three evidence-bearing files were present. Reported rather than defaulted, so a caller can tell an absent file from an empty one — all three were present in the measured export, and one of them was empty.",
+      "properties": {
+        "activities.csv": { "type": "boolean", "description": "Required. Its absence is not a partial export, it is not a Strava export." },
+        "general_preferences.csv": { "type": "boolean" },
+        "structured_details.csv": { "type": "boolean" }
+      }
+    }
+  }
+}

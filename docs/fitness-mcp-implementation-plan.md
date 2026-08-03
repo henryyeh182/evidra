@@ -157,7 +157,7 @@ token rotation，以及 connector directory 的 OAuth、privacy URL、support、
 
 ## 1. 已實作元件
 
-300 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+309 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
@@ -297,7 +297,7 @@ Anthropic Claude**。定位是「問 Claude 關於你的 Strava 表現」，由 
 |---|---|---|
 | **證據** | ✅ **是，但不是「擁有資料」那個意思**——是**同時讀懂四家並對齊成一份**。見下方訂正 | 已驗證（實測 Apple Health 匯出、Strava 官方頁） |
 | **計算** | ✅ 是。ATL/CTL/TSB、detraining 獨立軸線、個人基線，確定性、零外部 API、0.443ms | 已驗證（實測，Phase 8） |
-| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、300 tests） |
+| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、309 tests） |
 
 **知識圖譜 889 節點不列為護城河。** GPT-6 知道所有動作。它的價值在**不變量**
 （進退階互逆、禁忌把關、plan → catalog 100%）讓替代決策**可被驗證**，不在節點數。
@@ -489,7 +489,7 @@ tool 描述就是分發面」。
 |---|---|---|
 | ~~G2b~~ | ~~`commit_adjust_plan` 無觸發語句~~ | **2026-08-02 修復**：描述加上 `Use this after preview_adjust_plan` 與使用者語彙 |
 | ~~G3~~ | ~~`commit_adjust_plan.output.json` 缺 `versionHistory`~~ | **2026-08-02 修復**：runtime 產生 `versionHistory`（無狀態、無時間戳），契約隨之補齊 |
-| G5 | ~~apple-health~~ ／ strava **缺** source schema ＋ scenario（2 項） | **2026-08-02：Apple Health 已補齊**（契約 ＋ 5 個匯出形狀場景，量測自一份真實 153MB 匯出）。Strava 仍缺，且 `data/private/` 沒有真實 Strava 匯出可量測 |
+| G5 | ~~apple-health ／ strava 缺 source schema ＋ scenario~~ | **2026-08-03：全綠**。Apple Health（契約 ＋ 6 個場景，量測自一份真實 153MB 匯出）；Strava（契約 ＋ 6 個場景，量測自 mbp-rd 的真實 bulk export：39 個 CSV、7 筆活動）。六個場景做過變異驗證——故意改壞 runtime 六處，六處都被對應場景抓到 |
 
 #### 上架路徑有兩條，只有一條需要 Team 帳號（2026-08-01 查證）
 
@@ -617,7 +617,7 @@ tool 描述就是分發面」。
 | 2 工具面收斂 | ✅ 完成 | 14 → 6 個對外 tool | — |
 | 3 證明增益 | ✅ 完成（已改範圍） | 改為 MCP client 相容性驗證 | 原本的裸模型對照已取消，**取消理由第 2 條對宣言不成立**（見 4.5-B2） |
 | 4 決策深度 | ✅ 完成 3/3 | 訓練負荷模型、個人基線、知識圖譜語意關係 | — |
-| 5 多來源正規化 | 🟡 進行中 | 3/6 來源有解析器（Apple Health／Garmin／Strava，Strava 兩種方言）；心率區間分佈 | 其餘 3 家（Oura／Whoop／Google Health Connect）只有 registry 宣告；**G5 紅**：Apple Health 與 Strava 缺 source schema 與 scenario（4/4 只做到 2/4） |
+| 5 多來源正規化 | 🟡 進行中 | 3/6 來源有解析器（Apple Health／Garmin／Strava，Strava 兩種方言）；心率區間分佈 | 其餘 3 家（Oura／Whoop／Google Health Connect）只有 registry 宣告；**G5 綠**：四家都有 registry ＋ source schema ＋ parser ＋ scenario（4/4） |
 | 6 Feedback Learning | 🔴 未開始 | — | 全部。**且與宣言衝突未解**，使用者指定另開 session 討論（4.5-B1） |
 | 7 Multi-LLM Interface | 🟡 部分完成 | stdio；Streamable HTTP；OAuth 資源伺服器那一半 | 7.1 三缺口（簽章驗證器空著／進入點沒接線／沒有 authorization server）；7.2 公開部署；REST API；SDK |
 | 8 商業化 | 🔴 未開始 | 成本已實測；上架清單已查證；**計價單位暫定 per-MAU（2026-07-31）** | 14 項上架前置只有 icon ✅、tool annotations ✅；計價定案待 Claude／Codex 的 MCP server 商業文件 |
@@ -1146,7 +1146,7 @@ CIMD 那個決定要在 Phase 7 就下對。
   2. header 與 body 不一致時確實回 `-32020`
   3. 不支援的版本回 `-32022` 且列出 `supported`
   4. `server/discover` 回得出支援版本清單
-  5. 既有 300 tests 全綠，且新增 dual-era 雙路徑測試
+  5. 既有 309 tests 全綠，且新增 dual-era 雙路徑測試
 
 ---
 

@@ -212,7 +212,7 @@ Phase 2 有地方放，但表還沒建。
 ### 必要前提（Phase 1 與 Phase 2 共用）
 
 - 最小化 Evidence 契約：跨 Apple Health／Garmin／Strava 的必要欄位、單位、時間、來源與 freshness
-- 補齊 Apple Health／Strava 的 source schema 與 scenario（目前缺，`review:phase` 的 G5 一直紅）
+- ~~補齊 Apple Health／Strava 的 source schema 與 scenario~~（2026-08-03 完成，`review:phase` 的 G5 綠）
 - 只傳決策所需欄位，不把完整活動原始 payload 帶進 hosted MCP
 
 ### Phase 2：local / private engine

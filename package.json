@@ -13,6 +13,7 @@
     "simulate:garmin": "node scripts/simulate-garmin-scenarios.js",
     "simulate:apple-health": "node scripts/simulate-apple-health-scenarios.js",
     "simulate:google-health": "node scripts/simulate-google-health-scenarios.js",
+    "simulate:strava": "node scripts/simulate-strava-scenarios.js",
     "import:apple-health": "node scripts/import-apple-health.js",
     "build:graph": "node scripts/build-exercise-graph.js",
     "audit:graph": "node scripts/audit-exercise-graph.js",
