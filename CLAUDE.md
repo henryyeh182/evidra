@@ -74,7 +74,7 @@ Decision 與 Action 必須分開：同一意圖在不同器材／時間／傷病
 否 → 砍掉或降為內部。GPT-6 殺死**知識查詢**，殺不死三樣：
 **證據**（沒有這個人的資料）· **計算**（沒有執行縱向運算）· **保證**（確定性過濾器不會被說服繞過）。
 
-## 四條反覆失守的紀律
+## 五條反覆失守的紀律
 
 都因為實際偏移過而寫在這裡。動手前逐條自問。
 
@@ -119,6 +119,29 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 缺的列進 `signalCoverage` 對應那一組的 `missing`、決策仍成立且自我解釋。
 
 **模擬的生理數值不是 ground truth**，不得用來回頭 fit `readiness < 40` 這類門檻。
+
+### 5. 建議要帶自己的 `signalCoverage`
+
+**這條是把 `Decision ≠ Recommendation` 套用在我自己的輸出上。** 產品要求每個決策帶
+`signalCoverage`／`confidence`／`limits`，目的是讓沒有領域知識的人也看得出它站在多少證據上。
+**我給使用者的建議一樣要帶**，否則就是憑空發出的 recommendation。
+
+1. **講事實時附指令或原文**——使用者可以重跑、可以核對，不必懂這個領域。
+2. **講建議時把「查了什麼／沒查什麼」寫在同一段**，不要藏在標題或章節名裡。
+   記錄裡是 N 項清單而只查了 M 項時，**必須在結論那一句講明**——人讀的是結論，
+   標題上的限定詞不會被讀進去。
+3. **「這要不要改變計畫」預設是問句，不是答案。** 查到新事實就報事實；
+   要不要因此改變既定計畫是使用者的決定，不是查證的附贈品。
+
+**寫在這裡不等於做得到**——2026-08-03 實測：`D-CHANNEL` 早就列著四家通路的名字、
+還註明「別再重新推導一次」，我照樣只查兩家就給了完整語氣的建議，
+而且把那個結論寫進本檔與交接，下一段 session 便照著錯的範圍繼續做。
+**九條 gate 一條都攔不到——它們檢查程式與文件是否一致，不檢查建議建立在多少查證上。**
+所以這條沒有強制力，**不要拿「已經寫進 CLAUDE.md 了」當這件事的解法**。
+
+另外兩個同形狀的錯，一併記著：**技術關係不要用形容詞代替**
+（來源模糊就照引原文並標明「文件未定義」，不要翻成比喻）；
+**兩個事實之間不要自行接「因為」**（沒有證據說 A 導致 B 就並列，不要接因果連接詞）。
 
 ## 現況（2026-08-01 查證）
 
@@ -177,72 +200,31 @@ GPTs／Copilot／Gemini Gems／AgentExchange／Zapier 的使用者是自動化�
 Trainerize／Mindbody／Wellhub 屬「賣給握有課表的一方」，需 REST／SDK；
 wearable dev platform 要直連供應商，**違反 Phase 1 界線**，僅 Phase 2 適用。
 
-### Smithery／mcp.so 的上架與界線（2026-08-03 一手查證）
+### ⚠️ Phase 1 界線：只有「檔案送到使用者機器」那種路徑可以走
 
-**分類不變：曝光通路，不是收入通路。三家都沒有創作者分潤，金流方向是往外流。**
+**任何會讓 Evidence 經過第三方伺服器的發佈方式都不能用**，包括代理。
+Smithery 是踩過的例子：它的 **Local MCPB bundle** 可以（檔案下載到本機執行、不碰他們的伺服器），
+但 **hosted 與 URL proxy 都不行**——proxy 一樣經手 Evidence，與 hosted 同罪。
+**看到「免 infra 的 remote endpoint」不要直接用。**
 
-**Smithery 有兩條發佈路徑，只有一條可以用：**
+### 上架的三個既定判斷
 
-| 路徑 | 誰在跑我們的程式 | 可否 |
-|---|---|---|
-| **Local MCPB bundle** | **使用者自己的機器**——官方原文「Smithery distributes a pre-built MCPB bundle that clients download and run locally」 | ✅ **可以**。不碰他們的伺服器，Phase 1 界線不受影響 |
-| Smithery hosted | 他們的伺服器 | ❌ Evidence 流經第三方，log／trace 遮蔽與不持久化都無法保證 |
-| URL（bring your own hosting） | 他們**代理**到我們的上游（"Smithery proxies to your upstream server"） | ❌ **代理一樣經手 Evidence**，與 hosted 同罪 |
-
-**看到「免 infra 的 remote endpoint」不要直接用**——要用就只用 MCPB 那條。
-MCPB 路徑文件明載：**無開源要求、無公開 repo 要求、無強制審查**（"Get verified" 是選配）。
-現有的 `evidra.mcpb` 就是它要的東西，只差 config schema 與 server page metadata。
-
-**mcp.so 的「marketplace」是品牌用語，這次有一手證據**：submit 頁是表單（repo URL ＋ 名稱），
-並提供 **$39 一次性刊登費**（免審上架、verified badge、featured 版位、dofollow 連結）。
-**金流是我們付給它買曝光，不是使用者付錢買我們的產品，也沒有分潤。**
-自報 DR 72／12 個月 2.2M unique visitors／266K MAU，但招商文案自己寫
-「in front of **developers** building agents」——**受眾自承是開發者**。
-→ **免費送審可做；$39 先不要**，買的是開發者向的 SEO 曝光，終端使用者不在那裡。
-
-**兩家的開源要求方向相反**——這是「兩邊都要上架」成立的關鍵：
-
-| | Anthropic MCPB 表單 | Smithery MCPB |
-|---|---|---|
-| 公開 GitHub repo | 「primarily considering」四項之一 | **無要求** |
-| MIT／開源 | 同一份清單裡 | **無要求** |
-| 審查 | 主動挑人，不保證納入 | **無強制審查**（"Get verified" 選配） |
-
-**2026-08-03 使用者定：Anthropic MCPB ＋ Smithery MCPB 兩邊都要可以上架**——
-同一顆 `evidra.mcpb` 走兩條通路，不是二選一。**閉源不影響 Smithery，
-只影響 Anthropic 的優先順位**，所以 Smithery 那條不必等 MIT 的決定，兩條可以並行。
-仍該排在後面的只有 mcp.so。
+1. **Anthropic MCPB ＋ Smithery MCPB 兩邊都要可以上架**（2026-08-03 使用者定）——
+   同一顆 `evidra.mcpb` 走兩條通路，不是二選一。**閉源不影響 Smithery，
+   只影響 Anthropic 的優先順位**，所以 Smithery 那條不必等 MIT 的決定。
+2. **不必為了上架先升 Team**——remote 的送審 portal 在 admin settings（個人方案進不去），
+   但 **MCPB 走獨立表單、個人 Pro 即可，且 `stdio` 已綠**。確定要 remote 時再升。
+3. **要不要為了進 Anthropic 的優先清單改 MIT，是使用者的商業決定，不得自行改寫。**
+   閉源送得出去、不違反任何明文規定，只是不在優先清單。
 
 **Claude 先的理由**：Anthropic 送審表單的「Data handling」步驟**明文詢問是否處理
 personal health data → 是揭露事項，不是禁區**；OpenAI Apps SDK 則**明寫不得處理 PHI**。
-ChatGPT 那側**平行查證不平行開工**，未解的是「Health 內第三方 app 能否讀到 Apple Health
-數值」與 PHI 條款適用範圍。
+ChatGPT 那側**平行查證不平行開工**。
 
-**上架路徑有兩條，只有一條要 Team 帳號**：remote MCP 的送審 portal 在 admin settings，
-個人方案進不去；**MCPB desktop extension 走獨立表單、個人 Pro 即可，且 `stdio` 已綠**。
-**所以不必為了上架先升 Team**——先走 MCPB，確定要 remote 時再升。
-
-### MCPB 送審表單的實情（2026-08-03 讀過全文）
-
-> 表單存 `docs/MCPB Desktop Extensions Submission Form.pdf`，**進版控**（本 repo 是私有的，
-> 所以跨機 clone 就有，填表時不必再登入 Google 匯出一次）。那是**空白表單的存檔，不是填好的送審件**。
-> **不要複製到 `evidra`**——那是 public repo，PDF 第 2／3／5 頁帶著使用者 email。
-
-**表單只有 8 題**，且**一題都沒問** data handling、personal health data、OAuth、
-test account、pricing——那些全在 remote portal（11 步）。要打勾的 MCP Directory T&C
-也沒有健康資料／金流／授權條款。→ **授權檢查、evidence、per-MAU 三件事不阻擋 MCPB 送審。**
-
-**但表單第 2 頁有另一組要求**（跟 submission guide 那五項通用要求**不是同一組**，別混）：
-Publicly available on GitHub ／ **MIT licensed** ／ Node.js ／
-`manifest.json` 的 `author` 指向 GitHub profile。**現況兩條紅**：`LICENSE` 是
-「All rights reserved」專有授權；`author` 只有 `{"name": "Henry Yeh"}` 沒有 `url`。
-
-**強制？否**（Terms／Policy 全文無開源條款，closed-source 不接受明確限縮在 **plugins**）。
-**優先？是**（表單原文 "we're **primarily considering** extensions that: ... MIT licensed"）。
-→ 閉源送得出去，但不在優先清單。且表單自陳
-"does not guarantee inclusion"、Anthropic 主動挑人——**這是報名，不是審查流程的開始**。
-
-**要不要為了進優先清單改 MIT，是使用者的商業決定，不得自行改寫。**
+> **要動上架計畫，先讀 [docs/distribution-channels.md](docs/distribution-channels.md)。**
+> 那裡有每一家的原文引述、實測結果，以及**「尚未查證」清單**。
+> 那份清單存在的理由是：曾經只查了四家裡的兩家，就把結論當成四家的答案寫進這裡與交接。
+> **查了幾家，就只能講幾家。**
 
 完整盤點、門檻清單與價格比較見
 [implementation plan §3.5「通路決策」](docs/fitness-mcp-implementation-plan.md)。
@@ -298,7 +280,7 @@ npm run serve:http           # HTTP transport
 要說某個 Phase／偏差／修正「做完了」，先走 [docs/phase-review.md](docs/phase-review.md)：
 先讀（memory → 本檔 → product-spec → 宣言 → README → plan → user-journey），
 再跑 `npm run review:phase` 的九條 gate，最後回答機械驗不到的判斷題
-（GPT-6 判準、Decision ≠ Recommendation、四條紀律…）。
+（GPT-6 判準、Decision ≠ Recommendation、五條紀律…）。
 **gate 紅的不得宣告完成**——紅的是宣稱與現況的落差，不是待辦功能。
 
 **MCP server 是常駐行程，改程式不會熱重載**——要驗證改動必須開新 session 或重啟行程。
