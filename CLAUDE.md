@@ -224,6 +224,31 @@ ChatGPT 那側**平行查證不平行開工**，未解的是「Health 內第三�
 Anthropic Software Directory Policy **通篇無分潤或付費條文**（金流自理，與「金流控制權
 在我們手上」一致）。
 
+## 兩個 repo 的分工
+
+**開發在 `fitness-mcp`；只有改 LICENSE、隱私政策或對外宣稱時才需要同步
+[`evidra`](https://github.com/henryyeh182/evidra)（公開、送審用）。**
+
+evidra 只有三個檔，和這裡的關係各不相同——**唯一真正重複的是 `LICENSE`**：
+
+| 檔案 | 關係 |
+|---|---|
+| `LICENSE` | **逐字相同的複本** → 改一邊必須改另一邊 |
+| `README.md` | **同名但是兩份不同文件**（這裡 244 行、開發用；evidra 153 行、對外英文版）→ 不同步 |
+| `PRIVACY.md` | **只在 evidra** → 只在那邊改 |
+
+另外兩條耦合，改到才要管：
+
+- `manifest.json` 的 `homepage`／`documentation`／`support`／`privacy_policies` 四個欄位
+  指向 evidra 的檔案。**那些路徑一改，隱私政策連結就斷——送審文件明寫
+  missing or incomplete → immediate rejection。**
+- Release 上的 `evidra.mcpb` 是從這裡打包的。動到 `.mcpbignore` **沒有**排除的檔案，
+  那顆 bundle 就過時了；重打包時要照舊驗證（`unzip -l` 直接看 archive，
+  不要信 `mcpb pack` 自報的 ignored 數字）。
+
+**已知漂移（無害，等下次重出 Release 時順手修）**：v0.1.0 bundle 內的 README 停在打包當時的
+測試數，repo 已經往前走。不影響執行。
+
 ## 常用指令
 
 ```bash
