@@ -192,33 +192,80 @@ per-MAU 需要身分 → 需要 authorization server。`oauth.js` 的 resource-s
 
 ---
 
-## 三家對照（MCPB 上架 ＋ remote ＋ Evidra 適用）
+## 四家對照（2026-08-03 更新，Anthropic 併入同表）
 
-| | 官方 registry | PulseMCP | Smithery |
+**Anthropic 要與那三家列在同一張表。** 分類上它是通路、那三家是 discovery，
+但盤點「上架還缺什麼」時分兩張表會漏掉第一目標——曾經漏過一次。
+
+| | 官方 registry | PulseMCP | Smithery | **Anthropic Directory** |
+|---|---|---|---|---|
+| 定位 | 開發者 discovery | 開發者 discovery | 開發者 discovery | **真通路**（終端使用者在 Claude app 內） |
+| 上架需求 | `server.json` ＋ `mcp-publisher` | 一個 URL（或發官方 registry 後自動） | 上傳 `.mcpb` ＋ config schema ＋ metadata | 8 題表單 ＋ `.mcpb` 附檔 ＋ T&C |
+| 開源／公開 repo | 無 | 無 | 無 | **不強制**，但 MIT ＋ public GitHub 在「primarily considering」 |
+| 審查 | 極寬鬆 | **官方未公布**（submit／about 兩頁都沒寫） | 無強制審查 | "does not guarantee inclusion"，Anthropic 主動挑人 |
+| 上架費用 | 免費 | 免費 | **免費**（pricing FAQ 原文見下） | 免費 |
+| MCPB 支援 | ✅ | 未驗證（它只列目錄） | ✅ | ✅ |
+| remote 支援 | ✅ | 未驗證 | ✅ 但兩種 remote 模式我們都不能用 | ✅（另一個 portal，需 Team） |
+| Phase 1 界線 | ✅ 不經手 Evidence | ✅ 不經手 | ⚠️ 只有 MCPB 那條可以 | ✅ MCPB 本地執行 |
+| per-MAU | ❌ | ❌ | ❌ | ❌ |
+| **Evidra 還缺什麼** | `server.json` ＋ 一次登入 | **零** | config schema ＋ metadata | `author.url`；GitHub Link 填哪個 repo（綁 MIT 決定） |
+
+**四者是四個獨立動作**（PulseMCP 若走官方 registry 那條則可省下）。
+
+Smithery 收費原文（`smithery.ai/pricing` FAQ，2026-08-03 瀏覽器實查）：
+「Yes, listing your MCP server on Smithery's registry is completely free.
+You only pay for RPC calls when **consuming** MCP servers.」
+→ 付費在**消費端**，我們走 Local MCPB 不經過，與我們無關。
+
+### Anthropic 那格展開
+
+| 項目 | 狀態 |
+|---|---|
+| MCP Server Description（50 字上限） | ✅ 已定稿 35 字，見上方小節 |
+| `.mcpb` 附檔 | ✅ Release 上有（2026-08-03 實打 `gh` 確認） |
+| 隱私政策三處 ＋ tool annotations | ✅ 全綠 |
+| `manifest.json` 的 `author.url` | ❌ 未補 |
+| Desktop Extension GitHub Link | ❌ 未解，綁 MIT 決定 |
+| LICENSE | 專有 → 送得出去，不在優先清單 |
+| 升 Team | 不必（MCPB 走獨立表單，個人 Pro 即可） |
+
+---
+
+## 分潤與商業模式：四家都不是收入通路
+
+| | 創作者分潤 | 終端使用者結帳 | 金流方向 |
 |---|---|---|---|
-| 上架需求 | `server.json` ＋ `mcp-publisher` | 一個 URL（或發官方 registry 後自動） | 上傳 `.mcpb` ＋ config schema ＋ metadata |
-| 開源／公開 repo | 無 | 無 | 無 |
-| 審查 | 極寬鬆 | 未驗證 | 無強制審查 |
-| MCPB 支援 | ✅ | 未驗證（它只列目錄） | ✅ |
-| remote 支援 | ✅ | 未驗證 | ✅ 但兩種 remote 模式我們都不能用 |
-| Phase 1 界線 | ✅ 不經手 Evidence | ✅ 不經手 | ⚠️ 只有 MCPB 那條可以 |
-| per-MAU | ❌ | ❌ | ❌ |
-| Evidra 現況 | **三項要求已滿足**，缺 `server.json` | **現在就合格** | `.mcpb` 已有，缺 config schema ＋ metadata |
+| 官方 registry | 無 | 無 | **無金流**（只存 metadata） |
+| PulseMCP | 無 | 無 | 營利模式**官方未公布** |
+| Smithery | 無 | 無 | **反向**：收費在消費端 RPC |
+| Anthropic Directory | 無 | 無 | **金流自理**（Policy 通篇無分潤或付費條文） |
+| mcp.so | 無 | 無 | **反向**：$39 我們付錢買曝光 |
 
-**三者是三個獨立動作**（PulseMCP 若走官方 registry 那條則可省下）。
+**沒有一家能替我們收錢，商業模式 100% 自建。**
+
+兩條外部限制：ChatGPT Apps SDK **只准販售實體商品**，數位訂閱須導向自有網域外部結帳；
+Anthropic Policy 禁「software that transfers money… **on behalf of users**」——
+**禁的是軟體代替使用者轉錢，不是禁開發者收訂閱費**（曾經差點誤讀成後者）。
+
+**自建收費 → 要知道誰是誰 → authorization server**（`http.js:95`）。
+**商業模式與 per-MAU 是同一個依賴，不是兩件事。**
+
+不做 marketplace 的理由也在這裡：Shopify 能抽成是因為它持有金流、商家關係與交易資料，
+要複製那個位置就得當健康資料的中介與權限保管者——**那是資料湖**，「明確不做」的最後一項。
 
 ---
 
 ## 尚未查證 —— 動計畫前先看這裡
 
-| # | 未查的事 | 為什麼重要 | 掛著多久 |
+| # | 事項 | 狀態（2026-08-03 晚更新） | 為什麼重要 |
 |---|---|---|---|
-| 1 | **Smithery 會不會也從官方 registry 抓** | 決定是「發一次全解決」還是「發兩次」 | 2026-08-03 起 |
-| 2 | Smithery 對 **MCPB 路徑**收不收費 | 文件無 pricing 頁 | 2026-08-03 上午起 |
-| 3 | PulseMCP 的審查政策、remote／MCPB 顯示方式、營利模式 | 影響它算不算通路 | 2026-08-03 起 |
-| 4 | GitHub MCP Registry（moderation policy 點名的 subregistry）是否從官方 registry 抓 | 同 #1 | 2026-08-03 起 |
-| 5 | PulseMCP 自稱會自動收錄，**實際收錄結果未驗** | 那是它的說法，不是驗證過的結果 | 2026-08-03 起 |
-| 6 | ChatGPT Health 內第三方 app 能否讀到 Apple Health 數值；PHI 條款適用範圍 | 決定 ChatGPT 那側是不是主線 | 更早 |
+| 1 | Smithery 會不會也從官方 registry 抓 | ❌ **查過仍無定論**。Smithery 文件 59 頁全無提及；官方 registry 的 README／`community-projects.md`／`registry-aggregators.mdx`／發佈公告都不點名任何消費者；站內抽查 2 筆官方 registry 項目，1 筆在（命名空間不同）1 筆不在。**唯一給答案的第三方部落格，同句話把 PulseMCP 講錯，不可用。剩下的路只有問 Smithery 本人。** | 決定「發一次全解決」還是「發兩次」 |
+| 2 | Smithery 對 MCPB 路徑收不收費 | ✅ **已解：免費**（pricing FAQ 原文見上） | — |
+| 3 | PulseMCP 的審查政策與營利模式 | ✅ **已解：官方未公布**。`submit` 與 `about` 兩頁都沒有審查、把關、營利的敘述。**「未公布」不等於「沒有審查」** | 影響它算不算通路 |
+| 4 | GitHub MCP Registry 是否從官方 registry 抓 | ❌ 未查 | 同 #1 |
+| 5 | PulseMCP 自稱會自動收錄，實際收錄結果未驗 | ❌ 未驗——**要發完官方 registry 才驗得到** | 那是它的說法 |
+| 6 | ChatGPT Health 內第三方 app 能否讀到 Apple Health 數值；PHI 條款適用範圍 | ❌ 未查 | 決定 ChatGPT 那側是不是主線 |
+| 7 | 官方 registry 支不支援 Docker／OCI | ✅ **已解：支援**。`server.json` 的 `registryType` 含 `oci`（另有 npm／pypi／nuget／cargo／mcpb）。**但 API 抽樣 30 筆只見 npm／pypi** | 影響 remote 之外還有沒有第三種分發形態 |
 
 ---
 
