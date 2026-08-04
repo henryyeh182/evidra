@@ -348,12 +348,61 @@ export async function listTrainingPlansTool(args = {}) {
   });
 }
 
+/**
+ * What each plan tool needs from the caller. Stated per tool rather than in
+ * prose, for the same reason EVIDENCE_REQUIREMENTS is: a host that reads it
+ * knows what to send next.
+ */
+const PLAN_STATE_SHAPE = {
+  preview_adjust_plan: {
+    plan: "The caller-held plan, as returned by generate_plan or commit_adjust_plan. This server stores none.",
+    changeRequest:
+      "One of {kind:'reduce_availability', weekdayAvailableMinutes}, {kind:'add_injury', bodyRegion}, {kind:'deload_week', weekIndex}."
+  },
+  commit_adjust_plan: {
+    plan: "The current caller-held plan — the same version the preview was built against.",
+    preview: "The patch returned by preview_adjust_plan, unmodified."
+  }
+};
+
+/**
+ * The answer when a plan tool has nothing to compute on, or cannot read what it
+ * was given.
+ *
+ * Same rule as the evidence path: the request was well-formed, the tool ran, and
+ * it cannot produce an answer. These four paths used to throw — a missing plan,
+ * a change request naming no known kind, a plan that fails validation, a preview
+ * built against an older version — and every one of them reached the user as
+ * "Failed to call tool", which tells the model nothing it can act on. A stale
+ * preview in particular is a refusal the caller can fix in one turn by taking a
+ * fresh preview, but only if it is told that is what happened.
+ */
+function planStateProblem(toolName, error, problem) {
+  return errorContent({
+    error,
+    tool: toolName,
+    problem,
+    shape: PLAN_STATE_SHAPE[toolName],
+    note:
+      "Plan state lives with the caller: this server stores neither plan nor preview. If you hold no plan, call generate_plan first."
+  });
+}
+
 export async function previewPlanChangeTool(args = {}) {
   if (!args.plan) {
-    throw new Error("preview_adjust_plan is stateless: pass the caller-held plan.");
+    return planStateProblem(
+      "preview_adjust_plan",
+      "plan_required",
+      "No plan was supplied, so there is nothing to preview a change against."
+    );
   }
 
-  const preview = previewPlanChange(args.plan, args.changeRequest || {});
+  let preview;
+  try {
+    preview = previewPlanChange(args.plan, args.changeRequest || {});
+  } catch (error) {
+    return planStateProblem("preview_adjust_plan", "plan_change_refused", error.message);
+  }
 
   return jsonContent({
     previewId: preview.previewId,
@@ -368,9 +417,19 @@ export async function previewPlanChangeTool(args = {}) {
 
 export async function commitPlanChangeTool(args = {}) {
   if (!args.plan || !args.preview) {
-    throw new Error("commit_adjust_plan is stateless: pass both the current plan and preview patch.");
+    return planStateProblem(
+      "commit_adjust_plan",
+      "plan_state_required",
+      `Committing needs both the current plan and the preview patch; ${!args.plan ? "plan" : "preview"} was missing.`
+    );
   }
-  const committed = applyPlanPreview(args.plan, args.preview);
+
+  let committed;
+  try {
+    committed = applyPlanPreview(args.plan, args.preview);
+  } catch (error) {
+    return planStateProblem("commit_adjust_plan", "commit_refused", error.message);
+  }
 
   return jsonContent({
     planId: committed.id,

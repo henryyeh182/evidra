@@ -285,10 +285,48 @@ test("a substitution takes the movement as the user said it, not only as an id",
 });
 
 test("an unresolvable movement says what form the argument takes", async () => {
-  await assert.rejects(
-    () => call("decide_exercise_substitution", { exerciseId: "interpretive dance" }),
-    /canonical exercise_\* id/
-  );
+  const { payload, isError } = await call("decide_exercise_substitution", { exerciseId: "interpretive dance" });
+
+  // Asserted as a tool error, not a rejection: this used to throw, and the
+  // rejection assertion was what kept it throwing. A caller that sent a movement
+  // nobody stocks has to be able to read why and ask the user again.
+  assert.equal(isError, true, "the tool ran and could not answer — a tool error, not a protocol error");
+  assert.equal(payload.error, "unknown_exercise");
+  assert.match(payload.shape.exerciseId, /canonical exercise_\* id/);
+});
+
+test("a plan tool called without the caller's plan says what to send", async () => {
+  for (const [tool, args, expected] of [
+    ["preview_adjust_plan", { changeRequest: { kind: "deload_week", weekIndex: 0 } }, "plan_required"],
+    ["commit_adjust_plan", { preview: {} }, "plan_state_required"],
+    ["commit_adjust_plan", { plan: {} }, "plan_state_required"]
+  ]) {
+    const { payload, isError } = await call(tool, args);
+
+    assert.equal(isError, true, `${tool} reports missing plan state as a tool error`);
+    assert.equal(payload.error, expected);
+    // The server holds no plan, so the reply is the only place the caller can
+    // learn what it is expected to hold.
+    assert.match(payload.shape.plan, /caller-held|current caller-held/);
+  }
+});
+
+test("a change the plan cannot carry comes back refused, not thrown", async () => {
+  const plan = (await call("generate_plan", { evidence: WORKING_EVIDENCE, weeks: 2 })).payload;
+
+  const unknownKind = await call("preview_adjust_plan", { plan, changeRequest: { kind: "make_it_easier" } });
+  assert.equal(unknownKind.isError, true);
+  assert.equal(unknownKind.payload.error, "plan_change_refused");
+  assert.match(unknownKind.payload.problem, /make_it_easier/);
+
+  // Optimistic concurrency: a preview built against an older version is refused,
+  // and the refusal has to say so — taking a fresh preview is a one-turn fix.
+  const preview = (await call("preview_adjust_plan", { plan, changeRequest: { kind: "deload_week", weekIndex: 0 } }))
+    .payload.patch;
+  const stale = await call("commit_adjust_plan", { plan: { ...plan, version: plan.version + 1 }, preview });
+  assert.equal(stale.isError, true);
+  assert.equal(stale.payload.error, "commit_refused");
+  assert.match(stale.payload.problem, /stale/);
 });
 
 // The evidence a caller has to get right is not only the metric arrays: `date`

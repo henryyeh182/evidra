@@ -4,7 +4,7 @@
 import { searchWorkouts, totalWorkingSets } from "../../../packages/knowledge-graph/src/index.js";
 import { loadDemoUserContext } from "./demoData.js";
 import { loadKnowledgeBase, assertGrounded, toExerciseSummary, paginate } from "./knowledgeBase.js";
-import { jsonContent } from "./content.js";
+import { jsonContent, errorContent } from "./content.js";
 
 function assertUserId(context, userId) {
   if (context.user.id !== userId) {
@@ -210,9 +210,20 @@ export async function decideExerciseSubstitutionTool(args = {}) {
   // entry point and accepts canonical ids unchanged.
   const original = graph.resolveExercise(args.exerciseId);
   if (!original) {
-    throw new Error(
-      `Unknown exercise: ${args.exerciseId}. Pass the movement name as the user said it, or a canonical exercise_* id.`
-    );
+    // A movement this catalog does not know is the caller's to correct, and a
+    // JSON-RPC error is the one form it cannot correct: the host shows "Failed
+    // to call tool" and the model never sees which argument was wrong.
+    return errorContent({
+      error: "unknown_exercise",
+      tool: "decide_exercise_substitution",
+      problem: `${JSON.stringify(args.exerciseId ?? null)} did not resolve to any movement in the catalog.`,
+      shape: {
+        exerciseId:
+          "The movement as the user said it ('back squat', 'bench'), a catalog name, or a canonical exercise_* id."
+      },
+      note:
+        "Names and aliases are resolved server-side, so a value that resolves to nothing is not a movement this catalog carries. Ask the user which movement they mean rather than guessing a substitute."
+    });
   }
 
   const conditions = args.conditions || [];

@@ -1,6 +1,22 @@
+import { readFileSync } from "node:fs";
+
 import { getToolDefinition, listedToolDefinitions, resolveToolName } from "./toolDefinitions.js";
 import { parseJsonRpcMessage, jsonRpcError, jsonRpcResult } from "./jsonRpc.js";
 import { toolHandlers } from "./toolHandlers.js";
+
+/**
+ * The version a client is told has to be the version that shipped.
+ *
+ * Written out here as a literal it drifted: clients were told 0.1.0 while the
+ * package, the manifest and the released bundle were all 0.1.1, and nothing
+ * compared them. Read from the package manifest instead, which cannot drift
+ * from itself. No new dependency on the bundle's contents either — package.json
+ * has to travel inside it regardless, because `type: module` is what lets these
+ * imports resolve at all.
+ */
+const { version: SERVER_VERSION } = JSON.parse(
+  readFileSync(new URL("../../../package.json", import.meta.url), "utf8")
+);
 
 // Newest first: index 0 is what we offer when the client asks for something
 // we do not recognise.
@@ -34,7 +50,7 @@ export async function handleJsonRpcMessage(rawMessage) {
         protocolVersion: negotiated,
         serverInfo: {
           name: "fitness-mcp",
-          version: "0.1.0"
+          version: SERVER_VERSION
         },
         capabilities: {
           tools: {}

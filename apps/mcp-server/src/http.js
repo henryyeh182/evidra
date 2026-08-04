@@ -263,11 +263,25 @@ export function createHttpServer(options = {}) {
 // Run directly: node apps/mcp-server/src/http.js
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) {
   const port = Number(process.env.PORT || 8787);
+  /**
+   * Loopback by default, because the default has no authentication.
+   *
+   * `listen(port)` alone binds every interface: on any shared network the whole
+   * tool surface answered unauthenticated requests from other machines, while
+   * this same block printed "local only". Exposing it is now something a person
+   * types, and the token is named in the same breath.
+   */
+  const host = process.env.MCP_HOST || "127.0.0.1";
   const token = process.env.MCP_TOKEN || null;
   const allowedOrigins = (process.env.MCP_ALLOWED_ORIGINS || "").split(",").filter(Boolean);
 
-  createHttpServer({ token, allowedOrigins }).listen(port, () => {
-    console.log(`fitness-mcp listening on http://localhost:${port}/mcp`);
-    console.log(token ? "auth: bearer token required" : "auth: none (local only — add MCP_TOKEN before exposing)");
+  createHttpServer({ token, allowedOrigins }).listen(port, host, () => {
+    console.log(`fitness-mcp listening on http://${host}:${port}/mcp`);
+    console.log(token ? "auth: bearer token required" : "auth: none");
+    console.log(
+      host === "127.0.0.1" || host === "localhost"
+        ? `bound to ${host}: this machine only. MCP_HOST=0.0.0.0 exposes it — set MCP_TOKEN first.`
+        : `bound to ${host}: reachable from other machines${token ? "." : " WITH NO AUTHENTICATION."}`
+    );
   });
 }
