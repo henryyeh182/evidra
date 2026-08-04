@@ -48,10 +48,17 @@ retained, withdrawal leaves nothing behind for us to erase.
 
 As a desktop extension, verifiable from the code shipped in the extension:
 
-- **Evidra itself performs no outbound network requests.** Its code contains no outbound
-  HTTP, fetch, socket, or DNS calls, and it transmits your evidence nowhere.
+- **Evidra itself performs no outbound network requests.** Its code makes no outgoing
+  HTTP, fetch, socket, or DNS calls, and it transmits your evidence nowhere. The
+  extension does ship the source of a separate HTTP transport, kept for the possible
+  hosted deployment described below. It is not reachable from the extension's entry
+  point, it opens no port, and running Evidra as an extension never starts it.
 - **Evidra itself does not persist your evidence.** It writes nothing but its protocol
-  responses. There is no database, no cache, no log file, no history.
+  responses. There is no database, no cache, no log file, and no history. The extension
+  does ship a folder named `packages/db`, and it contains no database and no database
+  client: an id helper, functions that turn an object into a row-shaped object, and an
+  interface whose methods are all unimplemented and throw if they are called. Nothing
+  shipped in the extension can write your evidence anywhere.
 - **No third-party code.** The extension has zero dependencies and runs on the Node.js
   standard library alone. No analytics, no telemetry, no crash reporting, no SDKs.
 - **No model calls.** Decisions are deterministic arithmetic and explicit rules. Evidra
