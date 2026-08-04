@@ -297,6 +297,18 @@ bundle 內 10 個程式檔與 v0.1.0 不同，含兩個行為修正（`cc43122` 
 **v0.1.0 刻意保留不覆蓋**（已照舊 checksum 驗過的人不會對不上）。
 **送官方 registry 要填 v0.1.1 那顆。**
 
+## 動 MCP 介面之前先載 skill
+
+改 tool 定義、transport、輸出契約或 `manifest.json` 之前，先用 `Skill` 工具載
+**`anthropic-skills:mcp-builder`**（skill 不會自動載入，不叫就不會有）。
+
+它帶的是 MCP 官方慣例——tool 命名與前綴、annotations 的定義、**呼叫端的失誤要回在
+result 裡而不是協定層**、structured output、transport 選擇。**這些判準不在本檔，
+九條 gate 也一條都驗不到。** 2026-08-04 靠它一次查出：`decide_exercise_substitution`
+的描述要呼叫端傳一個 schema 裡不存在的 `evidence`（同一句錯話還在 `manifest.json`
+與 `evidra/README.md`）、3 個 tool 把呼叫端可以自己修的失誤送成 JSON-RPC error、
+`generate_plan` 宣告會寫入但它是純函數、HTTP 綁全部介面卻印「local only」。
+
 ## 常用指令
 
 ```bash
