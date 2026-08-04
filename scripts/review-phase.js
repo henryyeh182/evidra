@@ -237,10 +237,16 @@ gate(
         findings.push(`${name} 的描述沒有觸發語句（Use this for …）——host 無從得知使用者會怎麼問`);
       }
 
-      // Plan-write tools take history, not physiology, so they are exempt from
-      // the health-connector instruction; everything else must say where the
-      // evidence comes from.
-      const needsEvidence = !["preview_adjust_plan", "commit_adjust_plan"].includes(name);
+      // Exempt: the tools that have no `evidence` input at all. Plan-write
+      // tools take history, not physiology; decide_exercise_substitution
+      // decides from the movement plus the constraints the user states, and
+      // reads no recovery or load signal. Requiring the instruction of them
+      // was what put a parameter that does not exist into a public tool
+      // description. Everything else must still say where the evidence comes
+      // from.
+      const needsEvidence = !["preview_adjust_plan", "commit_adjust_plan", "decide_exercise_substitution"].includes(
+        name
+      );
       if (needsEvidence && !/`evidence`/.test(description)) {
         findings.push(`${name} 的描述沒有說明證據從哪來`);
       }

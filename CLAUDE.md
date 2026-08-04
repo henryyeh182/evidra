@@ -178,6 +178,22 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
   列在 `packages/db/schema.md` 的 Future Migrations，還沒寫。
 - **計價單位定案**：已暫定 per-MAU（見下）。定案條件是 Claude／Codex 出明確的
   MCP server 商業與計價文件。
+- **隱私政策要為 remote 改寫，但還不能改**（2026-08-04）：現在那份的範圍是 desktop
+  extension，裡面「no database／no accounts／runs on your own machine」都是 extension
+  的事實敘述，**不是跨版本承諾**——跨版本的 floor 只綁 evidence（最小化、算完丟棄、
+  不留存、不販賣、不訓練），一個字都不提資料庫，這是對的。
+  **remote 幾乎一定要一個資料庫**：per-MAU 要算「這個月幾個人用過」（識別碼＋活躍紀錄），
+  authorization server 要記 client 註冊與授權狀態。**證據仍然不存**——Phase 1 hosted
+  無狀態是核心宗旨那條線，不是可交換的東西。
+  **現在不寫進政策的理由不是「先不講」，是現在寫的會是猜的**：per-MAU 還是暫定，
+  authorization server 一行都沒寫，存什麼、存多久都沒定案。拿未定案的商業模式寫進
+  已發布的隱私政策，就是把猜測變成對外承諾。
+  **觸發點：per-MAU 定案、或 authorization server 開始寫的那一刻**，就要動政策，
+  而且必須在 remote 對外開放**之前**改完。要改的五處：`PRIVACY.md` 的 `Applies to`、
+  「As a desktop extension」那行範圍限定句（它罩住底下五個 bullet）、Summary 的
+  「a calculator, not a data service」與「on your own machine」、`README.md` 的
+  「It runs on your own machine」，加一條新揭露：hosted 版會處理識別碼。
+  **五處全在 `evidra`**（公開 repo），改動要與這裡的敘述一致。
 
 ## 選定的方向（2026-08-01 定案，`D-CHANNEL`）
 

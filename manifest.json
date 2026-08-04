@@ -45,7 +45,7 @@
     },
     {
       "name": "decide_exercise_substitution",
-      "description": "Decide whether a proposed exercise swap is acceptable, and what to do instead when it is not."
+      "description": "Decide what a movement the user cannot do today should be replaced with, returning from -> to with contraindications hard-filtered."
     },
     {
       "name": "generate_plan",
