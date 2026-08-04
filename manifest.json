@@ -57,7 +57,7 @@
     },
     {
       "name": "commit_adjust_plan",
-      "description": "Apply a previewed plan adjustment and return the resulting plan."
+      "description": "Compute the plan a previewed adjustment produces, once the user has accepted the preview. The caller keeps the result; this server stores nothing."
     }
   ],
   "compatibility": {

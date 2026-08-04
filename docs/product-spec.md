@@ -240,7 +240,7 @@ Phase 2 有地方放，但表還沒建。
 ### 協定升級
 
 `2026-07-28` 走 dual-era，不直接切換（只支援新版會讓舊客戶端連不上）。
-新規格的 core 是 stateless request/response——`planStore` 已於 `1d28ba6` 改成無狀態，
+新規格的 core 是 stateless request/response——`planPatch`（原 `planStore.js`）已於 `1d28ba6` 改成無狀態，
 方向一致。
 
 ### 上架與商業

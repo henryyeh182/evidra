@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { generateTrainingPlan } from "../src/generatePlan.js";
 import { previewPlanChange } from "../src/adaptPlan.js";
-import { applyPlanPreview, buildVersionHistory, summarizePlan } from "../src/planStore.js";
+import { applyPlanPreview, buildVersionHistory, summarizePlan } from "../src/planPatch.js";
 
 const context = JSON.parse(
   await readFile(new URL("../../../data/seeds/sample-user-context.json", import.meta.url), "utf8")

@@ -307,7 +307,7 @@ Anthropic Claude**。定位是「問 Claude 關於你的 Strava 表現」，由 
 **因此缺口是具體的**：來源方給資料、host model 會推理，但**沒有任何一方持有那份計畫**。
 這是 Evidra 佔的位置。
 
-> ✅ **2026-07-30 已修正 runtime 邊界。** `packages/planning/src/planStore.js` 現在是
+> ✅ **2026-07-30 已修正 runtime 邊界。** `packages/planning/src/planPatch.js` 現在是
 > **無狀態 patch/preview validator**，不含 `Map`、cache 或 process-lifetime plan；
 > caller／外部 storage 持有 plan 與版本歷史。`packages/db` 的 PostgreSQL schema
 > 尚未接 runtime，屬部署層持久化工作，不由 MCP core 偷渡保存。
@@ -1202,7 +1202,7 @@ CIMD 那個決定要在 Phase 7 就下對。
 | C2 | **`trainingLoad ?? 分鐘數` 仍在編造負荷值**（`rpe ?? 5` 已於 `ec7f887` 移除，這條當時明確劃在範圍外） | `packages/evidence/src/model.js:155` |
 | C3 | **user-journey 缺兩個已完成功能**（提議評估、心率區間分佈）。**沒有 gate 抓得到**——G4 只比對五種決策型別，沒有東西比對「功能 ↔ 對外文件」 | `docs/user-journey.html` |
 | C6 | 🟡 **證據的實際來源形狀沒驗過**——我們的 parser 全部是針對**匯出檔**寫的（`normalize.js` 註解自陳「Garmin Connect export → Fitness Evidence Model」）。但真實流程裡，證據是 Claude 從**別人的 MCP server** 拿到再當參數傳進來的：Strava 官方 connector、Garmin 社群版 61 個 tool 的 API 形狀。**兩者形狀不同，且從未對照過。** 這是「四家對齊」這條護城河能不能兌現的關鍵 | `packages/connectors/src/providers/*/normalize.js` |
-| C5 | ✅ **plan state 不由 MCP runtime 持有**——`planStore` 已改為 stateless patch/preview validator；caller 或外部 storage 負責持久化與版本歷史。`packages/db` 仍未接 runtime，屬部署層工作。 | `packages/planning/src/planStore.js`、`packages/db` |
+| C5 | ✅ **plan state 不由 MCP runtime 持有**——`planPatch`（原 `planStore.js`）已改為 stateless patch/preview validator；caller 或外部 storage 負責持久化與版本歷史。`packages/db` 仍未接 runtime，屬部署層工作。 | `packages/planning/src/planPatch.js`、`packages/db` |
 | C4 | **G5 一直紅著**：Apple Health 與 Strava 有 parser，但 `schemas/sources/` 缺原始格式契約、`eval/scenarios/` 缺匯出形狀場景。`schemas/README.md` 自訂規則是「registry ＋ source schema ＋ parser ＋ scenario」四件，現在 2/4 | `schemas/sources/`、`eval/scenarios/` |
 
 > **C4 現在的條件比先前好**：真實 Apple Health 匯出已在 `data/private/AppleHealth/export.xml`
