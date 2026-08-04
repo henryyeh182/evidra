@@ -37,7 +37,7 @@ MCP Directory T&C 同意＊／feedback（選填）。
 
 | | submission guide 通用五項 | **表單第 2 頁** |
 |---|---|---|
-| 內容 | security／tool annotations／OAuth（僅認證服務）／隱私政策／文件 | Publicly available on GitHub／**MIT licensed**／Node.js／`manifest.json` 的 `author` 指向 GitHub profile |
+| 內容 | security／tool annotations／**會做認證的服務要用 OAuth 2.0**／隱私政策／文件（[五項原文見下](#送審要求的原文2026-08-04-查證來源-claudecomdocsconnectorsbuildingsubmission)） | Publicly available on GitHub／**MIT licensed**／Node.js／`manifest.json` 的 `author` 指向 GitHub profile |
 | 現況 | 全綠 | **兩條紅** |
 
 紅的兩條（2026-08-03 實測）：`LICENSE` 是「All rights reserved」專有授權；
@@ -275,6 +275,45 @@ Anthropic Policy 禁「software that transfers money… **on behalf of users**�
 
 ---
 
+## 送審要求的原文（2026-08-04 查證，來源 `claude.com/docs/connectors/building/submission`）
+
+上面幾節的摘要以這一節的原文為準。四句話逐字抄下來，因為其中兩句原本只有中文摘要，
+而摘要讀起來的意思與原文不同。
+
+**五項 submission requirements 全文**：
+
+> 1. **Security**: Meet Anthropic's security standards
+> 2. **Tool annotations**: All tools must include a `title` and the applicable `readOnlyHint` or `destructiveHint`
+> 3. **Authentication**: Use OAuth 2.0 for authenticated services
+> 4. **Privacy Policy**: Local connectors must include privacy policies
+> 5. **Documentation**: Provide clear setup and usage instructions
+
+**第 3 條不是限制，是條件句。** 原文是「Use OAuth 2.0 for **authenticated** services」——
+**會做認證的服務要用 OAuth 2.0**，而不是「只有認證類服務才可以用 OAuth」。本檔先前那格
+摘要寫成「OAuth（僅認證服務）」，容易被讀成後者。portal 的 Authentication 一步明列
+「**no authentication**」是合法選項，所以：**認證不是上架門檻**；要做認證才必須是 OAuth 2.0。
+（注意原文寫 OAuth **2.0**；`oauth.js` 那半實作的是 2.1 的 resource server。）
+
+**隱私政策那句，原文在一個 Warning 區塊裡**：
+
+> Missing or incomplete privacy policies result in immediate rejection.
+
+適用範圍是**本機 connector**（第 4 條原文即「**Local** connectors must include privacy
+policies」）。要求三件：README.md 的 "Privacy Policy" 段、`manifest.json` 的
+`privacy_policies` 陣列（`manifest_version` 0.2+）、**HTTPS URL**。內容要涵蓋 data
+collection／usage and storage／third-party sharing／data retention／contact information。
+→ Evidra 三件都有，GitHub 的 `https://` 連結符合「HTTPS URLs」這一條。
+
+**另外三件本檔原本沒記的**：
+
+- **remote portal 的 Company 一步要「Company name and website」**——所以走 remote 時
+  **會被問到網站**，不只是文件與隱私政策的 URL。
+- **MCPB 送審表單的網址是 `clau.de/desktop-extention-submission`**（官方文件裡的拼字如此）。
+- **另有 pre-submission checklist**：`/docs/connectors/building/review-criteria`；
+  認證模式細節在 `/docs/connectors/building/authentication`（**兩份都還沒讀**）。
+
+---
+
 ## 尚未查證 —— 動計畫前先看這裡
 
 | # | 事項 | 狀態（2026-08-03 晚更新） | 為什麼重要 |
@@ -286,6 +325,11 @@ Anthropic Policy 禁「software that transfers money… **on behalf of users**�
 | 5 | PulseMCP 自稱會自動收錄，實際收錄結果未驗 | ❌ 未驗——**要發完官方 registry 才驗得到** | 那是它的說法 |
 | 6 | ChatGPT Health 內第三方 app 能否讀到 Apple Health 數值；PHI 條款適用範圍 | ❌ 未查 | 決定 ChatGPT 那側是不是主線 |
 | 7 | 官方 registry 支不支援 Docker／OCI | ✅ **已解：支援**。`server.json` 的 `registryType` 含 `oci`（另有 npm／pypi／nuget／cargo／mcpb）。**但 API 抽樣 30 筆只見 npm／pypi** | 影響 remote 之外還有沒有第三種分發形態 |
+| 8 | Garmin Connect Developer Program 是不是暫停中 | ❌ **無定論**。官方 Health API 頁與 FAQ 都寫「Stay tuned for more updates on the program」，同時 FAQ 又寫「please request … we'll quickly review your application」（約兩個工作日）。**說暫停的只有一份第三方部落格**，Garmin 論壇 thread 438046 零回覆。剩下的路是寄 `connect-support@developer.garmin.com` | 已確認的是**只給企業／商業用途**、要申請要審核（見 [implementation plan P4](fitness-mcp-implementation-plan.md)）。是否暫停決定「能不能排程」而不是「能不能做」 |
+| 9 | remote portal 的「不同使用者連不同 URL」實際怎麼運作 | ❌ 未查。官方文件只確認**這個選項存在**（Connection 一步：「whether every user connects to the same URL or different users connect to different URLs」），沒有說明審查怎麼驗、reviewer 用哪個 URL | 決定「使用者自己 host、我們不持有 evidence」這條路能不能上架 |
+| 10 | Team／Enterprise 方案的費用 | ❌ 未查 | remote portal 在 admin settings，個人方案進不去；這是走 remote 的固定成本 |
+| 11 | `review-criteria` 與 `authentication` 兩份官方文件 | ❌ **還沒讀**。`/docs/connectors/building/review-criteria`（pre-submission checklist）、`/docs/connectors/building/authentication`（哪些認證模式開箱支援、哪些要與審查團隊協調） | 前者可能有本檔沒收錄的門檻；後者決定 OAuth 要走 DCR、client ID metadata 還是 static client ID |
+| — | 隱私政策放 GitHub 會不會被接受 | ✅ **已解：可以**。要求原文是「HTTPS URLs to privacy policies」，沒有限定自有網域（見上一節） | — |
 
 ---
 

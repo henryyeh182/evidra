@@ -108,6 +108,27 @@ Claude／ChatGPT／internal AI host
 
 **驗收**：在沒有 hosted MCP 的情況下仍可完成 P3 三個情境，並測得 raw Evidence 不離開 user-controlled environment。
 
+#### 外部條件：直連 Garmin 需要企業身分（2026-08-04 查證）
+
+**直連資料供應商只有在這一段成立**——hosted 那一段的界線明文禁止（`CLAUDE.md`：不直接連
+資料供應商、不持有來源 OAuth refresh token）。所以「接 Garmin OAuth」屬於 P4，不屬於 P5。
+
+查 `developer.garmin.com` 的 Health API 頁與 Program FAQ，兩件事已確認：
+
+| | 原文 | 意思 |
+|---|---|---|
+| 資格 | 「available for enterprise use」／FAQ：「it is only for business use」 | **只給企業／商業用途**。兩頁都沒有提個人開發者或 hobbyist |
+| 流程 | 「please request the Garmin Connect Developer Program and we'll quickly review your application」；核准約兩個工作日，之後給 portal 存取並安排一次 integration call | **要申請、要審核**，不是自助註冊。核准後先給 evaluation environment |
+
+**未確認**：兩個頁面都掛著「Stay tuned for more updates on the program」。有一份第三方部落格
+說開發者計畫目前暫停、無法新建帳號，但**那是單一第三方來源，Garmin 官方頁面沒有這句話**，
+Garmin 論壇上同一個問題（thread 438046）**零回覆**。要確認只剩寄
+`connect-support@developer.garmin.com` 問本人。
+
+**對排序的影響**：這是排在寫程式之前的關卡，不是寫完就能用的 API。而且它與送審的相互作用
+記在 [distribution-channels.md](distribution-channels.md)——remote portal 的 Data handling
+一題會從「自己的 API」變成「不受控的第三方」，MCPB 那張表單則完全不問。
+
 ### P5 — Hosted MCP production boundary
 
 讓一般使用者能從手機 AI App 連到 hosted Fitness MCP：
