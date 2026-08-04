@@ -373,6 +373,59 @@ first-party，一邊把「不受控的第三方」列成可揭露的選項。**�
 
 ---
 
+## 送審前動作
+
+checklist 的最後一段要求：「For MCP servers, exercise every tool through the **MCP Inspector**
+and as a **custom connector in Claude**」。**MCPB 那張 8 題表單不問這件事，remote portal 的
+step 9 要勾選聲明**，所以對 MCPB 它是品質動作、對 remote 是必填。
+
+| 動作 | 狀態 |
+|---|---|
+| MCP Inspector 跑過六個 tool | ✅ **2026-08-04 完成**，結果見下 |
+| 在 Claude 裡以 custom connector 跑過 | ❌ **只有使用者能做**——要在 Claude app 裡設定並實際對話 |
+
+### MCP Inspector 實測結果（2026-08-04）
+
+指令（不進 `package.json`，一次性 npx）：
+
+```bash
+npx -y @modelcontextprotocol/inspector --cli node apps/mcp-server/src/stdio.js --method tools/list
+```
+
+六個 tool 全部以 `tools/call` 實跑，**全部成功、全部帶 `structuredContent`**：
+
+| tool | result frame | `structuredContent` |
+|---|---|---|
+| `assess_fitness_state` | 4,580 bytes | ✅ |
+| `decide_session` | 約 4,400 bytes | ✅ |
+| `decide_exercise_substitution` | 2,564 bytes | ✅ |
+| `generate_plan`（2 週） | 9,296 bytes | ✅ |
+| `preview_adjust_plan` | **12,576 bytes** | ✅ |
+| `commit_adjust_plan` | **10,120 bytes** | ✅ |
+
+這是**外部客戶端**驗到的，不是自家測試——`outputSchema` 與 `structuredContent` 在真的 MCP
+客戶端上成立。
+
+### 這次實測查出來的兩件事（都還沒修）
+
+**1. 兩個 plan tool 的回應超過自訂的 8KB 上限，而且會隨計畫長度成長。**
+`preview_adjust_plan` 回的 `patch` 裡含整份 `resultingPlan`，加上 `diff` 與 `summary`，
+再被「text ＋ structured 各一份」乘二——2 週計畫就 12.5KB，12 週會更大。
+checklist 有一條「Keep responses reasonably sized for the task」。
+本機測試只對 `decide_session` 斷言 8KB，沒有蓋到這兩個。
+
+**2. 呼叫端填的 `source` 不會出現在 provenance 裡。**
+input schema 寫著 `source`「Where the reading came from, e.g. garmin | strava | apple_health」，
+`packages/evidence/src/model.js:189` 也確實存下來，但 `describeEvidence` 的 `signalWriters`
+讀的是 `metric.metadata?.recorders` 與 `metadata?.sourceName`（`model.js:286-289`），
+**不是 `source`**。所以照文件填 `source: "garmin"` 的呼叫端，會拿到
+`signalWriters: { hrv_ms: { writers: [] } }`——看起來像沒人說來源，其實說了。
+`signalWriters` 原本要表達的是「同一個 source 底下有幾個 recorder」（Google Health 那個
+Garmin 與手機同時記步數的案例），與 `source` 是兩件事；但目前**沒有任何輸出欄位回報
+呼叫端填的 `source`**。
+
+---
+
 ## 尚未查證 —— 動計畫前先看這裡
 
 | # | 事項 | 狀態（2026-08-03 晚更新） | 為什麼重要 |
