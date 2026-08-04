@@ -83,7 +83,7 @@ language you read is your assistant's; the judgment is arithmetic.
 | `decide_exercise_substitution` | The replacement for a movement you cannot do today, as from → to |
 | `generate_plan` | A plan, when you don't have one — the substrate decisions are made against |
 | `preview_adjust_plan` | What adjusting a plan would change, without applying it |
-| `commit_adjust_plan` | Applies a previewed adjustment and returns the resulting plan |
+| `commit_adjust_plan` | The plan a previewed adjustment produces, once you have accepted it — you keep it, Evidra does not |
 
 ---
 
