@@ -237,13 +237,13 @@ server 內部: readFile("data/seeds/...")   ← 自己去拿資料
 
 `search_exercises` `get_exercise` `search_workouts` `get_workout` `get_user_profile` `get_training_history` `get_plan` `list_plans` — 回傳清單／詳情，違反原則 5，且超出 ≤10 上限。
 
-**已修**：對外 **14 → 6**。Content 端點下架但仍可呼叫一個版本；新增 `decide_exercise_substitution` 承接替代能力，避免空窗。
+**已修**：對外 **14 → 6**。Content 端點下架但仍可呼叫一個版本；新增 `evidra_decide_exercise_substitution` 承接替代能力，避免空窗。
 
 ### ~~D4 — recommend_workout 是 Recommendation~~ ✅ 已修
 
 現況回「今天適合低衝擊 Zone 2」——憑空發出、無 from→to、無 prior state。GPT-6 也做得到。
 
-**已修**：`decide_session` 上線，`recommend_workout` 下架為 deprecated。
+**已修**：`evidra_decide_session` 上線，`recommend_workout` 下架為 deprecated。
 
 ### ~~D5 — eval 零外部增益~~ ⛔ 已取消（決策）
 
@@ -508,8 +508,8 @@ tool 描述就是分發面」。
 
 | Gate | 缺口 | 與上架的關係 |
 |---|---|---|
-| ~~G2b~~ | ~~`commit_adjust_plan` 無觸發語句~~ | **2026-08-02 修復**：描述加上 `Use this after preview_adjust_plan` 與使用者語彙 |
-| ~~G3~~ | ~~`commit_adjust_plan.output.json` 缺 `versionHistory`~~ | **2026-08-02 修復**：runtime 產生 `versionHistory`（無狀態、無時間戳），契約隨之補齊 |
+| ~~G2b~~ | ~~`evidra_commit_adjust_plan` 無觸發語句~~ | **2026-08-02 修復**：描述加上 `Use this after evidra_preview_adjust_plan` 與使用者語彙 |
+| ~~G3~~ | ~~`evidra_commit_adjust_plan.output.json` 缺 `versionHistory`~~ | **2026-08-02 修復**：runtime 產生 `versionHistory`（無狀態、無時間戳），契約隨之補齊 |
 | G5 | ~~apple-health ／ strava 缺 source schema ＋ scenario~~ | **2026-08-03：全綠**。Apple Health（契約 ＋ 6 個場景，量測自一份真實 153MB 匯出）；Strava（契約 ＋ 6 個場景，量測自 mbp-rd 的真實 bulk export：39 個 CSV、7 筆活動）。六個場景做過變異驗證——故意改壞 runtime 六處，六處都被對應場景抓到 |
 
 #### 上架路徑有兩條，只有一條需要 Team 帳號（2026-08-01 查證）
@@ -653,7 +653,7 @@ Phase 9 不在主軸上；它唯一的作用是給 7.1 的 authorization server 
 證據經 tool call 傳入、五層決策契約上線。外部使用者（server 檔案中不存在）可純靠傳入證據取得完整決策。
 
 ### ~~Phase 2 — 工具面收斂（D3 + D4）~~ ✅ 完成
-對外 6 個 tool：`assess_fitness_state`、`decide_session`、`decide_exercise_substitution`、`generate_plan`、`preview_adjust_plan`、`commit_adjust_plan`。
+對外 6 個 tool：`evidra_assess_fitness_state`、`evidra_decide_session`、`evidra_decide_exercise_substitution`、`evidra_generate_plan`、`evidra_preview_adjust_plan`、`evidra_commit_adjust_plan`。
 
 ### ~~Phase 3 — 證明增益~~ ✅ 改為 client 相容性驗證（已完成）
 
@@ -665,7 +665,7 @@ Phase 9 不在主軸上；它唯一的作用是給 7.1 的 authorization server 
 | 不支援 `ping` | client 保活失敗 | 回空 result |
 | protocolVersion 寫死 | 新版 client 被靜默降級 | 協商，支援 2025-06-18 / 2025-03-26 / 2024-11-05 |
 
-**驗收（已通過）**：以子行程模擬 Claude Desktop 完整流程——handshake → initialized 通知 → tools/list → generate_plan → decide_session，取得帶 from→to 的決策。
+**驗收（已通過）**：以子行程模擬 Claude Desktop 完整流程——handshake → initialized 通知 → tools/list → evidra_generate_plan → evidra_decide_session，取得帶 from→to 的決策。
 
 ### ~~Phase 4 — 決策深度（護城河 #2 #3）~~ ✅ 完成（3/3）
 
@@ -816,11 +816,11 @@ olympic 服務爆發力。唯一的判斷是複合／單關節：多關節動作
 
 **接到決策路徑**（否則只是死資料）：
 
-- `generate_plan` — slot 宣告自己服務什麼目標。原本某個 slot 的動作被器材或 avoid
+- `evidra_generate_plan` — slot 宣告自己服務什麼目標。原本某個 slot 的動作被器材或 avoid
   偏好刷光時，一律退回寫死的 `exercise_bodyweight_squat`：**上肢肌力日會變成深蹲**，
   是一份課表，但不是原本排的那份。現在先向圖譜要一個服務同一目標的動作，要不到才退回
   寫死值，而且兩種情況都寫進 session rationale。
-- `decide_exercise_substitution` — 替代品若不保住原目標，寫進 `limits`（承諾 A）。
+- `evidra_decide_exercise_substitution` — 替代品若不保住原目標，寫進 `limits`（承諾 A）。
   受傷時把跑步換成走路仍是對的決策，但呼叫端必須知道刺激換掉了。
 - `graph.searchExercises({ trainingGoal })`／`findSubstitutes({ preserveTrainingGoal })`。
 
@@ -876,7 +876,7 @@ olympic 服務爆發力。唯一的判斷是複合／單關節：多關節動作
 > ```
 > 使用者問 Claude
 >   → Claude 向 Strava connector 取證據（近 30 天活動、逐秒心率、Relative Effort）
->   → Claude 把證據當參數呼叫 Evidra：decide_session({ evidence, scheduledSession })
+>   → Claude 把證據當參數呼叫 Evidra：evidra_decide_session({ evidence, scheduledSession })
 >   → Evidra 回 from: Tempo Run 45min high → to: Zone 2 Run 45min low，reason: ACWR 2.1 > 1.4
 >   → Claude 用人話講給使用者聽
 > ```
@@ -1032,7 +1032,7 @@ authorization server，等於一上線就走在 deprecated 路徑上。**
 
 #### 一次決策的實際成本（實測，非估計）
 
-以 180 個 metric ＋ 40 場訓練的證據跑 `decide_session`，500 次穩態平均：
+以 180 個 metric ＋ 40 場訓練的證據跑 `evidra_decide_session`，500 次穩態平均：
 
 | | |
 |---|---|
@@ -1184,7 +1184,7 @@ CIMD 那個決定要在 Phase 7 就下對。
 | ~~A2~~ | ~~**計價單位**~~ | ✅ **已決（2026-07-31）：暫定 per-MAU**，與實測成本同軸。宣言舊句「商業單位 = Decision Tools」已於宣言改寫時移除，衝突消失。定案條件：Claude／Codex 出明確的 MCP server 商業與計價文件 |
 | A3 | **max HR 171 是年齡估計**（220−49） | 資料裡觀察到的最高 150，但那 7 筆全是穩態有氧，是下限不是上限。維持估計值、還是做一次最大努力測試 |
 | A5 | **理由句子由誰組**——核心概念（3.5）說語言那層是 Claude 的；引擎現在自己寫中文模板句。要不要改成只回結構化數值與觸發的規則 | 影響 `decideSession.js` 全部 `reason.push(...)`、schema 契約、G3 gate |
-| A4 | **四個 tool 要不要改名**（`decide_session` → `decide_training_session` 等，牽動 6 處） | 判準是「遮住 connector 名稱後看不看得出是健身領域」，四個沒過。`deprecatedToolAliases` 已在，改名不會斷既有呼叫端 |
+| A4 | **四個 tool 要不要改名**（`evidra_decide_session` → `decide_training_session` 等，牽動 6 處） | 判準是「遮住 connector 名稱後看不看得出是健身領域」，四個沒過。`deprecatedToolAliases` 已在，改名不會斷既有呼叫端 |
 
 ### B. 計畫與宣言衝突（B1、B3 已於 2026-07-31 結案；B2 仍未決）
 

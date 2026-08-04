@@ -636,7 +636,7 @@ test("no proposal, no proposal field — the shape does not change for callers w
 
 // --- an incomplete scheduledSession ----------------------------------------
 //
-// `type` and `intensity` are both optional on decide_session's input contract,
+// `type` and `intensity` are both optional on evidra_decide_session's input contract,
 // and no connector can supply either: they describe a session that has not
 // happened, so they exist only in the caller's plan. Both omissions used to
 // produce output that read as though the value had been known.

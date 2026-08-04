@@ -30,12 +30,12 @@ test("MCP server lists core fitness tools", async () => {
 
   const toolNames = response.result.tools.map((tool) => tool.name);
   assert.deepEqual(toolNames, [
-    "assess_fitness_state",
-    "decide_session",
-    "decide_exercise_substitution",
-    "generate_plan",
-    "preview_adjust_plan",
-    "commit_adjust_plan"
+    "evidra_assess_fitness_state",
+    "evidra_decide_session",
+    "evidra_decide_exercise_substitution",
+    "evidra_generate_plan",
+    "evidra_preview_adjust_plan",
+    "evidra_commit_adjust_plan"
   ]);
   // Every exposed tool must be a decision or the substrate one operates on.
   assert.ok(toolNames.length <= 10, `tool surface grew to ${toolNames.length}`);
@@ -47,14 +47,14 @@ test("MCP server lists core fitness tools", async () => {
   }
 });
 
-test("MCP server calls assess_fitness_state", async () => {
+test("MCP server calls evidra_assess_fitness_state", async () => {
   const response = await handleJsonRpcMessage(
     JSON.stringify({
       jsonrpc: "2.0",
       id: 3,
       method: "tools/call",
       params: {
-        name: "assess_fitness_state",
+        name: "evidra_assess_fitness_state",
         arguments: {
           useDemoSeed: true,
           date: "2026-07-23",
@@ -99,7 +99,7 @@ async function callTool(id, name, args) {
 }
 
 test("MCP server runs the generate -> preview -> commit planning flow", async () => {
-  const plan = await callTool(10, "generate_plan", {
+  const plan = await callTool(10, "evidra_generate_plan", {
     useDemoSeed: true,
     startDate: "2026-07-27",
     weeks: 4
@@ -107,14 +107,14 @@ test("MCP server runs the generate -> preview -> commit planning flow", async ()
   assert.equal(plan.version, 1);
   assert.equal(plan.weeks.length, 4);
 
-  const preview = await callTool(11, "preview_adjust_plan", {
+  const preview = await callTool(11, "evidra_preview_adjust_plan", {
     plan,
     changeRequest: { kind: "reduce_availability", weekdayAvailableMinutes: 25, weekIndexes: [1] }
   });
   assert.ok(preview.previewId);
   assert.ok(preview.diff.length > 0);
 
-  const committed = await callTool(12, "commit_adjust_plan", { plan, preview: preview.patch });
+  const committed = await callTool(12, "evidra_commit_adjust_plan", { plan, preview: preview.patch });
   assert.equal(committed.version, 2);
   assert.equal(committed.plan.constraints.weekdayAvailableMinutes, 25);
 });

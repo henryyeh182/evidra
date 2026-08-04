@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "fitness-mcp/tools/decide_exercise_substitution.output",
-  "title": "decide_exercise_substitution output",
+  "$id": "fitness-mcp/tools/evidra_decide_exercise_substitution.output",
+  "title": "evidra_decide_exercise_substitution output",
   "type": "object",
   "properties": {
     "evidence": {

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 import { EVIDENCE_METRIC_TYPES } from "../../../packages/evidence/src/index.js";
 
 import { outputSchemas } from "./outputSchemas.js";
@@ -78,7 +81,7 @@ const EVIDENCE_INPUT = {
 
 export const toolDefinitions = [
   {
-    name: "assess_fitness_state",
+    name: "evidra_assess_fitness_state",
     title: "Assess Fitness State",
     annotations: {
       title: "Assess Fitness State",
@@ -87,7 +90,7 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Report how the user is doing today: recovery, readiness, muscle-group fatigue and training load, each with the evidence behind it and an honest list of what could not be seen. Use this for 'how am I doing today', 'have I recovered', 'am I overtraining', 'how is my training load'. Pass the user's recent health evidence as `evidence`; this server's instructions say what to gather and what happens to a signal nobody has. This reports state only — it never says what to train. If the user has a session scheduled and wants to know whether to do it, use decide_session; if they have no plan at all, use generate_plan.",
+      "Report how the user is doing today: recovery, readiness, muscle-group fatigue and training load, each with the evidence behind it and an honest list of what could not be seen. Use this for 'how am I doing today', 'have I recovered', 'am I overtraining', 'how is my training load'. Pass the user's recent health evidence as `evidence`; this server's instructions say what to gather and what happens to a signal nobody has. This reports state only — it never says what to train. If the user has a session scheduled and wants to know whether to do it, use evidra_decide_session; if they have no plan at all, use evidra_generate_plan.",
     inputSchema: {
       type: "object",
       properties: {
@@ -128,7 +131,7 @@ export const toolDefinitions = [
     }
   },
   {
-    name: "decide_session",
+    name: "evidra_decide_session",
     title: "Decide Today's Session",
     annotations: {
       title: "Decide Today's Session",
@@ -137,7 +140,7 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Decide what today's scheduled session should become, given today's evidence. Returns a decision with from -> to: the session as planned, what it should change to, and the evidence and rules behind the change. Use this for questions about a session that is already on the books: 'am I ready for today's session', 'today's plan says intervals — should I still do them', 'should I adjust today's workout', 'I only have 30 minutes today'. `scheduledSession` is what makes this a decision: called without it, this tool returns no_scheduled_session and decides nothing, so for an open-ended 'what should I train today' with no plan in hand, call generate_plan instead. If the user proposes their own alternative — 'today was cardio, can I do stretching instead?' — pass that as `proposedSession` and it comes back accepted or refused, with the reason. Pass the user's recent health evidence as `evidence`; this server's instructions say what to gather and what happens to a signal nobody has. This is a decision, not a suggestion: it requires a scheduled session and decides about an existing plan rather than inventing one. Do NOT re-derive or override the intensity, duration or movements it returns — injury filtering and load limits are enforced server-side and are decisions, not advice. To look up state alone, use assess_fitness_state.",
+      "Decide what today's scheduled session should become, given today's evidence. Returns a decision with from -> to: the session as planned, what it should change to, and the evidence and rules behind the change. Use this for questions about a session that is already on the books: 'am I ready for today's session', 'today's plan says intervals — should I still do them', 'should I adjust today's workout', 'I only have 30 minutes today'. `scheduledSession` is what makes this a decision: called without it, this tool returns no_scheduled_session and decides nothing, so for an open-ended 'what should I train today' with no plan in hand, call evidra_generate_plan instead. If the user proposes their own alternative — 'today was cardio, can I do stretching instead?' — pass that as `proposedSession` and it comes back accepted or refused, with the reason. Pass the user's recent health evidence as `evidence`; this server's instructions say what to gather and what happens to a signal nobody has. This is a decision, not a suggestion: it requires a scheduled session and decides about an existing plan rather than inventing one. Do NOT re-derive or override the intensity, duration or movements it returns — injury filtering and load limits are enforced server-side and are decisions, not advice. To look up state alone, use evidra_assess_fitness_state.",
     inputSchema: {
       type: "object",
       properties: {
@@ -177,7 +180,7 @@ export const toolDefinitions = [
     }
   },
   {
-    name: "decide_exercise_substitution",
+    name: "evidra_decide_exercise_substitution",
     title: "Decide Exercise Substitution",
     annotations: {
       title: "Decide Exercise Substitution",
@@ -287,7 +290,7 @@ export const toolDefinitions = [
     name: "get_user_profile",
     deprecated: true,
     description:
-      "Return the user's goals, preferences, active injuries, and available equipment. Use this to learn the constraints that apply to any recommendation. Do NOT use this for past sessions (use get_training_history) or for today's readiness (use assess_fitness_state).",
+      "Return the user's goals, preferences, active injuries, and available equipment. Use this to learn the constraints that apply to any recommendation. Do NOT use this for past sessions (use get_training_history) or for today's readiness (use evidra_assess_fitness_state).",
     inputSchema: {
       type: "object",
       properties: {
@@ -334,14 +337,14 @@ export const toolDefinitions = [
     }
   },
   {
-    name: "generate_plan",
+    name: "evidra_generate_plan",
     title: "Generate Training Plan",
     annotations: {
       title: "Generate Training Plan",
       // Read-only because nothing here has an environment to modify: the plan is
       // returned, never stored, and the caller decides whether to keep it. The
       // hints said otherwise, which told hosts to treat a pure computation as a
-      // write. commit_adjust_plan keeps `readOnlyHint: false` for the opposite
+      // write. evidra_commit_adjust_plan keeps `readOnlyHint: false` for the opposite
       // reason — it also stores nothing, but it must not be called without the
       // user having seen and accepted the preview.
       readOnlyHint: true,
@@ -388,7 +391,7 @@ export const toolDefinitions = [
     }
   },
   {
-    name: "preview_adjust_plan",
+    name: "evidra_preview_adjust_plan",
     title: "Preview Plan Adjustment",
     annotations: {
       title: "Preview Plan Adjustment",
@@ -415,7 +418,7 @@ export const toolDefinitions = [
     }
   },
   {
-    name: "commit_adjust_plan",
+    name: "evidra_commit_adjust_plan",
     title: "Commit Plan Adjustment",
     annotations: {
       title: "Commit Plan Adjustment",
@@ -425,12 +428,12 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Validate and materialize a caller-held preview patch after approval. Use this after preview_adjust_plan, once the user has agreed to what the preview showed: 'yes, do that', 'apply it', 'go ahead and change my plan', 'sounds good, update it'. Approval is the trigger — never call this on the strength of a preview the user has not seen and accepted. The server stores neither the plan nor the preview; the AI host or external storage must persist the returned plan. A preview built against an older version is refused.",
+      "Validate and materialize a caller-held preview patch after approval. Use this after evidra_preview_adjust_plan, once the user has agreed to what the preview showed: 'yes, do that', 'apply it', 'go ahead and change my plan', 'sounds good, update it'. Approval is the trigger — never call this on the strength of a preview the user has not seen and accepted. The server stores neither the plan nor the preview; the AI host or external storage must persist the returned plan. A preview built against an older version is refused.",
     inputSchema: {
       type: "object",
       properties: {
         plan: { type: "object", description: "The current caller-held plan." },
-        preview: { type: "object", description: "The patch returned by preview_adjust_plan." }
+        preview: { type: "object", description: "The patch returned by evidra_preview_adjust_plan." }
       },
       required: ["plan", "preview"]
     }
@@ -442,13 +445,25 @@ export const toolDefinitions = [
 // canonical surface. New clients discover only the canonical names via
 // tools/list. Remove after the next release.
 export const deprecatedToolAliases = {
-  get_semantic_fitness_state: "assess_fitness_state",
+  get_semantic_fitness_state: "evidra_assess_fitness_state",
   recommend_today_workout: "recommend_workout",
-  generate_training_plan: "generate_plan",
+  generate_training_plan: "evidra_generate_plan",
   get_training_plan: "get_plan",
   list_training_plans: "list_plans",
-  preview_plan_change: "preview_adjust_plan",
-  commit_plan_change: "commit_adjust_plan"
+  preview_plan_change: "evidra_preview_adjust_plan",
+  commit_plan_change: "evidra_commit_adjust_plan",
+
+  // The unprefixed names, which unlike the rest of this map were actually
+  // published: v0.1.0 and v0.1.1 both shipped them. A server name prefix is
+  // what keeps `generate_plan` from colliding with every other planner a host
+  // has connected, but anyone who installed either bundle holds the old names,
+  // so they keep resolving.
+  assess_fitness_state: "evidra_assess_fitness_state",
+  decide_session: "evidra_decide_session",
+  decide_exercise_substitution: "evidra_decide_exercise_substitution",
+  generate_plan: "evidra_generate_plan",
+  preview_adjust_plan: "evidra_preview_adjust_plan",
+  commit_adjust_plan: "evidra_commit_adjust_plan"
 };
 
 export function resolveToolName(name) {

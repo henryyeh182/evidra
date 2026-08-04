@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 // `source` names the vendor an export came from; `metadata` is where a
 // connector records what it learned reading it — which device actually wrote a
 // reading, how a day was aggregated, where a session's load came from. These

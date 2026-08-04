@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 /**
  * @typedef {"lose_fat" | "build_muscle" | "half_marathon" | "general_fitness" | "recovery"} GoalType
  * @typedef {"strength" | "run" | "ride" | "mobility" | "recovery" | "walk"} WorkoutType

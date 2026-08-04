@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "fitness-mcp/tools/assess_fitness_state.output",
-  "title": "assess_fitness_state output",
+  "$id": "fitness-mcp/tools/evidra_assess_fitness_state.output",
+  "title": "evidra_assess_fitness_state output",
   "type": "object",
   "properties": {
     "userId": {

@@ -29,7 +29,7 @@
 3. **Registry ↔ Parser 一致**：`VENDOR_SCHEMAS.garmin` 宣告的每個 signal，完整匯出時必須產出。
 4. **Sentinel**：`-1`／`0`／`NONE` 不得成為讀數。
 5. **誠實**：沒有的訊號出現在 `signalCoverage.recovery.missing`／`signalCoverage.training.missing`，不是被填成中間值。
-6. **決策仍成立**：不論形狀多殘缺，`decide_session` 仍回得出帶 `reason` 與 `evidence` 的決策
+6. **決策仍成立**：不論形狀多殘缺，`evidra_decide_session` 仍回得出帶 `reason` 與 `evidence` 的決策
    （manifesto 承諾 A）。**不斷言決策內容或數值。**
 
 ## 執行
@@ -52,7 +52,7 @@ npm run simulate:google-health -- --scenario lossy_export --json
 
 - [`garmin.js`](garmin.js) — 場景（形狀 ＋ 檢查）與 Garmin dialect 的 renderer
 - [`run.js`](run.js) — Garmin 的完整路徑：raw → `/schemas/sources` 驗證 → 正規化 →
-  `/schemas/evidence` 驗證 → 經 JSON-RPC 呼叫 `assess_fitness_state` / `decide_session`
+  `/schemas/evidence` 驗證 → 經 JSON-RPC 呼叫 `evidra_assess_fitness_state` / `evidra_decide_session`
 - [`google-health.js`](google-health.js) — Google Health Takeout 的場景與 renderer
   （產出的是檔案 bundle：CSV ＋ 按月 JSON，多一步 `parseGoogleHealthExport`）
 - [`google-health.run.js`](google-health.run.js) — 同一條路徑的 Google Health 版

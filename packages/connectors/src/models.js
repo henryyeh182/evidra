@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 /**
  * @typedef {"apple_health" | "garmin" | "strava" | "oura" | "whoop" | "manual"} ConnectorProvider
  * @typedef {"activity" | "sleep" | "readiness" | "body" | "unknown"} RawEventType

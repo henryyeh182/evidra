@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 import { stableId } from "../../../../db/src/id.js";
 
 /** Shared with the bulk-export dialect: both spell sport types identically. */

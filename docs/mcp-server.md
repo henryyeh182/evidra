@@ -37,7 +37,7 @@ state. The server does not retain plans or previews. See the [Design
 Manifesto](design-manifesto.md) for why the surface is this small.
 
 `evidence` is the required argument on every decision tool except
-`decide_exercise_substitution`, which reads no recovery or load signal and
+`evidra_decide_exercise_substitution`, which reads no recovery or load signal and
 decides from the movement plus the constraints the caller states; `userId` is an
 optional label the server echoes back and never computes on. A call that
 arrives without evidence gets a tool result carrying `isError` and an
@@ -67,7 +67,7 @@ The local demo seed is reachable only by asking for it outright and is absent
 from the public schemas: it is another person's numbers and must never reach a
 real caller's answer by way of a silent fallback.
 
-### `assess_fitness_state` — read-only
+### `evidra_assess_fitness_state` — read-only
 
 Recovery, readiness, and fatigue verdicts, plus training load (ATL/CTL/TSB),
 personal baselines, and which signals were usable.
@@ -80,7 +80,7 @@ personal baselines, and which signals were usable.
 }
 ```
 
-### `decide_session` — read-only, the core primitive
+### `evidra_decide_session` — read-only, the core primitive
 
 Takes today's **scheduled** session and today's evidence, and returns what the
 session should become. Without a scheduled session there is nothing to decide,
@@ -140,7 +140,7 @@ that never reports one loses nothing.
 `decision.type` is one of `keep` · `adjust` · `substitute` · `defer` ·
 `advance`. A `keep` is still a decision and still carries its evidence.
 
-### `decide_exercise_substitution` — read-only
+### `evidra_decide_exercise_substitution` — read-only
 
 One movement in, its replacement out, with the joint filter applied
 server-side.
@@ -149,15 +149,15 @@ server-side.
 { "exerciseId": "exercise_back_squat", "conditions": ["knee_injury"], "avoidContraindications": ["knee"] }
 ```
 
-### `generate_plan` — read-only
+### `evidra_generate_plan` — read-only
 
 Builds the periodized plan that later decisions act on. Read-only because there
 is nothing here for it to write to: the plan is returned and the caller decides
-whether to keep it. `commit_adjust_plan` is the one tool that declares itself not
+whether to keep it. `evidra_commit_adjust_plan` is the one tool that declares itself not
 read-only, and not because it stores anything either — it must not be called
 without the user having seen and accepted the preview.
 
-### `preview_adjust_plan` / `commit_adjust_plan` — stateless two-phase transform
+### `evidra_preview_adjust_plan` / `evidra_commit_adjust_plan` — stateless two-phase transform
 
 Both tools receive caller-held state. `preview` returns a deterministic patch
 containing the diff, base version, and resulting plan. `commit` receives the
@@ -180,7 +180,7 @@ present and confidence follows the evidence.
 ## Deprecated tools
 
 These still resolve for one release but are hidden from `tools/list`:
-`get_semantic_fitness_state` (→ `assess_fitness_state`), `recommend_workout`,
+`get_semantic_fitness_state` (→ `evidra_assess_fitness_state`), `recommend_workout`,
 `get_training_context`, `search_exercises`, `get_exercise`, `search_workouts`,
 `get_workout`, `get_user_profile`, `get_training_history`, `get_plan`,
 `list_plans`, and the pre-rename plan names.

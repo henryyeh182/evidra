@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 /**
  * Vendor schema registry — the Semantic Fitness Layer's mapping table.
  *

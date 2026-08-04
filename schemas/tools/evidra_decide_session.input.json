@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "fitness-mcp/tools/assess_fitness_state.input",
-  "title": "assess_fitness_state input",
+  "$id": "fitness-mcp/tools/evidra_decide_session.input",
+  "title": "evidra_decide_session input",
   "type": "object",
   "properties": {
     "evidence": {
@@ -120,7 +120,85 @@
     },
     "date": {
       "type": "string",
-      "description": "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server."
+      "description": "Date in YYYY-MM-DD. Defaults to today in the user's timezone, resolved by the server (demo fallback anchors to the seed's latest day)."
+    },
+    "scheduledSession": {
+      "type": "object",
+      "description": "Today's session as already planned — the prior state this decision acts on. Supply it from the agent's own memory of the user's plan; without it there is nothing to decide, only to suggest. Shape: {focus, type, durationMinutes, intensity, targetMuscleGroups[], exercises[]}.",
+      "properties": {
+        "focus": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "durationMinutes": {
+          "type": "number"
+        },
+        "intensity": {
+          "type": "string",
+          "enum": [
+            "low",
+            "moderate",
+            "high"
+          ]
+        },
+        "targetMuscleGroups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exercises": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "proposedSession": {
+      "type": "object",
+      "description": "What the athlete asked for instead — the alternative they proposed, judged against what today can carry. Supply it when the user names a specific option (today was cardio, can I do mobility work instead?). Without it the engine answers only what today should be, leaving the person's own suggestion unaddressed. Same shape as scheduledSession.",
+      "properties": {
+        "focus": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "durationMinutes": {
+          "type": "number"
+        },
+        "intensity": {
+          "type": "string",
+          "enum": [
+            "low",
+            "moderate",
+            "high"
+          ]
+        },
+        "targetMuscleGroups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exercises": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "description": "Optional caller-held plan metadata; the server does not look up plans."
+    },
+    "availableMinutes": {
+      "type": "number",
+      "description": "Override today's available time, e.g. when the user says they are busy."
     }
   },
   "required": [

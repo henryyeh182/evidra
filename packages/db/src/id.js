@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 export function stableId(...parts) {
   return parts
     .filter((part) => part !== undefined && part !== null && String(part).length > 0)

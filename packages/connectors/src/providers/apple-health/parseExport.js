@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 import { createReadStream } from "node:fs";
 import { createInterface } from "node:readline";
 

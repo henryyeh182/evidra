@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 import { generateSemanticFitnessState } from "../../../packages/semantic-engine/src/index.js";
 import {
   generateTrainingPlan,
@@ -188,11 +191,11 @@ export async function getSemanticFitnessState(args = {}) {
   // Falsy mirrors `args.date || defaultDate` below: an absent or empty date
   // still means "the server works today out", exactly as before.
   if (args.date && !isCalendarDay(args.date)) {
-    return invalidDate("assess_fitness_state", "date", args.date);
+    return invalidDate("evidra_assess_fitness_state", "date", args.date);
   }
   const resolved = await resolveContext(args);
-  if (!resolved) return evidenceRequired("assess_fitness_state");
-  if (resolved.invalid) return invalidEvidence("assess_fitness_state", resolved.invalid);
+  if (!resolved) return evidenceRequired("evidra_assess_fitness_state");
+  if (resolved.invalid) return invalidEvidence("evidra_assess_fitness_state", resolved.invalid);
   const { context, provenance, defaultDate } = resolved;
 
   const date = args.date || defaultDate;
@@ -314,11 +317,11 @@ async function goalAlternativeLookup() {
 
 export async function generateTrainingPlanTool(args = {}) {
   if (args.startDate && !isCalendarDay(args.startDate)) {
-    return invalidDate("generate_plan", "startDate", args.startDate);
+    return invalidDate("evidra_generate_plan", "startDate", args.startDate);
   }
   const resolved = await resolveContext(args);
-  if (!resolved) return evidenceRequired("generate_plan");
-  if (resolved.invalid) return invalidEvidence("generate_plan", resolved.invalid);
+  if (!resolved) return evidenceRequired("evidra_generate_plan");
+  if (resolved.invalid) return invalidEvidence("evidra_generate_plan", resolved.invalid);
   const { context } = resolved;
   const { displayNameFor } = await exerciseNaming();
   const findGoalAlternative = await goalAlternativeLookup();
@@ -354,14 +357,14 @@ export async function listTrainingPlansTool(args = {}) {
  * knows what to send next.
  */
 const PLAN_STATE_SHAPE = {
-  preview_adjust_plan: {
-    plan: "The caller-held plan, as returned by generate_plan or commit_adjust_plan. This server stores none.",
+  evidra_preview_adjust_plan: {
+    plan: "The caller-held plan, as returned by evidra_generate_plan or evidra_commit_adjust_plan. This server stores none.",
     changeRequest:
       "One of {kind:'reduce_availability', weekdayAvailableMinutes}, {kind:'add_injury', bodyRegion}, {kind:'deload_week', weekIndex}."
   },
-  commit_adjust_plan: {
+  evidra_commit_adjust_plan: {
     plan: "The current caller-held plan — the same version the preview was built against.",
-    preview: "The patch returned by preview_adjust_plan, unmodified."
+    preview: "The patch returned by evidra_preview_adjust_plan, unmodified."
   }
 };
 
@@ -384,14 +387,14 @@ function planStateProblem(toolName, error, problem) {
     problem,
     shape: PLAN_STATE_SHAPE[toolName],
     note:
-      "Plan state lives with the caller: this server stores neither plan nor preview. If you hold no plan, call generate_plan first."
+      "Plan state lives with the caller: this server stores neither plan nor preview. If you hold no plan, call evidra_generate_plan first."
   });
 }
 
 export async function previewPlanChangeTool(args = {}) {
   if (!args.plan) {
     return planStateProblem(
-      "preview_adjust_plan",
+      "evidra_preview_adjust_plan",
       "plan_required",
       "No plan was supplied, so there is nothing to preview a change against."
     );
@@ -401,7 +404,7 @@ export async function previewPlanChangeTool(args = {}) {
   try {
     preview = previewPlanChange(args.plan, args.changeRequest || {});
   } catch (error) {
-    return planStateProblem("preview_adjust_plan", "plan_change_refused", error.message);
+    return planStateProblem("evidra_preview_adjust_plan", "plan_change_refused", error.message);
   }
 
   return jsonContent({
@@ -418,7 +421,7 @@ export async function previewPlanChangeTool(args = {}) {
 export async function commitPlanChangeTool(args = {}) {
   if (!args.plan || !args.preview) {
     return planStateProblem(
-      "commit_adjust_plan",
+      "evidra_commit_adjust_plan",
       "plan_state_required",
       `Committing needs both the current plan and the preview patch; ${!args.plan ? "plan" : "preview"} was missing.`
     );
@@ -428,7 +431,7 @@ export async function commitPlanChangeTool(args = {}) {
   try {
     committed = applyPlanPreview(args.plan, args.preview);
   } catch (error) {
-    return planStateProblem("commit_adjust_plan", "commit_refused", error.message);
+    return planStateProblem("evidra_commit_adjust_plan", "commit_refused", error.message);
   }
 
   return jsonContent({
@@ -441,10 +444,10 @@ export async function commitPlanChangeTool(args = {}) {
 }
 
 export const toolHandlers = {
-  assess_fitness_state: getSemanticFitnessState,
+  evidra_assess_fitness_state: getSemanticFitnessState,
   recommend_workout: recommendTodayWorkout,
-  decide_session: decideSessionTool,
-  decide_exercise_substitution: decideExerciseSubstitutionTool,
+  evidra_decide_session: decideSessionTool,
+  evidra_decide_exercise_substitution: decideExerciseSubstitutionTool,
   get_training_context: getTrainingContext,
   search_exercises: searchExercisesTool,
   get_exercise: getExerciseTool,
@@ -452,11 +455,11 @@ export const toolHandlers = {
   get_workout: getWorkoutTool,
   get_user_profile: getUserProfileTool,
   get_training_history: getTrainingHistoryTool,
-  generate_plan: generateTrainingPlanTool,
+  evidra_generate_plan: generateTrainingPlanTool,
   get_plan: getTrainingPlanTool,
   list_plans: listTrainingPlansTool,
-  preview_adjust_plan: previewPlanChangeTool,
-  commit_adjust_plan: commitPlanChangeTool
+  evidra_preview_adjust_plan: previewPlanChangeTool,
+  evidra_commit_adjust_plan: commitPlanChangeTool
 };
 
 /**
@@ -468,11 +471,11 @@ export const toolHandlers = {
  */
 export async function decideSessionTool(args = {}) {
   if (args.date && !isCalendarDay(args.date)) {
-    return invalidDate("decide_session", "date", args.date);
+    return invalidDate("evidra_decide_session", "date", args.date);
   }
   const resolved = await resolveContext(args);
-  if (!resolved) return evidenceRequired("decide_session");
-  if (resolved.invalid) return invalidEvidence("decide_session", resolved.invalid);
+  if (!resolved) return evidenceRequired("evidra_decide_session");
+  if (resolved.invalid) return invalidEvidence("evidra_decide_session", resolved.invalid);
   const { context, provenance, defaultDate } = resolved;
 
   const date = args.date || defaultDate;

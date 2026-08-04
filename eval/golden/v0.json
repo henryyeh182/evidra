@@ -5,9 +5,9 @@
     {
       "id": "semantic_state_demo_user",
       "query": "What's my fitness state today?",
-      "expectedTool": "assess_fitness_state",
+      "expectedTool": "evidra_assess_fitness_state",
       "call": {
-        "tool": "assess_fitness_state",
+        "tool": "evidra_assess_fitness_state",
         "arguments": {
           "useDemoSeed": true,
           "userId": "user_henry_demo",
@@ -89,9 +89,9 @@
     {
       "id": "generate_plan_4wk",
       "query": "Build me a 4-week plan.",
-      "expectedTool": "generate_plan",
+      "expectedTool": "evidra_generate_plan",
       "call": {
-        "tool": "generate_plan",
+        "tool": "evidra_generate_plan",
         "arguments": {
           "useDemoSeed": true,
           "userId": "user_henry_demo",
@@ -121,9 +121,9 @@
     {
       "id": "decide_session_from_to",
       "query": "我今天該練什麼？（依排定課表與今日證據決策）",
-      "expectedTool": "decide_session",
+      "expectedTool": "evidra_decide_session",
       "call": {
-        "tool": "decide_session",
+        "tool": "evidra_decide_session",
         "arguments": {
           "useDemoSeed": true,
           "userId": "user_henry_demo",
@@ -223,9 +223,9 @@
     {
       "id": "preview_deload",
       "query": "Preview deloading week 2 of my plan.",
-      "expectedTool": "preview_adjust_plan",
+      "expectedTool": "evidra_preview_adjust_plan",
       "call": {
-        "tool": "preview_adjust_plan",
+        "tool": "evidra_preview_adjust_plan",
         "arguments": {
           "plan": "{{plan}}",
           "changeRequest": {
@@ -255,9 +255,9 @@
     {
       "id": "commit_deload",
       "query": "Apply that change.",
-      "expectedTool": "commit_adjust_plan",
+      "expectedTool": "evidra_commit_adjust_plan",
       "call": {
-        "tool": "commit_adjust_plan",
+        "tool": "evidra_commit_adjust_plan",
         "arguments": {
           "plan": "{{plan}}",
           "preview": "{{preview}}"
@@ -493,9 +493,9 @@
     {
       "id": "trap_no_evidence",
       "query": "State for a caller who has sent no evidence yet.",
-      "expectedTool": "assess_fitness_state",
+      "expectedTool": "evidra_assess_fitness_state",
       "call": {
-        "tool": "assess_fitness_state",
+        "tool": "evidra_assess_fitness_state",
         "arguments": {
           "userId": "someone_real"
         }

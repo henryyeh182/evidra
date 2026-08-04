@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 import { createInterface } from "node:readline";
 import { stdin, stdout } from "node:process";
 import { handleJsonRpcMessage } from "./server.js";

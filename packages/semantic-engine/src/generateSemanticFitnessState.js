@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 import { assertValidUserContext } from "../../domain/src/models.js";
 
 const DEFAULT_BASELINES = {
@@ -280,7 +283,7 @@ function calculateReadinessScore(recoveryScore, trainingLoad, muscleFatigue) {
 
 // null means "the user never told us", which is not the same as a short day.
 // This used to default to 30, and downstream had no way to tell the invented
-// number from a stated one — decide_session cut a 60-minute session in half and
+// number from a stated one — evidra_decide_session cut a 60-minute session in half and
 // told the athlete their available time was 30 minutes, evidence they had never
 // supplied. An unknown constraint is reported as unknown.
 function getAvailableMinutes(preferences) {

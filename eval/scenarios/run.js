@@ -5,7 +5,7 @@
  *
  *   export shape → validated against /schemas/sources/garmin.export.json
  *                → Fitness Evidence Model, validated against /schemas/evidence
- *                → assess_fitness_state / decide_session over JSON-RPC
+ *                → evidra_assess_fitness_state / evidra_decide_session over JSON-RPC
  *                → the scenario's schema checks
  *
  * Calls go through the MCP server exactly as a client's would, so a scenario
@@ -87,8 +87,8 @@ export async function runGarminScenario(scenario, { asOf = DEFAULT_AS_OF } = {})
   };
   const evidenceValidation = validate(evidence, evidenceSchema);
 
-  const state = await callTool("assess_fitness_state", { userId, date: asOf, evidence });
-  const decision = await callTool("decide_session", {
+  const state = await callTool("evidra_assess_fitness_state", { userId, date: asOf, evidence });
+  const decision = await callTool("evidra_decide_session", {
     userId,
     date: asOf,
     evidence,

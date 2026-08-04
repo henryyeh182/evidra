@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "fitness-mcp/tools/decide_session.output",
-  "title": "decide_session output (five-layer decision)",
+  "$id": "fitness-mcp/tools/evidra_decide_session.output",
+  "title": "evidra_decide_session output (five-layer decision)",
   "type": "object",
   "properties": {
     "userId": {

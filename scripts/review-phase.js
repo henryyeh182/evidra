@@ -28,12 +28,12 @@ const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /** 對外 tool 的白名單。新增一個名字之前，先過 docs/phase-review.md 的 GPT-6 判準。 */
 const APPROVED_DECISION_TOOLS = [
-  "assess_fitness_state",
-  "decide_session",
-  "decide_exercise_substitution",
-  "generate_plan",
-  "preview_adjust_plan",
-  "commit_adjust_plan"
+  "evidra_assess_fitness_state",
+  "evidra_decide_session",
+  "evidra_decide_exercise_substitution",
+  "evidra_generate_plan",
+  "evidra_preview_adjust_plan",
+  "evidra_commit_adjust_plan"
 ];
 
 /**
@@ -42,12 +42,12 @@ const APPROVED_DECISION_TOOLS = [
  * 計畫型的三個是決策的基底，要能回答「為什麼這樣排、改了哪裡」。
  */
 const SELF_EXPLANATION = {
-  assess_fitness_state: ["confidence", "signalCoverage", "provenance"],
-  decide_session: ["decision", "action", "reason", "confidence", "signalCoverage", "limits", "provenance"],
-  decide_exercise_substitution: ["decision", "action", "reason", "confidence", "limits"],
-  generate_plan: ["reasoning"],
-  preview_adjust_plan: ["diff", "summary"],
-  commit_adjust_plan: ["versionHistory"]
+  evidra_assess_fitness_state: ["confidence", "signalCoverage", "provenance"],
+  evidra_decide_session: ["decision", "action", "reason", "confidence", "signalCoverage", "limits", "provenance"],
+  evidra_decide_exercise_substitution: ["decision", "action", "reason", "confidence", "limits"],
+  evidra_generate_plan: ["reasoning"],
+  evidra_preview_adjust_plan: ["diff", "summary"],
+  evidra_commit_adjust_plan: ["versionHistory"]
 };
 
 /** 宣告完成度的文件。這五份都必須走得過。 */
@@ -238,13 +238,13 @@ gate(
       }
 
       // Exempt: the tools that have no `evidence` input at all. Plan-write
-      // tools take history, not physiology; decide_exercise_substitution
+      // tools take history, not physiology; evidra_decide_exercise_substitution
       // decides from the movement plus the constraints the user states, and
       // reads no recovery or load signal. Requiring the instruction of them
       // was what put a parameter that does not exist into a public tool
       // description. Everything else must still say where the evidence comes
       // from.
-      const needsEvidence = !["preview_adjust_plan", "commit_adjust_plan", "decide_exercise_substitution"].includes(
+      const needsEvidence = !["evidra_preview_adjust_plan", "evidra_commit_adjust_plan", "evidra_decide_exercise_substitution"].includes(
         name
       );
       if (needsEvidence && !/`evidence`/.test(description)) {
@@ -308,13 +308,13 @@ gate(
       /export const DECISION_TYPES = (\[[^\]]*\])/.exec(models)[1].replace(/'/g, '"')
     );
 
-    const contractTypes = readJson("schemas/tools/decide_session.output.json").properties.decision.properties.type.enum;
+    const contractTypes = readJson("schemas/tools/evidra_decide_session.output.json").properties.decision.properties.type.enum;
 
     const journey = read("docs/user-journey.html");
     const journeyTypes = engineTypes.filter((type) => new RegExp(`<code>${type}</code>`).test(journey));
 
     for (const type of engineTypes) {
-      if (!contractTypes.includes(type)) findings.push(`decide_session 契約缺決策型別 ${type}`);
+      if (!contractTypes.includes(type)) findings.push(`evidra_decide_session 契約缺決策型別 ${type}`);
       if (!journeyTypes.includes(type)) findings.push(`docs/user-journey.html 沒有提到決策型別 ${type}`);
     }
     for (const type of contractTypes) {
@@ -322,8 +322,8 @@ gate(
     }
 
     // from → to 是決策的定義，不是選配欄位。
-    if (!/action/.test(read("schemas/tools/decide_session.output.json"))) {
-      findings.push("decide_session 契約沒有 action，決策退化成推薦");
+    if (!/action/.test(read("schemas/tools/evidra_decide_session.output.json"))) {
+      findings.push("evidra_decide_session 契約沒有 action，決策退化成推薦");
     }
 
     return findings;

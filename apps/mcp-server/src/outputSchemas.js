@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 /**
  * What each decision comes back as, declared to the client.
  *
@@ -13,7 +16,7 @@
  * not the payload.
  */
 export const outputSchemas = {
-  assess_fitness_state: {
+  evidra_assess_fitness_state: {
     "type": "object",
     "properties": {
       "userId": {
@@ -215,7 +218,7 @@ export const outputSchemas = {
     ]
   },
 
-  decide_session: {
+  evidra_decide_session: {
     "type": "object",
     "properties": {
       "userId": {
@@ -525,7 +528,7 @@ export const outputSchemas = {
     ]
   },
 
-  decide_exercise_substitution: {
+  evidra_decide_exercise_substitution: {
     "type": "object",
     "properties": {
       "evidence": {
@@ -632,7 +635,7 @@ export const outputSchemas = {
     ]
   },
 
-  generate_plan: {
+  evidra_generate_plan: {
     "type": "object",
     "properties": {
       "id": {
@@ -781,7 +784,7 @@ export const outputSchemas = {
     ]
   },
 
-  preview_adjust_plan: {
+  evidra_preview_adjust_plan: {
     "type": "object",
     "properties": {
       "previewId": {
@@ -816,7 +819,7 @@ export const outputSchemas = {
     ]
   },
 
-  commit_adjust_plan: {
+  evidra_commit_adjust_plan: {
     "type": "object",
     "properties": {
       "planId": {

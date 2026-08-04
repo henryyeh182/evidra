@@ -6,7 +6,7 @@
  *   activities.csv text → parseStravaActivitiesCsv (header assertion included)
  *                       → validated against /schemas/sources/strava.export.json
  *                       → normalizeStravaExport
- *                       → assess_fitness_state / decide_session over JSON-RPC
+ *                       → evidra_assess_fitness_state / evidra_decide_session over JSON-RPC
  *                       → the scenario's schema checks
  *
  * What is measured is comprehension of the source schema — positional reading,
@@ -192,8 +192,8 @@ export async function runStravaScenario(scenario, { asOf = DEFAULT_AS_OF } = {})
     }
   }
 
-  const state = await callTool("assess_fitness_state", { userId, date: asOf, evidence });
-  const decision = await callTool("decide_session", {
+  const state = await callTool("evidra_assess_fitness_state", { userId, date: asOf, evidence });
+  const decision = await callTool("evidra_decide_session", {
     userId,
     date: asOf,
     evidence,

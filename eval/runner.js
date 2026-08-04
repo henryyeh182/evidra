@@ -154,7 +154,7 @@ export async function runGoldenSet(goldenPath = join(__dirname, "golden/v0.json"
       if (name === "planId") registry.register("plans", vars[name]);
       if (name === "previewId") registry.register("previews", vars[name]);
     }
-    if (tool === "generate_plan") registry.register("plans", payload.id);
+    if (tool === "evidra_generate_plan") registry.register("plans", payload.id);
 
     // 3. grounding of id-typed references
     for (const ref of registry.checkPayload(payload)) {
@@ -165,8 +165,8 @@ export async function runGoldenSet(goldenPath = join(__dirname, "golden/v0.json"
 
     // 4. plan validity + diagnostic exercise-catalog coverage
     const plan =
-      tool === "commit_adjust_plan" ? payload.plan :
-      tool === "generate_plan" || tool === "get_plan" ? payload :
+      tool === "evidra_commit_adjust_plan" ? payload.plan :
+      tool === "evidra_generate_plan" || tool === "get_plan" ? payload :
       null;
     if (plan) {
       planChecks += 1;

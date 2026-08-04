@@ -140,8 +140,8 @@ export async function runAppleHealthScenario(scenario, { asOf = DEFAULT_AS_OF } 
     });
   }
 
-  const state = await callTool("assess_fitness_state", { userId, date: asOf, evidence });
-  const decision = await callTool("decide_session", {
+  const state = await callTool("evidra_assess_fitness_state", { userId, date: asOf, evidence });
+  const decision = await callTool("evidra_decide_session", {
     userId,
     date: asOf,
     evidence,

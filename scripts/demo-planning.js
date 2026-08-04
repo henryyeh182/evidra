@@ -24,11 +24,11 @@ function printPlanSummary(plan) {
 const userId = "user_henry_demo";
 
 console.log("=== 1. Generate a 4-week plan ===");
-const plan = await callTool(1, "generate_plan", { useDemoSeed: true, userId, startDate: "2026-07-27", weeks: 4 });
+const plan = await callTool(1, "evidra_generate_plan", { useDemoSeed: true, userId, startDate: "2026-07-27", weeks: 4 });
 printPlanSummary(plan);
 
 console.log("\n=== 2. Preview a travel week (reduce week 1 to 25 min/day) ===");
-const preview = await callTool(2, "preview_adjust_plan", {
+const preview = await callTool(2, "evidra_preview_adjust_plan", {
   plan,
   changeRequest: { kind: "reduce_availability", weekdayAvailableMinutes: 25, weekIndexes: [1], reason: "Business travel" }
 });
@@ -39,7 +39,7 @@ for (const entry of preview.diff) {
 
 console.log("\n=== 3. Commit the change ===");
 // The caller holds both the plan and the patch — the server keeps neither.
-const committed = await callTool(3, "commit_adjust_plan", { plan, preview: preview.patch });
+const committed = await callTool(3, "evidra_commit_adjust_plan", { plan, preview: preview.patch });
 console.log(`Committed plan is now version ${committed.version} (${committed.status}).`);
 console.log(
   `Weekday availability: v${plan.version} ${plan.constraints.weekdayAvailableMinutes}m` +

@@ -36,27 +36,27 @@
   },
   "tools": [
     {
-      "name": "assess_fitness_state",
+      "name": "evidra_assess_fitness_state",
       "description": "Read today's recovery and training state from submitted evidence. Reports state only; never says what to train."
     },
     {
-      "name": "decide_session",
+      "name": "evidra_decide_session",
       "description": "Decide what today's scheduled session should become, returning from -> to with the evidence behind the change."
     },
     {
-      "name": "decide_exercise_substitution",
+      "name": "evidra_decide_exercise_substitution",
       "description": "Decide what a movement the user cannot do today should be replaced with, returning from -> to with contraindications hard-filtered."
     },
     {
-      "name": "generate_plan",
+      "name": "evidra_generate_plan",
       "description": "Build a training plan when the user has no plan in hand."
     },
     {
-      "name": "preview_adjust_plan",
+      "name": "evidra_preview_adjust_plan",
       "description": "Show what adjusting an existing plan would change, without applying it."
     },
     {
-      "name": "commit_adjust_plan",
+      "name": "evidra_commit_adjust_plan",
       "description": "Compute the plan a previewed adjustment produces, once the user has accepted the preview. The caller keeps the result; this server stores nothing."
     }
   ],

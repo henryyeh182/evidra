@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 // Phase 2 read API: structured, zero-side-effect queries over the knowledge
 // graph and the user's own record. Every payload is grounded (P3) and paginated
 // before it leaves the server.
@@ -215,7 +218,7 @@ export async function decideExerciseSubstitutionTool(args = {}) {
     // to call tool" and the model never sees which argument was wrong.
     return errorContent({
       error: "unknown_exercise",
-      tool: "decide_exercise_substitution",
+      tool: "evidra_decide_exercise_substitution",
       problem: `${JSON.stringify(args.exerciseId ?? null)} did not resolve to any movement in the catalog.`,
       shape: {
         exerciseId:

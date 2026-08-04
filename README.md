@@ -150,11 +150,11 @@ Phase 2 是核心宗旨要的那個版本，不是選配。兩種模式共用同
 
 | Tool | 產出 |
 |---|---|
-| `assess_fitness_state` | 恢復／準備度判定 |
-| `decide_session` | 今日課表 from → to |
-| `decide_exercise_substitution` | 動作替代 from → to |
-| `generate_plan` | 計畫（決策的基底） |
-| `preview_adjust_plan` / `commit_adjust_plan` | 兩階段調整 |
+| `evidra_assess_fitness_state` | 恢復／準備度判定 |
+| `evidra_decide_session` | 今日課表 from → to |
+| `evidra_decide_exercise_substitution` | 動作替代 from → to |
+| `evidra_generate_plan` | 計畫（決策的基底） |
+| `evidra_preview_adjust_plan` / `evidra_commit_adjust_plan` | 兩階段調整 |
 
 ## 現況
 

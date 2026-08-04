@@ -143,7 +143,7 @@ test("a structured result costs its payload twice, and only where a schema is de
   // that declares an output schema sends the payload twice. That is the price of
   // a client that predates structured results still seeing an answer — but it is
   // a real price, so the frame gets its own ceiling instead of going unmeasured.
-  const decision = await call("decide_session", {
+  const decision = await call("evidra_decide_session", {
     evidence: WORKING_EVIDENCE,
     scheduledSession: { focus: "intervals", type: "run", durationMinutes: 60, intensity: "high" }
   });
@@ -200,7 +200,7 @@ test("evidence passed in drives the decision for a user the server has never see
   };
 
   // This id exists nowhere in the server's own files.
-  const state = await call("assess_fitness_state", {
+  const state = await call("evidra_assess_fitness_state", {
     userId: "external_user_42",
     date: "2026-07-27",
     evidence
@@ -209,7 +209,7 @@ test("evidence passed in drives the decision for a user the server has never see
   assert.equal(state.payload.userId, "external_user_42");
   assert.equal(typeof state.payload.readinessScore, "number");
 
-  const decision = await call("decide_session", {
+  const decision = await call("evidra_decide_session", {
     userId: "external_user_42",
     date: "2026-07-27",
     evidence,
@@ -234,7 +234,7 @@ test("without evidence the server asks for evidence instead of answering", async
   // the user saw "Failed to call tool". A caller that has not sent evidence yet
   // is a state of the conversation, not a fault — so it comes back as a tool
   // error the model can read and act on, naming what to go and fetch.
-  for (const tool of ["assess_fitness_state", "decide_session", "generate_plan"]) {
+  for (const tool of ["evidra_assess_fitness_state", "evidra_decide_session", "evidra_generate_plan"]) {
     const { payload, isError } = await call(tool, { userId: "someone_real" });
 
     assert.equal(isError, true, `${tool} reports this as a tool error`);
@@ -249,7 +249,7 @@ test("evidence in the wrong shape comes back correctable, not fatal", async () =
   // evidence, got a field wrong, and three calls in a row came back as bare
   // JSON-RPC errors. The user saw "Failed to call tool" and the host gave up
   // rather than fixing its payload — it never learned which field was wrong.
-  const wrongCase = await call("decide_session", {
+  const wrongCase = await call("evidra_decide_session", {
     evidence: { healthMetrics: [{ type: "sleepDurationHours", value: 7, recordedAt: "2026-07-31T00:00:00Z" }] }
   });
 
@@ -259,7 +259,7 @@ test("evidence in the wrong shape comes back correctable, not fatal", async () =
   // The canonical names have to be in the reply, or the next attempt is another guess.
   assert.match(wrongCase.payload.shape["evidence.healthMetrics[]"].type, /sleep_duration_hours/);
 
-  const missingField = await call("assess_fitness_state", {
+  const missingField = await call("evidra_assess_fitness_state", {
     evidence: { workouts: [{ type: "run", durationMinutes: 45, trainingLoad: 62 }] }
   });
 
@@ -272,7 +272,7 @@ test("a ratio built on almost no history says so", async () => {
   // ratio of 0.17, which reads as severe detraining and meant only that the
   // evidence was one day deep. The host happened to catch it; the contract
   // has to carry it instead of relying on that.
-  const { payload } = await call("decide_session", {
+  const { payload } = await call("evidra_decide_session", {
     evidence: {
       profile: { timezone: "Asia/Taipei" },
       healthMetrics: [{ type: "sleep_duration_hours", value: 7, recordedAt: "2026-07-31T00:00:00Z" }],
@@ -292,11 +292,11 @@ test("the demo seed cannot reach a real caller's answer by falling back", async 
   // The seed is another person's numbers. It stays reachable for local runs,
   // but only by asking for it outright, and that flag is not in the public
   // schema — so no production call can arrive at it by omission.
-  const askedFor = await call("assess_fitness_state", { useDemoSeed: true, date: "2026-07-23" });
+  const askedFor = await call("evidra_assess_fitness_state", { useDemoSeed: true, date: "2026-07-23" });
   assert.equal(askedFor.isError, false);
   assert.equal(askedFor.payload.provenance.evidenceSource, "demo_seed");
 
-  const publicSchema = toolDefinitions.find((tool) => tool.name === "assess_fitness_state").inputSchema;
+  const publicSchema = toolDefinitions.find((tool) => tool.name === "evidra_assess_fitness_state").inputSchema;
   assert.equal(publicSchema.properties.useDemoSeed, undefined);
   assert.deepEqual(publicSchema.required, ["evidence"]);
 });
@@ -305,13 +305,13 @@ test("a substitution takes the movement as the user said it, not only as an id",
   // Regression, found running the real MCP server: agents pass the movement the
   // way their user named it, and the handler took canonical ids alone — so
   // "back squat" came back as a tool error the user could see.
-  const spoken = await call("decide_exercise_substitution", {
+  const spoken = await call("evidra_decide_exercise_substitution", {
     exerciseId: "back squat",
     conditions: ["knee_injury"],
     availableEquipment: ["dumbbell"],
     avoidContraindications: ["knee"]
   });
-  const canonical = await call("decide_exercise_substitution", {
+  const canonical = await call("evidra_decide_exercise_substitution", {
     exerciseId: "exercise_back_squat",
     conditions: ["knee_injury"],
     availableEquipment: ["dumbbell"],
@@ -323,7 +323,7 @@ test("a substitution takes the movement as the user said it, not only as an id",
 });
 
 test("an unresolvable movement says what form the argument takes", async () => {
-  const { payload, isError } = await call("decide_exercise_substitution", { exerciseId: "interpretive dance" });
+  const { payload, isError } = await call("evidra_decide_exercise_substitution", { exerciseId: "interpretive dance" });
 
   // Asserted as a tool error, not a rejection: this used to throw, and the
   // rejection assertion was what kept it throwing. A caller that sent a movement
@@ -335,9 +335,9 @@ test("an unresolvable movement says what form the argument takes", async () => {
 
 test("a plan tool called without the caller's plan says what to send", async () => {
   for (const [tool, args, expected] of [
-    ["preview_adjust_plan", { changeRequest: { kind: "deload_week", weekIndex: 0 } }, "plan_required"],
-    ["commit_adjust_plan", { preview: {} }, "plan_state_required"],
-    ["commit_adjust_plan", { plan: {} }, "plan_state_required"]
+    ["evidra_preview_adjust_plan", { changeRequest: { kind: "deload_week", weekIndex: 0 } }, "plan_required"],
+    ["evidra_commit_adjust_plan", { preview: {} }, "plan_state_required"],
+    ["evidra_commit_adjust_plan", { plan: {} }, "plan_state_required"]
   ]) {
     const { payload, isError } = await call(tool, args);
 
@@ -350,18 +350,18 @@ test("a plan tool called without the caller's plan says what to send", async () 
 });
 
 test("a change the plan cannot carry comes back refused, not thrown", async () => {
-  const plan = (await call("generate_plan", { evidence: WORKING_EVIDENCE, weeks: 2 })).payload;
+  const plan = (await call("evidra_generate_plan", { evidence: WORKING_EVIDENCE, weeks: 2 })).payload;
 
-  const unknownKind = await call("preview_adjust_plan", { plan, changeRequest: { kind: "make_it_easier" } });
+  const unknownKind = await call("evidra_preview_adjust_plan", { plan, changeRequest: { kind: "make_it_easier" } });
   assert.equal(unknownKind.isError, true);
   assert.equal(unknownKind.payload.error, "plan_change_refused");
   assert.match(unknownKind.payload.problem, /make_it_easier/);
 
   // Optimistic concurrency: a preview built against an older version is refused,
   // and the refusal has to say so — taking a fresh preview is a one-turn fix.
-  const preview = (await call("preview_adjust_plan", { plan, changeRequest: { kind: "deload_week", weekIndex: 0 } }))
+  const preview = (await call("evidra_preview_adjust_plan", { plan, changeRequest: { kind: "deload_week", weekIndex: 0 } }))
     .payload.patch;
-  const stale = await call("commit_adjust_plan", { plan: { ...plan, version: plan.version + 1 }, preview });
+  const stale = await call("evidra_commit_adjust_plan", { plan: { ...plan, version: plan.version + 1 }, preview });
   assert.equal(stale.isError, true);
   assert.equal(stale.payload.error, "commit_refused");
   assert.match(stale.payload.problem, /stale/);
@@ -380,9 +380,9 @@ const WORKING_EVIDENCE = {
 
 test("a date written the way a person says it is correctable, not fatal", async () => {
   for (const [tool, argument] of [
-    ["assess_fitness_state", "date"],
-    ["decide_session", "date"],
-    ["generate_plan", "startDate"]
+    ["evidra_assess_fitness_state", "date"],
+    ["evidra_decide_session", "date"],
+    ["evidra_generate_plan", "startDate"]
   ]) {
     // "today" is what an agent writes when it has not been told the format;
     // "2026-8-1" is the same date with the zero-padding dropped. Both reached
@@ -406,7 +406,7 @@ test("the dates that already worked keep working", async () => {
   // read for its calendar day exactly as before, and an absent date still means
   // "the server works today out" — that resolution is the server's job (P5).
   for (const date of ["2026-07-31", "2026-07-31T13:00:00+08:00", "", null, undefined]) {
-    const { isError } = await call("decide_session", { evidence: WORKING_EVIDENCE, date });
+    const { isError } = await call("evidra_decide_session", { evidence: WORKING_EVIDENCE, date });
     assert.equal(isError, false, `date ${JSON.stringify(date)} still answers`);
   }
 });
@@ -416,7 +416,7 @@ test("a timezone that is not an IANA name is correctable, not fatal", async () =
   // day cannot be resolved without one — so this is reported like any other
   // unreadable evidence, naming the form that would have worked.
   for (const timezone of ["Taipei", "GMT+8", "Mars/Olympus"]) {
-    const { payload, isError } = await call("assess_fitness_state", {
+    const { payload, isError } = await call("evidra_assess_fitness_state", {
       evidence: { ...WORKING_EVIDENCE, profile: { timezone } }
     });
 
@@ -426,7 +426,7 @@ test("a timezone that is not an IANA name is correctable, not fatal", async () =
     assert.match(payload.shape["evidence.profile"].timezone, /Asia\/Taipei/);
   }
 
-  const usable = await call("assess_fitness_state", {
+  const usable = await call("evidra_assess_fitness_state", {
     evidence: { ...WORKING_EVIDENCE, profile: { timezone: "Asia/Taipei" } }
   });
   assert.equal(usable.isError, false, "a real zone still answers");

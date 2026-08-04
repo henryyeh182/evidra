@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 /**
  * @typedef {"squat" | "hinge" | "horizontal_push" | "vertical_push" | "horizontal_pull" | "vertical_pull" | "locomotion" | "mobility"} MovementPattern
  * @typedef {"beginner" | "intermediate" | "advanced"} SkillLevel

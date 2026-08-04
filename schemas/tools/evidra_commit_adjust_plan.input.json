@@ -1,11 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "fitness-mcp/tools/commit_adjust_plan.input",
-  "title": "commit_adjust_plan input",
+  "$id": "fitness-mcp/tools/evidra_commit_adjust_plan.input",
+  "title": "evidra_commit_adjust_plan input",
   "type": "object",
   "properties": {
     "plan": { "type": "object", "description": "The current caller-held plan." },
-    "preview": { "type": "object", "description": "The patch returned by preview_adjust_plan." }
+    "preview": { "type": "object", "description": "The patch returned by evidra_preview_adjust_plan." }
   },
   "required": ["plan", "preview"]
 }

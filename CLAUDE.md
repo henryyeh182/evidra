@@ -145,8 +145,8 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 ## 現況（2026-08-01 查證）
 
-- 對外 **6 個 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` ·
-  `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
+- 對外 **6 個 tool**：`evidra_assess_fitness_state` · `evidra_decide_session` · `evidra_decide_exercise_substitution` ·
+  `evidra_generate_plan` · `evidra_preview_adjust_plan` · `evidra_commit_adjust_plan`
 - **333 tests**、eval 20 golden cases，全綠
 - parser 實作 4 家（Apple Health／Garmin／Strava／Google Health Takeout；Strava 含 API 與
   bulk export 兩種方言）；schema registry 涵蓋 6 個平台
@@ -304,10 +304,10 @@ bundle 內 10 個程式檔與 v0.1.0 不同，含兩個行為修正（`cc43122` 
 
 它帶的是 MCP 官方慣例——tool 命名與前綴、annotations 的定義、**呼叫端的失誤要回在
 result 裡而不是協定層**、structured output、transport 選擇。**這些判準不在本檔，
-九條 gate 也一條都驗不到。** 2026-08-04 靠它一次查出：`decide_exercise_substitution`
+九條 gate 也一條都驗不到。** 2026-08-04 靠它一次查出：`evidra_decide_exercise_substitution`
 的描述要呼叫端傳一個 schema 裡不存在的 `evidence`（同一句錯話還在 `manifest.json`
 與 `evidra/README.md`）、3 個 tool 把呼叫端可以自己修的失誤送成 JSON-RPC error、
-`generate_plan` 宣告會寫入但它是純函數、HTTP 綁全部介面卻印「local only」。
+`evidra_generate_plan` 宣告會寫入但它是純函數、HTTP 綁全部介面卻印「local only」。
 
 ## 常用指令
 
