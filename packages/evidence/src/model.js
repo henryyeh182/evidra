@@ -289,7 +289,13 @@ function signalWriters(metrics) {
         ? [metric.metadata.sourceName]
         : [];
 
-    const entry = perType.get(metric.type) || { writers: new Set(), latest: null };
+    const entry = perType.get(metric.type) || { sources: new Set(), writers: new Set(), latest: null };
+    // `source` is what the caller said the reading came from; `writers` is which
+    // device inside that source recorded it. Both are reported because they are
+    // different questions, and because reporting only the second one made a
+    // caller that filled in `source` — the field the tool schema documents — read
+    // its own answer back as an empty list.
+    if (metric.source) entry.sources.add(metric.source);
     for (const writer of writers) entry.writers.add(writer);
     if (metric.recordedAt && (entry.latest === null || metric.recordedAt > entry.latest)) {
       entry.latest = metric.recordedAt;
@@ -302,6 +308,7 @@ function signalWriters(metrics) {
     // A signal whose writer nobody recorded says so, rather than being left out
     // and read as absent.
     described[type] = {
+      sources: [...entry.sources].sort(),
       writers: [...entry.writers].sort(),
       latest: entry.latest
     };

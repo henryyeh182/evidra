@@ -152,10 +152,17 @@
         },
         "signalWriters": {
           "type": "object",
-          "description": "Who wrote each signal, and when they last did. Keyed by canonical signal name. Present when the evidence carried writer information at all. A signal being listed does not make it current: compare its `latest` against the others to see a device that stopped writing.",
+          "description": "Where each signal came from and who wrote it, and when it was last written. Keyed by canonical signal name. A signal being listed does not make it current: compare its `latest` against the others to see a device that stopped writing.",
           "additionalProperties": {
             "type": "object",
             "properties": {
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "What the caller said this signal came from, sorted — the `source` field on each reading. Empty when no reading of this signal stated one."
+              },
               "writers": {
                 "type": "array",
                 "items": {

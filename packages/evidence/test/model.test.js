@@ -78,6 +78,28 @@ test("describeEvidence reports what actually arrived", () => {
   assert.equal(summary.latest, "2026-07-27T06:00:00+08:00");
 });
 
+test("the source a caller stated is reported back, separately from the writer", () => {
+  const summary = describeEvidence({
+    healthMetrics: [
+      { type: "hrv_ms", value: 41, recordedAt: "2026-08-04T00:10:00Z", source: "garmin" },
+      // Same signal, second source: a caller merging two connectors gets both
+      // back rather than whichever happened to be last.
+      { type: "hrv_ms", value: 44, recordedAt: "2026-08-03T00:10:00Z", source: "apple_health" },
+      // A reading with no stated source leaves the list as it is; it does not
+      // become an entry saying "unknown".
+      { type: "steps", value: 8200, recordedAt: "2026-08-04T00:00:00Z" }
+    ]
+  });
+
+  assert.deepEqual(summary.signalWriters.hrv_ms.sources, ["apple_health", "garmin"]);
+  assert.deepEqual(summary.signalWriters.steps.sources, []);
+
+  // `writers` stays a separate question — which device inside a source recorded
+  // the reading — and only connector metadata answers it. Reporting only this
+  // one was what made a caller's own `source` read back as an empty list.
+  assert.deepEqual(summary.signalWriters.hrv_ms.writers, []);
+});
+
 test("a session that arrived without a load is carried as unmeasured", () => {
   const context = evidenceToUserContext({
     workouts: [{ type: "strength", startedAt: "2026-07-26T18:00:00+08:00", durationMinutes: 45 }]

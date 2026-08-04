@@ -414,15 +414,16 @@ npx -y @modelcontextprotocol/inspector --cli node apps/mcp-server/src/stdio.js -
 checklist 有一條「Keep responses reasonably sized for the task」。
 本機測試只對 `decide_session` 斷言 8KB，沒有蓋到這兩個。
 
-**2. 呼叫端填的 `source` 不會出現在 provenance 裡。**
+**2. 呼叫端填的 `source` 不會出現在 provenance 裡——已修（2026-08-04）。**
 input schema 寫著 `source`「Where the reading came from, e.g. garmin | strava | apple_health」，
 `packages/evidence/src/model.js:189` 也確實存下來，但 `describeEvidence` 的 `signalWriters`
-讀的是 `metric.metadata?.recorders` 與 `metadata?.sourceName`（`model.js:286-289`），
-**不是 `source`**。所以照文件填 `source: "garmin"` 的呼叫端，會拿到
-`signalWriters: { hrv_ms: { writers: [] } }`——看起來像沒人說來源，其實說了。
-`signalWriters` 原本要表達的是「同一個 source 底下有幾個 recorder」（Google Health 那個
-Garmin 與手機同時記步數的案例），與 `source` 是兩件事；但目前**沒有任何輸出欄位回報
-呼叫端填的 `source`**。
+當時只讀 `metric.metadata?.recorders` 與 `metadata?.sourceName`，**不是 `source`**——照文件填
+`source: "garmin"` 的呼叫端會拿到 `writers: []`，看起來像沒人說來源。
+**修法是回報它，而不是改文件**：`signalWriters` 每一項多一個 `sources`（呼叫端說的來源）
+與原有的 `writers`（那個來源底下哪個裝置記錄的）並列——兩者是不同問題，
+`writers` 要回答的是 Google Health 那個 Garmin 與手機同時記步數的案例。
+兩份輸出契約（`assess_fitness_state`／`decide_session`）與 `outputSchemas.js` 一起更新，
+Inspector 複驗：`{"hrv_ms":{"sources":["garmin"],"writers":[],"latest":"…"}}`。
 
 ---
 
