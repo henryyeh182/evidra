@@ -1,3 +1,81 @@
+import { EVIDENCE_METRIC_TYPES } from "../../../packages/evidence/src/index.js";
+
+import { outputSchemas } from "./outputSchemas.js";
+
+/**
+ * The evidence object, written once.
+ *
+ * Three tools take it and each carried its own copy of the same forty lines,
+ * which is how `healthMetrics` ended up describing its fields in a sentence
+ * instead of typing them: prose is cheap to duplicate, a schema is not. The
+ * constraints below are the ones `packages/evidence/src/model.js` already
+ * enforces, so a caller that validates its own arguments learns that
+ * `sleepDurationHours` is not a metric type before spending a round trip to
+ * find out.
+ */
+const EVIDENCE_INPUT = {
+  type: "object",
+  description:
+    "The user's health evidence, passed in by the AI layer that holds their authorization. Source-neutral: normalize Apple Health / Garmin / Oura / Whoop / Strava into this shape. The server does not fetch or store evidence. Omit only for local demo runs.",
+  properties: {
+    profile: {
+      type: "object",
+      description: "timezone, fitnessLevel.",
+      properties: {
+        timezone: {
+          type: "string",
+          description: "IANA zone name, e.g. Asia/Taipei — not an abbreviation and not a UTC offset. Defaults to UTC."
+        },
+        fitnessLevel: { type: "string", enum: ["beginner", "intermediate", "advanced"] }
+      }
+    },
+    goals: { type: "array", items: { type: "object" }, description: "Training goals, highest priority first." },
+    constraints: {
+      type: "object",
+      description: "injuries[], equipment[], availableMinutes, avoidMovements[]."
+    },
+    healthMetrics: {
+      type: "array",
+      description:
+        "Recent readings, one entry per measurement. Send only what exists — an absent signal is reported in signalCoverage, never guessed.",
+      items: {
+        type: "object",
+        properties: {
+          type: {
+            type: "string",
+            enum: [...EVIDENCE_METRIC_TYPES],
+            description: "Canonical and case-sensitive: sleepDurationHours is not sleep_duration_hours."
+          },
+          value: { type: "number" },
+          recordedAt: { type: "string", description: "ISO 8601 timestamp." },
+          source: { type: "string", description: "Where the reading came from, e.g. garmin | strava | apple_health." }
+        },
+        required: ["type", "value", "recordedAt"]
+      }
+    },
+    workouts: {
+      type: "array",
+      description: "Completed sessions, usually the last 7-28 days.",
+      items: {
+        type: "object",
+        properties: {
+          startedAt: { type: "string", description: "ISO 8601 timestamp." },
+          durationMinutes: { type: "number" },
+          type: { type: "string", description: "e.g. run | strength | recovery." },
+          rpe: { type: "number", description: "Carried as evidence; it is not a term in any computation." },
+          trainingLoad: {
+            type: "number",
+            description:
+              "The vendor's own effort figure, used as it stands. A session without one is reported in signalCoverage.training.missing rather than counted as zero fatigue."
+          },
+          muscleGroups: { type: "array", items: { type: "string" } }
+        },
+        required: ["startedAt", "durationMinutes"]
+      }
+    }
+  }
+};
+
 export const toolDefinitions = [
   {
     name: "assess_fitness_state",
@@ -9,33 +87,11 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Report how the user is doing today: recovery, readiness, muscle-group fatigue and training load, each with the evidence behind it and an honest list of what could not be seen. Use this for 'how am I doing today', 'have I recovered', 'am I overtraining', 'how is my training load'. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. This reports state only — it never says what to train. If the user has a session scheduled and wants to know whether to do it, use decide_session; if they have no plan at all, use generate_plan.",
+      "Report how the user is doing today: recovery, readiness, muscle-group fatigue and training load, each with the evidence behind it and an honest list of what could not be seen. Use this for 'how am I doing today', 'have I recovered', 'am I overtraining', 'how is my training load'. Pass the user's recent health evidence as `evidence`; this server's instructions say what to gather and what happens to a signal nobody has. This reports state only — it never says what to train. If the user has a session scheduled and wants to know whether to do it, use decide_session; if they have no plan at all, use generate_plan.",
     inputSchema: {
       type: "object",
       properties: {
-        evidence: {
-          type: "object",
-          description:
-            "The user's health evidence, passed in by the AI layer that holds their authorization. Source-neutral: normalize Apple Health / Garmin / Oura / Whoop / Strava into this shape. The server does not fetch or store evidence. Omit only for local demo runs.",
-          properties: {
-            profile: { type: "object", description: "timezone, fitnessLevel." },
-            goals: { type: "array", items: { type: "object" }, description: "Training goals, highest priority first." },
-            constraints: {
-              type: "object",
-              description: "injuries[], equipment[], availableMinutes, avoidMovements[]."
-            },
-            healthMetrics: {
-              type: "array",
-              items: { type: "object" },
-              description: "Recent readings: sleep_duration_hours, sleep_quality, hrv_ms, resting_hr_bpm, steps, stress — each with value, recordedAt, source."
-            },
-            workouts: {
-              type: "array",
-              items: { type: "object" },
-              description: "Completed sessions with startedAt, durationMinutes, type, rpe, trainingLoad, muscleGroups."
-            }
-          }
-        },
+        evidence: EVIDENCE_INPUT,
         userId: {
           type: "string",
           description: "User identifier."
@@ -61,7 +117,7 @@ export const toolDefinitions = [
         },
         date: {
           type: "string",
-          description: "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server (demo fallback anchors to the seed's latest day)."
+          description: "Date in YYYY-MM-DD format. Defaults to the demo seed's latest day (this tool is demo-seed only)."
         },
         includeStravaFixture: {
           type: "boolean",
@@ -81,33 +137,11 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Decide what today's scheduled session should become, given today's evidence. Returns a decision with from -> to: the session as planned, what it should change to, and the evidence and rules behind the change. Use this for questions about a session that is already on the books: 'am I ready for today's session', 'today's plan says intervals — should I still do them', 'should I adjust today's workout', 'I only have 30 minutes today'. `scheduledSession` is what makes this a decision: called without it, this tool returns no_scheduled_session and decides nothing, so for an open-ended 'what should I train today' with no plan in hand, call generate_plan instead. If the user proposes their own alternative — 'today was cardio, can I do stretching instead?' — pass that as `proposedSession` and it comes back accepted or refused, with the reason. Before calling, gather the user's recent health evidence from whichever health connectors they have connected — Strava, Garmin, Apple Health, Oura, Whoop — and pass it as `evidence`. More sources raise confidence; a signal nobody supplied is reported as missing, never guessed. This is a decision, not a suggestion: it requires a scheduled session and decides about an existing plan rather than inventing one. Do NOT re-derive or override the intensity, duration or movements it returns — injury filtering and load limits are enforced server-side and are decisions, not advice. To look up state alone, use assess_fitness_state.",
+      "Decide what today's scheduled session should become, given today's evidence. Returns a decision with from -> to: the session as planned, what it should change to, and the evidence and rules behind the change. Use this for questions about a session that is already on the books: 'am I ready for today's session', 'today's plan says intervals — should I still do them', 'should I adjust today's workout', 'I only have 30 minutes today'. `scheduledSession` is what makes this a decision: called without it, this tool returns no_scheduled_session and decides nothing, so for an open-ended 'what should I train today' with no plan in hand, call generate_plan instead. If the user proposes their own alternative — 'today was cardio, can I do stretching instead?' — pass that as `proposedSession` and it comes back accepted or refused, with the reason. Pass the user's recent health evidence as `evidence`; this server's instructions say what to gather and what happens to a signal nobody has. This is a decision, not a suggestion: it requires a scheduled session and decides about an existing plan rather than inventing one. Do NOT re-derive or override the intensity, duration or movements it returns — injury filtering and load limits are enforced server-side and are decisions, not advice. To look up state alone, use assess_fitness_state.",
     inputSchema: {
       type: "object",
       properties: {
-        evidence: {
-          type: "object",
-          description:
-            "The user's health evidence, passed in by the AI layer that holds their authorization. Source-neutral: normalize Apple Health / Garmin / Oura / Whoop / Strava into this shape. The server does not fetch or store evidence. Omit only for local demo runs.",
-          properties: {
-            profile: { type: "object", description: "timezone, fitnessLevel." },
-            goals: { type: "array", items: { type: "object" }, description: "Training goals, highest priority first." },
-            constraints: {
-              type: "object",
-              description: "injuries[], equipment[], availableMinutes, avoidMovements[]."
-            },
-            healthMetrics: {
-              type: "array",
-              items: { type: "object" },
-              description: "Recent readings: sleep_duration_hours, sleep_quality, hrv_ms, resting_hr_bpm, steps, stress — each with value, recordedAt, source."
-            },
-            workouts: {
-              type: "array",
-              items: { type: "object" },
-              description: "Completed sessions with startedAt, durationMinutes, type, rpe, trainingLoad, muscleGroups."
-            }
-          }
-        },
+        evidence: EVIDENCE_INPUT,
         userId: { type: "string", description: "User identifier." },
         date: { type: "string", description: "Date in YYYY-MM-DD. Defaults to today in the user's timezone, resolved by the server (demo fallback anchors to the seed's latest day)." },
         scheduledSession: {
@@ -304,9 +338,14 @@ export const toolDefinitions = [
     title: "Generate Training Plan",
     annotations: {
       title: "Generate Training Plan",
-      readOnlyHint: false,
-      destructiveHint: false,
-      idempotentHint: false,
+      // Read-only because nothing here has an environment to modify: the plan is
+      // returned, never stored, and the caller decides whether to keep it. The
+      // hints said otherwise, which told hosts to treat a pure computation as a
+      // write. commit_adjust_plan keeps `readOnlyHint: false` for the opposite
+      // reason — it also stores nothing, but it must not be called without the
+      // user having seen and accepted the preview.
+      readOnlyHint: true,
+      idempotentHint: true,
       openWorldHint: false
     },
     description:
@@ -314,29 +353,7 @@ export const toolDefinitions = [
     inputSchema: {
       type: "object",
       properties: {
-        evidence: {
-          type: "object",
-          description:
-            "The user's health evidence, passed in by the AI layer that holds their authorization. Source-neutral: normalize Apple Health / Garmin / Oura / Whoop / Strava into this shape. The server does not fetch or store evidence. Omit only for local demo runs.",
-          properties: {
-            profile: { type: "object", description: "timezone, fitnessLevel." },
-            goals: { type: "array", items: { type: "object" }, description: "Training goals, highest priority first." },
-            constraints: {
-              type: "object",
-              description: "injuries[], equipment[], availableMinutes, avoidMovements[]."
-            },
-            healthMetrics: {
-              type: "array",
-              items: { type: "object" },
-              description: "Recent readings: sleep_duration_hours, sleep_quality, hrv_ms, resting_hr_bpm, steps, stress — each with value, recordedAt, source."
-            },
-            workouts: {
-              type: "array",
-              items: { type: "object" },
-              description: "Completed sessions with startedAt, durationMinutes, type, rpe, trainingLoad, muscleGroups."
-            }
-          }
-        },
+        evidence: EVIDENCE_INPUT,
         userId: { type: "string", description: "User identifier." },
         goalId: { type: "string", description: "Goal to build the plan around. Defaults to the highest-priority goal." },
         weeks: { type: "number", description: "Number of weeks to plan. Defaults to 4." },
@@ -442,11 +459,30 @@ export function resolveToolName(name) {
  * Tools advertised to clients. Deprecated tools stay callable for one release
  * but are hidden from discovery, so new conversations only see the canonical
  * surface and the tool budget (R2) reflects what models actually choose from.
+ *
+ * The output schema is attached here rather than written into each definition:
+ * only advertised tools have a contract worth declaring, and doing it in one
+ * place means a new tool cannot quietly ship without one.
  */
 export function listedToolDefinitions() {
   return toolDefinitions
     .filter((tool) => !tool.deprecated)
-    .map(({ deprecated, ...tool }) => tool);
+    .map(({ deprecated, ...tool }) => ({
+      ...tool,
+      ...(outputSchemas[tool.name] ? { outputSchema: outputSchemas[tool.name] } : {})
+    }));
+}
+
+/**
+ * The output schema a tool declares, if it declares one.
+ *
+ * Only the advertised tools do. A structured result is the answer to a declared
+ * schema, so this is also what decides whether one is sent: handing a client a
+ * structured object that no contract covers means paying for the payload twice
+ * and promising nothing in return.
+ */
+export function outputSchemaFor(name) {
+  return outputSchemas[resolveToolName(name)] || null;
 }
 
 export function getToolDefinition(name) {

@@ -4,9 +4,20 @@
   "title": "recommend_workout input",
   "type": "object",
   "properties": {
-    "userId": { "type": "string", "description": "User identifier." },
-    "date": { "type": "string", "description": "Date in YYYY-MM-DD format. Defaults to the demo seed's latest day (this tool is demo-seed only)." },
-    "includeStravaFixture": { "type": "boolean", "description": "Include the local Strava fixture before generating the recommendation." }
+    "userId": {
+      "type": "string",
+      "description": "User identifier."
+    },
+    "date": {
+      "type": "string",
+      "description": "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server (demo fallback anchors to the seed's latest day)."
+    },
+    "includeStravaFixture": {
+      "type": "boolean",
+      "description": "Include the local Strava fixture before generating the recommendation."
+    }
   },
-  "required": ["userId"]
+  "required": [
+    "userId"
+  ]
 }

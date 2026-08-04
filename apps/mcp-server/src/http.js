@@ -11,7 +11,6 @@
  * available for a server-initiated stream. Dependency-free, on node:http.
  */
 import { createServer } from "node:http";
-import { randomUUID } from "node:crypto";
 
 import { handleJsonRpcMessage } from "./server.js";
 import {
@@ -70,7 +69,6 @@ export function createHttpServer(options = {}) {
   const endpoint = options.endpoint || "/mcp";
   const allowedOrigins = options.allowedOrigins || [];
   const requireToken = options.token || null;
-  const sessions = new Set();
 
   /**
    * OAuth 2.1 resource-server configuration. Present means every request needs
@@ -102,8 +100,10 @@ export function createHttpServer(options = {}) {
     const cors = {
       "access-control-allow-origin": req.headers.origin || "*",
       "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
-      "access-control-allow-headers": "content-type, mcp-session-id, mcp-protocol-version, authorization",
-      "access-control-expose-headers": "mcp-session-id"
+      // `mcp-session-id` stays in allow-headers because a client may still send
+      // one and there is no reason to reject the request over it. Nothing exposes
+      // it back: this server issues none.
+      "access-control-allow-headers": "content-type, mcp-session-id, mcp-protocol-version, authorization"
     };
 
     if (req.method === "OPTIONS") {
@@ -182,9 +182,17 @@ export function createHttpServer(options = {}) {
       }
     }
 
+    /**
+     * Sessions: there are none, and the server no longer pretends otherwise.
+     *
+     * It used to mint an `mcp-session-id` at initialize and hand it back, then
+     * never check it — a request carrying an invented id was answered exactly
+     * like a real one. Issuing an identifier that is not verified only tells
+     * clients a guarantee exists. Nothing here needs one: every call carries its
+     * own evidence and plan, so any request stands alone. DELETE is still
+     * answered so a client that ends its session gets a clean close.
+     */
     if (req.method === "DELETE") {
-      const sessionId = req.headers["mcp-session-id"];
-      sessions.delete(sessionId);
       res.writeHead(204, cors);
       res.end();
       return;
@@ -232,20 +240,14 @@ export function createHttpServer(options = {}) {
 
     const messages = Array.isArray(parsed) ? parsed : [parsed];
     const responses = [];
-    let newSessionId = null;
 
     for (const message of messages) {
-      if (message?.method === "initialize") {
-        newSessionId = randomUUID();
-        sessions.add(newSessionId);
-      }
       const response = await handleJsonRpcMessage(JSON.stringify(message));
       // Notifications resolve to null and must not produce a frame.
       if (response !== null) responses.push(response);
     }
 
     const headers = { ...cors };
-    if (newSessionId) headers["mcp-session-id"] = newSessionId;
 
     if (responses.length === 0) {
       // Every message was a notification: acknowledge without a body.

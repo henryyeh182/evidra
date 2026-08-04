@@ -26,7 +26,15 @@ async function call(name, args = {}) {
     throw new Error(response.error.message);
   }
   const text = response.result.content[0].text;
-  return { bytes: text.length, payload: JSON.parse(text), isError: Boolean(response.result.isError) };
+  return {
+    // What the model actually receives, which is the whole result frame: a
+    // structured payload is sent alongside the text block, so measuring the text
+    // alone would have quietly stopped measuring half of it.
+    bytes: JSON.stringify(response.result).length,
+    payload: JSON.parse(text),
+    structured: response.result.structuredContent,
+    isError: Boolean(response.result.isError)
+  };
 }
 
 test("search_exercises answers a structured query and grounds every result", async () => {
@@ -126,8 +134,38 @@ test("read payloads stay inside the cross-model size budget", async () => {
     await call("get_training_history", { userId: "user_henry_demo", limit: 20 })
   ];
   for (const { bytes } of calls) {
-    assert.ok(bytes <= 4096, `payload of ${bytes} bytes exceeds the ~4KB budget`);
+    assert.ok(bytes <= 4096, `result frame of ${bytes} bytes exceeds the ~4KB budget`);
   }
+});
+
+test("a structured result costs its payload twice, and only where a schema is declared", async () => {
+  // The protocol asks for the serialized JSON in a text block as well, so a tool
+  // that declares an output schema sends the payload twice. That is the price of
+  // a client that predates structured results still seeing an answer — but it is
+  // a real price, so the frame gets its own ceiling instead of going unmeasured.
+  const decision = await call("decide_session", {
+    evidence: WORKING_EVIDENCE,
+    scheduledSession: { focus: "intervals", type: "run", durationMinutes: 60, intensity: "high" }
+  });
+
+  assert.ok(decision.structured, "an advertised tool answers with a structured result");
+  // Compared as it goes on the wire: the payload carries keys whose value is
+  // undefined, which serializing drops from both copies but which an in-process
+  // comparison would report as a difference that no client can observe.
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(decision.structured)),
+    decision.payload,
+    "the two copies say the same thing"
+  );
+  assert.ok(
+    decision.bytes <= 8192,
+    `result frame of ${decision.bytes} bytes exceeds the ~8KB ceiling (payload ~4KB, sent twice)`
+  );
+
+  // A tool with no declared schema gets no structured copy, so nothing pays
+  // twice for a shape no contract covers.
+  const deprecated = await call("get_user_profile", { userId: "user_henry_demo" });
+  assert.equal(deprecated.structured, undefined);
 });
 
 test("assertGrounded rejects a payload that references a missing exercise (P3)", () => {

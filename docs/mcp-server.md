@@ -36,14 +36,33 @@ Six tools, all of which either return a decision or transform caller-held plan
 state. The server does not retain plans or previews. See the [Design
 Manifesto](design-manifesto.md) for why the surface is this small.
 
-`evidence` is the required argument on every decision tool; `userId` is an
+`evidence` is the required argument on every decision tool except
+`decide_exercise_substitution`, which reads no recovery or load signal and
+decides from the movement plus the constraints the caller states; `userId` is an
 optional label the server echoes back and never computes on. A call that
 arrives without evidence gets a tool result carrying `isError` and an
 `evidence_required` payload naming what to go and fetch — not a JSON-RPC error,
 so the host reads it and acts rather than showing the user a failed tool call.
 Evidence that arrives in the wrong shape gets the same treatment as
 `invalid_evidence`, carrying the rule that was broken and the shape it should
-have had, so the caller can correct its payload in the same turn.
+have had, so the caller can correct its payload in the same turn. The same holds
+for everything else a caller can get wrong: a movement the catalog does not
+carry (`unknown_exercise`), a plan tool called without the plan the caller holds
+(`plan_required`, `plan_state_required`), a change the plan cannot carry
+(`plan_change_refused`), and a preview built against an older version
+(`commit_refused`).
+
+Every advertised tool declares an `outputSchema` and answers with
+`structuredContent` as well as the serialized text block, so a host can read the
+result as an object instead of parsing prose. The schemas are the same files in
+`schemas/tools/` that the eval runner validates real payloads against; the two
+copies are held identical by `eval/test/contract.test.js`. Where a tool could not
+run, only the text block is sent — an error payload matches no output schema.
+
+Shared guidance — where evidence comes from, that any single source is enough,
+that plans live with the caller, and that a returned decision is not to be
+re-derived — is sent once in the `instructions` field of the initialize result
+rather than repeated in every tool description.
 The local demo seed is reachable only by asking for it outright and is absent
 from the public schemas: it is another person's numbers and must never reach a
 real caller's answer by way of a silent fallback.
@@ -130,9 +149,13 @@ server-side.
 { "exerciseId": "exercise_back_squat", "conditions": ["knee_injury"], "avoidContraindications": ["knee"] }
 ```
 
-### `generate_plan` — write
+### `generate_plan` — read-only
 
-Builds the periodized plan that later decisions act on.
+Builds the periodized plan that later decisions act on. Read-only because there
+is nothing here for it to write to: the plan is returned and the caller decides
+whether to keep it. `commit_adjust_plan` is the one tool that declares itself not
+read-only, and not because it stores anything either — it must not be called
+without the user having seen and accepted the preview.
 
 ### `preview_adjust_plan` / `commit_adjust_plan` — stateless two-phase transform
 

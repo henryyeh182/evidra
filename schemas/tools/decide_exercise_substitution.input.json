@@ -6,7 +6,7 @@
   "properties": {
     "exerciseId": {
       "type": "string",
-      "description": "The exercise being replaced."
+      "description": "The exercise being replaced. Accepts the movement as the user said it ('back squat', 'bench'), a catalog name, or a canonical exercise_* id — all are resolved server-side."
     },
     "conditions": {
       "type": "array",

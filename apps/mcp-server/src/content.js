@@ -1,11 +1,22 @@
+/**
+ * A tool result, in both forms the protocol has.
+ *
+ * `structuredContent` is the payload itself, for a host that declared it wants
+ * the object — it is what the tool's `outputSchema` describes, and a client can
+ * validate it instead of trusting a paragraph. The text block stays because a
+ * client that predates structured results would otherwise see an empty answer,
+ * and it is serialized compactly: it is the same object twice, so the indenting
+ * was paid for in every response for nothing.
+ */
 export function jsonContent(payload) {
   return {
     content: [
       {
         type: "text",
-        text: JSON.stringify(payload, null, 2)
+        text: JSON.stringify(payload)
       }
-    ]
+    ],
+    structuredContent: payload
   };
 }
 
@@ -21,8 +32,12 @@ export function jsonContent(payload) {
  * the payload and can go and fetch what is missing.
  */
 export function errorContent(payload) {
+  // Text only, deliberately: a tool that could not run has nothing that matches
+  // its `outputSchema`, and handing a validating client an object that fails its
+  // own declared schema turns a correctable refusal back into a broken call.
+  const { structuredContent, ...result } = jsonContent(payload);
   return {
-    ...jsonContent(payload),
+    ...result,
     isError: true
   };
 }

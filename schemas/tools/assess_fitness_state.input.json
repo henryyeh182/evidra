@@ -10,7 +10,21 @@
       "properties": {
         "profile": {
           "type": "object",
-          "description": "timezone, fitnessLevel."
+          "description": "timezone, fitnessLevel.",
+          "properties": {
+            "timezone": {
+              "type": "string",
+              "description": "IANA zone name, e.g. Asia/Taipei — not an abbreviation and not a UTC offset. Defaults to UTC."
+            },
+            "fitnessLevel": {
+              "type": "string",
+              "enum": [
+                "beginner",
+                "intermediate",
+                "advanced"
+              ]
+            }
+          }
         },
         "goals": {
           "type": "array",
@@ -25,17 +39,78 @@
         },
         "healthMetrics": {
           "type": "array",
+          "description": "Recent readings, one entry per measurement. Send only what exists — an absent signal is reported in signalCoverage, never guessed.",
           "items": {
-            "type": "object"
-          },
-          "description": "Recent readings: sleep_duration_hours, sleep_quality, hrv_ms, resting_hr_bpm, steps, stress — each with value, recordedAt, source."
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "sleep_duration_hours",
+                  "sleep_quality",
+                  "hrv_ms",
+                  "resting_hr_bpm",
+                  "steps",
+                  "stress"
+                ],
+                "description": "Canonical and case-sensitive: sleepDurationHours is not sleep_duration_hours."
+              },
+              "value": {
+                "type": "number"
+              },
+              "recordedAt": {
+                "type": "string",
+                "description": "ISO 8601 timestamp."
+              },
+              "source": {
+                "type": "string",
+                "description": "Where the reading came from, e.g. garmin | strava | apple_health."
+              }
+            },
+            "required": [
+              "type",
+              "value",
+              "recordedAt"
+            ]
+          }
         },
         "workouts": {
           "type": "array",
+          "description": "Completed sessions, usually the last 7-28 days.",
           "items": {
-            "type": "object"
-          },
-          "description": "Completed sessions with startedAt, durationMinutes, type, rpe, trainingLoad, muscleGroups."
+            "type": "object",
+            "properties": {
+              "startedAt": {
+                "type": "string",
+                "description": "ISO 8601 timestamp."
+              },
+              "durationMinutes": {
+                "type": "number"
+              },
+              "type": {
+                "type": "string",
+                "description": "e.g. run | strength | recovery."
+              },
+              "rpe": {
+                "type": "number",
+                "description": "Carried as evidence; it is not a term in any computation."
+              },
+              "trainingLoad": {
+                "type": "number",
+                "description": "The vendor's own effort figure, used as it stands. A session without one is reported in signalCoverage.training.missing rather than counted as zero fatigue."
+              },
+              "muscleGroups": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "startedAt",
+              "durationMinutes"
+            ]
+          }
         }
       }
     },
@@ -45,7 +120,7 @@
     },
     "date": {
       "type": "string",
-      "description": "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server (demo fallback anchors to the seed's latest day)."
+      "description": "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server."
     }
   },
   "required": [
