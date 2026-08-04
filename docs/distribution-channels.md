@@ -136,13 +136,13 @@ GitHub 在這件事出現三次但都不是它本身：repo 放原始碼與文�
 
 | 要求 | 現況 |
 |---|---|
-| artifact 掛在 GitHub／GitLab Release | ✅ **`v0.1.1`** 的 `evidra.mcpb`（251,337 bytes，`/releases/latest` 指向它） |
+| artifact 掛在 GitHub／GitLab Release | ✅ **`v0.2.0`** 的 `evidra.mcpb`（264,328 bytes、88 檔，`/releases/latest` 指向它） |
 | `identifier` 網址**須含 "mcp"** | ✅ `.mcpb` 副檔名即可（文件明說可來自副檔名） |
-| 須附 `fileSha256` | ✅ `af6c142b09378ca9ee28b8a1ddec4d6de2018f2c7b3e9e8d739ac8be185f1217` |
+| 須附 `fileSha256` | ✅ `aab0f5efc88a9829efffb96924bede551a83da397796a8788a2f533dbbf1d803` |
 
 缺的只有 `server.json` ＋ 一次 `mcp-publisher` 登入。
 
-**要填的是 v0.1.1 那顆，不是 v0.1.0。** v0.1.0 仍在（sha `6affeab9…caa9351`），刻意沒有覆蓋
+**要填的是 v0.2.0 那顆。** v0.1.0 仍在（sha `6affeab9…caa9351`），刻意沒有覆蓋
 ——已照舊 checksum 驗過的人不會對不上。
 
 **v0.1.1 不是純打包發布。** v0.1.0 打包後又有 9 個 commit 動到 runtime，bundle 內 **10 個程式檔**

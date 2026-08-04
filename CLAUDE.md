@@ -293,9 +293,17 @@ bundle 內 10 個程式檔與 v0.1.0 不同，含兩個行為修正（`cc43122` 
 就當成內容相同。**檔名一致不等於內容一致**；當時大小 244,579 → 251,337 bytes 就是反證。
 **驗兩顆 bundle 要 `diff -rq` 解開比對，不是比清單。**
 （**這裡不寫那個舊數字**：G1 只比對數字、讀不出「這是歷史值」，寫上去就會被判成宣稱漂移。）
-`/releases/latest` 現在指向 `v0.1.1`，sha `af6c142b09378ca9ee28b8a1ddec4d6de2018f2c7b3e9e8d739ac8be185f1217`。
-**v0.1.0 刻意保留不覆蓋**（已照舊 checksum 驗過的人不會對不上）。
-**送官方 registry 要填 v0.1.1 那顆。**
+**`/releases/latest` 現在指向 `v0.2.0`**（2026-08-04 發布），
+sha `aab0f5efc88a9829efffb96924bede551a83da397796a8788a2f533dbbf1d803`，264,328 bytes、88 檔。
+**送官方 registry 要填 v0.2.0 那顆。**
+
+**為什麼是 0.2.0 不是 0.1.2**：v0.1.1 那顆 bundle 宣告的六個 tool 名字已經不存在了——
+對外名稱全部改成 `evidra_*`（防撞名，`generate_plan` 那種名字任何做計畫的 server 都可能用），
+每個 tool 開始宣告 `outputSchema` 並回 `structuredContent`，共用指引搬進 initialize 的
+`instructions`。改的是介面本身，不是介面裡的 bug。**舊名字仍解析得到**（v0.1.0／v0.1.1 發布過它們）。
+
+**v0.1.0 與 v0.1.1 都刻意保留不覆蓋**（已照舊 checksum 驗過的人不會對不上）。
+v0.2.0 發布後已照規矩驗過：下載回來重算 sha256 相符，且與本地打包的那顆 `diff -rq` 逐檔相同。
 
 ## 動 MCP 介面之前先載 skill
 
