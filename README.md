@@ -78,12 +78,12 @@ language you read is your assistant's; the judgment is arithmetic.
 
 | Tool | What it returns |
 |---|---|
-| `assess_fitness_state` | Today's recovery and training state. State only — it never says what to train. |
-| `decide_session` | What today's scheduled session should become, as from → to |
-| `decide_exercise_substitution` | The replacement for a movement you cannot do today, as from → to |
-| `generate_plan` | A plan, when you don't have one — the substrate decisions are made against |
-| `preview_adjust_plan` | What adjusting a plan would change, without applying it |
-| `commit_adjust_plan` | The plan a previewed adjustment produces, once you have accepted it — you keep it, Evidra does not |
+| `evidra_assess_fitness_state` | Today's recovery and training state. State only — it never says what to train. |
+| `evidra_decide_session` | What today's scheduled session should become, as from → to |
+| `evidra_decide_exercise_substitution` | The replacement for a movement you cannot do today, as from → to |
+| `evidra_generate_plan` | A plan, when you don't have one — the substrate decisions are made against |
+| `evidra_preview_adjust_plan` | What adjusting a plan would change, without applying it |
+| `evidra_commit_adjust_plan` | The plan a previewed adjustment produces, once you have accepted it — you keep it, Evidra does not |
 
 ---
 
