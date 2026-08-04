@@ -314,6 +314,65 @@ collection／usage and storage／third-party sharing／data retention／contact 
 
 ---
 
+## Pre-submission checklist 逐條對照（2026-08-04，來源 `claude.com/docs/connectors/building/review-criteria`）
+
+這頁自陳是「最常見的退件原因」。**送審預設先以 community connector 上架並自動掃描政策合規；
+Anthropic 再自行把「highly useful」的挑去 verified review，那一關 reviewer 會實際跑過每個 tool**
+——挑選是自動的，我們不必也不能申請。
+
+| 條件 | 原文要點 | Evidra 現況 |
+|---|---|---|
+| 讀寫要分開 | 同時吃安全與不安全 HTTP 方法的單一 tool 直接退；`api_request` 加 `method` 參數是點名的反例 | ✅ 沒有萬用 tool |
+| 自由查詢型 tool 要指名 API | 只適用讓呼叫端自組 endpoint／query／body 的 tool | ✅ 不適用，沒有這種 tool |
+| annotations | 「Every tool must include a `title` and the applicable hint」；**read-only 可以免逐次確認，destructive 一定會提示** | ✅ 六個都有 `title` 與 hint。`commit_adjust_plan` 見下方風險 |
+| tool 名稱 ≤ 64 字元 | — | ✅ 最長 `decide_exercise_substitution`＝28 |
+| 描述要窄且準確 | 「The description must match the tool's actual behavior」 | ✅ P0 修的正是這條 |
+| 功能品質 | 「Every tool must return a successful response when called with valid parameters」；籠統錯誤（Internal Server Error／無細節的 Bad Request）退件；要驗證輸入並回可行動的錯誤 | ✅ P1 修的正是這條 |
+| 不碰對話資料 | 不得查 Claude 的 memory／chat history／對話摘要／使用者檔案 | ✅ 沒有 |
+| **API ownership** | 「Your server must call your own first-party APIs, or APIs you legitimately proxy. **The MCP server domain should match your service.**」 | ✅ 現在零外部呼叫。**接 Garmin 會直接踩到這條**——見下 |
+| 不支援的用途 | 金錢／加密資產移轉、AI 生成圖像影音 | ✅ 都不做 |
+| test credentials | 必填，且要是資料完整的帳號 | remote 才要；本產品沒有帳號，要另想 reviewer 怎麼端到端跑 |
+| public documentation | 「required by your publish date」——部落格或說明文章即可 | ✅ `evidra/README.md` |
+| plugins 必須公開 repo | 「closed-source is not accepted」 | 不適用，我們是 MCPB 不是 plugin |
+| **MCPB 的 open-source 條文** | 「**MCPB** open-source and "spec will evolve" clauses in the Software Directory Terms are **required and not waivable**」 | ⚠️ **找不到那條文**——見下 |
+| 送審前 | 每個 tool 都要用 **MCP Inspector** 跑過，並以 **custom connector in Claude** 跑過 | ❌ **還沒做**，這是可以現在做的動作 |
+
+### ⚠️ 風險一：我們的描述在指示 Claude 怎麼行為
+
+那頁的 prompt-injection 段落結尾是一句直述：
+
+> Describe what the tool does. Do not tell Claude how to behave.
+
+被列為退件的五種寫法裡，與我們有關的是「Interfere with Claude calling other tools」與
+「Tell Claude to behave in ways unrelated to the tool's function, attempt to override system
+instructions」。而 `decide_session` 的描述寫著「**Do NOT re-derive or override the intensity,
+duration or movements it returns**」，`decide_exercise_substitution` 寫著「**do NOT override or
+reason past the result**」「**Do NOT use this to browse exercises**」，P2 加的 server
+`instructions` 也有「do not re-derive them or reason past the result」。
+
+**這是不是踩線，我沒有定論**：那些句子講的是本 tool 的職能範圍（確定性過濾器不可被繞過），
+不是叫 Claude 去做無關的事，也不是覆寫系統指令。但形式上就是在指示行為。
+**低風險的改法是改成陳述句**——「Injury contraindications and load limits are applied
+server-side; the values returned are the decision」——同樣的意思，不用命令句。
+
+### ⚠️ 風險二：`commit_adjust_plan` 既不是 read-only 也不是 destructive
+
+那頁把 hint 講成二分（read-only 或 destructive），而 `commit_adjust_plan` 兩者都不是：
+它什麼都不存，但**不可以在使用者沒看過 preview 的情況下被呼叫**，所以刻意留
+`readOnlyHint: false` ＋ `destructiveHint: false` 來換取 host 的確認提示。
+若審查按二分法讀，可能被要求選一邊。**要不要改成 `destructiveHint: true` 是判斷題**：
+它確實會讓呼叫端手上的計畫版本被取代（「always prompt」正是我們要的行為），
+但那個字面意思是刪除或破壞資料，我們沒有。**先不動，記在這裡。**
+
+### Garmin 與 API ownership
+
+「must call your own first-party APIs, or APIs you legitimately proxy」與 portal 的 Data
+handling 一題（選項含「a third party's you don't control」）**看起來張力相反**：一邊要求
+first-party，一邊把「不受控的第三方」列成可揭露的選項。**哪一邊是實際判準，我沒有定論**，
+但「The MCP server domain should match your service」意味著走 remote 時 endpoint 要在自己的網域上。
+
+---
+
 ## 尚未查證 —— 動計畫前先看這裡
 
 | # | 事項 | 狀態（2026-08-03 晚更新） | 為什麼重要 |
@@ -328,7 +387,9 @@ collection／usage and storage／third-party sharing／data retention／contact 
 | 8 | Garmin Connect Developer Program 是不是暫停中 | ❌ **無定論**。官方 Health API 頁與 FAQ 都寫「Stay tuned for more updates on the program」，同時 FAQ 又寫「please request … we'll quickly review your application」（約兩個工作日）。**說暫停的只有一份第三方部落格**，Garmin 論壇 thread 438046 零回覆。剩下的路是寄 `connect-support@developer.garmin.com` | 已確認的是**只給企業／商業用途**、要申請要審核（見 [implementation plan P4](fitness-mcp-implementation-plan.md)）。是否暫停決定「能不能排程」而不是「能不能做」 |
 | 9 | remote portal 的「不同使用者連不同 URL」實際怎麼運作 | ❌ 未查。官方文件只確認**這個選項存在**（Connection 一步：「whether every user connects to the same URL or different users connect to different URLs」），沒有說明審查怎麼驗、reviewer 用哪個 URL | 決定「使用者自己 host、我們不持有 evidence」這條路能不能上架 |
 | 10 | Team／Enterprise 方案的費用 | ❌ 未查 | remote portal 在 admin settings，個人方案進不去；這是走 remote 的固定成本 |
-| 11 | `review-criteria` 與 `authentication` 兩份官方文件 | ❌ **還沒讀**。`/docs/connectors/building/review-criteria`（pre-submission checklist）、`/docs/connectors/building/authentication`（哪些認證模式開箱支援、哪些要與審查團隊協調） | 前者可能有本檔沒收錄的門檻；後者決定 OAuth 要走 DCR、client ID metadata 還是 static client ID |
+| 11 | `review-criteria`（pre-submission checklist） | ✅ **已讀，逐條對照見上一節。** 查出三件本檔原本沒有的：讀寫必須分開、tool 名稱 64 字元上限、送審前要用 MCP Inspector ＋ custom connector 跑過每個 tool | — |
+| 12 | `authentication` 那份官方文件 | ❌ **還沒讀**（`/docs/connectors/building/authentication`：哪些認證模式開箱支援、哪些要與審查團隊協調） | 決定 OAuth 要走 DCR、client ID metadata document 還是 Anthropic 持有的 static client ID |
+| 13 | **`review-criteria` 指的「MCPB open-source 條文」在哪** | ❌ **找不到**。原文說那條在 Software Directory **Terms** 裡且 required and not waivable。實際查了三處都沒有：Terms 全文搜 `MCPB`／`bundle`／`open source`／`license`／`source code`／`waive`／`specification`／`evolve` **八個詞全部零命中**（2026-08-04）；Software Directory **Policy** 也沒有（它只有 3.A 要求隱私政策連結）；MCPB 送審表單要打勾的 T&C 也沒有（2026-08-03 查過）。剩下的路是寄 `mcp-review@anthropic.com` 問 | **這條可能把 MIT 從商業決定變成門檻。** 目前的證據不足以說「必須開源」，也不足以說「不必」——**不得據此自行改寫授權決定** |
 | — | 隱私政策放 GitHub 會不會被接受 | ✅ **已解：可以**。要求原文是「HTTPS URLs to privacy policies」，沒有限定自有網域（見上一節） | — |
 
 ---
