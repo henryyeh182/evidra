@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 /**
  * 階段任務完成審查 —— 機械可驗的那一半。
  *

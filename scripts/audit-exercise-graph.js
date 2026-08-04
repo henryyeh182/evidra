@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 // Quality audit for the exercise knowledge graph. Reports movement-pattern
 // misclassifications (name keyword vs assigned pattern), contraindication
 // coverage, and equipment sanity. Read-only: prints a report and writes a

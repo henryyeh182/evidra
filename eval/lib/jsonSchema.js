@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 // Minimal, dependency-free JSON Schema validator.
 //
 // Supports the subset the Fitness MCP contracts actually use:

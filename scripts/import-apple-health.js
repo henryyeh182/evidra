@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 // Import a real Apple Health export from data/private/ (git-ignored), normalize
 // it, write the normalized dataset back into data/private/, and print a Semantic
 // Fitness State computed from the real data. Nothing here is committed.

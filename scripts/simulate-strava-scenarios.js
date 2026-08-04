@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Henry Yeh. All rights reserved.
+// Evidra — proprietary. See LICENSE at the repository root.
+
 /**
  * Walk the Strava bulk-export source-schema scenarios and print what each
  * export shape turns into.
