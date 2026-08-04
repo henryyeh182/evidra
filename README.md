@@ -13,7 +13,7 @@ It runs on your own machine, and it does not retain your evidence.
 
 ## Where this is
 
-The current release is v0.1.1. v0.1.0 was the first public release.
+The current release is v0.2.0. v0.1.0 was the first public release.
 
 The decision logic is covered by a deterministic test and evaluation suite:
 under the same version of Evidra, the same evidence produces the same decision,
