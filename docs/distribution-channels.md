@@ -140,7 +140,25 @@ GitHub 在這件事出現三次但都不是它本身：repo 放原始碼與文�
 | `identifier` 網址**須含 "mcp"** | ✅ `.mcpb` 副檔名即可（文件明說可來自副檔名） |
 | 須附 `fileSha256` | ✅ `aab0f5efc88a9829efffb96924bede551a83da397796a8788a2f533dbbf1d803` |
 
-缺的只有 `server.json` ＋ 一次 `mcp-publisher` 登入。
+**`server.json` 已寫好（2026-08-04，repo 根目錄）**，缺的只有一次 `mcp-publisher` 登入
+（GitHub OAuth，授權對象是使用者本人，Claude 不能代登）。
+
+schema 為 `2025-12-11`。**必填只有三個**：`name`／`description`／`version`。
+逐項對過的限制：`name` 須符合 `^[a-zA-Z0-9.-]+/[a-zA-Z0-9._-]+$`（用
+`io.github.henryyeh182/evidra`，命名空間就是 GitHub 認證的依據）、
+**`description` 上限 100 字元**、`fileSha256` 須為 64 位小寫十六進位、
+`registryType` 限 `npm`／`pypi`／`oci`／`nuget`／`mcpb`、`transport` 用 `stdio`。
+
+**`description` 不能用 Anthropic 表單那份定稿**——那份 259 字元，超過上限一倍半。
+registry 這欄另寫一句 93 字元：
+
+> Turns caller-supplied training evidence into a from->to change for today's scheduled session.
+
+**兩份文案是不同欄位、不同上限，不是同一句話的長短版**。表單那份問「做什麼＋核心功能」，
+這欄問的是一句人看得懂的功能說明。
+
+發布前最後一道驗證（已做）：拿 `server.json` 裡的 `identifier` 直接 `curl` 下載，
+264,328 bytes、sha256 與 `fileSha256` 欄位相符。
 
 **要填的是 v0.2.0 那顆。** v0.1.0 仍在（sha `6affeab9…caa9351`），刻意沒有覆蓋
 ——已照舊 checksum 驗過的人不會對不上。

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.henryyeh182/evidra",
+  "title": "Evidra",
+  "description": "Turns caller-supplied training evidence into a from->to change for today's scheduled session.",
+  "version": "0.2.0",
+  "websiteUrl": "https://github.com/henryyeh182/evidra",
+  "repository": {
+    "url": "https://github.com/henryyeh182/evidra",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/henryyeh182/evidra/releases/download/v0.2.0/evidra.mcpb",
+      "fileSha256": "aab0f5efc88a9829efffb96924bede551a83da397796a8788a2f533dbbf1d803",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
