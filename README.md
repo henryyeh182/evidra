@@ -126,7 +126,7 @@ Evidra runs locally and does not retain your evidence.
 
 As a desktop extension, this is verifiable from the code shipped in it: **Evidra itself
 performs no outbound network requests, does not persist your evidence, and has no
-dependencies, telemetry, model calls, or accounts.** Evidence exists in memory for the
+runtime dependencies, telemetry, model calls, or accounts.** Evidence exists in memory for the
 duration of one tool call.
 
 Full policy: [PRIVACY.md](PRIVACY.md)

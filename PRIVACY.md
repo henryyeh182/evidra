@@ -59,8 +59,8 @@ As a desktop extension, verifiable from the code shipped in the extension:
   client: an id helper, functions that turn an object into a row-shaped object, and an
   interface whose methods are all unimplemented and throw if they are called. Nothing
   shipped in the extension can write your evidence anywhere.
-- **No third-party code.** The extension has zero dependencies and runs on the Node.js
-  standard library alone. No analytics, no telemetry, no crash reporting, no SDKs.
+- **No third-party code.** The extension has zero runtime dependencies and runs on the
+  Node.js standard library alone. No analytics, no telemetry, no crash reporting, no SDKs.
 - **No model calls.** Decisions are deterministic arithmetic and explicit rules. Evidra
   calls no AI model of its own and sends your evidence to no model provider.
 - **No accounts.** Evidra has no sign-up, no login, and no user identifier. We do not know
