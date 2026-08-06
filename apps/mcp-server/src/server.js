@@ -81,10 +81,15 @@ export async function handleJsonRpcMessage(rawMessage) {
         protocolVersion: negotiated,
         serverInfo: {
           // `name` is the identifier clients key their config on and cannot
-          // change without breaking them; `title` is what a person reads, and
-          // the product they installed is called Evidra.
+          // change without breaking them; `title` is what a person reads.
+          //
+          // "Evidra" alone is not unique in the MCP registry: io.github.vitas/
+          // evidra is a DevOps flight recorder, published five months earlier
+          // and titled the same. Namespaces keep the identifiers distinct, but
+          // the title is the only part a person sees in a directory listing, so
+          // it is the part that has to say which one this is.
           name: "fitness-mcp",
-          title: "Evidra",
+          title: "Evidra Fitness",
           version: SERVER_VERSION
         },
         capabilities: {
