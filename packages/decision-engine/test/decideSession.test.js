@@ -197,13 +197,14 @@ test("an unknown time budget never becomes a reason to shorten the session", () 
     "nothing may be asserted about time we were never told"
   );
   assert.ok(!result.evidence.some((item) => item.signal === "available_minutes"));
-  const budgetLimit = result.limits.find((line) => /how much time the athlete has/.test(line));
+  const budgetLimit = result.limits.find((line) => /how much time is free today/.test(line));
   assert.ok(budgetLimit, "what we did not know is surfaced, not hidden");
   // The old wording said "no available-time figure was supplied", which reads as
-  // a complaint about the session's own durationMinutes — a different, optional
+  // a complaint about the session's own scheduled length — a different, optional
   // field. Saying which one it means keeps a caller from filling in the wrong
-  // gap to make the sentence go away.
-  assert.match(budgetLimit, /scheduledSession\.durationMinutes/);
+  // gap to make the sentence go away. It says it in words rather than field
+  // names: this line is spoken to the athlete, not read by the caller alone.
+  assert.match(budgetLimit, /keeps its planned length/);
 });
 
 test("every quoted number in a reason traces back to an evidence entry", () => {
@@ -257,9 +258,9 @@ test("an incomplete training week is surfaced as its own limit", () => {
     })
   });
 
-  const line = result.limits.find((l) => l.includes("training load"));
+  const line = result.limits.find((l) => l.includes("load figure"));
   assert.ok(line, "a gap in the training half must reach the caller too");
-  assert.match(line, /muscle fatigue is read from an incomplete week/);
+  assert.match(line, /muscle-fatigue picture covers part of the week/);
   // The recovery half was clean, so it must not manufacture a recovery limit.
   assert.ok(!result.limits.some((l) => /confidence is lowered/.test(l)));
 });

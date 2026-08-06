@@ -217,7 +217,8 @@ export function decideSession({
   state,
   availableMinutes,
   displayNameFor,
-  intensityDistributions
+  intensityDistributions,
+  rpeBasisCounts
 } = {}) {
   const speak = displayNameFor || identityDisplay;
   if (!state) {
@@ -522,9 +523,14 @@ export function decideSession({
     // Says only what it knows: no budget was supplied, so no time-based cut was
     // made. It must not claim the duration is unchanged — another rule may have
     // shortened it for reasons that have nothing to do with the clock.
-    limits.push(
-      "Nobody said how much time the athlete has today, so the session was not shortened to fit a clock. This is about their availability, not about how long the session itself is scheduled for — that is `scheduledSession.durationMinutes`, and it is optional."
-    );
+    // Only when there is a length to cut. Said on every call it was noise on
+    // four out of five: nobody asked about time, and the answer opened by
+    // explaining something that had not happened.
+    if (typeof to.durationMinutes === "number") {
+      limits.push(
+        "Nothing was said about how much time is free today, so the session keeps its planned length. Say how long you have and it will be cut to fit."
+      );
+    }
   }
 
   // 7. Room to progress: only when nothing above pulled anything down, and only
@@ -673,12 +679,12 @@ export function decideSession({
     // both ungrammatical and written in an identifier nobody outside this repo
     // has seen. `signalCoverage` keeps the machine-readable form; this sentence
     // says the same thing in words.
-    limits.push(`${listSignals(coverage.recovery.missing)} for today, so confidence is lowered.`);
+    limits.push(`${listSignals(coverage.recovery.missing)} for today, so confidence is held lower than it would be with them.`);
   }
   if (coverage.training.missing.length > 0) {
     limits.push(
-      `Some sessions in the last 7 days carry no training load, ` +
-        `so muscle fatigue is read from an incomplete week.`
+      `Some sessions in the last 7 days arrived without a load figure, ` +
+        `so the muscle-fatigue picture covers part of the week rather than all of it.`
     );
   }
 
@@ -688,20 +694,26 @@ export function decideSession({
   // which reads as severe detraining and meant only that the evidence was one day
   // deep. The caveat ships with the ratio rather than being left for the caller
   // to work out.
+  // Both of these fire together on any short history, and read as two paragraphs
+  // saying one thing: the ratio is early. Said as one sentence with the second
+  // fact as a clause, because a reader who is given ninety words about a number
+  // that was never the point stops reading the ones that were.
   const acwrCoverage = state.acwrCoverage;
-  if (acwrCoverage && !acwrCoverage.sufficientHistory) {
+  const thinHistory = acwrCoverage && !acwrCoverage.sufficientHistory;
+  const againstTarget = acwrCoverage && acwrCoverage.chronicBasis === "baseline_floor";
+  if (thinHistory) {
     limits.push(
-      `The acute:chronic ratio ${state.acuteChronicWorkloadRatio} is built on ` +
-        `${count(acwrCoverage.historyDays, "day")} of evidence ` +
-        `(${count(acwrCoverage.sessionsInWindow, "session")}) ` +
-        `against a ${acwrCoverage.chronicWindowDays}-day chronic window, so it reflects how little ` +
-        `history was supplied more than how this week compares to a normal one.`
+      `The acute:chronic ratio ${state.acuteChronicWorkloadRatio} rests on ` +
+        `${count(acwrCoverage.historyDays, "day")} of history ` +
+        `(${count(acwrCoverage.sessionsInWindow, "session")}), against a ` +
+        `${acwrCoverage.chronicWindowDays}-day window` +
+        (againstTarget ? `, and is measured against an assumed weekly target rather than a baseline of your own` : ``) +
+        `. Treat it as provisional until a few more weeks are in.`
     );
-  }
-  if (acwrCoverage && acwrCoverage.chronicBasis === "baseline_floor") {
+  } else if (againstTarget) {
     limits.push(
-      "Observed chronic load was below the assumed weekly target, so the ratio is measured " +
-        "against that target rather than against this person's own chronic load."
+      "Chronic load so far sits below the assumed weekly target, so the ratio is measured against that " +
+        "target rather than against a baseline of your own, which has not built up yet."
     );
   }
 
@@ -710,12 +722,27 @@ export function decideSession({
   // did not weigh it, rather than assuming it did. No rule reads these values —
   // inventing a threshold from one athlete's sessions is how an engine gets
   // fitted to a single person.
+  // A maximum heart rate seeded from 220-age is an assumption, not a
+  // measurement, and every heart-rate-derived load figure in the evidence is
+  // scaled against it. The flag has been parsed since the Strava export reader
+  // was written and has never been said out loud: the athlete sees load numbers
+  // and a decision drawn from them with no way to know what the ceiling was.
+  // Nothing is recomputed or discounted here — the reading is used as supplied,
+  // and the assumption travels beside it.
+  const ageEstimatedSessions = rpeBasisCounts?.athlete_max_hr_age_estimate || 0;
+  if (ageEstimatedSessions > 0) {
+    limits.push(
+      `The maximum heart rate behind ${count(ageEstimatedSessions, "session")} came from the source as an age estimate (220 minus age), not a measured maximum. ` +
+        `Heart-rate-derived load is scaled against that ceiling, so those figures — and this decision, where it rests on them — inherit the estimate. A measured maximum, set in the source app, would sharpen them.`
+    );
+  }
+
   const distributions = intensityDistributions || [];
   if (distributions.length > 0) {
     const sources = [...new Set(distributions.map((entry) => entry.boundarySource).filter(Boolean))];
     limits.push(
       `${distributions.length} sessions carry a heart-rate zone distribution (boundary source: ${sources.join(", ") || "unlabelled"}). ` +
-        `They are recorded as evidence, but no decision rule reads them — thresholds are not set from one athlete's data.`
+        `They are kept as evidence, and no rule reads them yet: thresholds are not drawn from a single athlete's sessions.`
     );
   }
 

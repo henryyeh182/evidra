@@ -387,8 +387,15 @@ test("a ratio built on almost no history says so", async () => {
 
   const caveat = payload.limits.find((line) => line.includes("acute:chronic ratio"));
   assert.ok(caveat, "the thin-history caveat travels with the ratio");
-  assert.match(caveat, /1 day of evidence \(1 session\)/);
-  assert.ok(payload.limits.some((line) => line.includes("assumed weekly target")));
+  assert.match(caveat, /1 day of history \(1 session\)/);
+  // Both facts still reach the athlete, but as one sentence. Said as two they
+  // ran to ninety words about a number that was never what they asked about.
+  assert.match(caveat, /assumed weekly target/);
+  assert.equal(
+    payload.limits.filter((line) => line.includes("assumed weekly target")).length,
+    1,
+    "the two halves of the same caveat are said once, not twice"
+  );
 });
 
 test("the demo seed cannot reach a real caller's answer by falling back", async () => {

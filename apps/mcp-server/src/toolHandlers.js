@@ -530,7 +530,12 @@ export async function decideSessionTool(args = {}) {
         startedAt: workout.startedAt,
         boundarySource: workout.intensityDistribution.boundarySource,
         derivation: workout.intensityDistribution.derivation
-      }))
+      })),
+    // How many sessions stood on what. `provenance.rpeBasis` has carried these
+    // counts all along, but a reader has to know that
+    // `athlete_max_hr_age_estimate` means 220-age to get anything from them.
+    // The decision turns the ones that qualify what it computed into a limit.
+    rpeBasisCounts: provenance.rpeBasis
   });
 
   return jsonContent({
