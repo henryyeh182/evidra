@@ -108,7 +108,7 @@ test("recovery renormalizes over present signals instead of using neutral filler
   assert.equal(state.recoveryScore, 100);
 });
 
-test("no fresh recovery signal falls back to a neutral score with empty coverage", () => {
+test("no fresh recovery signal scores nothing, rather than scoring 50", () => {
   const context = minimalContext([
     { type: "hrv_ms", value: 40, unit: "ms", recordedAt: "2019-01-01T07:00:00+08:00", source: "apple_health" }
   ]);
@@ -116,7 +116,14 @@ test("no fresh recovery signal falls back to a neutral score with empty coverage
   const state = generateSemanticFitnessState(context, { date: "2026-07-25", timezone: "Asia/Taipei" });
 
   assert.deepEqual(state.signalCoverage.recovery.usable, []);
-  assert.equal(state.recoveryScore, 50);
+  // 50 used to stand in here, and it was indistinguishable downstream from a
+  // measured 50: readiness came out 50, the rule that cuts intensity below 60
+  // fired, and the athlete was told their readiness was below the line on a
+  // number nobody had supplied. Coverage reported the gap the whole time and it
+  // changed nothing, because the decision was already made.
+  assert.equal(state.recoveryScore, null);
+  assert.equal(state.readinessScore, null);
+  assert.equal(state.fatigueScore, null);
   assert.equal(state.confidence, "low");
 });
 

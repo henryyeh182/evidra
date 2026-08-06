@@ -263,8 +263,17 @@ function calculateRecoveryScore(metrics, anchorDate, baselines = DEFAULT_BASELIN
   const missing = ["sleep", "hrv", "restingHeartRate", "stress"].filter((name) => !usable.includes(name));
 
   if (parts.length === 0) {
-    // No fresh recovery signal at all: neutral score, but say so via coverage.
-    return { score: 50, signals, coverage: { usable, missing } };
+    // No fresh recovery signal at all. This used to return 50 — a neutral score
+    // that read as a measurement all the way downstream: readiness came out 50,
+    // the rule that cuts intensity below 60 fired on it, and the athlete was
+    // told "readiness 50 is below 60, so intensity comes down" about a number
+    // nobody had supplied. Coverage reported the gap faithfully the whole time,
+    // and it made no difference, because the decision had already been made on
+    // the invented value.
+    //
+    // null is the honest answer, and it is what stops the readiness rules from
+    // firing at all.
+    return { score: null, signals, coverage: { usable, missing } };
   }
 
   const totalWeight = parts.reduce((sum, part) => sum + part.weight, 0);
@@ -274,6 +283,10 @@ function calculateRecoveryScore(metrics, anchorDate, baselines = DEFAULT_BASELIN
 }
 
 function calculateReadinessScore(recoveryScore, trainingLoad, muscleFatigue) {
+  // Readiness is recovery with penalties applied. With no recovery reading there
+  // is nothing to apply them to, and a number derived from nothing would be
+  // indistinguishable from a measured one.
+  if (recoveryScore === null) return null;
   const workloadPenalty = Math.max(0, trainingLoad.acuteChronicWorkloadRatio - 1.2) * 22;
   const maxMuscleFatigue = Math.max(0, ...Object.values(muscleFatigue));
   const fatiguePenalty = maxMuscleFatigue * 0.22;
@@ -313,7 +326,9 @@ function chooseRecommendedFocus({ readinessScore, muscleFatigue, restrictions, i
     restrictions.some((restriction) => restriction.includes("knee")) ||
     injuries.some((injury) => injury.status === "active" && injury.bodyRegion.includes("knee"));
 
-  if (readinessScore < 45) {
+  // `null < 45` is true in JavaScript, so an unmeasured readiness used to steer
+  // straight into the recovery-walk branch. Absent readiness steers nothing.
+  if (readinessScore !== null && readinessScore < 45) {
     return "Recovery walk + mobility";
   }
 
@@ -363,8 +378,10 @@ function buildReasoning({ recovery, training, readinessScore, trainingLoad, musc
   const reasoning = [
     usableSignals
       ? `Recovery score is ${recovery.score}, based on ${usableSignals}.`
-      : `Recovery score defaults to ${recovery.score} — no fresh recovery signal is available.`,
-    `Readiness score is ${readinessScore} after accounting for training load and recent muscle fatigue.`,
+      : `No fresh recovery signal is available, so there is no recovery score today — nothing is assumed in its place.`,
+    readinessScore === null
+      ? `Readiness is not scored without a recovery reading, so nothing today was decided on how recovered you are.`
+      : `Readiness score is ${readinessScore} after accounting for training load and recent muscle fatigue.`,
     `7-day training load is ${trainingLoad.trainingLoad7d}; 28-day training load is ${trainingLoad.trainingLoad28d}; acute/chronic ratio is ${trainingLoad.acuteChronicWorkloadRatio}.`
   ];
 
@@ -424,7 +441,7 @@ export function generateSemanticFitnessState(context, options = {}) {
     timezone,
     recoveryScore: recovery.score,
     readinessScore,
-    fatigueScore: clamp(100 - readinessScore),
+    fatigueScore: readinessScore === null ? null : clamp(100 - readinessScore),
     sleepQuality: recovery.signals.sleep,
     trainingLoad7d: trainingLoad.trainingLoad7d,
     trainingLoad28d: trainingLoad.trainingLoad28d,
@@ -438,7 +455,7 @@ export function generateSemanticFitnessState(context, options = {}) {
     availableTimeMinutes: getAvailableMinutes(context.preferences),
     goalAlignment: {
       primaryGoal: context.goals.sort((a, b) => a.priority - b.priority)[0]?.type || "general_fitness",
-      score: readinessScore >= 55 ? 0.76 : 0.52
+      score: readinessScore === null ? null : readinessScore >= 55 ? 0.76 : 0.52
     },
     // Two groups, not one list: a missing HRV and a session without an RPE are
     // both gaps, but they are gaps in different halves of the picture and a

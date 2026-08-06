@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "fitness-mcp",
   "display_name": "Evidra",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Semantic Fitness Layer exposed through MCP for model-agnostic AI fitness coaching.",
   "long_description": "Evidra turns the evidence a caller already holds into a training decision — not advice invented from nothing, but a well-supported transition from the current training state to the next, grounded in the evidence submitted and the rules applied. All computation is performed on the server. The server does not fetch, store, or retain evidence, nor does it invoke or rely on any model of its own.",
   "icon": "icon.png",

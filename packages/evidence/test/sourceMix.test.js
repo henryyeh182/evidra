@@ -76,10 +76,20 @@ for (const [label, extra] of Object.entries(SOURCE_MIXES)) {
     const context = evidenceToUserContext(evidence, { userId: "u" });
     const state = generateSemanticFitnessState(context, { date: DATE, timezone: "UTC" });
 
-    // Missing sleep must never break the pipeline for anyone.
-    assert.equal(typeof state.recoveryScore, "number", "recovery must resolve");
-    assert.equal(typeof state.readinessScore, "number", "readiness must resolve");
-    assert.ok(Number.isFinite(state.recoveryScore) && !Number.isNaN(state.recoveryScore));
+    // Missing sleep must never break the pipeline for anyone. Note what is and
+    // is not asserted: a mix with some physiology scores, a mix with none scores
+    // null — and either way a decision comes back and explains itself, which is
+    // the claim this file exists to hold. Asserting a number here for every mix
+    // was asserting that the invented 50 kept existing.
+    const anyRecoverySignal = state.signalCoverage.recovery.usable.length > 0;
+    if (anyRecoverySignal) {
+      assert.equal(typeof state.recoveryScore, "number", "recovery resolves from what arrived");
+      assert.equal(typeof state.readinessScore, "number", "readiness resolves from what arrived");
+      assert.ok(Number.isFinite(state.recoveryScore) && !Number.isNaN(state.recoveryScore));
+    } else {
+      assert.equal(state.recoveryScore, null, "nothing measured, nothing scored");
+      assert.equal(state.readinessScore, null);
+    }
 
     const decision = decideSession({ scheduledSession: session, state });
     assert.ok(decision.decision.type, "a decision is always produced");

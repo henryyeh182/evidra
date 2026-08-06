@@ -23,3 +23,8 @@ data/private/*
 export.xml
 apple_health_export/
 apple_health_export.zip
+
+# Screen recordings and screenshots of the extension in use — those are
+# recordings of health data, and they are not part of the source.
+*.mov
+*.mp4

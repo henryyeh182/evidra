@@ -229,8 +229,21 @@ export function decideSession({
   const reason = [];
   const limits = [];
 
-  const readiness = state.readinessScore;
-  evidence.push({ signal: "readiness", value: readiness, recordedAt: state.date });
+  // null when no recovery signal was supplied at all. It is not a low readiness
+  // and it is not a high one: there is no reading, so no rule that cuts on
+  // readiness may fire, and the number never enters evidence as though it had
+  // been measured. Everything else — muscle fatigue, acute:chronic load, time
+  // off — still decides, which is what keeps a training-load-only athlete
+  // getting an answer.
+  const readiness = state.readinessScore ?? null;
+  const readinessKnown = readiness !== null;
+  if (readinessKnown) {
+    evidence.push({ signal: "readiness", value: readiness, recordedAt: state.date });
+  } else {
+    limits.push(
+      "Readiness was not scored today, because no sleep, HRV, resting heart rate or stress reading arrived and a stand-in number would have decided this session on something nobody measured. The rules that read recovery sat this one out, everything resting on training load still applied, and confidence is held lower to match."
+    );
+  }
 
   const fatigue = targetFatigue(scheduledSession || {}, state.muscleFatigue);
   if (fatigue.group) {
@@ -379,7 +392,7 @@ export function decideSession({
   };
 
   // 2. Readiness.
-  if (readiness < RULES.readinessRest) {
+  if (readinessKnown && readiness < RULES.readinessRest) {
     to.intensity = "low";
     to.type = "recovery";
     to.focus = "Recovery + mobility";
@@ -397,7 +410,7 @@ export function decideSession({
       `Readiness ${readiness} is below ${RULES.readinessRest}: no training load today, swapped to a recovery session of at most ${RULES.recoveryCapMinutes} minutes.`
     );
   } else {
-    if (readiness < RULES.readinessReduce && from.intensity !== "low") {
+    if (readinessKnown && readiness < RULES.readinessReduce && from.intensity !== "low") {
       demand(
         "EVD-R-002",
         { quantity: "readiness_score", value: readiness },
@@ -553,6 +566,7 @@ export function decideSession({
     intensityStated &&
     !detraining?.active &&
     restrictions.length === 0 &&
+    readinessKnown &&
     readiness >= RULES.readinessAdvance &&
     (fatigue.value || 0) < RULES.muscleFatigueModerate &&
     from.intensity !== "high"
@@ -570,6 +584,7 @@ export function decideSession({
   if (
     type === "keep" &&
     restrictions.length > 0 &&
+    readinessKnown &&
     readiness >= RULES.readinessAdvance &&
     from.intensity !== "high"
   ) {
@@ -668,12 +683,17 @@ export function decideSession({
     reason.push(
       intensityUnstatedBlockedARule
         ? `The session is unchanged, but not because the evidence was clear: readiness ${readiness} and target-muscle fatigue ${fatigue.value || 0} called for a lower intensity that could not be applied. See limits.`
-        : `Readiness ${readiness} and target-muscle fatigue ${fatigue.value || 0} are both within range, so the session runs as planned.`
+        : readinessKnown
+          ? `Readiness ${readiness} and target-muscle fatigue ${fatigue.value || 0} are both within range, so the session runs as planned.`
+          : `Target-muscle fatigue ${fatigue.value || 0} and recent load leave nothing to change, so the session runs as planned.`
     );
   }
 
   const coverage = normalizeCoverage(state.signalCoverage);
-  if (coverage.recovery.missing.length > 0) {
+  // Skipped when readiness went unscored: that limit already names the same
+  // missing signals and says confidence dropped. Two sentences for one gap is
+  // the noise this file has been cutting all evening.
+  if (coverage.recovery.missing.length > 0 && readinessKnown) {
     // `limits` is prose, and prose reaches the athlete. The coverage keys are
     // field names — "No hrv, restingHeartRate, stress signal was available" is
     // both ungrammatical and written in an identifier nobody outside this repo

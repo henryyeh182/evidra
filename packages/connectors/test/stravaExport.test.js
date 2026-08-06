@@ -350,8 +350,16 @@ test("a Strava-export-only athlete still gets a decision, and it explains itself
     state
   });
 
-  assert.ok(Number.isFinite(state.readinessScore));
+  // A Strava export carries training and no physiology, so readiness is not
+  // scored — and the point of this test is that the decision lands anyway, on
+  // load. It used to assert a finite readiness, which only passed because an
+  // absent recovery signal was being filled in with 50 and then decided on.
+  assert.equal(state.readinessScore, null, "no recovery signal, so no readiness score");
   assert.ok(state.signalCoverage.recovery.missing.includes("sleep"), "the gap is reported, not papered over");
+  assert.ok(
+    decision.limits.some((line) => line.includes("Readiness was not scored today")),
+    "and the decision says which rules therefore sat out"
+  );
   assert.ok(decision.decision.type);
   assert.ok(decision.reason.length > 0);
   assert.ok(["low", "medium", "high"].includes(decision.confidence));
