@@ -46,19 +46,26 @@ retained, withdrawal leaves nothing behind for us to erase.
 
 ## What Evidra does not do
 
-As a desktop extension, verifiable from the code shipped in the extension:
+The extension ships one compiled JavaScript file, built from our source. It is minified,
+so it is not pleasant reading — but the two claims below survive that: minification does
+not rename the standard-library modules a file imports, so which capabilities the server
+has can still be read straight off the shipped file.
 
 - **Evidra itself performs no outbound network requests.** Its code makes no outgoing
-  HTTP, fetch, socket, or DNS calls, and it transmits your evidence nowhere. The
-  extension does ship the source of a separate HTTP transport, kept for the possible
-  hosted deployment described below. It is not reachable from the extension's entry
-  point, it opens no port, and running Evidra as an extension never starts it.
+  HTTP, fetch, socket, or DNS calls, and it transmits your evidence nowhere. The compiled
+  file imports no networking module of any kind — searching it for `node:http`,
+  `node:net`, `node:dgram` or `fetch(` returns nothing. A separate HTTP transport exists
+  in our source repository, kept for the possible hosted deployment described below; it
+  is not compiled into the extension and does not travel in it.
 - **Evidra itself does not persist your evidence.** It writes nothing but its protocol
-  responses. There is no database, no cache, no log file, and no history. The extension
-  does ship a folder named `packages/db`, and it contains no database and no database
-  client: an id helper, functions that turn an object into a row-shaped object, and an
-  interface whose methods are all unimplemented and throw if they are called. Nothing
-  shipped in the extension can write your evidence anywhere.
+  responses. There is no database, no cache, no log file, and no history. The compiled
+  file contains no call that writes to disk — no `writeFile`, no `appendFile`, no
+  `createWriteStream`, no `mkdir` — and it opens only three kinds of file, all of which
+  ship beside it and none of which are yours: the exercise catalogue, the sample data, and
+  the manifest it reads its own version number out of. One function from a folder our
+  repository names `packages/db` is compiled in: it turns text into a lowercase
+  identifier. No database, no database client, and nothing that could write your evidence
+  anywhere.
 - **No third-party code.** The extension has zero runtime dependencies and runs on the
   Node.js standard library alone. No analytics, no telemetry, no crash reporting, no SDKs.
 - **No model calls.** Decisions are deterministic arithmetic and explicit rules. Evidra

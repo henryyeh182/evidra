@@ -124,7 +124,7 @@ Evidra runs locally and does not retain your evidence.
 > compute the requested fitness decision. We do not retain, sell, use for training, or use
 > it for unrelated purposes.
 
-As a desktop extension, this is verifiable from the code shipped in it: **Evidra itself
+As a desktop extension, this is checkable against the compiled server it ships: **Evidra itself
 performs no outbound network requests, does not persist your evidence, and has no
 runtime dependencies, telemetry, model calls, or accounts.** Evidence exists in memory for the
 duration of one tool call.
