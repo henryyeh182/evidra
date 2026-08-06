@@ -2,12 +2,13 @@
   "manifest_version": "0.3",
   "name": "fitness-mcp",
   "display_name": "Evidra",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Semantic Fitness Layer exposed through MCP for model-agnostic AI fitness coaching.",
   "long_description": "Evidra turns the evidence a caller already holds into a training decision: not advice invented from nothing, but a from -> to change against the session already on the books, with the evidence and rules behind it. The server computes; it does not fetch, store, or retain evidence, and it calls no model of its own.",
   "icon": "icon.png",
   "author": {
-    "name": "Henry Yeh"
+    "name": "Henry Yeh",
+    "url": "https://github.com/henryyeh182"
   },
   "homepage": "https://github.com/henryyeh182/evidra",
   "documentation": "https://github.com/henryyeh182/evidra/blob/main/README.md",
