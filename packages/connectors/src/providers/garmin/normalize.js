@@ -1,6 +1,8 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
+import { stableId } from "../../../../db/src/id.js";
+
 /**
  * Garmin Connect export → Fitness Evidence Model.
  *
@@ -80,6 +82,42 @@ export function normalizeGarminReadiness(records = []) {
         value: record.acuteLoad,
         unit: "load",
         recordedAt
+      });
+    }
+  }
+  return events;
+}
+
+/**
+ * Daily Health Status ("Health Snapshot") metrics — a different file from the
+ * readiness export above, and a different HRV signal from its
+ * `hrvWeeklyAverage`. That field is a *weekly* average that stays the
+ * not-established sentinel `511` until Garmin has a sustained run of nights to
+ * average over. This file is *daily* and carries a real reading as soon as one
+ * night is measured: over one real export, 6/6 recorded days had a genuine
+ * value (37-50ms), each still `status: "ONBOARDING"` — that describes Garmin's
+ * confidence in the baseline, not an absent measurement, so it does not gate
+ * whether the reading is used. Prefer this over `hrvWeeklyAverage` for hrv_ms:
+ * it clears the sentinel days or weeks sooner.
+ */
+export function normalizeGarminHealthStatus(records = []) {
+  const events = [];
+  for (const record of records) {
+    const day = record.calendarDate;
+    const recordedAt = toIsoDay(day);
+    if (!recordedAt) continue;
+
+    const hrv = (record.metrics ?? []).find((metric) => metric.type === "HRV");
+    if (typeof hrv?.value === "number" && hrv.value > 0) {
+      events.push({
+        kind: "health_metric",
+        id: stableId("garmin", "hrv_ms", day),
+        type: "hrv_ms",
+        value: hrv.value,
+        unit: "ms",
+        recordedAt,
+        source: "garmin",
+        metadata: { onboarding: hrv.status === "ONBOARDING" }
       });
     }
   }
@@ -265,16 +303,17 @@ export function normalizeGarminActivities(activities = []) {
 /**
  * Assemble a Garmin export into Fitness Evidence Model shape.
  *
- * @param {{ readiness?: object[], dailySummaries?: object[], sleep?: object[], activities?: object[] }} parts
+ * @param {{ readiness?: object[], dailySummaries?: object[], sleep?: object[], activities?: object[], healthStatus?: object[] }} parts
  * @param {{ sinceDays?: number, asOf?: string }} [options]
  */
 export function buildGarminEvidence(parts = {}, options = {}) {
   const readiness = normalizeGarminReadiness(parts.readiness);
   const daily = normalizeGarminDailySummary(parts.dailySummaries);
   const sleep = normalizeGarminSleep(parts.sleep);
+  const healthStatus = normalizeGarminHealthStatus(parts.healthStatus);
   const workouts = normalizeGarminActivities(parts.activities);
 
-  const all = [...readiness, ...daily, ...sleep];
+  const all = [...readiness, ...daily, ...sleep, ...healthStatus];
   const asOf = options.asOf ? new Date(options.asOf).getTime() : Date.now();
   const cutoff = options.sinceDays ? asOf - options.sinceDays * DAY : null;
   const inWindow = (iso) => !cutoff || new Date(iso).getTime() >= cutoff;

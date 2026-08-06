@@ -6,5 +6,6 @@ export {
   normalizeGarminReadiness,
   normalizeGarminDailySummary,
   normalizeGarminSleep,
+  normalizeGarminHealthStatus,
   normalizeGarminActivities
 } from "./normalize.js";

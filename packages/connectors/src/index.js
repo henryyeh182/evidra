@@ -42,5 +42,6 @@ export {
   normalizeGarminReadiness,
   normalizeGarminDailySummary,
   normalizeGarminSleep,
+  normalizeGarminHealthStatus,
   normalizeGarminActivities
 } from "./providers/garmin/index.js";
