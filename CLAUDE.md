@@ -147,7 +147,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 - 對外 **6 個 tool**：`evidra_assess_fitness_state` · `evidra_decide_session` · `evidra_decide_exercise_substitution` ·
   `evidra_generate_plan` · `evidra_preview_adjust_plan` · `evidra_commit_adjust_plan`
-- **333 tests**、eval 20 golden cases，全綠
+- **366 tests**、eval 20 golden cases，全綠
 - parser 實作 4 家（Apple Health／Garmin／Strava／Google Health Takeout；Strava 含 API 與
   bulk export 兩種方言）；schema registry 涵蓋 6 個平台
 - Strava bulk export：CSV 按欄位**索引**解析（5 組同名欄單位不同）；`Activity Date` 是 UTC 無 offset，
@@ -316,6 +316,13 @@ result 裡而不是協定層**、structured output、transport 選擇。**這些
 的描述要呼叫端傳一個 schema 裡不存在的 `evidence`（同一句錯話還在 `manifest.json`
 與 `evidra/README.md`）、3 個 tool 把呼叫端可以自己修的失誤送成 JSON-RPC error、
 `evidra_generate_plan` 宣告會寫入但它是純函數、HTTP 綁全部介面卻印「local only」。
+
+**要打包 `.mcpb` 之前先載 `mcp-server-dev:build-mcpb`。** 觸發條件：重新打包 bundle、
+動 `.mcpbignore`、改 `manifest.json` 裡與打包有關的欄位、或發布新版本。
+（這個 skill 的內容我沒讀過，只知道觸發條件——它宣稱管的是 bundle 封裝與本機安裝那一段。）
+
+另兩個 `mcp-server-dev:*` 這裡用不到，不必叫：`build-mcp-server` 是決定部署模型的入口
+（已定案）；`build-mcp-app` 是做互動 widget／Apps SDK 的（「聊天介面」在「明確不做」裡）。
 
 ## 常用指令
 

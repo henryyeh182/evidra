@@ -1,11 +1,118 @@
 # Fitness MCP — Implementation Plan
 
-> 版本：**v7** · 依 [Design Manifesto](design-manifesto.md) 推導
+> 版本：**v8** · 依 [Design Manifesto](design-manifesto.md) 推導
 > **Mission**：A permissioned Fitness Decision Engine that turns fragmented, user-owned health evidence into explainable training decisions for AI agents.
 
 > ⚠️ [Design Manifesto](design-manifesto.md) 位階最高，衝突時以宣言為準。
 > 宣言回答「蓋什麼、不蓋什麼」；本文件回答「照什麼順序蓋、現在偏差在哪」。
 > 本文件是唯一的實作計畫，先前的 v1／v2／各 phase 分冊已刪除並整併於此。
+
+> **v8 併入了 `Evidra_Decision_Engine_開發計畫.md`**（處置逐章列在 §4.6）。
+> 併入原則：**可驗證的結構提案照收，與已定案項目衝突的一律不改寫，只列為未決。**
+> 該文件的九章有 4 章併入、2 章列為提案、3 章與既有決策衝突未併入——**明細與理由在 §4.6，
+> 不要只讀本節就當它整份生效了。**
+
+---
+
+## 0.0 上架優先順序與 Go／No-Go（v8 新增）
+
+> **本節是「現在要做什麼」的唯一入口。** 底下 §0 的 P1–P8 是產品交付路線，
+> §4 的 Phase 1–9 是歷史工程階段——**三套編號不要混用**。
+>
+> **證據正本在 [distribution-channels.md](distribution-channels.md)**，本節只放判斷與順序。
+> 要改變上架計畫之前，先看那份的最後一節「尚未查證」。
+> **本節的查證範圍**：七個通路裡，**五個有一手查證**（官方 registry、PulseMCP、Smithery、
+> mcp.so、Anthropic 兩條路徑），**兩個沒有**（ChatGPT App Directory、ChatGPT Health
+> ——它們的判定是「因為未查證所以不開工」，不是「查過之後判定不做」）。
+
+### 0.0.1 通路順位（依「還缺什麼」排，不依吸引力排）
+
+| 順位 | 通路 | 性質 | 還缺什麼 | 誰能做 | 判定 |
+|---|---|---|---|---|---|
+| **1** | **官方 MCP registry** | 開發者 discovery | 一次 `mcp-publisher` 登入（GitHub OAuth）。`server.json` ✅ 已寫、v0.2.0 的 sha 已對過 | **只有使用者**（Claude 不能代登） | 🟢 **GO** |
+| **2** | **PulseMCP** | 開發者 discovery | **零**。發完順位 1 之後它每天抓、每週處理；不想等就填表單（只要一個 URL） | 自動／使用者填表 | 🟢 **GO**（與順位 1 綁在一起，不是獨立工作） |
+| **3** | **Anthropic MCPB 表單** | **真通路**（Claude Desktop 使用者） | `manifest.json` 的 `author.url`（可現在補）＋ GitHub Link 填哪個 repo（綁 **G/N-1**） | 補欄位＝Claude；送表單＋在 Claude 裡跑 custom connector＝使用者 | 🟢 **GO，但先答 G/N-1** |
+| **4** | **Smithery（Local MCPB 路徑）** | 開發者 discovery | config schema ＋ server page metadata | Claude 可備妥，使用者發布 | 🟡 **GO（低優先）**——尚未查證 #1（會不會從官方 registry 自動抓）未解，可能白做一次 |
+| **5** | **mcp.so 免費送審** | 開發者 discovery | 一個表單 | 使用者 | 🟡 順手做。**$39 刊登：🔴 NO-GO**（受眾自承是開發者，我們付錢買曝光且無分潤） |
+| **6** | **Anthropic remote portal** | **真通路**（所有 Claude 介面，含手機） | Team 帳號 ＋ authorization server ＋ HTTPS 公開部署 ＋ 隱私政策改寫，**四件** | — | 🔴 **NO-GO（現在）**——見 0.0.3 |
+| **7** | **ChatGPT App Directory／Health** | **真通路** | 未查證 #6 未解 | — | 🔴 **NO-GO（現在）**：**平行查證，不平行開工** |
+
+**順位 1–3 加起來的工程量是「補一個 `author.url`」。** 其餘全是使用者帳號動作與一個授權決定
+——**這就是「go/no-go 先完成」要處理的東西：擋住上架的不是程式。**
+
+### 0.0.2 三個 Go／No-Go 決定（**2026-08-06 使用者已定案**）
+
+#### G/N-1 — 為了進 Anthropic 的優先清單改 MIT？→ ✅ **不改，照閉源送**
+
+**使用者定案（2026-08-06）**：不改授權。**「如果送審受阻，會再通知沒過的原因，
+要公開再來公開。」**
+
+> **這句話決定了後續怎麼處理退件**：閉源送出後若被退，**退件理由本身就是要找的證據**
+> ——它會回答 distribution-channels 尚未查證 #13（那條找不到原文的 MCPB 開源條文）
+> 到底存不存在。**所以退件不是失敗，是查證。** 收到理由之前不得自行改授權，
+> 也不得把「可能要開源」寫成既定事項。
+
+支持這個定案的三個理由，全部有出處：
+
+1. MCPB 表單原文是「we're **primarily considering** extensions that: ... MIT licensed」
+   ——**優先，不是門檻**。表單同時自陳 "does not guarantee inclusion"，
+   **它是報名表達興趣，不是審查流程的開始**。
+2. `review-criteria` 提到的「MCPB open-source 條文 required and not waivable」
+   **三處查遍找不到原文**（Terms 全文八個關鍵詞零命中、Policy 沒有、表單 T&C 沒有）
+   ——見 distribution-channels 尚未查證 #13。**不得拿一條找不到原文的條款去公開
+   decision engine 與知識圖譜。**
+3. 送出去被略過的成本近零；改 MIT 不可逆。
+
+**寄信問 #13 是選配，不是前置**——定案是**直接送，用退件理由當答案**。
+
+#### G/N-2 — 採不採用 `開發計畫` 的 Rule Library？→ ✅ **採用 Rule Schema，排在上架動作之後**
+
+**使用者定案（2026-08-06）**：做，**但排在順位 1–3 的上架動作之後**。
+理由是工作量不對稱——上架三步只要一個 `author.url`，Rule Schema 牽動控制流與契約。
+
+**採用 §3.3 的 Rule Schema（規則帶 id／版本／出處），不採用九層重寫。**
+
+理由是實測出來的：`packages/decision-engine/src/decideSession.js:46` 的 `RULES` 已經是
+「拉出來當資料」的常數表（`acwrHigh: 1.4`、`muscleFatigueHigh: 65`、`readinessRest: 40`…），
+但**全庫 `rule_id`／`evidence_level` 零命中**。所以缺的不是「把規則變成資料」——
+那已經做了——**缺的是每條規則的出處欄位**。這正好是 CLAUDE.md 紀律 2
+（無出處的值不准進 repo）與技術債 #17 一直沒有落點的那件事。
+
+**九層重寫則是 no-go**：九層裡 Layer 0／2／5／6 現況已有實作，Layer 7 已於
+Phase 6 結案（呼叫端保存），真缺口只有三個。逐層對照見 §4.6.2。
+
+#### G/N-3 — `開發計畫` §8 的 IP 保護（Rule Package 加密 ＋ 編譯 ＋ License Token ＋ 機器指紋）？→ ✅ **NO-GO**
+
+**使用者定案（2026-08-06）：現在不做。** 三個理由：
+
+1. **會推翻已經公開發布的承諾。** `PRIVACY.md` 與 release notes 寫的是
+   「performs **no outbound network requests** … **no telemetry, model calls, or accounts**」。
+   License 定期驗證與 Rule Package 自動更新**都要連外**，機器指紋是**識別碼蒐集**
+   ——三者都會讓已發布的政策當場失真。
+2. **它依賴一個還沒定案的商業模式。** 授權伺服器＝`http.js:95` 缺的那個 authorization
+   server，與 per-MAU 是**同一個缺口**；per-MAU 本身仍是暫定。
+3. **技術前提對不上。** 該節指定的 Nuitka 是 Python 工具，本專案是 Node、
+   `dependencies` 與 `devDependencies` 皆空。
+
+**可以現在做、且不衝突的只有一項**：`開發計畫` §3.7.1 的邊界界定
+（使用者拿到治理結果與溯源標籤，拿不到治理過程）——那是**內部檔案放哪裡**的規則，
+不需要任何加密或連網。
+
+### 0.0.3 為什麼 remote 是「現在 no-go」而不是「不做」
+
+**remote 是終點，MCPB 到不了手機。** 目標情境是使用者在手機的 Claude／ChatGPT 問一句
+就拿到決策；MCPB 只裝得進 Claude Desktop。所以順位 6 的 no-go 是**時序**，不是方向。
+
+它擋在四件事上，**其中兩件互為同一個缺口**：
+
+| # | 缺口 | 現況 | 與別的東西的關係 |
+|---|---|---|---|
+| 1 | Team／Enterprise 帳號 | 個人 Pro 進不去 admin settings | 純付費，與程式無關。**費用未查證**（distribution-channels #10） |
+| 2 | authorization server | `http.js:95` | **與 per-MAU 是同一個缺口，不是兩件工**。選型硬條件：支援 CIMD（D-REGISTRATION） |
+| 3 | HTTPS 公開部署 | 只跑 `localhost:8787` | 見 7.2 |
+| 4 | 隱私政策改寫 | 計畫已寫在 [privacy-policy-rewrite-plan.md](privacy-policy-rewrite-plan.md) | **觸發點是 #2 開工的那一刻**，且必須在 remote 對外開放**之前**改完 |
+
+**#2 一動，#4 就同時到期。** 這是排序上唯一的硬耦合。
 
 ---
 
@@ -178,7 +285,7 @@ token rotation，以及 connector directory 的 OAuth、privacy URL、support、
 
 ## 1. 已實作元件
 
-333 tests pass，全部 dependency-free（Node 20+，無外部套件）。
+366 tests pass，全部 dependency-free（Node 20+，無外部套件）。
 
 | Package | 內容 |
 |---|---|
@@ -189,7 +296,8 @@ token rotation，以及 connector directory 的 OAuth、privacy URL、support、
 | `packages/planning` | `generatePlan`（週期化 base→build→peak→deload）、`adaptPlan`（非破壞式 diff 預覽）、stateless patch validator（caller/external storage 持有版本） |
 | `packages/connectors` | Apple Health（`export.xml` 串流解析）、**Strava**（OAuth API ＋ bulk export 兩種方言，後者按欄位索引解析並從 `.fit.gz` 還原本地 offset）、**Garmin**（readiness／daily summary／sleep／activities，含 sentinel 處理）的格式正規化 |
 | `packages/evidence` | **Fitness Evidence Model**：跨來源證據契約 ＋ 轉內部 context |
-| `packages/decision-engine` | **`decideSession`**：計畫 × 證據 → Decision/Action/Reason，結構性拒絕退化成推薦 |
+| `packages/rules` | **Rule Library（v1.0.0，8 條規則）**：每個門檻帶 `ruleId`／`version`／`category`／`priority`／`basis`／`evidenceLevel`／`sources`／`contested`／`limitations`。引擎**沒有自己的門檻**——`RULES = THRESHOLDS`，改 JSON 就改行為，`assertThresholdsMatch` 雙向把關。含 Priority Matrix 仲裁與 `most_restrictive_wins` 合併政策 |
+| `packages/decision-engine` | **`decideSession`**：計畫 × 證據 → Decision/Action/Reason，結構性拒絕退化成推薦。**輸出帶 `decisionBasis`**：哪條規則、量到什麼、門檻多少、依據是文獻還是內部分數 |
 | `packages/db` | PostgreSQL schema 與 row mappers（尚未接 runtime） |
 | `apps/mcp-server` | **6 個對外決策 tool**（另 10 個 Content 端點已下架、仍可呼叫一版），JSON-RPC over stdio，含 `assertGrounded` 與 4KB payload 預算 |
 | `/schemas` | 各 tool 的 input/output JSON Schema 契約 ＋ drift guard |
@@ -318,7 +426,7 @@ Anthropic Claude**。定位是「問 Claude 關於你的 Strava 表現」，由 
 |---|---|---|
 | **證據** | ✅ **是，但不是「擁有資料」那個意思**——是**同時讀懂四家並對齊成一份**。見下方訂正 | 已驗證（實測 Apple Health 匯出、Strava 官方頁） |
 | **計算** | ✅ 是。ATL/CTL/TSB、detraining 獨立軸線、個人基線，確定性、零外部 API、0.443ms | 已驗證（實測，Phase 8） |
-| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、333 tests） |
+| **保證** | ✅ 是，且更難複製。同證據永遠同決策，理由綁回證據，輸出帶 confidence／signalCoverage／limits | 已驗證（G3 gate、366 tests） |
 
 **知識圖譜 889 節點不列為護城河。** GPT-6 知道所有動作。它的價值在**不變量**
 （進退階互逆、禁忌把關、plan → catalog 100%）讓替代決策**可被驗證**，不在節點數。
@@ -606,7 +714,13 @@ tool 描述就是分發面」。
 
 **所以下一步只有一件事：讓 Claude 連得上。**
 
-1. **7.2 公開部署 ＋ 7.1 OAuth 補完** ← **主軸上唯一未完成的一步**
+> 🔴 **訂正（v8）：這一段的排序已被 §0.0 取代。** 它寫於 2026-07-30，當時
+> **「連得上」只有 remote 一條路**。2026-08-01 查證後確認 **MCPB 走獨立表單、
+> 個人 Pro 即可、`stdio` 已綠**——那是「讓 Claude 連得上」的第二條路，而且**現在就能走**。
+> 所以下面的 1. 不再是下一步：**remote 擋在四件事上（見 §0.0.3），MCPB 擋在一個
+> `author.url` 上。** 這一段保留是為了留下當時的推理，**排序以 §0.0 為準。**
+
+1. ~~**7.2 公開部署 ＋ 7.1 OAuth 補完** ← 主軸上唯一未完成的一步~~ → 見 §0.0.3，現為順位 6
 2. **Phase 8 上架清單** ← 連得上之後才有人找得到（Team 帳號與隱私政策與程式無關，可平行）
 3. **user-journey 補上已完成的功能**（提議評估、心率區間分佈，見 4.5-C3）
    ← 這份文件同時是需求書與對 stakeholder 的說明，內容落後就是需求說明落後
@@ -1167,7 +1281,7 @@ CIMD 那個決定要在 Phase 7 就下對。
   2. header 與 body 不一致時確實回 `-32020`
   3. 不支援的版本回 `-32022` 且列出 `supported`
   4. `server/discover` 回得出支援版本清單
-  5. 既有 333 tests 全綠，且新增 dual-era 雙路徑測試
+  5. 既有 366 tests 全綠，且新增 dual-era 雙路徑測試
 
 ---
 
@@ -1185,6 +1299,10 @@ CIMD 那個決定要在 Phase 7 就下對。
 | A3 | **max HR 171 是年齡估計**（220−49） | 資料裡觀察到的最高 150，但那 7 筆全是穩態有氧，是下限不是上限。維持估計值、還是做一次最大努力測試 |
 | A5 | **理由句子由誰組**——核心概念（3.5）說語言那層是 Claude 的；引擎現在自己寫中文模板句。要不要改成只回結構化數值與觸發的規則 | 影響 `decideSession.js` 全部 `reason.push(...)`、schema 契約、G3 gate |
 | A4 | **四個 tool 要不要改名**（`evidra_decide_session` → `decide_training_session` 等，牽動 6 處） | 判準是「遮住 connector 名稱後看不看得出是健身領域」，四個沒過。`deprecatedToolAliases` 已在，改名不會斷既有呼叫端 |
+| A6 | **商業分級要不要做**（`開發計畫` §2 的 Free／Pro US$20／Enterprise ＋ Rule `tier` 欄位） | 與 A2「暫定 per-MAU」是同一個未定案的兩種答案。**在 A2 定案前不得寫進任何資料結構**。見 §4.6.5 衝突 ② |
+| ~~A7~~ | ~~**Rule Schema 要不要做**~~ | ✅ **已實作（2026-08-06）：`packages/rules` v1.0.0，8 條規則。** 使用者當日改變順序要求先做。見 §4.6.3 |
+| A8 | **部署終局是 local-first 還是 remote** | `開發計畫` 把 Cloud 排在 1000 使用者之後；本文件的目標情境是手機 AI app，而 **MCPB 到不了手機**。**取決於主客群是誰**（醫療／運動隊／企業 vs 個人使用者），不是技術問題。見 §4.6.5 衝突 ① |
+| ~~A9~~ | ~~**為了 Anthropic 優先清單改 MIT？**~~ | ✅ **已決（2026-08-06）：不改，照閉源送；被退再依退件理由決定。** 見 D-LICENSE |
 
 ### B. 計畫與宣言衝突（B1、B3 已於 2026-07-31 結案；B2 仍未決）
 
@@ -1199,6 +1317,9 @@ CIMD 那個決定要在 Phase 7 就下對。
 | # | 項目 | 位置 |
 |---|---|---|
 | C1 | **`maxSampleGapSeconds = 30` 沒有出處**——「心率斷超過 30 秒算暫停」的 30 是挑的，已 commit。要有依據，或改成呼叫端必填 | `packages/connectors/src/timeInZone.js:106` |
+| ~~C7~~ | ✅ **已解（2026-08-06）**：門檻全部移入 `packages/rules/data/session-rules.json`，各自帶 `basis`／`evidenceLevel`／`sources`／`limitations`。引擎的 `RULES = THRESHOLDS`，沒有自己的數字。**但要看清楚它解掉的是什麼**：它讓「無出處」變成資料裡看得見且結構性強制的事實，**不是讓那 6 條變成有出處**——那 6 條永遠不會有。C1 的 `maxSampleGapSeconds` 仍未收編（它在 connectors 不在 decision engine） | `packages/rules/` |
+| C9 | **G5 是來源粒度，看不見「既有來源多了一個 signal」**（v8 新增，實測）——`16b4985` 為 Garmin 新增 `hrv_ms` parser，G5 全綠不動，因為 Garmin 的 registry／source schema／scenario 四件本來就都在。**抓到它的是 scenario 自己那條「registry 宣告的每個 signal 都要真的被解析出來」**，不是 gate。教訓：**動既有來源的 parser 時 gate 不會叫，要自己跑 `npm run simulate:<source>`** | `scripts/review-phase.js` |
+| C8 | **Evidence Quality 這個維度不存在**（v8 新增）——現況只有 coverage（有沒有）與新鮮度（過不過期），**沒有「這個來源多可信」**。是 §4.6.2 的 Layer 1 真缺口。⚠️ 做的時候會立刻遇到 C7 同一個問題：`quality: 0.94` 這種分數**本身就需要出處**，否則只是換個地方編值 | 尚未有檔案 |
 | C2 | **`trainingLoad ?? 分鐘數` 仍在編造負荷值**（`rpe ?? 5` 已於 `ec7f887` 移除，這條當時明確劃在範圍外） | `packages/evidence/src/model.js:155` |
 | C3 | **user-journey 缺兩個已完成功能**（提議評估、心率區間分佈）。**沒有 gate 抓得到**——G4 只比對五種決策型別，沒有東西比對「功能 ↔ 對外文件」 | `docs/user-journey.html` |
 | C6 | 🟡 **證據的實際來源形狀沒驗過**——我們的 parser 全部是針對**匯出檔**寫的（`normalize.js` 註解自陳「Garmin Connect export → Fitness Evidence Model」）。但真實流程裡，證據是 Claude 從**別人的 MCP server** 拿到再當參數傳進來的：Strava 官方 connector、Garmin 社群版 61 個 tool 的 API 形狀。**兩者形狀不同，且從未對照過。** 這是「四家對齊」這條護城河能不能兌現的關鍵 | `packages/connectors/src/providers/*/normalize.js` |
@@ -1221,6 +1342,170 @@ CIMD 那個決定要在 Phase 7 就下對。
 
 ---
 
+## 4.6 Rule Library 與決策治理（v8 併入 `Evidra_Decision_Engine_開發計畫.md`）
+
+> **併入原則**：可驗證的結構提案照收；與已定案項目衝突的**一律不改寫**，只列為未決。
+> 每一段標明是**已驗證**（附讀碼／指令／官方原文）還是**提案**（尚未驗證）。
+
+### 4.6.1 逐章處置
+
+| 開發計畫的章 | 處置 | 去了哪裡／為什麼不併 |
+|---|---|---|
+| §0 核心定位（本機優先） | 🟡 **部分併入** | 「Decision Engine 與封裝層解耦」併入（§4.6.2）。**但「Cloud 是 Phase 4 加值」與既定方向衝突**——見 4.6.5 衝突 ① |
+| §1 九層架構 | 🟡 **列為提案** | 逐層對現況實測，真缺口只有三個。見 §4.6.2 |
+| §2 商業模式與定價（Free／Pro US$20／Enterprise） | 🔴 **不併入** | 與已定的「暫定 per-MAU、定案條件未達成」衝突。**計價不得自行改寫**。列為 4.5-A6 |
+| §3.1–3.4 資料模型（Canonical Signal／Quality／Rule Schema／Priority Matrix） | 🟢 **併入** | 見 §4.6.3、§4.6.4 |
+| §3.5–3.6 Decision Case／Outcome Record | 🔴 **不併入** | Phase 6 已於 2026-07-31 結案：**三元組由呼叫端保存，hosted 不留**。這兩個結構屬呼叫端，不屬本引擎 |
+| §3.7.1 Rule Package 邊界 | 🟢 **併入** | 治理結果與溯源標籤出貨，治理過程留內部。不需要任何加密即可執行 |
+| §4 Rule Governance 流程 | 🟢 **併入** | 見 §4.6.4。**證據等級階梯直接解掉紀律 2 一直沒有落點的那半** |
+| §5 建議新增 4 個 tool | 🔴 **不併入** | 見 4.6.5 衝突 ③ |
+| §6 路線圖 Phase 0–4 | 🔴 **不併入** | 與本文件的 P1–P8／Phase 1–9 是第四套編號。內容可對應處已分別併入 |
+| §7 風險 1／3／4／5 | 🟢 **併入** | 1 併入 §4.6.4（初期誠實標 Expert Consensus）、3 已是 D-LLM、4 併入 §4.6.4、5 併入 §4.6.3 |
+| §7 風險 2（Outcome Learning 變慢） | ✅ **已結** | Phase 6 已結案，不是待處理風險 |
+| §8 IP 保護與更新機制 | 🔴 **不併入（已定案 NO-GO）** | 見 **D-IPGUARD** 與 §0.0.2 的 G/N-3。**§8.3 查到的事實併入**（見 §4.6.6） |
+
+### 4.6.2 九層 vs 現況：真缺口只有三個（已驗證）
+
+| 層 | 開發計畫的定義 | 現況 | 判定 |
+|---|---|---|---|
+| 0 Evidence Canonical Model | vendor-neutral 中介語言 | `schemaRegistry.js` ＋ 四家 parser ＋ `schemas/evidence/fitness-evidence.json` | ✅ 已有 |
+| **1 Evidence Quality** | 每個 signal 的可信度打分 | **無**。只有新鮮度（過期即排除） | 🔴 **真缺口** |
+| 2 Evidence Coverage | 缺值誠實回報 | `signalCoverage.recovery`／`.training` | ✅ 已有 |
+| **3 Rule Library** | 版本化、帶出處 | `decideSession.js:46` 的 `RULES` 是裸常數，**全庫 `rule_id`／`evidence_level` 零命中** | 🔴 **真缺口**（＝技術債 #17） |
+| **4 Conflict Resolver** | Priority Matrix 仲裁 | **無**。現況是 `demand(優先級數字, 理由)` 的隱式排序，類別體系不存在 | 🔴 **真缺口** |
+| 5 Decision Engine | from／to／reason／rule／confidence | `decideSession` ＋ `assertValidDecision` | ✅ 已有（缺 `rule`，隨 Layer 3 一起補） |
+| 6 Explainability | Rule Trace | reason 已綁回證據；**但 trace 指不到 rule id**（同 Layer 3） | 🟡 隨 Layer 3 補齊 |
+| 7 Outcome Learning | Decision→Outcome→Review | **Phase 6 已結案：呼叫端保存，hosted 不留** | ✅ 已結，不是缺口 |
+| 8 Knowledge Governance | 審查流程 | 無 | 🟡 **是流程不是程式**，見 §4.6.4 |
+
+**所以「九層架構」對本專案的實際內容 = 補 Layer 1／3／4 三件事，外加一個人工流程。**
+不是重寫。**「Decision Engine 與封裝層解耦」這條現況已成立**：同一份
+`packages/decision-engine` 同時被 stdio、HTTP 與 `.mcpb` 使用，封裝層不含決策邏輯。
+
+### 4.6.3 Rule Schema（提案，直接對應技術債 #17）
+
+現況（已驗證，`packages/decision-engine/src/decideSession.js:46`）：
+
+```js
+const RULES = {
+  readinessRest: 40,       // ← 沒有出處
+  muscleFatigueHigh: 65,   // ← 沒有出處
+  acwrHigh: 1.4,           // ← 沒有出處
+  ...
+};
+```
+
+提案：每條門檻升格成帶溯源的規則。欄位取自開發計畫 §3.3，**刪掉 `tier`**
+（分級屬未定案的商業模式，不進資料結構）：
+
+```yaml
+rule_id: EX-042
+version: 1.3
+title: Reduce Intensity after Recovery Decline
+trigger: { autonomic_state: low, sleep_quality: poor }
+decision: { replace_with: Zone2 }
+category: Recovery        # 供 Layer 4 仲裁：Injury / Illness / Recovery / Training Goal / Preference
+priority: 85              # 同類別內的次序
+evidence_level: Systematic Review
+sources: [ACSM 2024, Seiler 2019]
+status: active            # draft / active / deprecated
+```
+
+**這個結構的價值不在「可以賣套件」，在於它讓紀律 2 有地方可寫**：
+一個沒有出處的門檻現在必須把 `evidence_level` 填成 `Internal / Expert Consensus`
+或 `untested`，**它的無出處狀態會顯示在資料裡**，而不是藏在一行註解後面。
+
+**規則引擎選型（併自 §7 風險 5）**：**不自建規則引擎**。現況的
+condition-matching 足夠；等規則數成長到需要加權或模糊匹配再談。
+
+> ✅ **已實作（2026-08-06，`packages/rules` v1.0.0）。** 使用者當日改變順序，要求先做。
+> 366 tests 全過、九條 gate 全綠。**實際做出來與提案有三處不同，都是實作時才看清楚的**：
+>
+> 1. **多了 `basis` 欄位，這是整個設計的重心。** 查證發現 8 條規則裡只有 2 條
+>    （ACWR、detraining）的量是外部定義的；其餘 6 條的門檻掛在**我們自己組的
+>    readiness／fatigue 分數**上（權重 0.35/0.35/0.2/0.1、`(ACWR−1.2)×22` 等全是我們挑的），
+>    **沒有任何論文用過那個分數，所以永遠不可能有出處**。`basis: internal_composite`
+>    把這件事變成資料裡看得見的欄位，並由 `assertProvenanceHonesty` **結構性禁止**
+>    在這類規則上掛引用——把真論文貼到自創分數的門檻上，是這個 library 能犯的最嚴重的錯。
+> 2. **`sources` 與 `supportingLiterature` 分成兩個欄位。** 前者＝「這篇支持這個門檻」，
+>    後者＝「這篇支持這條規則的方向，但明講不支持它的數字」。每個引用都強制填
+>    `doesNotSupport`——**這個 library 裡每一篇引用都與門檻有落差，落差要寫出來。**
+> 3. **多了 `contested`。** ACWR 那條同時載入 Gabbett 2016 與 Impellizzeri 2020／Lolli
+>    的反對意見。**引用 Gabbett 卻不引用批評它的人，才是會被查出來的破綻。**
+>
+> 不含 `tier`（分級屬未定案的商業模式，A6 未決）。
+
+### 4.6.4 Conflict Resolver 與治理流程（提案）
+
+**Priority Matrix**（開發計畫 §3.4，原樣併入）：
+
+```
+Injury > Illness > Recovery > Training Goal > Preference
+```
+
+先比類別、同類別再比 `priority` 數值。**及早定案的理由是可驗證的**：規則少時衝突機率低，
+一旦擴充就會讓決策不可預期——而「同證據永遠同決策」是本產品宣稱的三項保證之一。
+
+**證據等級階梯**（§4，原樣併入）：
+
+```
+國際指南（ACSM／NSCA／ISSN）> Position Stand > Systematic Review / Meta-analysis
+> RCT > 專家共識（IOC／USOPC／AIS）> 內部 Outcome Data
+```
+
+**規則生命週期**：`文獻更新／Outcome 異常 → Draft → 人工審查 → Regression Test（跑既有
+golden set）→ Release（version bump）`。**Regression Test 這一步現況已有載體**——
+`eval/` 的 20 golden cases 與五個 gate 就是它。
+
+**兩條紀律照收**：
+- **LLM 不自己決定新規則**，只協助從文獻萃取草稿與解釋既有規則給使用者聽。與 D-LLM 一致。
+- **初期誠實標 `Expert Consensus / Internal`**，不自稱 Guideline 等級（§7 風險 1）。
+
+### 4.6.5 三個衝突：不併入，也不代為改寫
+
+**① 部署終局：`開發計畫` 說 Cloud 是 Phase 4 的加值，本文件說 remote 是終點。**
+
+開發計畫 §6 Phase 4 寫「累積 1000+ 使用者後推出 Cloud，作為加值而非取代」，
+且 §0 把本機優先講成長期定位。**但本專案的目標情境是手機上的 AI app**——
+MCPB 只裝得進 Claude Desktop，到不了手機。兩者不是同一個終局。
+**這條沒有自動的正確答案，因為它取決於賣給誰**：若主客群是醫療／運動隊／企業，
+開發計畫那個排序成立；若是個人使用者，remote 才是終點。**列為 4.5-A8。**
+
+**② 商業分級：`開發計畫` §2 的 Free／Pro US$20／Enterprise 與 `tier` 欄位。**
+
+與已定的「暫定 per-MAU、定案條件是 Claude／Codex 出明確的 MCP server 商業與計價文件」
+衝突。**計價不得自行改寫**，列為 4.5-A6。連帶：`tier` 欄位不進 §4.6.3 的 Rule Schema。
+
+**③ 新增 4 個 tool：`explain_decision`／`get_evidence_coverage`／`submit_outcome`／`resolve_conflict`。**
+
+四個都不併入，理由各不相同——**這裡逐個講，因為「都不做」很容易被讀成一個理由**：
+
+| tool | 不併入的理由 |
+|---|---|
+| `explain_decision(decision_id)` | **需要 decision_id 存在**，等於要 hosted 記得上一個決策 → 牴觸 D-DATA。解釋現況已隨每次決策同步回傳 |
+| `get_evidence_coverage` | **已經是每個決策輸出的必帶欄位**（`signalCoverage`）。獨立成 tool 只會多一次往返 |
+| `submit_outcome` | 直接牴觸 Phase 6 已結案的結論：三元組由呼叫端保存 |
+| `resolve_conflict` | 開發計畫自己標「內部用，不一定對外暴露」。同意——它是 Layer 4 的內部函式，不是 tool |
+
+**外加一條共同判準**：D-TOOL 是 14 → 6，且 GPT-6 判準要求每個對外 tool 都要能答
+「模型自己做不到什麼」。**要新增對外 tool 必須先過那一關**，不能因為架構圖上有一層就開一個口。
+
+### 4.6.6 一個併入的事實：`.mcpb` 更新機制（已驗證，開發計畫 §8.3）
+
+| 安裝情境 | 更新方式 |
+|---|---|
+| 上架官方 Extension Directory | Claude Desktop 原生自動更新 |
+| Team／Enterprise 自訂擴充 | 管理員改 `manifest.json` 版本號即可推送 |
+| **個人側載** | **無內建自動更新**，使用者要手動重新下載 |
+
+**對我們的意義**：順位 3（MCPB 表單）若上架成功，更新問題自動消失；**在那之前，
+每一顆 bundle 都是使用者手動裝的**——這就是為什麼 v0.1.0／v0.1.1 刻意保留不覆蓋。
+
+> **但開發計畫由這個事實推出的「Rule Package 自動更新模組（每 24–48hr 呼叫 API）」不併入**
+> ——它要連外，牴觸已發布的 `PRIVACY.md`「no outbound network requests」。見 G/N-3。
+
+---
+
 ## 5. 決策日誌
 
 | 決策 | 結論 |
@@ -1237,6 +1522,9 @@ CIMD 那個決定要在 Phase 7 就下對。
 | **D-CHANNEL**（2026-08-01） | **MCP-native distribution：目標通路只有 host 內建目錄兩個——Anthropic Connectors Directory ＋ ChatGPT（含 Health）。** 排除 marketplace（要持有金流與使用者關係＝資料湖，牴觸「明確不做」）與 model router（第 3 段在 host；MCP 本身即 model-agnostic，自建等於把成本搬回來）。registry／Smithery／mcp.so 是**開發者 discovery 不是通路**，順手曝光即可。wearable dev platform 要直連供應商，**違反 Phase 1 界線**，僅 Phase 2 適用。健身 B2B SaaS 歸入「賣給握有課表的一方」，需 REST／SDK。排序：Claude 先（門檻是一張可列完的清單），ChatGPT **平行查證不平行開工**——未解的是「Health 內第三方 app 能否讀到 Apple Health 數值」與 PHI 條款適用範圍。詳見 3.5「通路決策」 |
 | **D-PROTOCOL**（v6） | 升 2026-07-28 走 **dual-era**，不是直接切換。依官方相容性矩陣，只支援新版會讓所有舊版客戶端連不上 |
 | **D-REGISTRATION**（v6） | authorization server 以**支援 CIMD** 為選型硬條件。DCR 已 deprecated，只留向後相容 |
+| **D-LICENSE**（2026-08-06） | **維持專有授權，照閉源送 Anthropic MCPB。** MCPB 表單原文是「**primarily considering** ... MIT licensed」——**優先，不是門檻**；`review-criteria` 指的那條「required and not waivable」的 MCPB 開源條文**三處查遍零命中**（Terms 八個關鍵詞、Policy、表單 T&C）。**使用者定案：送出去，被退再依退件理由決定要不要公開。** → **退件理由是查證 #13 的答案**，不是失敗訊號。收到理由之前**不得自行改授權**，也不得把「可能要開源」寫成既定事項 |
+| **D-IPGUARD**（2026-08-06） | **`開發計畫` §8 的 IP 保護全部 NO-GO（現在）**：Rule Package 加密、編譯混淆、License Token、機器指紋。三個理由：①**會推翻已公開發布的 `PRIVACY.md`**（「no outbound network requests … no telemetry, model calls, or accounts」）——授權驗證與自動更新都要連外，機器指紋是識別碼蒐集；②授權伺服器與 per-MAU 是**同一個未定案的缺口**（`http.js:95`）；③指定的 Nuitka 是 Python 工具，本專案是 Node 且 `dependencies` 為空。**唯一可現在做的是 §3.7.1 的內部邊界**（治理結果出貨、治理過程留內部），它不需要加密也不需要連網 |
+| **D-RULESCHEMA**（2026-08-06） | **採用 `開發計畫` §3.3 的 Rule Schema（規則帶 `rule_id`／`version`／`evidence_level`／`sources`／`category`／`priority`），不採用九層重寫，且不含 `tier` 欄位**（分級屬未定案的商業模式）。**排在順位 1–3 的上架動作之後**。理由是實測：`decideSession.js:46` 的 `RULES` 已是資料化常數，但全庫 `rule_id`／`evidence_level` 零命中——**缺的不是把規則變成資料，是每條規則的出處**。這是紀律 2「無出處的值不准進 repo」目前唯一的落點 |
 
 ## 6. 風險
 
