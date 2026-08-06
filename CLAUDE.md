@@ -147,7 +147,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 - 對外 **6 個 tool**：`evidra_assess_fitness_state` · `evidra_decide_session` · `evidra_decide_exercise_substitution` ·
   `evidra_generate_plan` · `evidra_preview_adjust_plan` · `evidra_commit_adjust_plan`
-- **366 tests**、eval 20 golden cases，全綠
+- **367 tests**、eval 20 golden cases，全綠
 - parser 實作 4 家（Apple Health／Garmin／Strava／Google Health Takeout；Strava 含 API 與
   bulk export 兩種方言）；schema registry 涵蓋 6 個平台
 - Strava bulk export：CSV 按欄位**索引**解析（5 組同名欄單位不同）；`Activity Date` 是 UTC 無 offset，

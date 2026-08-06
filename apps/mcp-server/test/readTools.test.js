@@ -161,14 +161,114 @@ test("a structured result costs its payload twice, and only where a schema is de
     "the two copies say the same thing"
   );
   assert.ok(
-    decision.bytes <= 8192,
-    `result frame of ${decision.bytes} bytes exceeds the ~8KB ceiling (payload ~4KB, sent twice)`
+    decision.bytes <= FRAME_CEILING,
+    `result frame of ${decision.bytes} bytes exceeds the ${FRAME_CEILING}-byte ceiling`
   );
 
   // A tool with no declared schema gets no structured copy, so nothing pays
   // twice for a shape no contract covers.
   const deprecated = await call("get_user_profile", { userId: "user_henry_demo" });
   assert.equal(deprecated.structured, undefined);
+});
+
+/**
+ * The ceiling, and why it is this number.
+ *
+ * It is a budget we set, not a limit anyone published — the submission
+ * checklist says only "keep responses reasonably sized for the task". The
+ * previous 8192 came from "payload ~4KB, sent twice" and was chosen before
+ * decisions carried their evidentiary basis. 12288 is set above the measured
+ * worst case below, with headroom; it is not a finding and must not be cited as
+ * one.
+ *
+ * What pushes a decision to the top of the range is the two rules that carry
+ * citations — the acute:chronic rule ships Gabbett 2016 plus the Impellizzeri
+ * and Lolli objections, and detraining ships Mujika and Padilla. Trimming to
+ * hold a rounder number would mean cutting exactly the material that lets those
+ * rules be checked, which is the wrong trade.
+ */
+const FRAME_CEILING = 12288;
+
+/**
+ * The ceiling has to be tested against the worst case, not a convenient one.
+ *
+ * The test above passes on a fixture whose governing rule happens to be one of
+ * the six with no citations to carry. It went on passing while the real worst
+ * case sat 3KB over the old ceiling, because nothing drove a decision that the
+ * acute:chronic rule governs. A ceiling only one fixture can reach is not a
+ * ceiling.
+ */
+test("the frame ceiling holds for the decisions that carry the most provenance", async () => {
+  const day = (n) => new Date(Date.UTC(2026, 7, 6) - n * 86400000).toISOString().slice(0, 10);
+  const run = (n, load) => ({
+    type: "run",
+    startedAt: `${day(n)}T07:00:00Z`,
+    durationMinutes: 60,
+    trainingLoad: load,
+    source: "garmin"
+  });
+  const recovery = [
+    { type: "hrv_ms", value: 43, unit: "ms", recordedAt: "2026-08-06T06:00:00Z", source: "garmin" },
+    { type: "sleep_duration_hours", value: 7.2, unit: "hours", recordedAt: "2026-08-06T06:00:00Z", source: "garmin" },
+    { type: "resting_hr_bpm", value: 54, unit: "bpm", recordedAt: "2026-08-06T06:00:00Z", source: "garmin" },
+    { type: "stress", value: 30, unit: "0-100", recordedAt: "2026-08-06T06:00:00Z", source: "garmin" }
+  ];
+  const scheduledSession = {
+    focus: "VO2max Intervals",
+    type: "run",
+    durationMinutes: 60,
+    intensity: "high",
+    targetMuscleGroups: ["legs"]
+  };
+
+  // Thin history is the expensive shape, not an exotic one: a caller who has
+  // only just connected a source lands here, and the decision then carries both
+  // the rule's own provenance and two extra caveats about how little history
+  // the ratio rests on.
+  const worstCases = [
+    {
+      name: "acute:chronic spike on thin history",
+      expectGoverning: "EVD-R-006",
+      evidence: { healthMetrics: recovery, workouts: [1, 2, 3, 4, 5].map((n) => run(n, 220)) }
+    },
+    {
+      name: "acute:chronic spike on a full chronic window",
+      expectGoverning: "EVD-R-006",
+      evidence: {
+        healthMetrics: recovery,
+        workouts: Array.from({ length: 24 }, (_, i) => run(i + 1, i < 6 ? 400 : 60))
+      }
+    },
+    {
+      name: "return from a long break",
+      expectGoverning: "EVD-R-007",
+      evidence: {
+        healthMetrics: recovery,
+        workouts: Array.from({ length: 12 }, (_, i) => run(i + 70, 300))
+      }
+    }
+  ];
+
+  for (const testCase of worstCases) {
+    const result = await call("evidra_decide_session", {
+      evidence: testCase.evidence,
+      date: "2026-08-06",
+      scheduledSession
+    });
+
+    // Assert the case still drives the rule it was built to drive. Without this
+    // the ceiling could go on passing because the case quietly stopped
+    // exercising the expensive path — the exact failure this test replaces.
+    assert.equal(
+      result.payload.decisionBasis.governingRule?.ruleId,
+      testCase.expectGoverning,
+      `${testCase.name} no longer reaches ${testCase.expectGoverning}, so it is not testing the worst case`
+    );
+    assert.ok(
+      result.bytes <= FRAME_CEILING,
+      `${testCase.name}: frame of ${result.bytes} bytes exceeds the ${FRAME_CEILING}-byte ceiling`
+    );
+  }
 });
 
 test("assertGrounded rejects a payload that references a missing exercise (P3)", () => {
