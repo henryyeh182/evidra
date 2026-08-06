@@ -2,14 +2,12 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
+
+import { rootDir } from "./rootDir.js";
 import { normalizeStravaActivity } from "../../../packages/connectors/src/providers/strava/index.js";
 import { applyNormalizedEventsToContext } from "../../../packages/connectors/src/index.js";
 import { calendarDayInTimezone } from "../../../packages/domain/src/dates.js";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const rootDir = join(__dirname, "../../..");
 
 async function readJson(relativePath) {
   const raw = await readFile(join(rootDir, relativePath), "utf8");

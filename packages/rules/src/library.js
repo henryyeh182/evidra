@@ -1,21 +1,18 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
-import { readFileSync } from "node:fs";
-
+import { librarySourceJson } from "./librarySource.js";
 import { assertValidRuleLibrary } from "./models.js";
 
 /**
- * The rule library is read once per process, at module load, and frozen.
+ * The rule library is parsed once per process, at module load, and frozen.
  *
  * Synchronous on purpose: `decideSession` is a pure synchronous function and
- * every caller of it depends on that. The file is a few kilobytes, read once,
- * so the cost is paid at import and never again — the same shape
- * `apps/mcp-server/src/server.js` already uses to read package.json.
+ * every caller of it depends on that. Where the JSON comes from — a file next
+ * to this one, or a string the build inlined — is `librarySource.js`'s
+ * business, not this module's.
  */
-const library = assertValidRuleLibrary(
-  JSON.parse(readFileSync(new URL("../data/session-rules.json", import.meta.url), "utf8"))
-);
+const library = assertValidRuleLibrary(JSON.parse(librarySourceJson));
 
 deepFreeze(library);
 

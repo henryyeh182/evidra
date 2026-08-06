@@ -16,6 +16,7 @@
     "simulate:strava": "node scripts/simulate-strava-scenarios.js",
     "import:apple-health": "node scripts/import-apple-health.js",
     "import:google-health-api": "node scripts/import-google-health-api.js",
+    "build:bundle": "node scripts/build-bundle.js",
     "build:graph": "node scripts/build-exercise-graph.js",
     "audit:graph": "node scripts/audit-exercise-graph.js",
     "eval": "node eval/runner.js",
@@ -26,5 +27,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1"
   }
 }

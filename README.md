@@ -103,7 +103,7 @@ shipped in it:
   or DNS calls, and it transmits your evidence nowhere.
 - **Evidra itself does not persist your evidence.** No database, no cache, no log file,
   no history.
-- **No dependencies.** Node.js standard library only — no analytics, telemetry, or SDKs.
+- **No runtime dependencies.** Node.js standard library only — no analytics, telemetry, or SDKs.
 - **No model calls.** Decisions are deterministic arithmetic and explicit rules.
 - **No accounts.** No sign-up, no login, no user identifier.
 

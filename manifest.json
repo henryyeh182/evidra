@@ -29,11 +29,11 @@
   ],
   "server": {
     "type": "node",
-    "entry_point": "apps/mcp-server/src/stdio.js",
+    "entry_point": "dist/evidra-server.mjs",
     "mcp_config": {
       "command": "node",
       "args": [
-        "${__dirname}/apps/mcp-server/src/stdio.js"
+        "${__dirname}/dist/evidra-server.mjs"
       ]
     }
   },

@@ -2,7 +2,9 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
+import { rootDir } from "./rootDir.js";
 import {
   getToolDefinition,
   listedToolDefinitions,
@@ -23,7 +25,7 @@ import { toolHandlers } from "./toolHandlers.js";
  * imports resolve at all.
  */
 const { version: SERVER_VERSION } = JSON.parse(
-  readFileSync(new URL("../../../package.json", import.meta.url), "utf8")
+  readFileSync(join(rootDir, "package.json"), "utf8")
 );
 
 /**

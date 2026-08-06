@@ -2,13 +2,10 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 
+import { rootDir } from "./rootDir.js";
 import { buildExerciseGraph } from "../../../packages/knowledge-graph/src/index.js";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const rootDir = join(__dirname, "../../..");
 
 let cached = null;
 

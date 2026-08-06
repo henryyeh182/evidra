@@ -25,7 +25,22 @@ scripts/
 .claude/
 CLAUDE.md
 
+# Source. The bundle runs dist/evidra-server.mjs, which `npm run build:bundle`
+# compiles from these two trees — shipping them as well would put the same code
+# in the archive twice, once readable. `packages/rules/data/session-rules.json`
+# goes with them: the build inlines it into the bundle as a string, so nothing
+# under packages/ is read at runtime.
+#
+# This does not make the rules private. Every decision returns the governing
+# rule's thresholds and citations in `decisionBasis`; the archive is simply no
+# longer the easy way to read them.
+apps/
+packages/
+
+# esbuild, and nothing the server imports. The bundle has no runtime deps.
+node_modules/
+
 # Kept: manifest.json, README.md (the submission requires its Privacy Policy
-# section to travel with the bundle), apps/, packages/, and data/seeds +
-# data/fixtures, which the server reads at runtime through knowledgeBase.js
-# and demoData.js.
+# section to travel with the bundle), package.json (the server reads its
+# version), dist/, and data/seeds + data/fixtures, which the server reads at
+# runtime through knowledgeBase.js and demoData.js.
