@@ -13,7 +13,7 @@
     {
       "registryType": "mcpb",
       "identifier": "https://github.com/henryyeh182/evidra/releases/download/v0.3.2/evidra.mcpb",
-      "fileSha256": "9cfd1e38b7cf1ff74108ec3dcbb9d9243cd257e5cba2281e4c2fa7b9207d1678",
+      "fileSha256": "02cf92a0e44065db95b11169fc34513dc9281936452a91c3412981b09c8da838",
       "transport": {
         "type": "stdio"
       }
