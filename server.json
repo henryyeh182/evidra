@@ -3,7 +3,7 @@
   "name": "io.github.henryyeh182/evidra",
   "title": "Evidra",
   "description": "Turns caller-supplied training evidence into a from->to change for today's scheduled session.",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "websiteUrl": "https://github.com/henryyeh182/evidra",
   "repository": {
     "url": "https://github.com/henryyeh182/evidra",
@@ -12,8 +12,8 @@
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/henryyeh182/evidra/releases/download/v0.3.0/evidra.mcpb",
-      "fileSha256": "66b6b1f88dd2712b93b2b1d59119cfc49b31ba36a878029596944586ad94a3eb",
+      "identifier": "https://github.com/henryyeh182/evidra/releases/download/v0.3.2/evidra.mcpb",
+      "fileSha256": "22f214e6f019ddc2b20e872f18544e0633b79a00ed12eca1730dc18683c48c17",
       "transport": {
         "type": "stdio"
       }

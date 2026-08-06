@@ -404,6 +404,28 @@ test("the demo seed cannot reach a real caller's answer by falling back", async 
   assert.deepEqual(publicSchema.required, ["evidence"]);
 });
 
+test("a refusal carries the way out, and says it is not an answer to read aloud", async () => {
+  // Regression, found in Claude Desktop on v0.3.0: asked whether to run today's
+  // intervals, the host answered "I have no data, anything I say now is made
+  // up" and stopped. Nothing was broken — the refusal simply stated what this
+  // server will not do, in a sentence that reads perfectly well aloud, so it
+  // was read aloud. The athlete was never asked the three questions that would
+  // have produced a decision.
+  for (const tool of ["evidra_assess_fitness_state", "evidra_decide_session", "evidra_generate_plan"]) {
+    const { isError, payload } = await call(tool, {});
+    assert.ok(isError, `${tool} should refuse a call with no evidence`);
+    assert.match(payload.audience, /not an answer to relay/, `${tool} must mark the payload as the caller's`);
+    assert.ok(payload.callerAction, `${tool} must say what to do next`);
+    assert.match(payload.callerAction, /ask them/, `${tool} must offer asking the athlete as a path`);
+    // The sentence that became "anything I say now is made up".
+    assert.doesNotMatch(
+      JSON.stringify(payload),
+      /does not fetch, store, or invent/,
+      `${tool} must not answer a failed call with a statement of what the server declines to do`
+    );
+  }
+});
+
 test("a substitution takes the movement as the user said it, not only as an id", async () => {
   // Regression, found running the real MCP server: agents pass the movement the
   // way their user named it, and the handler took canonical ids alone — so

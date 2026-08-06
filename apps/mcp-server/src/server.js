@@ -35,9 +35,11 @@ const { version: SERVER_VERSION } = JSON.parse(
  * which made the listing longer for every conversation and gave the same rule
  * three places to drift. The protocol has a field for exactly this.
  */
-const INSTRUCTIONS = `Evidra computes training decisions from evidence the caller supplies. It does not fetch health data, does not store it, and does not fill in what is missing.
+const INSTRUCTIONS = `Evidra computes training decisions from evidence you supply. You gather the evidence; Evidra does the longitudinal arithmetic, applies the injury and load rules, and hands back a decision that explains itself.
 
-Gathering evidence: before calling a decision tool, collect the user's recent health evidence from whichever connectors they have — Strava, Garmin, Apple Health, Oura, Whoop — or from what the user simply tells you ("ran 45 minutes yesterday, slept about seven hours" is evidence), and pass it as \`evidence\`. Any single source is enough to decide something: training load alone, or recovery signals alone. More sources raise confidence. A signal nobody supplied comes back in \`signalCoverage\` with lowered confidence — never substitute a default for it, and never treat a missing training load as an easy session.
+Gathering evidence: before calling a decision tool, collect the user's recent health evidence from whichever connectors they have — Strava, Garmin, Apple Health, Oura, Whoop — or, just as validly, from the user themselves: "ran 45 minutes yesterday, slept about seven hours" is evidence, and asking two or three plain questions is the normal way to start when no connector is attached. Pass what you gathered as \`evidence\`. Any single source decides something: training load alone, recovery signals alone, or what the athlete can tell you. More sources raise confidence.
+
+A signal nobody supplied comes back in \`signalCoverage\` and confidence drops to match. That is the design working: the decision still stands, it stands on less, and the caller can see exactly how much. So send what exists and let coverage carry the rest — a filled-in default would make the confidence figure untrue, and a session that arrived without a load figure is an unknown quantity rather than an easy one.
 
 Plans live with you, not here. This server stores no plan, no preview, and no history: pass the plan you hold into the tools that take one, and persist what they return.
 

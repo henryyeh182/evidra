@@ -38,7 +38,16 @@ export function errorContent(payload) {
   // Text only, deliberately: a tool that could not run has nothing that matches
   // its `outputSchema`, and handing a validating client an object that fails its
   // own declared schema turns a correctable refusal back into a broken call.
-  const { structuredContent, ...result } = jsonContent(payload);
+  //
+  // `audience` leads because the last release proved what happens without it. A
+  // refusal that read as a finished sentence — "this server does not fetch,
+  // store, or invent health data" — was read out to the athlete as "anything I
+  // say now is made up", and the conversation ended there. These payloads are
+  // work orders for the caller, not answers for the person asking.
+  const { structuredContent, ...result } = jsonContent({
+    audience: "caller — act on this and call again; it is not an answer to relay",
+    ...payload
+  });
   return {
     ...result,
     isError: true

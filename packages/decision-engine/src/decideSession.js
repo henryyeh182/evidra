@@ -30,6 +30,27 @@ function count(n, noun) {
   return `${n} ${noun}${n === 1 ? "" : "s"}`;
 }
 
+// What each coverage key is called in a sentence. An unmapped key falls back to
+// itself rather than being dropped: a signal missing from this table must still
+// be reported, and an odd-looking word is a smaller failure than silence.
+const SIGNAL_WORDS = {
+  sleep: "sleep",
+  hrv: "HRV",
+  restingHeartRate: "resting heart rate",
+  stress: "stress",
+  trainingLoad: "training load"
+};
+
+function listSignals(keys) {
+  const words = keys.map((key) => SIGNAL_WORDS[key] || key);
+  const verb = words.length === 1 ? "reading was" : "readings were";
+  const list =
+    words.length <= 1
+      ? words.join("")
+      : `${words.slice(0, -1).join(", ")} or ${words[words.length - 1]}`;
+  return `No ${list} ${verb} supplied`;
+}
+
 function normalizeCoverage(signalCoverage) {
   if (!signalCoverage) {
     return { recovery: { ...EMPTY_COVERAGE }, training: { ...EMPTY_COVERAGE } };
@@ -501,7 +522,9 @@ export function decideSession({
     // Says only what it knows: no budget was supplied, so no time-based cut was
     // made. It must not claim the duration is unchanged — another rule may have
     // shortened it for reasons that have nothing to do with the clock.
-    limits.push("No available-time figure was supplied, so no time-based cut was made.");
+    limits.push(
+      "Nobody said how much time the athlete has today, so the session was not shortened to fit a clock. This is about their availability, not about how long the session itself is scheduled for — that is `scheduledSession.durationMinutes`, and it is optional."
+    );
   }
 
   // 7. Room to progress: only when nothing above pulled anything down, and only
@@ -645,7 +668,12 @@ export function decideSession({
 
   const coverage = normalizeCoverage(state.signalCoverage);
   if (coverage.recovery.missing.length > 0) {
-    limits.push(`No ${coverage.recovery.missing.join(", ")} signal was available, so confidence is lowered.`);
+    // `limits` is prose, and prose reaches the athlete. The coverage keys are
+    // field names — "No hrv, restingHeartRate, stress signal was available" is
+    // both ungrammatical and written in an identifier nobody outside this repo
+    // has seen. `signalCoverage` keeps the machine-readable form; this sentence
+    // says the same thing in words.
+    limits.push(`${listSignals(coverage.recovery.missing)} for today, so confidence is lowered.`);
   }
   if (coverage.training.missing.length > 0) {
     limits.push(

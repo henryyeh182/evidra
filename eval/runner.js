@@ -93,7 +93,7 @@ async function callTool(tool, args) {
   // failed call as far as a golden case is concerned, even though the protocol
   // carried it as a result — otherwise "I need evidence" would score as a pass.
   if (response.result?.isError) {
-    return { ok: false, error: { message: payload.message || payload.error }, payload };
+    return { ok: false, error: { message: payload.problem || payload.message || payload.error }, payload };
   }
   return { ok: true, payload };
 }

@@ -19,7 +19,7 @@ import { outputSchemas } from "./outputSchemas.js";
 const EVIDENCE_INPUT = {
   type: "object",
   description:
-    "The user's health evidence, passed in by the AI layer that holds their authorization. Source-neutral: normalize Apple Health / Garmin / Oura / Whoop / Strava into this shape. The server does not fetch or store evidence. Omit only for local demo runs.",
+    "The user's health evidence, gathered and passed in by the AI layer that holds their authorization. Source-neutral: normalize Apple Health / Garmin / Oura / Whoop / Strava into this shape, or build it from what the athlete tells you. Omit only for local demo runs.",
   properties: {
     profile: {
       type: "object",
@@ -40,7 +40,7 @@ const EVIDENCE_INPUT = {
     healthMetrics: {
       type: "array",
       description:
-        "Recent readings, one entry per measurement. Send only what exists — an absent signal is reported in signalCoverage, never guessed.",
+        "Recent readings, one entry per measurement. Send what exists; anything absent is reported in signalCoverage and lowers confidence.",
       items: {
         type: "object",
         properties: {
@@ -90,7 +90,7 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Report how the user is doing today: recovery, readiness, muscle-group fatigue and training load, each with the evidence behind it and an honest list of what could not be seen. Use this for 'how am I doing today', 'have I recovered', 'am I overtraining', 'how is my training load'. Pass the user's recent health evidence as `evidence`; this server's instructions say what to gather and what happens to a signal nobody has. This reports state only — it never says what to train. If the user has a session scheduled and wants to know whether to do it, use evidra_decide_session; if they have no plan at all, use evidra_generate_plan.",
+      "Report how the user is doing today: recovery, readiness, muscle-group fatigue and training load, each with the evidence behind it and an honest list of what could not be seen. Use this for 'how am I doing today', 'have I recovered', 'am I overtraining', 'how is my training load'. Pass the user's recent health evidence as `evidence`, gathered from whichever health connectors they have — Strava, Garmin, Apple Health, Oura, Whoop — or, where they have none, from the user directly: what a person says about their own week is evidence, and 'slept about seven hours, legs feel fine, last hard run was Tuesday' is enough to compute on. Any single source decides something; a signal nobody supplied comes back in signalCoverage and lowers confidence, so the decision still stands — on less, and visibly so. This reports state only — it never says what to train. If the user has a session scheduled and wants to know whether to do it, use evidra_decide_session; if they have no plan at all, use evidra_generate_plan.",
     inputSchema: {
       type: "object",
       properties: {
@@ -140,7 +140,7 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Decide what today's scheduled session should become, given today's evidence. Returns a decision with from -> to: the session as planned, what it should change to, and the evidence and rules behind the change. Use this for questions about a session that is already on the books: 'am I ready for today's session', 'today's plan says intervals — should I still do them', 'should I adjust today's workout', 'I only have 30 minutes today'. `scheduledSession` is what makes this a decision: called without it, this tool returns no_scheduled_session and decides nothing, so for an open-ended 'what should I train today' with no plan in hand, call evidra_generate_plan instead. If the user proposes their own alternative — 'today was cardio, can I do stretching instead?' — pass that as `proposedSession` and it comes back accepted or refused, with the reason. Pass the user's recent health evidence as `evidence`; this server's instructions say what to gather and what happens to a signal nobody has. This is a decision, not a suggestion: it requires a scheduled session and decides about an existing plan rather than inventing one. Do NOT re-derive or override the intensity, duration or movements it returns — injury filtering and load limits are enforced server-side and are decisions, not advice. To look up state alone, use evidra_assess_fitness_state.",
+      "Decide what today's scheduled session should become, given today's evidence. Returns a decision with from -> to: the session as planned, what it should change to, and the evidence and rules behind the change. Use this for questions about a session that is already on the books: 'am I ready for today's session', 'today's plan says intervals — should I still do them', 'should I adjust today's workout', 'I only have 30 minutes today'. `scheduledSession` is what makes this a decision: called without it, this tool returns no_scheduled_session and decides nothing, so for an open-ended 'what should I train today' with no plan in hand, call evidra_generate_plan instead. If the user proposes their own alternative — 'today was cardio, can I do stretching instead?' — pass that as `proposedSession` and it comes back accepted or refused, with the reason. Pass the user's recent health evidence as `evidence`, gathered from whichever health connectors they have — Strava, Garmin, Apple Health, Oura, Whoop — or, where they have none, from the user directly: what a person says about their own week is evidence, and 'slept about seven hours, legs feel fine, last hard run was Tuesday' is enough to compute on. Any single source decides something; a signal nobody supplied comes back in signalCoverage and lowers confidence, so the decision still stands — on less, and visibly so. This is a decision, not a suggestion: it requires a scheduled session and decides about an existing plan rather than inventing one. Do NOT re-derive or override the intensity, duration or movements it returns — injury filtering and load limits are enforced server-side and are decisions, not advice. To look up state alone, use evidra_assess_fitness_state.",
     inputSchema: {
       type: "object",
       properties: {
@@ -352,7 +352,7 @@ export const toolDefinitions = [
       openWorldHint: false
     },
     description:
-      "Build a multi-week training plan from the user's goal, available days and equipment — the baseline that later daily decisions adjust. Use this for 'make me a training plan', 'I want to train for a half marathon', 'give me a 4-week program'. Pass the user's recent training history as `evidence` where available, so the plan starts from the load they are actually carrying rather than from zero. Weeks are periodized, and every movement it prescribes resolves to a real catalog entry.",
+      "Build a multi-week training plan from the user's goal, available days and equipment — the baseline that later daily decisions adjust. Use this for 'make me a training plan', 'I want to train for a half marathon', 'give me a 4-week program'. Pass the user's recent training history as `evidence`, from their connectors or from what they tell you — 'I've been running about three times a week' is evidence — so the plan starts from the load they are actually carrying rather than from zero. Weeks are periodized, and every movement it prescribes resolves to a real catalog entry.",
     inputSchema: {
       type: "object",
       properties: {

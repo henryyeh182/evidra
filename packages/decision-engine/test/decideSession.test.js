@@ -197,10 +197,13 @@ test("an unknown time budget never becomes a reason to shorten the session", () 
     "nothing may be asserted about time we were never told"
   );
   assert.ok(!result.evidence.some((item) => item.signal === "available_minutes"));
-  assert.ok(
-    result.limits.some((line) => /available-time/.test(line)),
-    "what we did not know is surfaced, not hidden"
-  );
+  const budgetLimit = result.limits.find((line) => /how much time the athlete has/.test(line));
+  assert.ok(budgetLimit, "what we did not know is surfaced, not hidden");
+  // The old wording said "no available-time figure was supplied", which reads as
+  // a complaint about the session's own durationMinutes — a different, optional
+  // field. Saying which one it means keeps a caller from filling in the wrong
+  // gap to make the sentence go away.
+  assert.match(budgetLimit, /scheduledSession\.durationMinutes/);
 });
 
 test("every quoted number in a reason traces back to an evidence entry", () => {

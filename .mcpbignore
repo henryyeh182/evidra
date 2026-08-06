@@ -49,6 +49,18 @@ server.json
 # The packed archive itself, which lands in dist/ beside the compiled server.
 *.mcpb
 
+# Screen recordings and screenshots. A 28MB .mcpb caught one of these already:
+# a recording of the extension being used, which is a recording of someone's
+# health data, packed into a file other people install. Nothing here is ever
+# part of the extension, so the rule is by extension rather than by name.
+*.mov
+*.mp4
+*.png
+!icon.png
+*.jpg
+*.jpeg
+*.gif
+
 # Kept: manifest.json, README.md (the submission requires its Privacy Policy
 # section to travel with the bundle), package.json (the server reads its
 # version), dist/, and data/seeds + data/fixtures, which the server reads at

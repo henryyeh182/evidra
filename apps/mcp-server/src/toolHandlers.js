@@ -50,7 +50,7 @@ const EVIDENCE_REQUIREMENTS = {
     "evidence.constraints": "injuries[], equipment[], availableMinutes, avoidMovements[]."
   },
   note:
-    "Any single source is enough to decide something: training load alone, or recovery signals alone. Whatever is absent is reported in signalCoverage and lowers confidence — it is never guessed."
+    "Any single source decides something: training load alone, recovery signals alone, or what the athlete tells you. Whatever is absent is reported in signalCoverage and lowers confidence, so a thin call still returns a decision that says how thin it is."
 };
 
 /**
@@ -128,8 +128,13 @@ function evidenceRequired(toolName) {
   return errorContent({
     error: "evidence_required",
     tool: toolName,
-    message:
-      "No evidence was supplied, so there is nothing to compute. This server does not fetch, store, or invent health data — the caller passes it in.",
+    problem: "This call arrived without evidence, so there is nothing to compute yet. It is the first step, not a failure.",
+    // What used to sit here was a statement of what this server will not do.
+    // Read aloud it becomes an apology, and that is what reached the athlete.
+    // The way out has to travel with the refusal, phrased as the caller's next
+    // move rather than as our architecture.
+    callerAction:
+      "Get the evidence, then call again. Read it from whichever health connectors this user has; where there are none, ask them — what a person says about their own week is evidence, and three questions usually cover it: how long they slept last night, how their legs feel right now, when their last hard session was. Their answers are the input: 'about seven hours' is sleep_duration_hours 7, 'ran 45 minutes on Tuesday' is a workout. Deciding on what the athlete can tell you is the designed path, not a fallback — say nothing to them about missing data until you have asked.",
     ...EVIDENCE_REQUIREMENTS
   });
 }
@@ -164,7 +169,7 @@ function invalidEvidence(toolName, problem) {
       }
     },
     note:
-      "Metric names are canonical and case-sensitive: sleepDurationHours is not sleep_duration_hours. Send only what you actually have — omitted signals are reported as missing, never guessed."
+      "Metric names are canonical and case-sensitive: sleepDurationHours is not sleep_duration_hours. Send what you actually have; omitted signals come back reported as missing."
   });
 }
 
@@ -182,8 +187,8 @@ function invalidDate(toolName, argument, value) {
     tool: toolName,
     problem: `${argument} was ${JSON.stringify(value)}, which is not a calendar day.`,
     shape: { [argument]: "YYYY-MM-DD, e.g. 2026-08-01" },
-    note:
-      "Relative words are not resolved here — the server does not know the caller's clock. Omit the argument to get today in the athlete's timezone, which is the server's own job to work out."
+    callerAction:
+      "Resolve the relative word yourself and send a calendar day, or drop the argument entirely — omitted, it resolves to today in the athlete's timezone here."
   });
 }
 
@@ -386,8 +391,8 @@ function planStateProblem(toolName, error, problem) {
     tool: toolName,
     problem,
     shape: PLAN_STATE_SHAPE[toolName],
-    note:
-      "Plan state lives with the caller: this server stores neither plan nor preview. If you hold no plan, call evidra_generate_plan first."
+    callerAction:
+      "Send the plan you are holding — this server keeps none, so it has to travel in the call. If you hold no plan, call evidra_generate_plan first and pass what it returns."
   });
 }
 
