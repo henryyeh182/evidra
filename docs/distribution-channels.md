@@ -76,22 +76,45 @@ become as a from→to change`，讀者要先扛一個子句再回頭接 `as a...
 `decision rule` 讓 decision 這個字留在句子裡——回傳的是**變更**，而變更由**決策規則**產生。
 
 **`silently` 那個字是量出來的，不要拿掉。** 「missing signals 不會被推估」字面上不成立——
-引擎有三處會拿母體基準或中性值頂替缺席的證據，三處都在 tool 路徑上：
+引擎仍有兩處會拿母體基準頂替缺席的證據，兩處都在 tool 路徑上（2026-08-06 複查）：
 
 | 位置 | 缺什麼時 | 頂替成什麼 |
 |---|---|---|
-| `generateSemanticFitnessState.js:3` | 呼叫端沒傳 baselines（`toolHandlers.js:199` 就沒傳） | `hrvMs: 52`／`restingHrBpm: 57`／`weeklyTrainingLoadTarget: 360` |
-| 同檔 `:76` | 觀察到的慢性負荷低於 360 | `Math.max(observed, 360)`，ACWR 改對著 360 量，標記 `chronicBasis: "baseline_floor"` |
-| 同檔 `:263` | 完全沒有新鮮的恢復訊號 | 中性分數（註解：「neutral score, but say so via coverage」） |
+| `generateSemanticFitnessState.js:7-9` | 呼叫端沒傳 baselines（`toolHandlers.js` 就沒傳） | `hrvMs: 52`／`restingHrBpm: 57`／`weeklyTrainingLoadTarget: 360` |
+| 同檔 `:79` | 觀察到的慢性負荷低於 360 | `Math.max(observed, 360)`，ACWR 改對著 360 量，標記 `chronicBasis: "baseline_floor"`（`:104`） |
 
-三處都會說出來（第二處進 `decideSession.js:600` 的 `limits`，第三處進 reasoning 的
-「Recovery score **defaults to** X」），所以真正的不變量是**推估不會沉默**，不是不推估。
+兩處都會說出來（第二處進 `decideSession.js:735` 的 `limits`），所以真正的不變量是
+**推估不會沉默**，不是不推估。
+
+**原本有第三處，2026-08-06 移除了。** 完全沒有新鮮恢復訊號時，恢復分數回傳中性的 50，
+readiness 因此也是 50——而 `readinessReduce = 60` 的規則就在那個編出來的 50 上觸發，
+把使用者的 VO2max 課表降成 moderate。coverage 一直誠實回報那個缺口，**但決策早就做完了**。
+現在 `recoveryScore` 與 `readinessScore` 在沒有量測時都是 `null`，讀 readiness 的規則不觸發，
+決策改由分肌群疲勞、急慢性負荷與距上次訓練天數落地。
+所以「頂替」只剩母體基準那一層，**恢復分數那層已經不頂替了**。
 
 **這與紀律 2 不衝突**：原始輸入不被捏造（沒有 RPE 就是沒有，`model.js` 的 `?? null`），
 母體基準頂替發生在**導出分數**那層。兩件事都真，是不同層。
 
-**其餘必填欄位尚未定案**，這節只涵蓋 Description 一題——GitHub Link 填哪個 repo 仍與 MIT
-決定綁著（見上方兩條紅），`manifest.json` 的 `author.url` 未補。**不要因為這節存在就以為表單可以送了。**
+**其餘欄位已於 2026-08-06 定案**（表單實際是 8 個必填 ＋ 1 個選填）：
+
+| 題 | 答案 | 依據 |
+|---|---|---|
+| Is this an update to an existing extension? | **No** | 從未進過目錄 |
+| Primary Contact Name | `Henry Yeh` | — |
+| Primary Contact Email | `evidramcp@icloud.com` | 與 `PRIVACY.md`／README 的對外聯絡信箱一致 |
+| MCP Server Description | 上面那段（36 字，主詞已改為 **Evidra Fitness**） | 上限 50 字 |
+| Desktop Extension GitHub Link | `https://github.com/henryyeh182/evidra` | **`fitness-mcp` 是 PRIVATE**，表單要求 publicly available on GitHub，所以只有這一個能填。與 MIT 決定無關 |
+| Primary Party Confirmation | **No** | 原問句問的是「你是否任職於這個 MCP server **連接的**那個 application／service 的公司」。Evidra 不連任何外部服務，沒有那個公司存在。表單自陳 not required |
+| Attach your .mcpb | v0.3.4 那顆 | — |
+| MCP Directory T&C | **使用者自己勾** | 法律同意，不代答 |
+| Feedback（選填） | 留白 | — |
+
+`manifest.json` 的 `author.url` **已補**（`https://github.com/henryyeh182`，v0.3.0 時補的）。
+
+**四條「primarily considering」符合三條**：Publicly available on GitHub ✅／MIT licensed ❌／
+Built with Node.js ✅／valid manifest.json with author pointing at GitHub profile ✅。
+授權那條是偏好不是門檻，**送得出去，只是不在優先清單**——見上方兩條紅。
 
 ---
 
