@@ -1,6 +1,6 @@
 # Privacy Policy — Evidra
 
-**Effective date:** 2026-08-02
+**Effective date:** 2026-08-06
 **Applies to:** the Evidra desktop extension (`fitness-mcp`), an MCP server that runs locally on your own computer.
 
 ## Summary
