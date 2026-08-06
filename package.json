@@ -21,7 +21,8 @@
     "eval": "node eval/runner.js",
     "test": "node --test",
     "serve:http": "node apps/mcp-server/src/http.js",
-    "review:phase": "node scripts/review-phase.js"
+    "review:phase": "node scripts/review-phase.js",
+    "test:rules": "node --test packages/rules/test/"
   },
   "engines": {
     "node": ">=20"

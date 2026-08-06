@@ -1,0 +1,311 @@
+{
+  "libraryId": "evidra.session-rules",
+  "version": "1.0.0",
+  "lastReview": "2026-08-06",
+  "reviewer": "Henry Yeh",
+
+  "readMe": [
+    "Every threshold the session decision engine applies lives here, with the",
+    "provenance of that threshold attached to it. The engine reads its numbers",
+    "from this file: editing a `value` here changes what the engine decides.",
+    "This file is data, not documentation of data.",
+    "",
+    "The field that matters most is `basis`. It answers a question that a",
+    "citation list cannot: is this threshold a cut point on a quantity the",
+    "outside world defines, or a cut point on a score Evidra computes itself?",
+    "",
+    "  external_metric    The quantity is defined outside Evidra (an",
+    "                     acute:chronic ratio, days since the last session).",
+    "                     Literature can speak to it, so `sources` is required",
+    "                     and `contested` records published disagreement.",
+    "",
+    "  internal_composite The quantity is a score Evidra invents by weighting",
+    "                     signals together. No published study has ever used",
+    "                     this score, so no publication can support a cut point",
+    "                     on it. `sources` MUST be empty and `evidenceLevel`",
+    "                     MUST be internal_heuristic. This is enforced by",
+    "                     assertValidRuleLibrary, not by convention.",
+    "",
+    "That invariant exists because the tempting failure here is to attach a",
+    "real paper to an invented number and call the rule evidence-based. A",
+    "reviewer who checks the citation would find it does not mention the score",
+    "the threshold sits on. An empty `sources` on an internal_composite rule is",
+    "the honest state, not an unfinished one."
+  ],
+
+  "evidenceLevels": [
+    "guideline",
+    "position_stand",
+    "systematic_review",
+    "rct",
+    "observational",
+    "expert_consensus",
+    "internal_heuristic"
+  ],
+
+  "categories": [
+    { "id": "injury", "rank": 1, "description": "Active injury or contraindication." },
+    { "id": "illness", "rank": 2, "description": "Acute illness." },
+    { "id": "recovery", "rank": 3, "description": "Recovery state, accumulated load and lost fitness." },
+    { "id": "training_goal", "rank": 4, "description": "Progression toward the athlete's stated goal." },
+    { "id": "preference", "rank": 5, "description": "Athlete preference and stated constraints." }
+  ],
+
+  "arbitrationPolicy": {
+    "id": "category_then_priority",
+    "description": "Which rule the decision is attributed to. Rules sort by category rank ascending, then priority descending, then ruleId. The first is the governing rule.",
+    "note": "Every rule in this library version is in the recovery category, so this policy does not yet arbitrate between categories. It is implemented now so that adding the first injury or illness rule does not also require inventing the ordering under time pressure."
+  },
+
+  "combinationPolicy": {
+    "id": "most_restrictive_wins",
+    "description": "How the effects of several triggered rules combine. Intensity reductions do not sum; the largest single reduction applies. Duration caps apply independently and the lowest cap wins.",
+    "note": "Arbitration and combination are separate policies on purpose. The governing rule explains the decision; it does not necessarily set the size of the change."
+  },
+
+  "rules": [
+    {
+      "ruleId": "EVD-R-001",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "Very low readiness replaces the session with recovery",
+      "category": "recovery",
+      "priority": 90,
+      "basis": "internal_composite",
+      "evidenceLevel": "internal_heuristic",
+      "measuredQuantity": {
+        "name": "readiness score",
+        "range": "0-100",
+        "computedBy": "packages/semantic-engine/src/generateSemanticFitnessState.js:calculateReadinessScore",
+        "definition": "A recovery score (itself a weighted blend of sleep 0.35, HRV 0.35, resting heart rate 0.20, stress 0.10, with vendor composites weighted above raw signals) minus a workload penalty of (ACWR - 1.2) x 22 and a fatigue penalty of maxMuscleFatigue x 0.22.",
+        "whyNoSourceIsPossible": "Every weight in that expression was chosen by us. No study has measured outcomes against this score, so no study can support a cut point on it."
+      },
+      "thresholds": [
+        { "key": "readinessRest", "operator": "<", "value": 40, "unit": "readiness_score" },
+        { "key": "recoveryCapMinutes", "operator": "<=", "value": 30, "unit": "minutes" }
+      ],
+      "effect": { "decision": "defer", "intent": "swap_to_recovery", "intensityStepsDown": null },
+      "sources": [],
+      "contested": [],
+      "limitations": [
+        "40 and 30 are our own choices. They have not been calibrated against any outcome data, and calibrating them against simulated physiological values is prohibited (that would be fitting the engine to invented people).",
+        "The recovery score falls back to a neutral 50 when no fresh recovery signal is present, so a total absence of evidence cannot trigger this rule. That is deliberate, and it is reported through signalCoverage."
+      ],
+      "notes": "The severity here is the reason the effect is a swap rather than a step down: one notch off a hard session still prescribes training load on a day the evidence says to take none."
+    },
+
+    {
+      "ruleId": "EVD-R-002",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "Low readiness pulls intensity down one step",
+      "category": "recovery",
+      "priority": 70,
+      "basis": "internal_composite",
+      "evidenceLevel": "internal_heuristic",
+      "measuredQuantity": { "sameAs": "EVD-R-001" },
+      "thresholds": [{ "key": "readinessReduce", "operator": "<", "value": 60, "unit": "readiness_score" }],
+      "effect": { "decision": "adjust", "intent": "reduce_today_intensity", "intensityStepsDown": 1 },
+      "sources": [],
+      "contested": [],
+      "supportingLiterature": [
+        {
+          "citation": "Javaloyes A, Sarabia JM, Lamberts RP, Moya-Ramon M, et al. Training prescription guided by heart rate variability vs. predefined training: systematic review and meta-analysis, 2019-2021.",
+          "url": "https://www.mdpi.com/2076-3417/10/23/8532",
+          "supports": "Varying daily prescription from a daily recovery measurement, rather than following a fixed plan, has been tested in randomised trials: small-to-medium benefit on submaximal parameters, and lower dispersion of outcomes.",
+          "doesNotSupport": "Any numeric cut point, and specifically not 60 on Evidra's readiness score. These trials used HRV-derived indices, not this composite.",
+          "whyItIsHereAnyway": "It supports the direction of the rule (adjust today from today's recovery reading) while explicitly not supporting its number. Recording that split is the point of this field."
+        }
+      ],
+      "limitations": [
+        "60 is our own choice.",
+        "This rule is skipped when the scheduled session is already low intensity, and when the caller states no intensity at all — in the second case the blocked rule is reported in `limits` rather than silently dropped."
+      ],
+      "notes": "supportingLiterature is deliberately a different field from sources. sources means 'this publication supports this threshold'. Nothing supports this threshold."
+    },
+
+    {
+      "ruleId": "EVD-R-003",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "A maxed-out muscle group takes no further stimulus today",
+      "category": "recovery",
+      "priority": 80,
+      "basis": "internal_composite",
+      "evidenceLevel": "internal_heuristic",
+      "measuredQuantity": {
+        "name": "per-muscle-group fatigue",
+        "range": "0-100",
+        "computedBy": "packages/semantic-engine/src/generateSemanticFitnessState.js:calculateMuscleFatigue",
+        "definition": "Sum over recent sessions of trainingLoad x decay, where decay = max(0.15, 1 - ageDays/5), attributed to the muscle groups the session targeted, clamped to 0-100.",
+        "whyNoSourceIsPossible": "The decay curve, its floor, and the 0-100 clamp are ours. The resulting number is not a physiological measurement and no publication reports outcomes against it."
+      },
+      "thresholds": [{ "key": "muscleFatigueMaxed", "operator": ">=", "value": 90, "unit": "fatigue_score" }],
+      "effect": { "decision": "adjust", "intent": "reduce_today_intensity", "intensityStepsDown": 2 },
+      "sources": [],
+      "contested": [],
+      "limitations": [
+        "90 is our own choice, and so are the decay constants that produce the number it is compared against.",
+        "A session carrying no training load contributes nothing to this sum. That is reported through signalCoverage.training.missing and is the only way a caller learns the fatigue figure is built on partial evidence."
+      ],
+      "notes": "Two steps rather than one: at the ceiling, a single notch still leaves the session loading the same tissue."
+    },
+
+    {
+      "ruleId": "EVD-R-004",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "High fatigue in the target muscle group rules out hard work on it",
+      "category": "recovery",
+      "priority": 75,
+      "basis": "internal_composite",
+      "evidenceLevel": "internal_heuristic",
+      "measuredQuantity": { "sameAs": "EVD-R-003" },
+      "thresholds": [{ "key": "muscleFatigueHigh", "operator": ">=", "value": 65, "unit": "fatigue_score" }],
+      "effect": { "decision": "adjust", "intent": "reduce_today_intensity", "intensityStepsDown": 1 },
+      "sources": [],
+      "contested": [],
+      "supportingLiterature": [
+        {
+          "citation": "American College of Sports Medicine. Position Stand: Progression Models in Resistance Training for Healthy Adults. Med Sci Sports Exerc, 2009.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19204579/",
+          "supports": "That recovery of a trained muscle group governs how soon it may be loaded hard again, and that progression is managed per muscle group rather than globally.",
+          "doesNotSupport": "The value 65, and the decay model that produces the score it is compared against.",
+          "verificationStatus": "citation_not_read_in_full",
+          "whyItIsHereAnyway": "It supports the existence of a per-muscle-group recovery rule. It says nothing about our number."
+        }
+      ],
+      "limitations": [
+        "65 is our own choice.",
+        "The supporting citation above was identified but not read in full; it is recorded as citation_not_read_in_full and must not be described as verified until it is."
+      ],
+      "notes": ""
+    },
+
+    {
+      "ruleId": "EVD-R-005",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "Moderate fatigue is reported but changes nothing",
+      "category": "recovery",
+      "priority": 20,
+      "basis": "internal_composite",
+      "evidenceLevel": "internal_heuristic",
+      "measuredQuantity": { "sameAs": "EVD-R-003" },
+      "thresholds": [{ "key": "muscleFatigueModerate", "operator": ">=", "value": 45, "unit": "fatigue_score" }],
+      "effect": { "decision": "keep", "intent": null, "intensityStepsDown": 0 },
+      "sources": [],
+      "contested": [],
+      "limitations": ["45 is our own choice."],
+      "notes": "An advisory rule. It is in the library rather than inline because a rule that deliberately changes nothing is still a rule the athlete is entitled to see, and because it also gates the progression rule EVD-R-008."
+    },
+
+    {
+      "ruleId": "EVD-R-006",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "An acute load spike pulls intensity down one step",
+      "category": "recovery",
+      "priority": 78,
+      "basis": "external_metric",
+      "evidenceLevel": "observational",
+      "measuredQuantity": {
+        "name": "acute:chronic workload ratio",
+        "computedBy": "packages/semantic-engine/src/generateSemanticFitnessState.js:calculateTrainingLoad",
+        "definition": "Sum of training load over the last 7 days, divided by max(sum over the last 28 days / 4, weeklyTrainingLoadTarget).",
+        "matchesPublishedDefinition": "partially"
+      },
+      "thresholds": [{ "key": "acwrHigh", "operator": ">", "value": 1.4, "unit": "ratio" }],
+      "effect": { "decision": "adjust", "intent": "reduce_today_intensity", "intensityStepsDown": 1 },
+      "sources": [
+        {
+          "citation": "Gabbett TJ. The training-injury prevention paradox: should athletes be training smarter and harder? Br J Sports Med. 2016;50(5):273-280.",
+          "doi": "10.1136/bjsports-2015-095788",
+          "url": "https://efsma.org/images/pdf/publications/Br-J-Sports-Med-2016-Gabbett-273-80.pdf",
+          "supports": "That acute (1 week) to chronic (rolling 4-week) load ratio is associated with injury risk; reported lower-risk band approximately 0.8-1.3, spike above 1.5.",
+          "doesNotSupport": "The value 1.4.",
+          "verificationStatus": "numbers_from_secondary_sources"
+        }
+      ],
+      "contested": [
+        {
+          "citation": "Impellizzeri FM, Tenan MS, Kempton T, Novak A, Coutts AJ. Acute:Chronic Workload Ratio: Conceptual Issues and Fundamental Pitfalls. Int J Sports Physiol Perform. 2020.",
+          "objection": "Mathematical coupling (acute load appears in both numerator and denominator); no coherent causal interpretation; adds no predictive value over acute load alone."
+        },
+        {
+          "citation": "Lolli L, Batterham AM, Hawkins R, et al. Br J Sports Med, 2017-2019.",
+          "objection": "Ratio indices invite spurious correlation and inflated odds ratios; the published 'sweet spot' figure is argued to be an artefact."
+        }
+      ],
+      "limitations": [
+        "1.4 matches neither published figure: it sits between the band ceiling (1.3) and the spike definition (1.5). It is our choice, not the literature's.",
+        "When observed chronic load falls below weeklyTrainingLoadTarget the denominator becomes that target, so the ratio compares acute load against a goal rather than against this athlete's own chronic load. Reported as chronicBasis: baseline_floor.",
+        "weeklyTrainingLoadTarget (360) is itself unsourced, so the baseline_floor state inherits an unsourced denominator.",
+        "Given the objections above, read this as a ramp-rate guard, not injury prediction. That is why the effect is one step down and not a stop."
+      ],
+      "notes": "The only rule here whose quantity is externally defined and externally studied, and therefore the only one carrying a contested list. Citing Gabbett without citing Impellizzeri would misrepresent the state of the field, so both travel together. On verification: the publisher PDF was fetched but is not machine-readable as text, so the 0.8-1.3 band and the 1.5 spike figure came from secondary summaries. Treat them as unconfirmed against the original until someone reads the paper — that is what verificationStatus: numbers_from_secondary_sources means. Sessions carrying no training load are excluded from both sums."
+    },
+
+    {
+      "ruleId": "EVD-R-007",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "The first session back after a break is scaled down",
+      "category": "recovery",
+      "priority": 85,
+      "basis": "external_metric",
+      "evidenceLevel": "systematic_review",
+      "measuredQuantity": {
+        "name": "days since last session, and percentage loss of chronic training load from its recent peak",
+        "computedBy": "packages/training-load/src/trainingLoad.js",
+        "definition": "Detraining is flagged only when both an idle-days condition and a CTL-loss condition hold, measured against this athlete's own recent CTL peak."
+      },
+      "thresholds": [
+        { "key": "returnSevereIdleDays", "operator": ">=", "value": 42, "unit": "days" },
+        { "key": "returnSevereCtlLossPct", "operator": ">=", "value": 60, "unit": "percent" },
+        { "key": "returnDurationFactor", "operator": "x", "value": 0.6, "unit": "fraction_of_planned_duration" }
+      ],
+      "effect": { "decision": "adjust", "intent": "ease_back_after_break", "intensityStepsDown": "1, or 2 when either severe threshold is met", "durationCap": "max(15, planned x 0.6) minutes" },
+      "sources": [
+        {
+          "citation": "Mujika I, Padilla S. Detraining: loss of training-induced physiological and performance adaptations. Part I: short term insufficient training stimulus / Part II: long term insufficient training stimulus. Sports Med. 2000;30(2):79-87 and 30(3):145-154.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10999420/",
+          "supports": "That aerobic capacity declines progressively with training cessation — roughly 4-7% VO2max within 2-3 weeks, substantially more beyond 4 weeks — so a returning athlete should not resume at prior load, and the reduction should scale with the length of the break.",
+          "doesNotSupport": "The specific values 42 days, 60%, and 0.6.",
+          "verificationStatus": "numbers_from_secondary_sources"
+        }
+      ],
+      "contested": [],
+      "limitations": [
+        "42, 60 and 0.6 are our own choices. The literature supports a monotonic decline and a scaled return, not these cut points.",
+        "The detraining literature measures VO2max. Our trigger measures modelled chronic training load — a proxy for training done, not for fitness retained.",
+        "0.6 sits inside the common 'half to two-thirds of prior volume' return guidance, which is practitioner convention rather than a trial result."
+      ],
+      "notes": "This rule exists because no recovery signal can see it. An athlete two months off reads rested: readiness high, muscle fatigue near zero, and ACWR at 0 — the safest possible value to EVD-R-006. Every other guard passes. Lost fitness therefore needs its own trigger rather than being inferred from recovery. On verification: the percentage figures came from review summaries, not the primary papers."
+    },
+
+    {
+      "ruleId": "EVD-R-008",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "High readiness with a fresh target muscle group allows a step up",
+      "category": "training_goal",
+      "priority": 40,
+      "basis": "internal_composite",
+      "evidenceLevel": "internal_heuristic",
+      "measuredQuantity": { "sameAs": "EVD-R-001" },
+      "thresholds": [
+        { "key": "readinessAdvance", "operator": ">=", "value": 85, "unit": "readiness_score" },
+        { "key": "muscleFatigueModerate", "operator": "<", "value": 45, "unit": "fatigue_score" }
+      ],
+      "effect": { "decision": "advance", "intent": "progress_when_fresh", "intensityStepsDown": -1 },
+      "sources": [],
+      "contested": [],
+      "limitations": [
+        "85 and 45 are our own choices.",
+        "A detrained athlete reads fresh on both quantities. This rule must therefore never fire while EVD-R-007 is active, and that exclusion is part of the rule, not an implementation detail."
+      ],
+      "notes": "The only rule in this library outside the recovery category. It is what makes the arbitration policy observable today: when it and a recovery rule both trigger, category rank decides which rule the decision is attributed to."
+    }
+  ]
+}

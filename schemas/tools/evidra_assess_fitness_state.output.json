@@ -176,6 +176,10 @@
                   "null"
                 ],
                 "description": "ISO 8601 of the most recent reading of this signal."
+              },
+              "baselineEstablishing": {
+                "type": "boolean",
+                "description": "True when the vendor says its own baseline for this signal is still forming — Garmin marks a daily HRV reading ONBOARDING until it has enough nights to compare against. The reading is used at full value and no penalty is applied to it, because inventing one would be a threshold with no source. Absent means no vendor flagged it, not that the baseline is established: that is not something we would know."
               }
             }
           }

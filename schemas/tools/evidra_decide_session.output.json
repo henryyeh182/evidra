@@ -264,6 +264,10 @@
                   "null"
                 ],
                 "description": "ISO 8601 of the most recent reading of this signal."
+              },
+              "baselineEstablishing": {
+                "type": "boolean",
+                "description": "True when the vendor says its own baseline for this signal is still forming — Garmin marks a daily HRV reading ONBOARDING until it has enough nights to compare against. The reading is used at full value and no penalty is applied to it, because inventing one would be a threshold with no source. Absent means no vendor flagged it, not that the baseline is established: that is not something we would know."
               }
             }
           }
@@ -297,6 +301,46 @@
         "verdict",
         "violations"
       ]
+    },
+    "decisionBasis": {
+      "type": "object",
+      "description": "What the decision stands on. `governingRule` is the rule the decision is attributed to, carrying the reading that triggered it (`measured`), the thresholds it was compared against, and the provenance of those thresholds: `sources` for published work supporting them, `supportingLiterature` for work supporting the rule's direction but explicitly not its number, `contested` for published objections to the method, and `limitations`. `basis` separates the two kinds of threshold. external_metric: the quantity is defined outside Evidra, so literature can speak to it. internal_composite: the threshold cuts a score Evidra computes from weights it chose, so no publication can support it and `sources` is empty by design, not by omission. Most rules are internal_composite. `appliedRules` lists every rule that fired, compact, with `applied: false` where a rule triggered but could not act. `policies` names the arbitration and combination policies by id.",
+      "properties": {
+        "libraryVersion": {
+          "type": "string"
+        },
+        "policies": {
+          "type": "object",
+          "properties": {
+            "arbitration": {
+              "type": "string"
+            },
+            "combination": {
+              "type": "string"
+            }
+          }
+        },
+        "governingRule": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Null only when no rule fired at all — the session ran as planned with nothing to report."
+        },
+        "appliedRules": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "description": "Ordered by the arbitration policy: governing rule first, overruled rules after."
+        }
+      },
+      "required": [
+        "libraryVersion",
+        "policies",
+        "governingRule",
+        "appliedRules"
+      ]
     }
   },
   "required": [
@@ -307,6 +351,7 @@
     "reason",
     "confidence",
     "signalCoverage",
-    "limits"
+    "limits",
+    "decisionBasis"
   ]
 }

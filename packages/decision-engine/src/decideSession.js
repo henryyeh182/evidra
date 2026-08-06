@@ -2,6 +2,16 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 import { assertValidDecision } from "./models.js";
+import {
+  THRESHOLDS,
+  LIBRARY_VERSION,
+  describeRule,
+  arbitrate,
+  combineIntensitySteps,
+  getPolicies,
+  assertThresholdsMatch,
+  getRuleLibrary
+} from "../../rules/src/index.js";
 
 const EMPTY_COVERAGE = { usable: [], missing: [] };
 
@@ -41,26 +51,40 @@ function normalizeCoverage(signalCoverage) {
   };
 }
 
-// Deterministic thresholds. These are the training-science rules, kept as data
-// so they can be tuned and reviewed without touching control flow.
-const RULES = {
-  readinessRest: 40, // below this, train nothing hard
-  readinessReduce: 60, // below this, pull intensity down
-  readinessAdvance: 85, // above this (and fresh), allow a step up
-  muscleFatigueMaxed: 90, // target muscle fully loaded — two steps off
-  muscleFatigueHigh: 65, // target muscle too fatigued for high intensity
-  muscleFatigueModerate: 45,
-  acwrHigh: 1.4, // acute:chronic ratio above this = spike
-  recoveryCapMinutes: 30, // how long a swapped-in recovery session may run
-  // Coming back from a break. A returning athlete restarts at roughly half to
-  // two-thirds of prior volume; 0.6 sits inside that and is a cap, not a target,
-  // so a session already shorter than the cap is left alone.
-  returnDurationFactor: 0.6,
-  // Past either of these the break stopped being a pause and started being a
-  // reset — one notch off the planned intensity is not enough.
-  returnSevereIdleDays: 42,
-  returnSevereCtlLossPct: 60
-};
+// Every threshold this engine applies comes from the rule library, and none of
+// them are written here.
+//
+// That is the whole point of the indirection. A number living in this file is a
+// number with no stated origin: a reader has to take "readinessRest: 40" on
+// trust, and nothing stops the next edit from adding a forty-first. In
+// `packages/rules/data/session-rules.json` the same value cannot exist without
+// declaring which rule owns it, what quantity it cuts, whether that quantity is
+// externally defined or one Evidra computes itself, and — for the two that are
+// externally defined — who published on it and who disputes that publication.
+//
+// The join is enforced in both directions by `assertThresholdsMatch` below: a
+// threshold the engine reads but no rule declares fails the load, and so does a
+// rule nobody applies. Neither side can drift into decoration.
+const RULES = THRESHOLDS;
+
+// Read at module load, so a mismatch is a startup failure rather than a wrong
+// decision discovered later. The list is the engine's side of the contract and
+// has to be maintained by hand — that is deliberate: adding a threshold here
+// without adding the rule that owns it is exactly the move this guard exists to
+// stop, and it should cost a deliberate edit in two places.
+assertThresholdsMatch(getRuleLibrary(), [
+  "readinessRest",
+  "readinessReduce",
+  "readinessAdvance",
+  "muscleFatigueMaxed",
+  "muscleFatigueHigh",
+  "muscleFatigueModerate",
+  "acwrHigh",
+  "recoveryCapMinutes",
+  "returnDurationFactor",
+  "returnSevereIdleDays",
+  "returnSevereCtlLossPct"
+]);
 
 const INTENSITY_ORDER = ["low", "moderate", "high"];
 
@@ -302,8 +326,20 @@ export function decideSession({
 
   let stepsDown = 0;
   let intensityUnstatedBlockedARule = false;
-  const demand = (steps, text, asIntent = "reduce_today_intensity") => {
+
+  // Which rules fired, and the reading that fired each one.
+  //
+  // Recorded even when a rule is blocked from acting: "this rule triggered and
+  // could not be applied" is information the athlete is owed, and dropping it
+  // would let `decisionBasis` claim the evidence was quiet when it was not.
+  const fired = [];
+  const fire = (ruleId, measured, applied = true) => {
+    fired.push({ ruleId, measured, applied });
+  };
+
+  const demand = (ruleId, measured, steps, text, asIntent = "reduce_today_intensity") => {
     if (!intensityStated) {
+      fire(ruleId, measured, false);
       // The reason strings name both the observation and the remedy ("...so
       // intensity comes down"), and the remedy is not available here. Reporting
       // one without the other would be prose contradicting `limits`, so the
@@ -313,7 +349,9 @@ export function decideSession({
       intensityUnstatedBlockedARule = true;
       return;
     }
-    stepsDown = Math.max(stepsDown, steps);
+    fire(ruleId, measured, true);
+    // `most_restrictive_wins`, stated once in the library and applied here.
+    stepsDown = combineIntensitySteps([stepsDown, steps]);
     reason.push(text);
     escalate("adjust", asIntent);
   };
@@ -332,28 +370,48 @@ export function decideSession({
     // about how much time the athlete has.
     to.durationMinutes = Math.min(to.durationMinutes, RULES.recoveryCapMinutes);
     escalate("defer", "swap_to_recovery");
+    fire("EVD-R-001", { quantity: "readiness_score", value: readiness });
     reason.push(
       `Readiness ${readiness} is below ${RULES.readinessRest}: no training load today, swapped to a recovery session of at most ${RULES.recoveryCapMinutes} minutes.`
     );
   } else {
     if (readiness < RULES.readinessReduce && from.intensity !== "low") {
-      demand(1, `Readiness ${readiness} is below ${RULES.readinessReduce}, so intensity comes down.`);
+      demand(
+        "EVD-R-002",
+        { quantity: "readiness_score", value: readiness },
+        1,
+        `Readiness ${readiness} is below ${RULES.readinessReduce}, so intensity comes down.`
+      );
     }
 
     // 3. Fatigue in the muscles this session actually targets. A maxed-out
     //    group warrants two steps: one notch off a hard day still leaves it
     //    training the same fatigued tissue.
+    const fatigueReading = { quantity: "muscle_fatigue_score", group: fatigue.group, value: fatigue.value };
     if (fatigue.group && fatigue.value >= RULES.muscleFatigueMaxed) {
-      demand(2, `${fatigue.group} fatigue is ${fatigue.value}, at the ceiling: that muscle group takes no further stimulus today.`);
+      demand("EVD-R-003", fatigueReading, 2, `${fatigue.group} fatigue is ${fatigue.value}, at the ceiling: that muscle group takes no further stimulus today.`);
     } else if (fatigue.group && fatigue.value >= RULES.muscleFatigueHigh) {
-      demand(1, `${fatigue.group} fatigue is ${fatigue.value}, high enough to rule out hard work on the same muscle group today.`);
+      demand("EVD-R-004", fatigueReading, 1, `${fatigue.group} fatigue is ${fatigue.value}, high enough to rule out hard work on the same muscle group today.`);
     } else if (fatigue.group && fatigue.value >= RULES.muscleFatigueModerate && from.intensity === "high") {
+      // Advisory: EVD-R-005 changes nothing by design, so it fires without
+      // demanding a step. It is still recorded — a rule that deliberately holds
+      // is part of the basis for holding.
+      fire("EVD-R-005", fatigueReading, true);
       reason.push(`${fatigue.group} fatigue is ${fatigue.value}, moderate: intensity is kept, but watch how it feels.`);
     }
 
     // 4. Acute load spike.
     if (state.acuteChronicWorkloadRatio > RULES.acwrHigh) {
-      demand(1, `Acute:chronic workload ratio ${state.acuteChronicWorkloadRatio} is above ${RULES.acwrHigh}: load has been ramping too fast.`);
+      demand(
+        "EVD-R-006",
+        {
+          quantity: "acute_chronic_workload_ratio",
+          value: state.acuteChronicWorkloadRatio,
+          chronicBasis: state.acwrCoverage?.chronicBasis ?? null
+        },
+        1,
+        `Acute:chronic workload ratio ${state.acuteChronicWorkloadRatio} is above ${RULES.acwrHigh}: load has been ramping too fast.`
+      );
     }
 
     // 5. Coming back from a break. Nothing above can see this. An athlete two
@@ -369,6 +427,13 @@ export function decideSession({
         detraining.daysSinceLastSession >= RULES.returnSevereIdleDays ||
         detraining.ctlLossPct >= RULES.returnSevereCtlLossPct;
       demand(
+        "EVD-R-007",
+        {
+          quantity: "detraining",
+          daysSinceLastSession: detraining.daysSinceLastSession,
+          ctlLossPct: detraining.ctlLossPct,
+          severe
+        },
         severe ? 2 : 1,
         `${detraining.daysSinceLastSession} days since the last session and chronic load is down ${detraining.ctlLossPct}% from its peak: fitness has decayed, so the first session back is scaled down.`,
         "ease_back_after_break"
@@ -465,6 +530,11 @@ export function decideSession({
   ) {
     to.intensity = raiseIntensity(to.intensity);
     escalate("advance", "increase_today_intensity");
+    fire("EVD-R-008", {
+      quantity: "readiness_score",
+      value: readiness,
+      targetMuscleFatigue: fatigue.value || 0
+    });
     reason.push(`Readiness ${readiness} is ample and ${fatigue.group || "the target muscle group"} fatigue is low, so intensity steps up from ${from.intensity} to ${to.intensity}.`);
   }
 
@@ -621,12 +691,51 @@ export function decideSession({
     );
   }
 
+  // What the decision stands on.
+  //
+  // This is the field that separates Evidra from a model that read the same
+  // numbers and wrote a fluent paragraph. It names the rule that governs the
+  // decision, the reading that triggered it, the threshold it was compared
+  // against, and — the part that is easy to leave out and most worth keeping —
+  // whether that threshold rests on published work or on a score Evidra
+  // computes itself.
+  //
+  // Six of the eight rules in library v1.0.0 come back as
+  // `basis: "internal_composite"`, `evidenceLevel: "internal_heuristic"`, with
+  // no sources. That is the correct output, not a gap: those thresholds cut a
+  // readiness or fatigue score built from weights we chose, and no publication
+  // has ever used those scores. The two that are externally defined
+  // (acute:chronic ratio, detraining) carry their citations and, for the ratio,
+  // the published objections to it. A reader can therefore tell the difference
+  // between the parts of this engine that rest on literature and the parts that
+  // rest on our judgement, which is not a distinction most systems expose at
+  // all.
+  const arbitration = arbitrate(fired.map((entry) => entry.ruleId));
+  const readingFor = new Map(fired.map((entry) => [entry.ruleId, entry]));
+  const decisionBasis = {
+    libraryVersion: LIBRARY_VERSION,
+    policies: getPolicies(),
+    governingRule: arbitration.governing
+      ? describeRule(arbitration.governing.ruleId, readingFor.get(arbitration.governing.ruleId)?.measured)
+      : null,
+    appliedRules: arbitration.ordered.map((entry) => {
+      const record = readingFor.get(entry.ruleId);
+      const governing = entry.ruleId === arbitration.governing?.ruleId;
+      return {
+        ...describeRule(entry.ruleId, record?.measured, { full: false }),
+        applied: record?.applied ?? true,
+        ...(governing ? { governing: true } : {})
+      };
+    })
+  };
+
   const result = {
     evidence,
     state: stateSummary,
     decision: { type, intent },
     action: { from, to: changed.length > 0 ? to : from, changed },
     reason,
+    decisionBasis,
     confidence: state.confidence || "low",
     signalCoverage: coverage,
     ...(proposal ? { proposal } : {}),

@@ -191,6 +191,10 @@ export const outputSchemas = {
                     "null"
                   ],
                   "description": "ISO 8601 of the most recent reading of this signal."
+                },
+                "baselineEstablishing": {
+                  "type": "boolean",
+                  "description": "True when the vendor says its own baseline for this signal is still forming — Garmin marks a daily HRV reading ONBOARDING until it has enough nights to compare against. The reading is used at full value and no penalty is applied to it; say so if the user asks how far to trust it. Absent means no vendor flagged it, not that the baseline is established."
                 }
               }
             }
@@ -379,6 +383,23 @@ export const outputSchemas = {
         },
         "minItems": 1
       },
+      "decisionBasis": {
+        "type": "object",
+        "description": "What the decision stands on. `governingRule` is the rule the decision is attributed to, carrying the reading that triggered it, the threshold it was compared against, and the provenance of that threshold. `basis` distinguishes the two kinds: external_metric means the quantity is defined outside Evidra and `sources` cite published work on it — with `contested` listing published objections to that work where they exist; internal_composite means the threshold cuts a score Evidra computes from weights it chose, so no publication can support it and `sources` is empty by design. Most rules are internal_composite. Report that plainly if asked what a decision rests on; do not describe an internal_heuristic threshold as evidence-based, and do not treat the empty source list as missing information.",
+        "properties": {
+          "libraryVersion": { "type": "string" },
+          "policies": {
+            "type": "object",
+            "properties": {
+              "arbitration": { "type": "string" },
+              "combination": { "type": "string" }
+            }
+          },
+          "governingRule": { "type": ["object", "null"] },
+          "appliedRules": { "type": "array", "items": { "type": "object" } }
+        },
+        "required": ["libraryVersion", "policies", "governingRule", "appliedRules"]
+      },
       "confidence": {
         "type": "string",
         "enum": [
@@ -481,6 +502,10 @@ export const outputSchemas = {
                     "null"
                   ],
                   "description": "ISO 8601 of the most recent reading of this signal."
+                },
+                "baselineEstablishing": {
+                  "type": "boolean",
+                  "description": "True when the vendor says its own baseline for this signal is still forming — Garmin marks a daily HRV reading ONBOARDING until it has enough nights to compare against. The reading is used at full value and no penalty is applied to it; say so if the user asks how far to trust it. Absent means no vendor flagged it, not that the baseline is established."
                 }
               }
             }
@@ -522,6 +547,7 @@ export const outputSchemas = {
       "decision",
       "action",
       "reason",
+      "decisionBasis",
       "confidence",
       "signalCoverage",
       "limits"

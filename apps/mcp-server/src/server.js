@@ -39,7 +39,11 @@ Gathering evidence: before calling a decision tool, collect the user's recent he
 
 Plans live with you, not here. This server stores no plan, no preview, and no history: pass the plan you hold into the tools that take one, and persist what they return.
 
-The intensity, duration and movements a decision returns are the decision, not a suggestion to refine. Injury contraindications and load limits are applied here; do not re-derive them or reason past the result. What to say to the user is yours; what today's session becomes is not.`;
+The intensity, duration and movements a decision returns are the decision, not a suggestion to refine. Injury contraindications and load limits are applied here; do not re-derive them or reason past the result. What to say to the user is yours; what today's session becomes is not.
+
+Where the thresholds come from. Every threshold lives in a versioned rule library, and each decision returns \`decisionBasis\`: the rule it is attributed to, the reading that triggered it, and that rule's provenance. Two policies govern this and are named by id on every decision. Arbitration (\`category_then_priority\`) picks which rule the decision is attributed to: rules sort by category — injury, then illness, recovery, training goal, preference — and by priority within a category. Combination (\`most_restrictive_wins\`) decides how far to move: intensity reductions do not sum, the largest single reduction applies, because two readings of the same tired athlete are one fact observed twice, not two reasons to stop.
+
+Be accurate about what a rule rests on. \`basis: external_metric\` means the quantity is defined outside Evidra and \`sources\` cite work on it; where that work is disputed, \`contested\` names the objections, and both should be reported together if the user asks. \`basis: internal_composite\` means the threshold cuts a score Evidra computes from weights it chose — no study has used that score, so no citation is possible and \`sources\` is empty by design. Most rules are internal_composite. If the user asks what a decision is based on, say which of the two it is. Do not call an internal threshold evidence-based, and do not read an empty source list as missing information.`;
 
 // Newest first: index 0 is what we offer when the client asks for something
 // we do not recognise.
