@@ -292,7 +292,22 @@ function signalWriters(metrics) {
         ? [metric.metadata.sourceName]
         : [];
 
-    const entry = perType.get(metric.type) || { sources: new Set(), writers: new Set(), latest: null };
+    const entry = perType.get(metric.type)
+      || { sources: new Set(), writers: new Set(), latest: null, baselineEstablishing: false };
+
+    // A vendor saying its own baseline is still forming.
+    //
+    // Garmin marks a daily HRV reading `status: "ONBOARDING"` until it has
+    // enough nights to trust the baseline it compares against. The measurement
+    // itself is real — 43ms is 43ms — so it is admitted at full value, and no
+    // penalty is invented for it: a down-weight would be a threshold with no
+    // source, which discipline 2 forbids.
+    //
+    // But it cannot be dropped either. Recovery weights HRV at 0.35, and
+    // without this flag a reading the vendor is unsure of is indistinguishable
+    // from one it is confident in. So it travels the same way the acute:chronic
+    // baseline_floor caveat does: reported, not applied.
+    if (metric.metadata?.onboarding === true) entry.baselineEstablishing = true;
     // `source` is what the caller said the reading came from; `writers` is which
     // device inside that source recorded it. Both are reported because they are
     // different questions, and because reporting only the second one made a
@@ -313,7 +328,10 @@ function signalWriters(metrics) {
     described[type] = {
       sources: [...entry.sources].sort(),
       writers: [...entry.writers].sort(),
-      latest: entry.latest
+      latest: entry.latest,
+      // Only when true. A signal no vendor flagged says nothing rather than
+      // claiming its baseline is established — we would not know that.
+      ...(entry.baselineEstablishing ? { baselineEstablishing: true } : {})
     };
   }
   return described;

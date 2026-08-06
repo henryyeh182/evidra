@@ -131,6 +131,20 @@ export const VENDOR_SCHEMAS = {
       { from: "averageStressLevel", to: "stress", convert: identity, scale: "0-100" },
       { from: "sleepTimeSeconds", to: "sleep_duration_hours", convert: hours, scale: "seconds" },
       { from: "sleepScores.overall.value", to: "sleep_quality", convert: identity, scale: "0-100" },
+      // HRV comes from the daily Health Status file, not from
+      // TrainingReadinessDTO.hrvWeeklyAverage. That field is a *weekly* average
+      // and sits at the not-established sentinel 511 until Garmin has a
+      // sustained run of nights to average over — measured at 511 on all 330
+      // days of one real export, so it is deliberately mapped to nothing.
+      // The Health Status file is *daily* and carries a real figure as soon as
+      // one night is measured.
+      //
+      // `status: "ONBOARDING"` beside the value describes Garmin's confidence
+      // in its own baseline, not an absent measurement, so it does not gate
+      // admission — a reading of 43ms is 43ms. It is carried into the metric's
+      // metadata and reported, because a caller weighing HRV deserves to know
+      // the vendor considers the baseline still forming.
+      { from: "metrics[type=HRV].value", to: "hrv_ms", convert: identity, scale: "ms", requires: "value > 0", file: "health-status" },
       // Garmin composites
       { from: "score", to: "vendor_readiness", convert: identity, scale: "0-100", requires: "level !== NONE" },
       { from: "bodyBattery.HIGHEST", to: "body_battery", convert: identity, scale: "0-100" },

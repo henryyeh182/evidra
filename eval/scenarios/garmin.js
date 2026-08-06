@@ -27,6 +27,8 @@
  * did not arrive is reported as missing instead of invented.
  */
 
+import { describeEvidence } from "../../packages/evidence/src/model.js";
+
 const DAY_MS = 86400000;
 
 function shiftDay(asOf, daysAgo) {
@@ -120,12 +122,70 @@ const decisionRemainsSelfExplaining = {
   }
 };
 
-/** Garmin never supplies a usable HRV series, and the layer must not pretend. */
-const hrvIsNeverInvented = {
-  name: "hrv is reported missing — Garmin's weekly average is stale, not a reading",
+/**
+ * HRV has two candidate fields in a Garmin export and only one of them is a
+ * reading.
+ *
+ * `readiness.hrvWeeklyAverage` is a weekly average pinned at the not-established
+ * sentinel 511 — measured at 511 on all 330 days of one real export. The daily
+ * Health Status file carries a genuine figure as soon as a single night is
+ * measured. This check exists to keep the parser reading the second and never
+ * the first.
+ */
+const hrvComesFromHealthStatus = {
+  name: "hrv is read from the daily Health Status file, never from the 511 weekly average",
+  run: ({ state, evidence }) => {
+    const readings = evidence.healthMetrics.filter((metric) => metric.type === "hrv_ms");
+    if (readings.length === 0) return "an export carrying Health Status produced no hrv_ms";
+    if (readings.some((metric) => metric.value === 511)) {
+      return "the not-established sentinel 511 reached hrv_ms";
+    }
+    if (readings.some((metric) => metric.value === 0)) {
+      return "the off-wrist 0 sentinel reached hrv_ms";
+    }
+    if (readings.some((metric) => metric.unit !== "ms")) return "hrv_ms was emitted in another unit";
+    return state.signalCoverage.recovery.usable.includes("hrv") || "hrv was not counted as usable";
+  }
+};
+
+/**
+ * The vendor's own doubt has to survive the trip.
+ *
+ * Garmin marks these readings ONBOARDING while its baseline is still forming.
+ * The value is admitted at face value — no penalty is invented for it — but a
+ * caller weighting HRV at 0.35 of recovery is entitled to know the vendor is
+ * not yet confident in the baseline. Dropping the flag would make an uncertain
+ * reading indistinguishable from a settled one.
+ */
+const onboardingIsDisclosedNotDiscarded = {
+  name: "an ONBOARDING baseline is disclosed rather than discarded or hidden",
+  run: ({ evidence }) => {
+    const readings = evidence.healthMetrics.filter((metric) => metric.type === "hrv_ms");
+    if (readings.length === 0) return "no hrv_ms reading survived, so ONBOARDING gated admission";
+    if (!readings.every((metric) => metric.metadata?.onboarding === true)) {
+      return "the ONBOARDING flag was dropped between the file and the metric";
+    }
+
+    // Provenance is built at the tool boundary rather than by the connector, so
+    // it is derived here from the same evidence a tool call would carry. What
+    // this asserts is the end of the chain: the vendor's own doubt is visible
+    // to whoever reads the decision, not just to the parser that saw it.
+    const described = describeEvidence(evidence).signalWriters?.hrv_ms;
+    if (!described) return "hrv_ms is absent from provenance";
+    return described.baselineEstablishing === true || "the ONBOARDING flag never reached provenance";
+  }
+};
+
+/**
+ * The behaviour before commit 16b4985, kept as a case rather than deleted: an
+ * export without the Health Status file has no HRV to read, and must say so
+ * instead of falling back to the weekly average.
+ */
+const hrvIsMissingWithoutHealthStatus = {
+  name: "without the Health Status file, hrv is reported missing rather than taken from 511",
   run: ({ state, evidence }) => {
     if (evidence.healthMetrics.some((metric) => metric.type === "hrv_ms")) {
-      return "an hrv_ms reading was manufactured from the export";
+      return "an hrv_ms reading was manufactured from an export that has no Health Status file";
     }
     return state.signalCoverage.recovery.missing.includes("hrv") || "hrv was not reported as missing";
   }
@@ -189,7 +249,8 @@ export const GARMIN_SCENARIOS = [
           return workout.metadata.loadSource === "garmin_epoc" || `loadSource was ${workout.metadata.loadSource}`;
         }
       },
-      hrvIsNeverInvented,
+      hrvComesFromHealthStatus,
+      onboardingIsDisclosedNotDiscarded,
       decisionRemainsSelfExplaining
     ]
   },
@@ -294,6 +355,7 @@ export const GARMIN_SCENARIOS = [
     day: completeDay,
     checks: [
       speaksCanonicalVocabulary,
+      hrvIsMissingWithoutHealthStatus,
       {
         name: "a workout without Garmin's load is still usable, and labelled as estimated",
         run: ({ evidence }) => {
@@ -343,7 +405,7 @@ export const GARMIN_SCENARIOS = [
     },
     checks: [
       speaksCanonicalVocabulary,
-      hrvIsNeverInvented,
+      hrvComesFromHealthStatus,
       {
         name: "no reading is fabricated for a day the export has no record for",
         run: ({ evidence, rawExport }) => {
@@ -385,7 +447,8 @@ const DIALECTS = {
     omitTrainingLoad: false,
     omitSleepScore: false,
     omitAcuteLoad: false,
-    partialBodyBattery: false
+    partialBodyBattery: false,
+    omitHealthStatus: false
   },
   /** Older/alternative spellings of the same facts. */
   legacy: {
@@ -395,7 +458,8 @@ const DIALECTS = {
     omitTrainingLoad: false,
     omitSleepScore: false,
     omitAcuteLoad: false,
-    partialBodyBattery: false
+    partialBodyBattery: false,
+    omitHealthStatus: false
   },
   /** Everything Garmin commonly leaves out. */
   lossy: {
@@ -405,7 +469,11 @@ const DIALECTS = {
     omitTrainingLoad: true,
     omitSleepScore: true,
     omitAcuteLoad: true,
-    partialBodyBattery: true
+    partialBodyBattery: true,
+    // Health Status is its own file. A user who exported only the folders they
+    // were offered can arrive without it, and that must read as "no HRV" rather
+    // than sending the parser back to the 511 weekly average.
+    omitHealthStatus: true
   }
 };
 
@@ -441,6 +509,7 @@ export function buildGarminExport(scenario, { asOf, dialect } = {}) {
   const dailySummaries = [];
   const sleep = [];
   const activities = [];
+  const healthStatus = [];
 
   days.forEach((day, index) => {
     readiness.push({
@@ -475,6 +544,27 @@ export function buildGarminExport(scenario, { asOf, dialect } = {}) {
       bodyBattery: batteryStats ? { bodyBatteryStatList: batteryStats } : null
     });
 
+    // Daily Health Status: a separate file from readiness above, and the only
+    // place a usable HRV figure lives. It is emitted only for days the watch
+    // was actually worn overnight — HRV is a sleep measurement, so a day with
+    // no sleep record has nothing to report, and the 0 that Garmin writes in
+    // that case is a sentinel rather than a reading.
+    if (!spelling.omitHealthStatus) {
+      healthStatus.push({
+        calendarDate: day.date,
+        metrics: [
+          {
+            type: "HRV",
+            value: day.sleep ? (day.hrvMs ?? 44) : 0,
+            // Observed on every recorded day of a real export. It describes
+            // Garmin's confidence in the baseline, not whether the night was
+            // measured, so it must not stop the reading being used.
+            status: "ONBOARDING"
+          }
+        ]
+      });
+    }
+
     if (day.sleep) {
       sleep.push({
         ...spelling.sleepDate(day.date),
@@ -505,5 +595,5 @@ export function buildGarminExport(scenario, { asOf, dialect } = {}) {
     }
   });
 
-  return { readiness, dailySummaries, sleep, activities };
+  return { readiness, dailySummaries, sleep, activities, healthStatus };
 }

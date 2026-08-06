@@ -11,18 +11,52 @@
       "items": {
         "type": "object",
         "properties": {
-          "calendarDate": { "type": "string", "description": "YYYY-MM-DD, Garmin's local calendar day." },
-          "timestamp": { "type": ["string", "number"], "description": "Fallback when calendarDate is absent: ISO 8601 or epoch milliseconds." },
-          "score": { "type": "number", "nullable": true, "description": "Training Readiness 0-100. Null whenever Garmin could not compute it — most often no valid sleep record." },
+          "calendarDate": {
+            "type": "string",
+            "description": "YYYY-MM-DD, Garmin's local calendar day."
+          },
+          "timestamp": {
+            "type": [
+              "string",
+              "number"
+            ],
+            "description": "Fallback when calendarDate is absent: ISO 8601 or epoch milliseconds."
+          },
+          "score": {
+            "type": "number",
+            "nullable": true,
+            "description": "Training Readiness 0-100. Null whenever Garmin could not compute it — most often no valid sleep record."
+          },
           "level": {
             "type": "string",
             "nullable": true,
-            "enum": ["NONE", "LOW", "MODERATE", "HIGH", "MAXIMUM", null],
+            "enum": [
+              "NONE",
+              "LOW",
+              "MODERATE",
+              "HIGH",
+              "MAXIMUM",
+              null
+            ],
             "description": "Garmin's own qualifier. NONE means the score is not trustworthy and must not be read as evidence."
           },
-          "recoveryTime": { "type": "number", "nullable": true, "minimum": 0, "description": "Minutes Garmin still considers owed before full recovery." },
-          "acuteLoad": { "type": "number", "nullable": true, "minimum": 0, "description": "Garmin's 7-day acute training load." },
-          "hrvWeeklyAverage": { "type": "number", "nullable": true, "description": "**511 is a not-established sentinel, not a millisecond figure**, the same kind of value as restingHeartRate 0 and averageStressLevel -1. Measured across 330 consecutive days of one real export (2025-10-18 to 2026-07-26, three TrainingReadinessDTO files): every day reads 511, with hrvFactorPercent 0 beside it — Garmin weighting its own HRV at nothing. A real weekly average sits in the tens of milliseconds. Never mapped to hrv_ms. The cause is a prerequisite, not a missing capability: Garmin only reports HRV status after a sustained run of nights slept wearing the watch, and in the same export validSleep is true on 4 of 330 days, never more than 2 consecutive. So 511 means the athlete could have this signal by wearing the watch to bed — which is worth saying to them, and is the opposite of what \"the device cannot measure HRV\" would imply. Do not infer the required run length from these files; they only show it was never approached." }
+          "recoveryTime": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "description": "Minutes Garmin still considers owed before full recovery."
+          },
+          "acuteLoad": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "description": "Garmin's 7-day acute training load."
+          },
+          "hrvWeeklyAverage": {
+            "type": "number",
+            "nullable": true,
+            "description": "**511 is a not-established sentinel, not a millisecond figure**, the same kind of value as restingHeartRate 0 and averageStressLevel -1. Measured across 330 consecutive days of one real export (2025-10-18 to 2026-07-26, three TrainingReadinessDTO files): every day reads 511, with hrvFactorPercent 0 beside it — Garmin weighting its own HRV at nothing. A real weekly average sits in the tens of milliseconds. Never mapped to hrv_ms. The cause is a prerequisite, not a missing capability: Garmin only reports HRV status after a sustained run of nights slept wearing the watch, and in the same export validSleep is true on 4 of 330 days, never more than 2 consecutive. So 511 means the athlete could have this signal by wearing the watch to bed — which is worth saying to them, and is the opposite of what \"the device cannot measure HRV\" would imply. Do not infer the required run length from these files; they only show it was never approached."
+          }
         }
       }
     },
@@ -32,10 +66,25 @@
       "items": {
         "type": "object",
         "properties": {
-          "calendarDate": { "type": "string" },
-          "restingHeartRate": { "type": "number", "nullable": true, "minimum": 0, "description": "0 is Garmin's not-measured sentinel, not a heart rate." },
-          "totalSteps": { "type": "number", "nullable": true, "minimum": 0 },
-          "averageStressLevel": { "type": "number", "nullable": true, "description": "0-100. Negative values (-1, -2) are not-measured sentinels." },
+          "calendarDate": {
+            "type": "string"
+          },
+          "restingHeartRate": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "description": "0 is Garmin's not-measured sentinel, not a heart rate."
+          },
+          "totalSteps": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "averageStressLevel": {
+            "type": "number",
+            "nullable": true,
+            "description": "0-100. Negative values (-1, -2) are not-measured sentinels."
+          },
           "bodyBattery": {
             "type": "object",
             "nullable": true,
@@ -45,8 +94,18 @@
                 "items": {
                   "type": "object",
                   "properties": {
-                    "bodyBatteryStatType": { "type": "string", "enum": ["HIGHEST", "LOWEST"] },
-                    "statsValue": { "type": "number", "nullable": true, "minimum": 0 }
+                    "bodyBatteryStatType": {
+                      "type": "string",
+                      "enum": [
+                        "HIGHEST",
+                        "LOWEST"
+                      ]
+                    },
+                    "statsValue": {
+                      "type": "number",
+                      "nullable": true,
+                      "minimum": 0
+                    }
                   }
                 }
               }
@@ -61,14 +120,47 @@
       "items": {
         "type": "object",
         "properties": {
-          "calendarDate": { "type": "string" },
-          "sleepStartTimestampGMT": { "type": ["string", "number"], "nullable": true },
-          "sleepTimeSeconds": { "type": "number", "nullable": true, "minimum": 0 },
-          "napTimeSeconds": { "type": "number", "nullable": true, "minimum": 0, "description": "Naps are a separate window and are not counted as a night." },
-          "deepSleepSeconds": { "type": "number", "nullable": true, "minimum": 0 },
-          "lightSleepSeconds": { "type": "number", "nullable": true, "minimum": 0 },
-          "remSleepSeconds": { "type": "number", "nullable": true, "minimum": 0 },
-          "awakeSleepSeconds": { "type": "number", "nullable": true, "minimum": 0 },
+          "calendarDate": {
+            "type": "string"
+          },
+          "sleepStartTimestampGMT": {
+            "type": [
+              "string",
+              "number"
+            ],
+            "nullable": true
+          },
+          "sleepTimeSeconds": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "napTimeSeconds": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "description": "Naps are a separate window and are not counted as a night."
+          },
+          "deepSleepSeconds": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "lightSleepSeconds": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "remSleepSeconds": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "awakeSleepSeconds": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
           "sleepScores": {
             "type": "object",
             "nullable": true,
@@ -78,8 +170,15 @@
                 "type": "object",
                 "nullable": true,
                 "properties": {
-                  "value": { "type": "number", "nullable": true, "minimum": 0 },
-                  "qualifierKey": { "type": "string", "nullable": true }
+                  "value": {
+                    "type": "number",
+                    "nullable": true,
+                    "minimum": 0
+                  },
+                  "qualifierKey": {
+                    "type": "string",
+                    "nullable": true
+                  }
                 }
               }
             }
@@ -93,24 +192,114 @@
       "items": {
         "type": "object",
         "properties": {
-          "activityId": { "type": ["number", "string"] },
-          "name": { "type": "string", "nullable": true },
+          "activityId": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
           "activityType": {
-            "type": ["object", "string"],
+            "type": [
+              "object",
+              "string"
+            ],
             "description": "Either Garmin's {typeKey} object or the bare type key string.",
             "properties": {
-              "typeKey": { "type": "string" }
+              "typeKey": {
+                "type": "string"
+              }
             }
           },
-          "beginTimestamp": { "type": "number", "description": "Epoch milliseconds. Activities without it are skipped — an undated session cannot be placed on a load curve." },
-          "duration": { "type": "number", "nullable": true, "minimum": 0, "description": "Milliseconds." },
-          "distance": { "type": "number", "nullable": true, "minimum": 0, "description": "Meters." },
-          "avgHr": { "type": "number", "nullable": true, "minimum": 0 },
-          "maxHr": { "type": "number", "nullable": true, "minimum": 0 },
-          "activityTrainingLoad": { "type": "number", "nullable": true, "minimum": 0, "description": "Garmin's EPOC-derived load. When absent the connector falls back to a duration estimate and says so via metadata.loadSource." },
-          "aerobicTrainingEffect": { "type": "number", "nullable": true, "minimum": 0 },
-          "anaerobicTrainingEffect": { "type": "number", "nullable": true, "minimum": 0 }
+          "beginTimestamp": {
+            "type": "number",
+            "description": "Epoch milliseconds. Activities without it are skipped — an undated session cannot be placed on a load curve."
+          },
+          "duration": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "description": "Milliseconds."
+          },
+          "distance": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "description": "Meters."
+          },
+          "avgHr": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "maxHr": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "activityTrainingLoad": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "description": "Garmin's EPOC-derived load. When absent the connector falls back to a duration estimate and says so via metadata.loadSource."
+          },
+          "aerobicTrainingEffect": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          },
+          "anaerobicTrainingEffect": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0
+          }
         }
+      }
+    },
+    "healthStatus": {
+      "type": "array",
+      "description": "Daily Health Status (\"Health Snapshot\"). A separate export from `readiness`, and the only source of a usable HRV figure. `readiness.hrvWeeklyAverage` is a *weekly* average that reads the not-established sentinel 511 on every one of the 330 days of one real export, and is mapped to nothing; this file is *daily* and carries a real reading as soon as one night is measured. On one real export 6/6 recorded days had a genuine value (37-50ms). Prefer this for hrv_ms: it clears the sentinel days or weeks sooner.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "calendarDate": {
+            "type": "string",
+            "description": "YYYY-MM-DD, Garmin's local calendar day. A record without one is skipped: there is no other date field in this file to fall back to."
+          },
+          "metrics": {
+            "type": "array",
+            "description": "One entry per measured quantity, keyed by `type` rather than by field name — so a day that measured nothing simply has fewer entries, and an absent metric is absent rather than null. Only `HRV` is currently read.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Garmin's metric label, e.g. HRV, RHR."
+                },
+                "value": {
+                  "type": "number",
+                  "description": "For HRV, milliseconds. **0 is the off-wrist sentinel, not a measurement** — the same class of value as restingHeartRate 0 and averageStressLevel -1 elsewhere in this export. Admitted only when > 0; a 0 reaching hrv_ms would score as the worst possible night rather than as no night."
+                },
+                "status": {
+                  "type": "string",
+                  "nullable": true,
+                  "description": "Observed value: ONBOARDING. It describes Garmin's confidence in the baseline it compares against, **not** whether the night was measured — on one real export every recorded day carried a genuine value while still marked ONBOARDING. It therefore does not gate admission; the reading is used as measured and the flag travels into metadata, surfacing as `baselineEstablishing` in provenance. The label Garmin uses once a baseline IS established has not been seen in any export read so far, so no other value is asserted here."
+                }
+              },
+              "required": [
+                "type",
+                "value"
+              ]
+            }
+          }
+        },
+        "required": [
+          "calendarDate",
+          "metrics"
+        ]
       }
     }
   }

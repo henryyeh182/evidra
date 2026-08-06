@@ -1,5 +1,5 @@
 {
-  "_note": "Five days of a Garmin Connect export, shaped like the real thing — including the holes. 2026-07-23 is a night the watch was off the wrist (no sleep record, readiness level NONE, stress sentinel -1, resting HR 0); 2026-07-24 is a strength session Garmin did not assign a training load to; 2026-07-25 is a night that was timed but not scored. Field names follow Garmin Connect's own export, not our vocabulary.",
+  "_note": "Five days of a Garmin Connect export, shaped like the real thing — including the holes. 2026-07-23 is a night the watch was off the wrist (no sleep record, readiness level NONE, stress sentinel -1, resting HR 0); 2026-07-24 is a strength session Garmin did not assign a training load to; 2026-07-25 is a night that was timed but not scored. Field names follow Garmin Connect's own export, not our vocabulary. healthStatus is the daily Health Status file, a different export from readiness above and the only place a usable HRV figure appears: 07-22 and 07-24 carry real readings Garmin still marks ONBOARDING, 07-25 carries one with no status field at all, 07-23 is the off-wrist night where HRV comes back as the 0 sentinel, and 07-26 has no HRV metric in the file. The label Garmin uses once a baseline IS established is not recorded here because we have not seen one in a real export — the absent-status record is written as an absent field rather than a guessed string.",
   "readiness": [
     {
       "calendarDate": "2026-07-22",
@@ -50,8 +50,14 @@
       "averageStressLevel": 32,
       "bodyBattery": {
         "bodyBatteryStatList": [
-          { "bodyBatteryStatType": "HIGHEST", "statsValue": 88 },
-          { "bodyBatteryStatType": "LOWEST", "statsValue": 24 }
+          {
+            "bodyBatteryStatType": "HIGHEST",
+            "statsValue": 88
+          },
+          {
+            "bodyBatteryStatType": "LOWEST",
+            "statsValue": 24
+          }
         ]
       }
     },
@@ -62,8 +68,14 @@
       "averageStressLevel": -1,
       "bodyBattery": {
         "bodyBatteryStatList": [
-          { "bodyBatteryStatType": "HIGHEST", "statsValue": 61 },
-          { "bodyBatteryStatType": "LOWEST", "statsValue": 30 }
+          {
+            "bodyBatteryStatType": "HIGHEST",
+            "statsValue": 61
+          },
+          {
+            "bodyBatteryStatType": "LOWEST",
+            "statsValue": 30
+          }
         ]
       }
     },
@@ -74,8 +86,14 @@
       "averageStressLevel": 44,
       "bodyBattery": {
         "bodyBatteryStatList": [
-          { "bodyBatteryStatType": "HIGHEST", "statsValue": 72 },
-          { "bodyBatteryStatType": "LOWEST", "statsValue": 18 }
+          {
+            "bodyBatteryStatType": "HIGHEST",
+            "statsValue": 72
+          },
+          {
+            "bodyBatteryStatType": "LOWEST",
+            "statsValue": 18
+          }
         ]
       }
     },
@@ -86,8 +104,14 @@
       "averageStressLevel": 27,
       "bodyBattery": {
         "bodyBatteryStatList": [
-          { "bodyBatteryStatType": "HIGHEST", "statsValue": 93 },
-          { "bodyBatteryStatType": "LOWEST", "statsValue": 41 }
+          {
+            "bodyBatteryStatType": "HIGHEST",
+            "statsValue": 93
+          },
+          {
+            "bodyBatteryStatType": "LOWEST",
+            "statsValue": 41
+          }
         ]
       }
     },
@@ -98,8 +122,14 @@
       "averageStressLevel": 58,
       "bodyBattery": {
         "bodyBatteryStatList": [
-          { "bodyBatteryStatType": "HIGHEST", "statsValue": 49 },
-          { "bodyBatteryStatType": "LOWEST", "statsValue": 9 }
+          {
+            "bodyBatteryStatType": "HIGHEST",
+            "statsValue": 49
+          },
+          {
+            "bodyBatteryStatType": "LOWEST",
+            "statsValue": 9
+          }
         ]
       }
     }
@@ -110,14 +140,24 @@
       "sleepTimeSeconds": 26280,
       "deepSleepSeconds": 4560,
       "remSleepSeconds": 5820,
-      "sleepScores": { "overall": { "value": 78, "qualifierKey": "GOOD" } }
+      "sleepScores": {
+        "overall": {
+          "value": 78,
+          "qualifierKey": "GOOD"
+        }
+      }
     },
     {
       "calendarDate": "2026-07-24",
       "sleepTimeSeconds": 22140,
       "deepSleepSeconds": 3180,
       "remSleepSeconds": 4020,
-      "sleepScores": { "overall": { "value": 64, "qualifierKey": "FAIR" } }
+      "sleepScores": {
+        "overall": {
+          "value": 64,
+          "qualifierKey": "FAIR"
+        }
+      }
     },
     {
       "calendarDate": "2026-07-25",
@@ -130,14 +170,21 @@
       "sleepTimeSeconds": 16920,
       "deepSleepSeconds": 2040,
       "remSleepSeconds": 2760,
-      "sleepScores": { "overall": { "value": 43, "qualifierKey": "POOR" } }
+      "sleepScores": {
+        "overall": {
+          "value": 43,
+          "qualifierKey": "POOR"
+        }
+      }
     }
   ],
   "activities": [
     {
       "activityId": 18220001,
       "name": "Zone 2 Run",
-      "activityType": { "typeKey": "running" },
+      "activityType": {
+        "typeKey": "running"
+      },
       "beginTimestamp": 1784703600000,
       "duration": 3120000,
       "distance": 9100,
@@ -150,7 +197,9 @@
     {
       "activityId": 18220002,
       "name": "Upper Body Strength",
-      "activityType": { "typeKey": "strength_training" },
+      "activityType": {
+        "typeKey": "strength_training"
+      },
       "beginTimestamp": 1784876400000,
       "duration": 2700000,
       "avgHr": 112,
@@ -161,7 +210,9 @@
     {
       "activityId": 18220003,
       "name": "Threshold Intervals",
-      "activityType": { "typeKey": "running" },
+      "activityType": {
+        "typeKey": "running"
+      },
       "beginTimestamp": 1785049200000,
       "duration": 3480000,
       "distance": 11400,
@@ -170,6 +221,61 @@
       "activityTrainingLoad": 168,
       "aerobicTrainingEffect": 4.2,
       "anaerobicTrainingEffect": 2.3
+    }
+  ],
+  "healthStatus": [
+    {
+      "calendarDate": "2026-07-22",
+      "metrics": [
+        {
+          "type": "HRV",
+          "value": 43,
+          "status": "ONBOARDING"
+        },
+        {
+          "type": "RHR",
+          "value": 54,
+          "status": "ONBOARDING"
+        }
+      ]
+    },
+    {
+      "calendarDate": "2026-07-23",
+      "metrics": [
+        {
+          "type": "HRV",
+          "value": 0,
+          "status": "ONBOARDING"
+        }
+      ]
+    },
+    {
+      "calendarDate": "2026-07-24",
+      "metrics": [
+        {
+          "type": "HRV",
+          "value": 50,
+          "status": "ONBOARDING"
+        }
+      ]
+    },
+    {
+      "calendarDate": "2026-07-25",
+      "metrics": [
+        {
+          "type": "HRV",
+          "value": 37
+        }
+      ]
+    },
+    {
+      "calendarDate": "2026-07-26",
+      "metrics": [
+        {
+          "type": "RHR",
+          "value": 51
+        }
+      ]
     }
   ]
 }
