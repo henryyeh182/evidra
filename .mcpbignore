@@ -40,6 +40,15 @@ packages/
 # esbuild, and nothing the server imports. The bundle has no runtime deps.
 node_modules/
 
+# Registry metadata, and it cannot be packed. Its `fileSha256` is the hash of
+# the archive itself, so an archive containing it can never agree with it:
+# filling the field changes the hash that the field states. The registry reads
+# this file from the repository, and no code reads it at runtime.
+server.json
+
+# The packed archive itself, which lands in dist/ beside the compiled server.
+*.mcpb
+
 # Kept: manifest.json, README.md (the submission requires its Privacy Policy
 # section to travel with the bundle), package.json (the server reads its
 # version), dist/, and data/seeds + data/fixtures, which the server reads at
