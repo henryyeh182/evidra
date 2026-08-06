@@ -96,8 +96,9 @@ it for unrelated purposes.
 
 Evidra never fetches your data — it only sees what the calling AI assistant passes into a
 tool call: recovery signals for today, recent training load, the session you had scheduled,
-and context you state yourself. As a desktop extension, this is verifiable from the code
-shipped in it:
+and context you state yourself. As a desktop extension, this is checkable against the one
+compiled server file it ships — minifying does not hide which standard-library modules a
+file imports:
 
 - **Evidra itself performs no outbound network requests.** No outbound HTTP, fetch, socket,
   or DNS calls, and it transmits your evidence nowhere.
