@@ -13,7 +13,7 @@ import {
 } from "./toolDefinitions.js";
 import { parseJsonRpcMessage, jsonRpcError, jsonRpcResult } from "./jsonRpc.js";
 import { toolHandlers } from "./toolHandlers.js";
-import { describePolicies, getRuleLibrary } from "../../../packages/rules/src/index.js";
+import { describePolicies } from "../../../packages/rules/src/index.js";
 
 /**
  * The policy prose the host is told, taken from the library rather than retyped.
@@ -24,15 +24,10 @@ import { describePolicies, getRuleLibrary } from "../../../packages/rules/src/in
  * Interpolating means the sentence a host reads cannot disagree with the file
  * the engine reads.
  *
- * The category order is derived for the same reason — it is `categories` sorted
- * by rank, and writing it out by hand is one more place for the priority matrix
- * to be described wrongly.
+ * The derived category order that used to live here went with the sentence that
+ * used it, when the instructions were cut to fit the client's 2KB truncation.
  */
 const POLICIES = describePolicies();
-const CATEGORY_ORDER = [...getRuleLibrary().categories]
-  .sort((a, b) => a.rank - b.rank)
-  .map((category) => category.id.replace(/_/g, " "))
-  .join(", ");
 
 /**
  * The version a client is told has to be the version that shipped.
@@ -54,22 +49,40 @@ const { version: SERVER_VERSION } = JSON.parse(
  * Three tool descriptions carried their own copy of where evidence comes from,
  * which made the listing longer for every conversation and gave the same rule
  * three places to drift. The protocol has a field for exactly this.
+ *
+ * Ordered by what is most costly to get wrong, and kept under 2048 bytes.
+ *
+ * Claude Code truncates server instructions at 2KB, and this text had reached
+ * 3539 — so the last 1491 bytes had never reached a model at all. What sat in
+ * those bytes was the whole of the provenance guidance: which tools carry
+ * `decisionBasis`, the two policies, and the instruction not to describe an
+ * internal threshold as evidence-based. The single most important paragraph
+ * here was the one being silently dropped.
+ *
+ * Ordering alone would only have moved the loss somewhere else, so the text was
+ * also cut to fit. Every instruction survives; the prose around them does not.
+ * Two things were dropped rather than compressed: the category rank order, and
+ * the reason intensity reductions do not sum. Both are mechanism the host
+ * reports rather than applies.
+ *
+ * server.test.js fails the suite if this grows back, which is the part that
+ * stops it happening again — nothing caught it the first time. Headroom is thin
+ * and about a third of the text is interpolated from the rule library, so a
+ * policy description edited there can break the limit from outside this file.
  */
-const INSTRUCTIONS = `Evidra computes training decisions from evidence you supply. You gather the evidence; Evidra does the longitudinal arithmetic, applies the injury and load rules, and hands back a decision that explains itself.
+const INSTRUCTIONS = `You gather the evidence; Evidra does the longitudinal arithmetic, applies the injury and load rules, and returns a decision that explains itself.
 
-Gathering evidence: before calling a decision tool, collect the user's recent health evidence from whichever health source this user actually has — Apple Health, Google Health, Garmin, Strava, Oura, Whoop or any other; the shape is the same and no one source is expected — or, just as validly, from the user themselves: "ran 45 minutes yesterday, slept about seven hours" is evidence, and asking two or three plain questions is the normal way to start when no connector is attached. Pass what you gathered as \`evidence\`. Any single source decides something: training load alone, recovery signals alone, or what the athlete can tell you. More sources raise confidence.
+\`basis: internal_composite\` — the threshold cuts a score Evidra computes from weights it chose; no study has used that score, so \`sources\` is empty by design and it is not evidence-based. \`basis: external_metric\` — the quantity is defined outside Evidra, \`sources\` cite work on it, \`contested\` names published objections; report both. Most rules are internal_composite. Say which when asked; empty \`sources\` is not missing information.
 
-A signal nobody supplied comes back in \`signalCoverage\` and confidence drops to match. That is the design working: the decision still stands, it stands on less, and the caller can see exactly how much. So send what exists and let coverage carry the rest — a filled-in default would make the confidence figure untrue, and a session that arrived without a load figure is an unknown quantity rather than an easy one.
+\`decisionBasis\` comes from \`evidra_decide_session\` only; the other tools' numbers are not in the library, so do not claim they carry the same sourcing. Two policies, by id: arbitration (\`${POLICIES.arbitration.id}\`) — ${POLICIES.arbitration.description} Combination (\`${POLICIES.combination.id}\`) — ${POLICIES.combination.description}
 
-Plans live with you, not here. This server stores no plan, no preview, and no history: pass the plan you hold into the tools that take one, and persist what they return.
+The intensity, duration and movements returned are the decision, not a draft to refine. Contraindications and load limits are applied here; do not re-derive them or reason past the result. What to say to the user is yours; what today's session becomes is not.
 
-The intensity, duration and movements a decision returns are the decision, not a suggestion to refine. Injury contraindications and load limits are applied here; do not re-derive them or reason past the result. What to say to the user is yours; what today's session becomes is not.
+Gathering evidence: use whichever source this user has — Apple Health, Google Health, Garmin, Strava, Oura, Whoop or any other — or the user's own words; two or three plain questions are a normal start. Pass it as \`evidence\`. Any single source decides something; more sources raise confidence.
 
-Where the thresholds come from. Every threshold the session decision applies lives in a versioned rule library. \`evidra_decide_session\` returns \`decisionBasis\`: the rule the decision is attributed to, the reading that triggered it, and that rule's provenance. The other tools do not return it yet — their numbers are not in the library, so do not tell the user a substitution or a generated plan carries the same rule-level sourcing.
+A signal nobody supplied comes back in \`signalCoverage\` and lowers confidence. Send what exists, not a default: a filled-in value makes that confidence figure untrue.
 
-Two policies govern \`decisionBasis\` and are named by id on it. Arbitration (\`${POLICIES.arbitration.id}\`) — ${POLICIES.arbitration.description} Categories rank ${CATEGORY_ORDER}. Combination (\`${POLICIES.combination.id}\`) — ${POLICIES.combination.description} The reason they do not sum: two readings of the same tired athlete are one fact observed twice, not two reasons to stop.
-
-Be accurate about what a rule rests on. \`basis: external_metric\` means the quantity is defined outside Evidra and \`sources\` cite work on it; where that work is disputed, \`contested\` names the objections, and both should be reported together if the user asks. \`basis: internal_composite\` means the threshold cuts a score Evidra computes from weights it chose — no study has used that score, so no citation is possible and \`sources\` is empty by design. Most rules are internal_composite. If the user asks what a decision is based on, say which of the two it is. Do not call an internal threshold evidence-based, and do not read an empty source list as missing information.`;
+Plans live with you: this server stores no plan, preview or history. Pass in the plan you hold, and persist what comes back.`;
 
 // Newest first: index 0 is what we offer when the client asks for something
 // we do not recognise.

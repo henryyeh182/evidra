@@ -21,6 +21,72 @@ test("MCP server initialize returns server capabilities", async () => {
   assert.deepEqual(response.result.capabilities, { tools: {} });
 });
 
+/**
+ * The static text a host loads before it has called anything, and its ceiling.
+ *
+ * Unlike the frame ceiling, this one is not a budget we chose. Claude Code
+ * documents it: "Claude Code truncates tool descriptions and server
+ * instructions at 2KB each"
+ * (https://code.claude.com/docs/en/mcp, MCP output limits and warnings).
+ *
+ * It went unenforced and the instructions reached 3539 bytes, so 1491 bytes had
+ * never reached a model — including the whole of the provenance guidance, which
+ * is the part of this text most costly to lose. Nothing failed, because nothing
+ * was looking. That is the argument for the assertion rather than for
+ * remembering to check: the truncation is silent at both ends.
+ *
+ * Note where the pressure comes from. Roughly a third of the instructions is
+ * interpolated from `session-rules.json` — the two policy descriptions — so
+ * editing the rule library can push this over without anyone touching
+ * server.js. That is the case this test exists to catch.
+ */
+const CLIENT_TEXT_CEILING = 2048;
+
+test("the instructions a host loads survive the client's 2KB truncation", async () => {
+  const response = await handleJsonRpcMessage(
+    JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} })
+  );
+  const bytes = Buffer.byteLength(response.result.instructions, "utf8");
+
+  assert.ok(
+    bytes <= CLIENT_TEXT_CEILING,
+    `server instructions are ${bytes} bytes and are truncated at ${CLIENT_TEXT_CEILING}. ` +
+      `The last ${bytes - CLIENT_TEXT_CEILING} bytes would never reach a model. Cut the text, ` +
+      `or move reference material into the payload that needs it — do not simply reorder, ` +
+      `which moves the loss rather than removing it.`
+  );
+});
+
+test("every tool description survives the client's 2KB truncation", async () => {
+  const response = await handleJsonRpcMessage(
+    JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} })
+  );
+
+  for (const tool of response.result.tools) {
+    const bytes = Buffer.byteLength(tool.description ?? "", "utf8");
+    assert.ok(
+      bytes <= CLIENT_TEXT_CEILING,
+      `${tool.name} has a ${bytes}-byte description and is truncated at ${CLIENT_TEXT_CEILING}`
+    );
+  }
+});
+
+// The provenance paragraphs are why this text was reordered. A later edit that
+// pushes them past the cut point restores the original failure while leaving
+// the byte-count assertions green, so their position is pinned too.
+test("the provenance guidance sits inside the first 2KB, not at the end", async () => {
+  const response = await handleJsonRpcMessage(
+    JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} })
+  );
+  const head = Buffer.from(response.result.instructions, "utf8")
+    .subarray(0, CLIENT_TEXT_CEILING)
+    .toString();
+
+  for (const claim of ["internal_composite", "external_metric", "decisionBasis", "contested"]) {
+    assert.ok(head.includes(claim), `"${claim}" falls outside the bytes a host actually receives`);
+  }
+});
+
 test("MCP server lists core fitness tools", async () => {
   const response = await handleJsonRpcMessage(
     JSON.stringify({
