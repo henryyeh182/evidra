@@ -281,29 +281,34 @@ evidra 只有三個檔，和這裡的關係各不相同——**唯一真正重�
 - `manifest.json` 的 `homepage`／`documentation`／`support`／`privacy_policies` 四個欄位
   指向 evidra 的檔案。**那些路徑一改，隱私政策連結就斷——送審文件明寫
   missing or incomplete → immediate rejection。**
-- Release 上的 `evidra.mcpb` 是從這裡打包的。動到 `.mcpbignore` **沒有**排除的檔案，
-  那顆 bundle 就過時了；重打包時要照舊驗證（`unzip -l` 直接看 archive，
-  不要信 `mcpb pack` 自報的 ignored 數字）。
+- Release 上的 `evidra.mcpb` 是從這裡打包的，用 `npm run pack`——那條指令**先 build 再打包，
+  最後把版本、下載網址與 archive 的 sha256 寫回 `server.json`**。`dist/` 不進 git，所以
+  單獨跑 `mcpb pack` 會打到過期或不存在的 build；**一律走 `npm run pack`**。
+  驗證照舊：`unzip -l` 直接看 archive，不要信 `mcpb pack` 自報的 ignored 數字。
+  **每次打包 sha 都會變**（zip 記錄打包時間），所以要送出去的必須是最後打的那一顆。
 
-**那個已知漂移已修（2026-08-03）**：v0.1.0 bundle 內的 README 停在打包當日的舊測試數，
-已由 **v0.1.1** 取代。**v0.1.1 不是純打包發布**：v0.1.0 打包後又有 9 個 commit 動到 runtime，
-bundle 內 10 個程式檔與 v0.1.0 不同，含兩個行為修正（`cc43122` 缺 `type`／`intensity` 時
-不再宣稱做了沒做的變更；`96f820f` 沒有負荷的場次改為進 `signalCoverage.training.missing`）。
-**曾經誤判成「只換 README」**——因為只 diff 了 `unzip -l` 的檔名清單（兩邊都 87 檔、名字相同）
-就當成內容相同。**檔名一致不等於內容一致**；當時大小 244,579 → 251,337 bytes 就是反證。
-**驗兩顆 bundle 要 `diff -rq` 解開比對，不是比清單。**
-（**這裡不寫那個舊數字**：G1 只比對數字、讀不出「這是歷史值」，寫上去就會被判成宣稱漂移。）
-**`/releases/latest` 現在指向 `v0.2.0`**（2026-08-04 發布），
-sha `aab0f5efc88a9829efffb96924bede551a83da397796a8788a2f533dbbf1d803`，264,328 bytes、88 檔。
-**送官方 registry 要填 v0.2.0 那顆。**
+**bundle 現在是一顆編譯檔，不是原始碼樹**（2026-08-06）：`apps/` 與 `packages/` 由 esbuild
+編成 `dist/evidra-server.mjs`，rule library 以字串內嵌，兩者都不進 archive。
+**這不等於規則變私密**——每個決策的 `decisionBasis` 照樣回傳 governing rule 的門檻與引文。
 
-**為什麼是 0.2.0 不是 0.1.2**：v0.1.1 那顆 bundle 宣告的六個 tool 名字已經不存在了——
-對外名稱全部改成 `evidra_*`（防撞名，`generate_plan` 那種名字任何做計畫的 server 都可能用），
-每個 tool 開始宣告 `outputSchema` 並回 `structuredContent`，共用指引搬進 initialize 的
-`instructions`。改的是介面本身，不是介面裡的 bug。**舊名字仍解析得到**（v0.1.0／v0.1.1 發布過它們）。
+**驗兩顆 bundle 要 `diff -rq` 解開比對，不是比清單**（2026-08-03 的教訓：檔名一致不等於內容
+一致，只 diff `unzip -l` 的清單曾把一次行為修正誤判成「只換 README」）。
 
-**v0.1.0 與 v0.1.1 都刻意保留不覆蓋**（已照舊 checksum 驗過的人不會對不上）。
-v0.2.0 發布後已照規矩驗過：下載回來重算 sha256 相符，且與本地打包的那顆 `diff -rq` 逐檔相同。
+**`/releases/latest` 指向 `v0.3.7`**（2026-08-06 發布）。
+**官方 MCP registry 已上架**：`io.github.henryyeh182/evidra` v0.3.7，
+title `Evidra Fitness`，用 `mcp-publisher publish` 送的（token 效期很短，幾乎每次都要重登）。
+**registry 拒收同版號重送**，所以連文案修正都要帶一個版號。
+**Anthropic MCPB 送審表單已提交**（附的是 v0.3.6 那顆快照；表單自陳是表達興趣，
+他們評估時看的是連結指向的最新版）。
+
+**顯示名稱是 `Evidra Fitness`，識別碼仍是 `evidra`**——registry 上另有
+`io.github.vitas/evidra`（DevOps flight recorder，早五個月），命名空間讓識別碼不會撞，
+但**目錄清單上人看到的那個字會撞**，所以只改顯示名稱那三處
+（`server.json` 的 `title`、`manifest.json` 的 `display_name`、`server.js` 的 `serverInfo.title`）。
+**repo 名、registry 識別碼、`evidra_*` 工具名一律不動**——那三樣才是改名真正的成本。
+
+**v0.1.0 起的每一版都刻意保留不覆蓋**（已照舊 checksum 驗過的人不會對不上）。
+每次發布後照規矩驗過：下載回來重算 sha256 相符，且與本地打包的那顆 `diff -rq` 逐檔相同。
 
 ## 動 MCP 介面之前先載 skill
 
