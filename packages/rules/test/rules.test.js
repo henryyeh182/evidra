@@ -12,7 +12,12 @@ import {
   combineIntensitySteps,
   THRESHOLDS,
   assertValidRuleLibrary,
-  assertThresholdsMatch
+  assertThresholdsMatch,
+  deriveEvidenceLevel,
+  EVIDENCE_LEVELS,
+  STUDY_DESIGNS,
+  RECOMMENDATION_STRENGTHS,
+  VERIFICATION_STATUSES
 } from "../src/index.js";
 
 const library = getRuleLibrary();
@@ -42,12 +47,167 @@ test("a citation cannot be attached to a threshold on a score Evidra invents", (
   );
 });
 
-test("an internal_composite rule cannot claim an evidence level above internal_heuristic", () => {
+test("an internal_composite rule cannot claim a study supports its threshold", () => {
   const tampered = clone();
   const rule = tampered.rules.find((entry) => entry.basis === "internal_composite");
+  rule.evidence.recommendationStrength = "supports_direction_only";
+  delete rule.evidenceLevel;
+
+  assert.throws(() => assertValidRuleLibrary(tampered), /recommendationStrength/i);
+});
+
+// The two axes are independent everywhere except at the bottom, where they are
+// the same statement twice. `none` + `supports_threshold` would have a rule
+// assert that nothing supports its number and that its number is supported.
+test("no study and a supported threshold cannot be claimed together", () => {
+  const tampered = clone();
+  const rule = tampered.rules.find((entry) => entry.evidence.studyDesign === "none");
+  rule.evidence.recommendationStrength = "supports_threshold";
+  delete rule.evidenceLevel;
+
+  assert.throws(() => assertValidRuleLibrary(tampered), /same claim on two axes/i);
+});
+
+test("a study design outside the declared vocabulary fails the load", () => {
+  const tampered = clone();
+  tampered.rules[0].evidence.studyDesign = "meta_analysis";
+  delete tampered.rules[0].evidenceLevel;
+
+  assert.throws(() => assertValidRuleLibrary(tampered), /studyDesign/);
+});
+
+// The flat field is a summary, and a summary that can disagree with what it
+// summarises is worse than no summary: a caller reading only `evidenceLevel`
+// would be reading a claim nothing enforces.
+test("the compatibility field cannot contradict the axes it summarises", () => {
+  const tampered = clone();
+  const rule = tampered.rules.find((entry) => entry.evidence.studyDesign === "none");
   rule.evidenceLevel = "systematic_review";
 
-  assert.throws(() => assertValidRuleLibrary(tampered), /evidenceLevel/i);
+  assert.throws(() => assertValidRuleLibrary(tampered), /cannot contradict/i);
+});
+
+test("the old evidence ladder is reproduced exactly for every shipped rule", () => {
+  // The point of keeping `evidenceLevel` is that nothing downstream has to
+  // change. If a derivation ever moved one of these, that promise is broken.
+  const expected = {
+    "EVD-R-001": "internal_heuristic",
+    "EVD-R-002": "internal_heuristic",
+    "EVD-R-003": "internal_heuristic",
+    "EVD-R-004": "internal_heuristic",
+    "EVD-R-005": "internal_heuristic",
+    "EVD-R-006": "observational",
+    "EVD-R-007": "expert_consensus",
+    "EVD-R-008": "internal_heuristic"
+  };
+
+  for (const rule of library.rules) {
+    assert.equal(rule.evidenceLevel, expected[rule.ruleId], `${rule.ruleId} changed its compatibility level`);
+    assert.ok(EVIDENCE_LEVELS.includes(rule.evidenceLevel), `${rule.ruleId} derived a level outside the old ladder`);
+  }
+});
+
+// The one lossy step in the collapse, pinned so it stays deliberate. EVD-R-007
+// is two narrative reviews; the old ladder has no rung for that and rounds to
+// expert_consensus, which is the rounding the rule was doing by hand before
+// the axis existed.
+test("narrative_review collapses to expert_consensus and nothing else does", () => {
+  assert.equal(
+    deriveEvidenceLevel({ studyDesign: "narrative_review", recommendationStrength: "supports_direction_only" }),
+    "expert_consensus"
+  );
+  assert.equal(
+    deriveEvidenceLevel({ studyDesign: "rct", recommendationStrength: "supports_direction_only" }),
+    "rct"
+  );
+  assert.equal(
+    deriveEvidenceLevel({ studyDesign: "none", recommendationStrength: "internal_heuristic" }),
+    "internal_heuristic"
+  );
+
+  const lossy = STUDY_DESIGNS.filter(
+    (design) =>
+      design !== "none" &&
+      deriveEvidenceLevel({ studyDesign: design, recommendationStrength: "supports_direction_only" }) !== design
+  );
+  assert.deepEqual(lossy, ["narrative_review"], "a second lossy collapse appeared without anyone deciding to add one");
+});
+
+// R5. The vocabulary was written into readMe on 2026-08-07 and enforced by
+// nobody, so a typo in this field would have read as a verification claim. It
+// is the one field in the library that is a statement about our own diligence
+// rather than about the athlete or the literature.
+test("every citation in the library declares how far it has been read", () => {
+  for (const rule of library.rules) {
+    for (const source of rule.sources) {
+      assert.ok(
+        VERIFICATION_STATUSES.includes(source.verificationStatus),
+        `${rule.ruleId} source "${source.citation}" has no valid verificationStatus`
+      );
+    }
+    for (const item of rule.supportingLiterature ?? []) {
+      assert.ok(
+        VERIFICATION_STATUSES.includes(item.verificationStatus),
+        `${rule.ruleId} supportingLiterature "${item.citation}" has no valid verificationStatus`
+      );
+    }
+  }
+});
+
+test("a citation with no verificationStatus fails the load", () => {
+  const tampered = clone();
+  const rule = tampered.rules.find((entry) => entry.sources.length > 0);
+  delete rule.sources[0].verificationStatus;
+
+  assert.throws(() => assertValidRuleLibrary(tampered), /no verificationStatus/i);
+});
+
+test("a misspelt verificationStatus fails the load", () => {
+  const tampered = clone();
+  const rule = tampered.rules.find((entry) => entry.sources.length > 0);
+  rule.sources[0].verificationStatus = "primary_fulltext_verified";
+
+  assert.throws(() => assertValidRuleLibrary(tampered), /not in the declared vocabulary/i);
+});
+
+// supportingLiterature was the field with the hole: EVD-R-002's citation was
+// the only entry in the library carrying no status at all, because the
+// 2026-08-07 review never reached it. Both fields are checked, not just
+// `sources`.
+test("supportingLiterature is held to the same standard as sources", () => {
+  const tampered = clone();
+  const rule = tampered.rules.find((entry) => entry.supportingLiterature?.length > 0);
+  delete rule.supportingLiterature[0].verificationStatus;
+
+  assert.throws(() => assertValidRuleLibrary(tampered), /supportingLiterature.*no verificationStatus/is);
+});
+
+test("the unchecked citation says so rather than saying nothing", () => {
+  const rule = getRule("EVD-R-002");
+
+  assert.equal(rule.supportingLiterature[0].verificationStatus, "unverified");
+  assert.ok(
+    rule.limitations.some((line) => line.includes("unverified")),
+    "an unverified citation must be visible in limitations, not only in a field a reader may not know to check"
+  );
+});
+
+// A vocabulary the file declares and the loader does not apply is decoration,
+// and the drift can run either way: a value legal in the file and rejected by
+// the loader, or legal in the loader and missing from the list a reviewer reads
+// to learn what the values mean.
+test("the vocabularies the file declares are the vocabularies the loader enforces", () => {
+  assert.deepEqual(library.studyDesigns, STUDY_DESIGNS);
+  assert.deepEqual(library.recommendationStrengths, RECOMMENDATION_STRENGTHS);
+  assert.deepEqual(library.verificationStatuses, VERIFICATION_STATUSES);
+  assert.deepEqual(library.evidenceLevels, EVIDENCE_LEVELS);
+});
+
+test("a vocabulary that drifts from the loader fails the load", () => {
+  const tampered = clone();
+  tampered.verificationStatuses = [...tampered.verificationStatuses, "eyeballed"];
+
+  assert.throws(() => assertValidRuleLibrary(tampered), /must be the vocabulary the loader applies/i);
 });
 
 // Every citation in this library falls short of the threshold it is attached to
@@ -125,12 +285,17 @@ test("a progression can never cancel a reduction", () => {
 });
 
 test("the compact rule form keeps basis and evidence level", () => {
-  // These two fields are the disclosure. If size pressure ever trims the
-  // compact form further, it must not trim these.
+  // These fields are the disclosure. If size pressure ever trims the compact
+  // form further, it must not trim these — including the two axes, since
+  // "observational" alone does not say whether the study reaches our number.
   const compact = describeRule("EVD-R-006", { value: 2.1 }, { full: false });
 
   assert.equal(compact.basis, "external_metric");
   assert.equal(compact.evidenceLevel, "observational");
+  assert.deepEqual(compact.evidence, {
+    studyDesign: "observational",
+    recommendationStrength: "supports_direction_only"
+  });
   assert.ok(compact.contestedCount > 0, "the compact form still says objections exist");
   assert.equal(compact.sources, undefined, "the compact form does not carry full citations");
 });

@@ -1,6 +1,6 @@
 {
   "libraryId": "evidra.session-rules",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "lastReview": "2026-08-07",
   "reviewer": "Henry Yeh",
 
@@ -22,8 +22,8 @@
     "  internal_composite The quantity is a score Evidra invents by weighting",
     "                     signals together. No published study has ever used",
     "                     this score, so no publication can support a cut point",
-    "                     on it. `sources` MUST be empty and `evidenceLevel`",
-    "                     MUST be internal_heuristic. This is enforced by",
+    "                     on it. `sources` MUST be empty and `evidence` MUST be",
+    "                     none/internal_heuristic. This is enforced by",
     "                     assertValidRuleLibrary, not by convention.",
     "",
     "That invariant exists because the tempting failure here is to attach a",
@@ -32,10 +32,46 @@
     "the threshold sits on. An empty `sources` on an internal_composite rule is",
     "the honest state, not an unfinished one.",
     "",
+    "`evidence` asks two questions that used to be one. The old `evidenceLevel`",
+    "ladder mixed study design (systematic_review, rct, observational) with",
+    "institutional endorsement (guideline, position_stand, expert_consensus), so",
+    "a rule could inherit the weight of a published recommendation with no field",
+    "showing how its own evidence had been graded. GRADE keeps these apart, and",
+    "so does this:",
+    "",
+    "  studyDesign            What kind of study supports THIS RULE'S THRESHOLD.",
+    "                         `none` is the honest value when no study does, and",
+    "                         it is what most rules here carry. `narrative_review`",
+    "                         exists because EVD-R-007 needed it and the single",
+    "                         ladder had no rung for it.",
+    "",
+    "  recommendationStrength How far that study reaches toward our number.",
+    "                         supports_threshold means a study establishes the",
+    "                         cut point itself; supports_direction_only means it",
+    "                         establishes that the rule should exist and points",
+    "                         which way, and explicitly not the value;",
+    "                         internal_heuristic means the number is ours alone.",
+    "",
+    "No rule in this library is supports_threshold today. Every citation's",
+    "`doesNotSupport` names the number as the thing it fails to establish, so",
+    "that value is reachable and currently unused. It sitting empty is a fact",
+    "about the library, and it is now a fact a field states rather than one",
+    "buried in prose.",
+    "",
+    "`evidenceLevel` is no longer declared here. It is derived from the two axes",
+    "at load time (deriveEvidenceLevel) and still returned to callers, so the",
+    "split does not break contracts that read it. The one lossy step is",
+    "narrative_review, which collapses to expert_consensus because the old",
+    "vocabulary has nowhere else to put it. Declaring the field on a rule is a",
+    "load error: a stored copy is free to disagree with the axes it summarises.",
+    "",
     "Every citation also carries `verificationStatus`, which says how far anyone",
     "here has actually read it. A citation is a claim about a document, and that",
     "claim is checkable independently of whether the document supports our",
-    "threshold. The vocabulary, strongest first:",
+    "threshold. It is required on every entry in `sources` and",
+    "`supportingLiterature`, and checked against this vocabulary — an optional",
+    "field made an unchecked citation and a scrupulous one look identical.",
+    "The vocabulary, strongest first:",
     "",
     "  primary_full_text_verified          The quoted figures were read in the",
     "                                      primary text at the URL given.",
@@ -53,10 +89,41 @@
     "                                      unconfirmed.",
     "  citation_not_read_in_full           Legacy of the above two; do not use",
     "                                      for new entries.",
+    "  unverified                          Nobody here has checked this citation",
+    "                                      against any record at all. Weaker than",
+    "                                      citation_not_read_in_full, which still",
+    "                                      implies something was read.",
     "",
     "A status may only move up when someone reads further, and moves down the",
     "moment a check fails. Rules whose provenance was corrected downward record",
-    "the correction in `notes` rather than quietly dropping the old claim."
+    "the correction in `notes` rather than quietly dropping the old claim.",
+    "",
+    "`contested` entries do not yet carry a verificationStatus. That is a known",
+    "gap, not a statement that they have been checked: EVD-R-006's notes record",
+    "that its two objections are taken from their published abstracts and not",
+    "from anyone's reading of the papers."
+  ],
+
+  "studyDesigns": [
+    "guideline",
+    "position_stand",
+    "systematic_review",
+    "rct",
+    "observational",
+    "narrative_review",
+    "expert_consensus",
+    "none"
+  ],
+
+  "recommendationStrengths": ["supports_threshold", "supports_direction_only", "internal_heuristic"],
+
+  "verificationStatuses": [
+    "primary_full_text_verified",
+    "abstract_verified_full_text_not_read",
+    "abstract_verified_full_text_paywalled",
+    "numbers_from_secondary_sources",
+    "citation_not_read_in_full",
+    "unverified"
   ],
 
   "evidenceLevels": [
@@ -98,7 +165,7 @@
       "category": "recovery",
       "priority": 90,
       "basis": "internal_composite",
-      "evidenceLevel": "internal_heuristic",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
       "measuredQuantity": {
         "name": "readiness score",
         "range": "0-100",
@@ -122,13 +189,13 @@
 
     {
       "ruleId": "EVD-R-002",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "status": "active",
       "title": "Low readiness pulls intensity down one step",
       "category": "recovery",
       "priority": 70,
       "basis": "internal_composite",
-      "evidenceLevel": "internal_heuristic",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
       "measuredQuantity": { "sameAs": "EVD-R-001" },
       "thresholds": [{ "key": "readinessReduce", "operator": "<", "value": 60, "unit": "readiness_score" }],
       "effect": { "decision": "adjust", "intent": "reduce_today_intensity", "intensityStepsDown": 1 },
@@ -140,14 +207,16 @@
           "url": "https://www.mdpi.com/2076-3417/10/23/8532",
           "supports": "Varying daily prescription from a daily recovery measurement, rather than following a fixed plan, has been tested in randomised trials: small-to-medium benefit on submaximal parameters, and lower dispersion of outcomes.",
           "doesNotSupport": "Any numeric cut point, and specifically not 60 on Evidra's readiness score. These trials used HRV-derived indices, not this composite.",
+          "verificationStatus": "unverified",
           "whyItIsHereAnyway": "It supports the direction of the rule (adjust today from today's recovery reading) while explicitly not supporting its number. Recording that split is the point of this field."
         }
       ],
       "limitations": [
         "60 is our own choice.",
+        "The supporting citation is unverified: the 2026-08-07 provenance review checked EVD-R-004, EVD-R-006 and EVD-R-007 and never reached this one, so nobody here has confirmed the bibliographic record or that the paraphrase above matches what the paper says. Read the `supports` line as a claim about the paper that is itself unchecked.",
         "This rule is skipped when the scheduled session is already low intensity, and when the caller states no intensity at all — in the second case the blocked rule is reported in `limits` rather than silently dropped."
       ],
-      "notes": "supportingLiterature is deliberately a different field from sources. sources means 'this publication supports this threshold'. Nothing supports this threshold."
+      "notes": "supportingLiterature is deliberately a different field from sources. sources means 'this publication supports this threshold'. Nothing supports this threshold. The unverified status here was surfaced by making verificationStatus mandatory rather than by anyone noticing: while the field was optional this entry looked no different from a checked one, which is the whole argument for the enum."
     },
 
     {
@@ -158,7 +227,7 @@
       "category": "recovery",
       "priority": 80,
       "basis": "internal_composite",
-      "evidenceLevel": "internal_heuristic",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
       "measuredQuantity": {
         "name": "per-muscle-group fatigue",
         "range": "0-100",
@@ -185,7 +254,7 @@
       "category": "recovery",
       "priority": 75,
       "basis": "internal_composite",
-      "evidenceLevel": "internal_heuristic",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
       "measuredQuantity": { "sameAs": "EVD-R-003" },
       "thresholds": [{ "key": "muscleFatigueHigh", "operator": ">=", "value": 65, "unit": "fatigue_score" }],
       "effect": { "decision": "adjust", "intent": "reduce_today_intensity", "intensityStepsDown": 1 },
@@ -222,7 +291,7 @@
       "category": "recovery",
       "priority": 20,
       "basis": "internal_composite",
-      "evidenceLevel": "internal_heuristic",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
       "measuredQuantity": { "sameAs": "EVD-R-003" },
       "thresholds": [{ "key": "muscleFatigueModerate", "operator": ">=", "value": 45, "unit": "fatigue_score" }],
       "effect": { "decision": "keep", "intent": null, "intensityStepsDown": 0 },
@@ -240,7 +309,7 @@
       "category": "recovery",
       "priority": 78,
       "basis": "external_metric",
-      "evidenceLevel": "observational",
+      "evidence": { "studyDesign": "observational", "recommendationStrength": "supports_direction_only" },
       "measuredQuantity": {
         "name": "acute:chronic workload ratio",
         "computedBy": "packages/semantic-engine/src/generateSemanticFitnessState.js:calculateTrainingLoad",
@@ -291,7 +360,7 @@
       "category": "recovery",
       "priority": 85,
       "basis": "external_metric",
-      "evidenceLevel": "expert_consensus",
+      "evidence": { "studyDesign": "narrative_review", "recommendationStrength": "supports_direction_only" },
       "measuredQuantity": {
         "name": "days since last session, and percentage loss of chronic training load from its recent peak",
         "computedBy": "packages/training-load/src/trainingLoad.js",
@@ -334,9 +403,9 @@
         "42, 60 and 0.6 are our own choices. The sources support the direction only; neither abstract contains a single number, so there is nothing in them for these cut points to be near or far from.",
         "The detraining literature measures VO2max. Our trigger measures modelled chronic training load — a proxy for training done, not for fitness retained.",
         "0.6 sits inside the common 'half to two-thirds of prior volume' return guidance, which is practitioner convention rather than a trial result.",
-        "Both sources are narrative reviews read at abstract level only, which is why evidenceLevel is expert_consensus and not systematic_review."
+        "Both sources are narrative reviews read at abstract level only. studyDesign says so directly now; the derived evidenceLevel still reads expert_consensus, because the legacy ladder has no narrative_review rung and that is the nearest it can get."
       ],
-      "notes": "This rule exists because no recovery signal can see it. An athlete two months off reads rested: readiness high, muscle fatigue near zero, and ACWR at 0 — the safest possible value to EVD-R-006. Every other guard passes. Lost fitness therefore needs its own trigger rather than being inferred from recovery. Provenance re-reviewed 2026-08-07: this rule previously claimed \"roughly 4-7% VO2max within 2-3 weeks, substantially more beyond 4 weeks\" and an evidenceLevel of systematic_review. Neither survived the check — the percentages are in neither abstract, the full texts are paywalled, and both papers are narrative reviews by two authors with no systematic search method described. Both claims were corrected downward. This library's vocabulary has no narrative_review level, so expert_consensus is the nearest honest rung; adding one is a schema change, not something to fake with the levels available. Retracting a claim is the expected outcome of a provenance review, not a failure of one."
+      "notes": "This rule exists because no recovery signal can see it. An athlete two months off reads rested: readiness high, muscle fatigue near zero, and ACWR at 0 — the safest possible value to EVD-R-006. Every other guard passes. Lost fitness therefore needs its own trigger rather than being inferred from recovery. Provenance re-reviewed 2026-08-07: this rule previously claimed \"roughly 4-7% VO2max within 2-3 weeks, substantially more beyond 4 weeks\" and an evidenceLevel of systematic_review. Neither survived the check — the percentages are in neither abstract, the full texts are paywalled, and both papers are narrative reviews by two authors with no systematic search method described. Both claims were corrected downward. At the time this rule recorded that the library's vocabulary had no narrative_review level and that expert_consensus was the nearest honest rung, noting that adding one was a schema change rather than something to fake with the levels available. That schema change has since been made: studyDesign is narrative_review, which is what these two papers are, and the derived evidenceLevel still collapses to expert_consensus for callers reading the old field. Retracting a claim is the expected outcome of a provenance review, not a failure of one."
     },
 
     {
@@ -347,7 +416,7 @@
       "category": "training_goal",
       "priority": 40,
       "basis": "internal_composite",
-      "evidenceLevel": "internal_heuristic",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
       "measuredQuantity": { "sameAs": "EVD-R-001" },
       "thresholds": [
         { "key": "readinessAdvance", "operator": ">=", "value": 85, "unit": "readiness_score" },

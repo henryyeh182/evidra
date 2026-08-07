@@ -15,7 +15,11 @@ export { arbitrate, combineIntensitySteps, getPolicies, describePolicies } from 
 export {
   assertValidRuleLibrary,
   assertThresholdsMatch,
+  deriveEvidenceLevel,
   CATEGORY_IDS,
   EVIDENCE_LEVELS,
+  STUDY_DESIGNS,
+  RECOMMENDATION_STRENGTHS,
+  VERIFICATION_STATUSES,
   BASES
 } from "./models.js";

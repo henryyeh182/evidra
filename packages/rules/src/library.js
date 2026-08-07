@@ -2,7 +2,7 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 import { librarySourceJson } from "./librarySource.js";
-import { assertValidRuleLibrary } from "./models.js";
+import { assertValidRuleLibrary, deriveEvidenceLevel } from "./models.js";
 
 /**
  * The rule library is parsed once per process, at module load, and frozen.
@@ -13,6 +13,17 @@ import { assertValidRuleLibrary } from "./models.js";
  * business, not this module's.
  */
 const library = assertValidRuleLibrary(JSON.parse(librarySourceJson));
+
+// The compatibility field, computed once rather than stored twice.
+//
+// `evidenceLevel` is what every existing contract reads, and it keeps working.
+// It is attached here instead of being written into session-rules.json because
+// a declared copy is free to disagree with the two axes it summarises, and a
+// disagreement between them would be a provenance claim nobody made. The
+// loader refuses to load a rule that declares the field itself.
+for (const rule of library.rules) {
+  rule.evidenceLevel = deriveEvidenceLevel(rule.evidence);
+}
 
 deepFreeze(library);
 
@@ -67,11 +78,17 @@ export function getCategoryRank(categoryId) {
  * fired, what it measured and against what threshold, what that rule's basis
  * is, and who disagrees with that basis.
  *
- * `evidenceLevel: "internal_heuristic"` with an empty `sources` is a normal and
- * expected output here, not a gap to be filled in later. Six of the eight rules
- * are thresholds on scores Evidra computes itself, and for those no citation is
- * possible. Saying so is the disclosure; hiding it behind a plausible-sounding
- * reference would be the failure.
+ * `evidence: { studyDesign: "none", recommendationStrength: "internal_heuristic" }`
+ * with an empty `sources` is a normal and expected output here, not a gap to be
+ * filled in later. Six of the eight rules are thresholds on scores Evidra
+ * computes itself, and for those no citation is possible. Saying so is the
+ * disclosure; hiding it behind a plausible-sounding reference would be the
+ * failure.
+ *
+ * Both `evidence` and the older `evidenceLevel` go out. The flat field is the
+ * one existing callers read and it is not going away; the object is where the
+ * two questions it used to conflate — what kind of study, and how far that
+ * study reaches toward our number — are answered separately.
  */
 export function describeRule(ruleId, measured = null, { full = true } = {}) {
   const rule = getRule(ruleId);
@@ -83,15 +100,17 @@ export function describeRule(ruleId, measured = null, { full = true } = {}) {
   // So the split follows what a reader actually does with the field: the rule
   // the decision is attributed to gets the complete record, including who
   // disputes it; the rules that also fired but did not govern get identity,
-  // basis and the reading that triggered them. `basis` and `evidenceLevel`
-  // survive in both forms, because "this one rests on a score we invented" is
-  // the disclosure, and it must not be the part that gets trimmed for size.
+  // basis and the reading that triggered them. `basis`, `evidence` and
+  // `evidenceLevel` survive in both forms, because "this one rests on a score
+  // we invented" is the disclosure, and it must not be the part that gets
+  // trimmed for size.
   if (!full) {
     return {
       ruleId: rule.ruleId,
       title: rule.title,
       category: rule.category,
       basis: rule.basis,
+      evidence: { ...rule.evidence },
       evidenceLevel: rule.evidenceLevel,
       ...(measured ? { measured } : {}),
       sourceCount: rule.sources.length,
@@ -105,6 +124,7 @@ export function describeRule(ruleId, measured = null, { full = true } = {}) {
     title: rule.title,
     category: rule.category,
     basis: rule.basis,
+    evidence: { ...rule.evidence },
     evidenceLevel: rule.evidenceLevel,
     ...(measured ? { measured } : {}),
     thresholds: rule.thresholds.map((threshold) => ({
@@ -119,7 +139,10 @@ export function describeRule(ruleId, measured = null, { full = true } = {}) {
       ...(source.url ? { url: source.url } : {}),
       supports: source.supports,
       doesNotSupport: source.doesNotSupport,
-      ...(source.verificationStatus ? { verificationStatus: source.verificationStatus } : {})
+      // Unconditional. While this was spread in only when present, a citation
+      // nobody had checked came out looking exactly like one with nothing to
+      // declare — the absent field and the weakest status were the same output.
+      verificationStatus: source.verificationStatus
     })),
     ...(rule.supportingLiterature?.length
       ? {
@@ -128,7 +151,7 @@ export function describeRule(ruleId, measured = null, { full = true } = {}) {
             ...(item.url ? { url: item.url } : {}),
             supports: item.supports,
             doesNotSupport: item.doesNotSupport,
-            ...(item.verificationStatus ? { verificationStatus: item.verificationStatus } : {})
+            verificationStatus: item.verificationStatus
           }))
         }
       : {}),
