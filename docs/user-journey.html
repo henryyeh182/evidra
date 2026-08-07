@@ -508,29 +508,36 @@
 
   <section class="spine">
     <p class="section-label">Semantic Fitness Layer</p>
-    <h2>六家裝置，一套語彙</h2>
+    <h2>四家匯出檔，一套語彙</h2>
     <p class="lede">
       Garmin 叫 <code>sleepTimeSeconds</code>，Apple 發 <code>HKCategoryTypeIdentifierSleepAnalysis</code> 區間，
-      Oura 回 <code>total_sleep_duration</code>，Whoop 把毫秒藏在 <code>sleep.score.stage_summary</code> 裡。
+      Google 的匯出檔把本地午夜寫成 UTC，Strava 的 CSV 有五組同名欄位、單位各不相同。
       這些方言<strong>不該有任何一個抵達決策規則</strong>。新增一家＝加一張映射表，下游一行不動。
     </p>
     <div class="scroller">
       <table>
         <thead>
-          <tr><th>Canonical signal</th><th>Apple</th><th>Garmin</th><th>Google</th><th>Oura</th><th>Whoop</th><th>Strava</th></tr>
+          <tr><th>Canonical signal</th><th>Apple</th><th>Garmin</th><th>Google</th><th>Strava</th></tr>
         </thead>
         <tbody>
-          <tr><td class="sig-name">sleep_duration_hours</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td class="sig-name">hrv_ms</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td class="sig-name">resting_hr_bpm</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td class="sig-name">vendor_readiness</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td class="sig-name">body_battery</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+          <tr><td class="sig-name">sleep_duration_hours</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td></tr>
+          <tr><td class="sig-name">hrv_ms</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td></tr>
+          <tr><td class="sig-name">resting_hr_bpm</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td></tr>
+          <tr><td class="sig-name">vendor_readiness</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+          <tr><td class="sig-name">body_battery</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
         </tbody>
       </table>
     </div>
     <p class="note">
       廠商自己算好的複合分數（readiness、Body Battery）當作<strong>一等證據</strong>收進來，不忽略重算——
       裝置在手腕上，它整合了我們看不到的訊號。
+    </p>
+    <p class="note">
+      <strong>這張表講的是「我們讀得懂誰的匯出檔」，目前是這四家。</strong>
+      Oura、Whoop 已經在語彙裡有對應位置，但還沒有讀檔的解析器——
+      它們的數值今天要由 AI 那端整理成同一套語彙傳進來。
+      <strong>把「已經設計好」與「已經做好」分開講，是這個產品該有的樣子</strong>：
+      表上多一個勾很容易，收回來很難。
     </p>
 
     <h4 style="margin-top:38px;font-size:18px;font-weight:620">但表上的 ✓ 不代表那家量到了</h4>
@@ -591,8 +598,8 @@
             <td class="yes">依廠商複合分數與負荷調整</td>
           </tr>
           <tr>
-            <td class="sig-name">Garmin ＋ Oura</td>
-            <td>上述全部 ＋ 睡眠與睡眠品質</td>
+            <td class="sig-name">Garmin ＋ Apple Health</td>
+            <td>上述全部 ＋ HRV</td>
             <td class="yes">同樣的決策，信心更高</td>
           </tr>
         </tbody>
