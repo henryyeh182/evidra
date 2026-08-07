@@ -55,7 +55,7 @@ Anthropic 主動挑人——**這是報名表達興趣，不是審查流程的�
 **要不要為了進優先清單改 MIT，是使用者的商業決定，不得自行改寫。**
 改 MIT 等於 decision engine／知識圖譜／四家 parser 要公開。
 
-### 已定稿的欄位：MCP Server Description（2026-08-03，使用者定稿）
+### 已定稿的欄位：MCP Server Description（2026-08-07 改寫）
 
 表單原問句（PDF 第 4 頁）：
 
@@ -63,17 +63,33 @@ Anthropic 主動挑人——**這是報名表達興趣，不是審查流程的�
 
 問的是**做什麼 ＋ 核心功能**，所以定稿不寫 feature list、不寫賣點：
 
+> An MCP server for AI assistants that decides today's workout. Give it recent sessions
+> and any recovery readings, and it says whether to keep the planned session, ease it,
+> swap a movement, or move it — and why. Readings it was not given are reported, never
+> guessed.
+
+**47 字**，上限 50。
+
+**「from → to」用四個動詞講掉了**——keep／ease／swap／move，對應決策型別
+`keep`／`adjust`／`substitute`／`defer`（`advance` 併進 ease 的反面，不另外列，
+四個動詞已經讓讀者知道它會對課表做什麼）。讀者不必懂術語就看得出輸出是**對既有課表的變更**，
+而不是憑空發出的建議。
+
+**最後一句是差異點**，不是免責聲明——它擋掉「這不就是問 AI 就好」的反問。
+
+#### 為什麼換掉 2026-08-03 那版
+
+舊版是：
+
 > An exercise-science MCP server for AI assistants. Evidra takes caller-supplied evidence
 > and returns a from→to change for today's scheduled session, together with the supporting
 > evidence and decision rule. Missing signals are reported, never silently inferred.
 
-**35 字**，上限 50。
+35 字，寫得準，但**沒人看得懂**（2026-08-07 使用者判斷）。`caller-supplied evidence`、
+`from→to change`、`decision rule`、`signals` 四個都是內部詞彙——在這份 repo 裡有精確意義，
+對一個快速掃過送審件的人沒有。而且箭頭符號在表單裡是個賭注。
 
-**第一句是分類，不是標語**：MCP server ／ 給 AI assistant 用 ／ 運動科學引擎——
-讀者一眼排除 chatbot 與 fitness app。第二句是 `Evidence → 決策` 的資料流，
-主詞動詞受詞一路到底，不用名詞子句（早期稿寫 `what today's scheduled session should
-become as a from→to change`，讀者要先扛一個子句再回頭接 `as a...`，已棄用）。
-`decision rule` 讓 decision 這個字留在句子裡——回傳的是**變更**，而變更由**決策規則**產生。
+**教訓：對外文案的讀者不是我們。** 寫得準與看得懂是兩件事，送審那份要的是後者。
 
 **`silently` 那個字是量出來的，不要拿掉。** 「missing signals 不會被推估」字面上不成立——
 引擎仍有兩處會拿母體基準頂替缺席的證據，兩處都在 tool 路徑上（2026-08-06 複查）：
@@ -103,7 +119,7 @@ readiness 因此也是 50——而 `readinessReduce = 60` 的規則就在那個�
 | Is this an update to an existing extension? | **No** | 從未進過目錄 |
 | Primary Contact Name | `Henry Yeh` | — |
 | Primary Contact Email | `evidramcp@icloud.com` | 與 `PRIVACY.md`／README 的對外聯絡信箱一致 |
-| MCP Server Description | 上面那段（36 字，主詞已改為 **Evidra Fitness**） | 上限 50 字 |
+| MCP Server Description | 上面那段（47 字） | 上限 50 字 |
 | Desktop Extension GitHub Link | `https://github.com/henryyeh182/evidra` | **`fitness-mcp` 是 PRIVATE**，表單要求 publicly available on GitHub，所以只有這一個能填。與 MIT 決定無關 |
 | Primary Party Confirmation | **No** | 原問句問的是「你是否任職於這個 MCP server **連接的**那個 application／service 的公司」。Evidra 不連任何外部服務，沒有那個公司存在。表單自陳 not required |
 | Attach your .mcpb | v0.3.4 那顆 | — |
