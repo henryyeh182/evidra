@@ -4,8 +4,8 @@
 and safety engine behind it.**
 
 Evidra is an MCP server. It turns the evidence you already have into a training
-decision — not advice invented from nothing, but a *from → to* change against the
-session already on your calendar, with the evidence and the rule behind it.
+decision — not advice invented from nothing, but a change to the session already on
+your calendar, with the evidence and the rule behind it.
 
 It runs on your own machine, and it does not retain your evidence.
 
@@ -13,7 +13,7 @@ It runs on your own machine, and it does not retain your evidence.
 
 ## Where this is
 
-The current release is v0.3.3. v0.1.0 was the first public release.
+The current release is v0.3.7. v0.1.0 was the first public release.
 
 The decision logic is covered by a deterministic test and evaluation suite:
 under the same version of Evidra, the same evidence produces the same decision,
@@ -38,8 +38,8 @@ This distinction is the whole product.
 
 |  | Recommendation | **Decision** |
 |---|---|---|
-| Example | "You should do a Zone 2 run today" | "Today's VO₂max intervals → 45 min Zone 2" |
-| Structure | Emitted from nothing | **from → to**, a change to something that already exists |
+| Example | "You should do a Zone 2 run today" | "Today's VO₂max intervals become 45 min Zone 2" |
+| Structure | Emitted from nothing | **A change to something that already exists** |
 | Requires | Nothing | **Knowing what you were already going to do** |
 
 A general-purpose model can produce the left column. It cannot produce the right one,
@@ -49,7 +49,7 @@ and then needs the arithmetic done the same way every time.
 Every decision comes back in five layers:
 
 ```
-Evidence → Fitness State → Decision (intent) → Action (from → to) → Reason (bound to evidence)
+Evidence → Fitness State → Decision (intent) → Action (the change itself) → Reason (bound to evidence)
 ```
 
 Decision types: `keep` (keeping the session is also a decision) · `adjust` ·
@@ -79,8 +79,8 @@ language you read is your assistant's; the judgment is arithmetic.
 | Tool | What it returns |
 |---|---|
 | `evidra_assess_fitness_state` | Today's recovery and training state. State only — it never says what to train. |
-| `evidra_decide_session` | What today's scheduled session should become, as from → to |
-| `evidra_decide_exercise_substitution` | The replacement for a movement you cannot do today, as from → to |
+| `evidra_decide_session` | What today's scheduled session should become: keep it, ease it, or change it |
+| `evidra_decide_exercise_substitution` | What to do instead of a movement you cannot do today |
 | `evidra_generate_plan` | A plan, when you don't have one — the substrate decisions are made against |
 | `evidra_preview_adjust_plan` | What adjusting a plan would change, without applying it |
 | `evidra_commit_adjust_plan` | The plan a previewed adjustment produces, once you have accepted it — you keep it, Evidra does not |
