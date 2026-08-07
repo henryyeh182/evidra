@@ -1,0 +1,54 @@
+{
+  "profile": {
+    "timezone": "Asia/Taipei",
+    "fitnessLevel": "intermediate"
+  },
+  "healthMetrics": [
+    {
+      "type": "hrv_ms",
+      "value": 33,
+      "unit": "ms",
+      "recordedAt": "2026-08-06T06:00:00Z",
+      "source": "garmin"
+    },
+    {
+      "type": "sleep_duration_hours",
+      "value": 4.6,
+      "unit": "hours",
+      "recordedAt": "2026-08-06T06:00:00Z",
+      "source": "garmin"
+    },
+    {
+      "type": "resting_hr_bpm",
+      "value": 67,
+      "unit": "bpm",
+      "recordedAt": "2026-08-06T06:00:00Z",
+      "source": "garmin"
+    },
+    {
+      "type": "stress",
+      "value": 71,
+      "unit": "0-100",
+      "recordedAt": "2026-08-06T06:00:00Z",
+      "source": "garmin"
+    }
+  ],
+  "vendorAssessments": [
+    {
+      "type": "body_battery",
+      "value": 24,
+      "unit": "score_0_100",
+      "recordedAt": "2026-08-06T06:00:00Z",
+      "source": "garmin"
+    }
+  ],
+  "workouts": [
+    {
+      "type": "run",
+      "startedAt": "2026-08-05T07:00:00Z",
+      "durationMinutes": 95,
+      "trainingLoad": 420,
+      "source": "garmin"
+    }
+  ]
+}

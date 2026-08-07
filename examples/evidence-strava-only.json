@@ -1,0 +1,172 @@
+{
+  "workouts": [
+    {
+      "type": "run",
+      "startedAt": "2026-08-05T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 380,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-08-04T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 380,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-08-03T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 380,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-08-02T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 380,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-08-01T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 380,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-31T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 380,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-29T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-28T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-27T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-26T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-25T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-24T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-23T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-22T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-21T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-20T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-19T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-18T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-17T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-16T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-15T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-14T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-13T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    },
+    {
+      "type": "run",
+      "startedAt": "2026-07-12T07:00:00Z",
+      "durationMinutes": 60,
+      "trainingLoad": 55,
+      "source": "strava"
+    }
+  ]
+}

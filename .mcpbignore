@@ -22,6 +22,10 @@ schemas/
 docs/
 eval/
 scripts/
+# Demo prompts and sample evidence. They are read by a person on GitHub before
+# installing, not by the server after it — evidence arrives as call arguments,
+# so nothing here is ever loaded from disk at runtime.
+examples/
 .claude/
 CLAUDE.md
 

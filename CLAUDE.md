@@ -147,7 +147,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 - 對外 **6 個 tool**：`evidra_assess_fitness_state` · `evidra_decide_session` · `evidra_decide_exercise_substitution` ·
   `evidra_generate_plan` · `evidra_preview_adjust_plan` · `evidra_commit_adjust_plan`
-- **383 tests**、eval 20 golden cases，全綠
+- **407 tests**、eval 20 golden cases，全綠
 - parser 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP；
   Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 個平台。
   **前四家照真實匯出檔寫；Oura 與 WHOOP 照兩家自己的 OpenAPI 寫（2026-08-07），

@@ -1,0 +1,9 @@
+{
+  "focus": "VO₂max Intervals",
+  "type": "run",
+  "durationMinutes": 60,
+  "intensity": "high",
+  "targetMuscleGroups": [
+    "legs"
+  ]
+}

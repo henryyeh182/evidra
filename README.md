@@ -1,7 +1,36 @@
 # Evidra — Fitness Decision Engine
 
-> 使用者用自己已訂閱的 AI App 對話；AI 或使用者把授權可用的運動證據交給 Evidra，
-> Fitness MCP 以最小化資料計算訓練決策，AI 再以自然語言提供個人化、可解釋的教練回覆。
+> **Evidra decides today's session.**
+> 它不查資料、不給建議。它拿**你今天原本排定的課表**與**你現在的身體證據**，
+> 回一個 `from → to` 的變更，並說得出憑什麼。
+
+一次真實的輸出（`examples/evidence-garmin-hard-day.json`，可自行重跑）：
+
+```jsonc
+"action": {
+  "from": { "focus": "Tempo Run",    "durationMinutes": 50, "intensity": "high" },
+  "to":   { "focus": "Moderate run", "durationMinutes": 50, "intensity": "moderate" },
+  "changed": ["focus", "intensity"]
+},
+"decision": { "type": "adjust", "intent": "reduce_today_intensity" },
+"reason": [
+  "Readiness 48 is below 60, so intensity comes down.",
+  "At moderate intensity the session is no longer \"Tempo Run\"; it becomes \"Moderate run\"."
+],
+"confidence": "high",
+"decisionBasis": {
+  "governingRule": {
+    "ruleId": "EVD-R-002",
+    "title":  "Low readiness pulls intensity down one step",
+    "measured": { "quantity": "readiness_score", "value": 48 },
+    "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" }
+  }
+}
+```
+
+**沒有那份 `from`，這一切就只是建議。** 問「今天練什麼」而手上沒有課表時，Evidra 不會
+編一個出來——它回 `intent: no_scheduled_session`，並附一句
+`This is a recommendation question, not a decision.`
 
 **AI host 是教練的大腦與對話介面；Fitness MCP 是教練背後的運動科學計算與安全判斷引擎。**
 
@@ -12,33 +41,35 @@
 
 ```
 使用者
-  │ 在 Claude Desktop 或手機輸入：
-  │「我今天的課表是什麼？」
-  │「昨天運動量很大，今天適合做什麼？」
+  │ 在 Claude Desktop 輸入：
+  │「今天排的是 Tempo Run 50 分鐘高強度，我還該照做嗎？」
   ▼
-Claude Desktop / Claude or ChatGPT Mobile
-  │ 理解問題、判斷需要哪些資料
+Claude Desktop
+  │ 聽懂問題、湊齊證據 —— 從使用者的匯出檔，或直接問他
+  │「昨天練了什麼、睡多久」本身就是合法的證據
   ▼
-資料來源 connector
-  │ Apple Health / Garmin / Strava
+Evidra（MCP tool call）
+  │ 證據以「參數」進入呼叫。Evidra 不連任何雲端、不持有 token、
+  │ 不 fetch 任何人的資料 —— 它只看得到這一次呼叫傳進來的東西
+  ├─ 標準化各家方言
+  ├─ 計算 ACWR / readiness / 分肌群疲勞
+  ├─ 套用確定性規則與傷病硬過濾
+  └─ 回傳 Decision / Action(from → to) / Reason / decisionBasis
   ▼
-最小化 Evidence
-  │ 例如：昨日負荷、近 7 日負荷、睡眠、HRV、今日課表
+Claude Desktop
+  │ 把結構化決策講成人話（強度與動作不重新推導）
   ▼
-Fitness MCP
-  ├─ 標準化
-  ├─ 計算 ACWR / readiness / fatigue
-  ├─ 套用確定性規則
-  └─ 產生 Decision / Action / Reason
-  ▼
-Claude / ChatGPT
-  │ 把結構化結果轉成自然語言
-  ▼
-使用者得到個人化教練回覆
+使用者知道今天那堂課變成什麼，以及為什麼
 ```
+
+**證據路徑今天長這樣**：`evidenceSource` 只有 `provided`（呼叫端傳入）與 `demo_seed` 兩種。
+`packages/connectors` 的六家解析器是用來**讀懂各家匯出檔的格式**，不是決策路徑上的即時
+connector——Evidra 從不代替使用者連上 Apple Health、Garmin 或 Strava。
 
 今天已走通的是 **Claude Desktop + desktop extension（MCPB）**。手機情境需要 remote MCP
 server，因此仍卡在 authorization server、OAuth 簽章驗證、HTTPS 公開部署與 hosted 版隱私政策。
+
+裝好之後貼上去就能跑的五則問法在 [`examples/README.md`](examples/README.md)。
 
 ## 三段分工
 
@@ -174,7 +205,7 @@ Form 3 是核心宗旨要的那個版本，不是選配。它排在後面是因�
 | 對外 tool | 6 個（`tools/list` 實測） |
 | 資料標準化 | `packages/connectors` 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP，Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 家。前四家照真實匯出檔寫，Oura／WHOOP 照兩家自己的 OpenAPI 寫、尚未對過真實回應 |
 | 確定性計算 | `semantic-engine`（readiness／分肌群疲勞）· `training-load`（ATL/CTL/TSB/ACWR）· `decision-engine`（from→to）· `planning` · `knowledge-graph`（889 節點 / 5,785 邊） |
-| 測試 | 383 tests、eval 20 golden cases 全綠 |
+| 測試 | 407 tests、eval 20 golden cases 全綠 |
 | 傳輸 | stdio ✅ · Streamable HTTP ✅ |
 | OAuth | 只做了「檢查 token claims」那一半；**簽章驗證器沒填、`serve:http` 進入點沒接線、沒有 authorization server** → 遠端連不起來 |
 | 協定版本 | `2025-06-18`；最新規格是 `2026-07-28`（stateless），升級走 dual-era |
@@ -199,6 +230,7 @@ source schema 與匯出形狀 scenario **四家齊備**（Garmin／Google Health
 
 ## 文件
 
+- [**Demo prompts 與 sample evidence**](examples/README.md) — 裝好之後貼上去就能跑的五則；輸出由 `apps/mcp-server/test/examples.test.js` 釘住
 - [User Journey](docs/user-journey.html) — 對外敘事正本：產品核心、獨特性、使用者情境
 - [**產品規格需求書**](docs/product-spec.md) — 核心需求、架構、概念、使用者情境
 - [Design Manifesto](docs/design-manifesto.md) — 原則與治理判準
@@ -254,7 +286,7 @@ GUI 啟動的 app 拿到的 PATH 很精簡，設定檔裡**不能寫裸的 `node
 ## 指令
 
 ```bash
-npm test                    # 383 tests
+npm test                    # 407 tests
 npm run eval                # golden set 計分
 npm run review:phase        # 階段完成審查（宣告「做完了」之前必跑）
 npm run serve:http          # HTTP transport
