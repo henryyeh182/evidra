@@ -228,30 +228,68 @@ export const VENDOR_SCHEMAS = {
     }
   },
 
+  // Verified 2026-08-07 against Oura's own OpenAPI document, spec version 1.37
+  // (https://cloud.ouraring.com/v2/static/json/openapi-1.37.json). Three of the
+  // six mappings below were wrong before that check; `quirks` records what they
+  // were, because the shape of the mistake is worth keeping.
   oura: {
     label: "Oura Ring",
     access: "oauth_cloud",
+    specVerifiedAgainst: "openapi-1.37.json (2026-08-07)",
     signals: [
-      { from: "daily_sleep.total_sleep_duration", to: "sleep_duration_hours", convert: hours, scale: "seconds" },
+      { from: "sleep.total_sleep_duration", to: "sleep_duration_hours", convert: hours, scale: "seconds" },
       { from: "daily_sleep.score", to: "sleep_quality", convert: identity, scale: "0-100" },
-      { from: "daily_sleep.contributors.hrv_balance", to: "hrv_ms", convert: identity, scale: "ms" },
-      { from: "daily_sleep.lowest_heart_rate", to: "resting_hr_bpm", convert: identity, scale: "bpm" },
+      { from: "sleep.average_hrv", to: "hrv_ms", convert: identity, scale: "ms" },
+      { from: "sleep.lowest_heart_rate", to: "resting_hr_bpm", convert: identity, scale: "bpm" },
       { from: "daily_readiness.score", to: "vendor_readiness", convert: identity, scale: "0-100" },
       { from: "daily_activity.steps", to: "steps", convert: identity, scale: "count" }
-    ]
+    ],
+    quirks: {
+      "daily_sleep is a score document, not a measurement document":
+        "PublicDailySleep carries only id, day, timestamp, score and contributors. It has no durations and no heart rate. The measurements live on the sleep endpoint (PublicModifiedSleepModel). Three mappings here used to read them off daily_sleep, where they do not exist.",
+      "contributors are [1, 100] scores, never physiology":
+        "Every field in PublicSleepContributors and PublicReadinessContributors is documented as 'Contribution of X in range [1, 100]'. hrv_balance is one of them, and it is on readiness, not sleep. It was previously mapped to hrv_ms as though it were milliseconds — a 1-100 score lands inside the plausible range for HRV in ms, so the error would have produced believable numbers rather than obvious ones. The real millisecond value is sleep.average_hrv.",
+      "lowest_heart_rate is our proxy for resting HR, not Oura's":
+        "Oura publishes no resting-heart-rate field. lowest_heart_rate is 'Lowest heart rate during sleep', and the spec notes it is computed from 30-second samples. Treating it as resting HR is our choice and should be reported as such."
+    }
   },
 
+  // Verified 2026-08-07 against WHOOP's own OpenAPI document
+  // (https://api.prod.whoop.com/developer/doc/openapi.json). Five of the six
+  // mappings were already right, including both ranges; the sleep one was not.
   whoop: {
     label: "WHOOP",
     access: "oauth_cloud",
+    specVerifiedAgainst: "api.prod.whoop.com/developer/doc/openapi.json (2026-08-07)",
     signals: [
       { from: "recovery.score.recovery_score", to: "vendor_readiness", convert: identity, scale: "0-100" },
       { from: "recovery.score.hrv_rmssd_milli", to: "hrv_ms", convert: identity, scale: "ms" },
       { from: "recovery.score.resting_heart_rate", to: "resting_hr_bpm", convert: identity, scale: "bpm" },
-      { from: "sleep.score.stage_summary.total_in_bed_time_milli", to: "sleep_duration_hours", convert: (ms) => hours(ms / 1000), scale: "milliseconds" },
+      // Asleep time has no field of its own: it is the three sleep stages added
+      // up. See the quirk below for why the single field that looks like it
+      // would do is not.
+      {
+        fromAll: [
+          "sleep.score.stage_summary.total_light_sleep_time_milli",
+          "sleep.score.stage_summary.total_slow_wave_sleep_time_milli",
+          "sleep.score.stage_summary.total_rem_sleep_time_milli"
+        ],
+        derive: "sum",
+        to: "sleep_duration_hours",
+        convert: (ms) => hours(ms / 1000),
+        scale: "milliseconds"
+      },
       { from: "sleep.score.sleep_performance_percentage", to: "sleep_quality", convert: identity, scale: "0-100" },
       { from: "cycle.score.strain", to: "vendor_acute_load", convert: identity, scale: "0-21" }
-    ]
+    ],
+    quirks: {
+      "total_in_bed_time_milli is time in bed, not time asleep":
+        "The spec's own wording: 'Total time the user spent in bed'. The same object separately reports total_awake_time_milli and total_no_data_time_milli. Reading in-bed time as sleep duration overstates every night, and overstates it most on the nights the athlete slept worst — the readiness score would drift upward exactly when it should fall. Asleep time is light + slow_wave + rem.",
+      "sleep_performance_percentage is an attainment ratio, not a quality score":
+        "'A percentage (0-100%) of the time a user is asleep over the amount of sleep the user needed.' It is mapped to sleep_quality because that is the nearest canonical slot, but it answers 'did you get enough' rather than 'how good was it'. sleep_efficiency_percentage is the closer analogue of efficiency and is deliberately not used, since sleep_quality feeds a score where attainment is the more useful of the two.",
+      "several fields are absent rather than zero":
+        "sleep_performance_percentage and sleep_consistency_percentage 'may not be reported' until WHOOP has enough history, spo2_percentage and skin_temp_celsius exist only on 4.0 hardware, and recovery carries user_calibrating for the period where a score is not yet trustworthy. All of these are missing signals, never zeros."
+    }
   },
 
   strava: {
