@@ -22,6 +22,20 @@
 
 共同紀律：沒有紀錄的日子不得憑空生出讀數，coverage 要誠實縮水。
 
+**OAuth API 來源（Oura／WHOOP）考的是同五種形狀，但形狀長得不一樣**——它們沒有匯出檔，
+呼叫端交來的是已經解析好的 JSON，所以「哨兵值」在這裡是**閘門**而不是特殊數值：
+
+| Scenario | Oura 的形狀考什麼 | WHOOP 的形狀考什麼 |
+|---|---|---|
+| `complete_documents` | 四個端點都給，registry 宣告的訊號都要出得來 | recovery／sleep／cycle／workout 全部 `SCORED` |
+| 閘門那一種 | `naps_and_rejected`：`sleep`／`late_nap`／`rest`／`deleted` 四種都不是一夜，只有 `long_sleep` 是 | `pending_scores`：`PENDING_SCORE`／`UNSCORABLE` 沒有 `score` 物件，**當 0 讀會報出「整晚沒睡」** |
+| 端點混淆 | `scorecard_only`：只給 `daily_sleep`（記分卡）不給 `sleep`（量測），時長／HRV／心率必須回報 missing | `calibrating`：`user_calibrating` 為真時扣住複合分數，但保留底下的 HRV 與靜息心率 |
+| 單位陷阱 | `unloaded_workouts`：Oura 不算任何負荷，`trainingLoad` 必須是 `null` | `restless_nights`：在床 8h、睡著 5h30m，**讀成在床時間會高估兩個半小時** |
+| `sparse_wear` | 戒指三天戴一次 | 手環三天戴一次 |
+
+**沒有 `dialect_equivalence`**：這兩家各只有一種方言（自家 API），沒有第二種寫法可以對照。
+有匯出檔的四家才考這一項。
+
 ## 斷言的類型（只有這幾種）
 
 1. **命名**：emit 出來的每個訊號都在 `CANONICAL_SIGNALS` 裡，且帶 `source: "garmin"`。
@@ -37,11 +51,13 @@
 ```bash
 npm run simulate:garmin
 npm run simulate:google-health
+npm run simulate:oura
+npm run simulate:whoop
 ```
 
 ```bash
 npm run simulate:garmin -- --scenario sentinels_and_gaps --json
-npm run simulate:google-health -- --scenario lossy_export --json
+npm run simulate:whoop -- --scenario restless_nights --json
 ```
 
 同一份 runner 由 [`../test/garminScenarios.test.js`](../test/garminScenarios.test.js)／
@@ -56,10 +72,20 @@ npm run simulate:google-health -- --scenario lossy_export --json
 - [`google-health.js`](google-health.js) — Google Health Takeout 的場景與 renderer
   （產出的是檔案 bundle：CSV ＋ 按月 JSON，多一步 `parseGoogleHealthExport`）
 - [`google-health.run.js`](google-health.run.js) — 同一條路徑的 Google Health 版
+- [`oura.js`](oura.js)／[`whoop.js`](whoop.js) — 兩家 OAuth API 來源的場景
+- [`apiVendor.run.js`](apiVendor.run.js) — **Oura 與 WHOOP 共用的 runner**。
+  有匯出檔的四家各自有 runner，因為各有自己的解析步驟（zip／CSV 包／XML 串流）；
+  這兩家沒有——呼叫端交來的 JSON 已經是形狀好的，所以一份 runner 服務兩家，
+  差異全部留在場景檔裡。**檢查是宣告式的**（場景寫「適用哪幾種斷言」，runner 知道怎麼跑），
+  這樣場景長不出一條會斷言門檻的檢查。
 
 ## 加一個新來源時
 
 1. 在 `packages/evidence/src/schemaRegistry.js` 補上該來源的欄位對應。
-2. 在 `schemas/sources/<vendor>.export.json` 寫下它的原始格式（含缺洞與 sentinel）。
+   **若該家有公開的 OpenAPI，先抓下來對**——Oura 與 WHOOP 都有，而且 registry
+   原本憑印象寫的 12 條映射裡有 4 條是錯的，其中一條把 1–100 的分項評分當成 HRV 毫秒值。
+2. 在 `schemas/sources/<vendor>.export.json`（匯出檔）或 `<vendor>.api.json`（API 回應）
+   寫下它的原始格式（含缺洞與 sentinel）。
 3. 寫 parser，讓「registry 宣告的訊號都解析得出來」這條檢查通過。
-4. 加場景：完整、sentinel、方言等價、有損、稀疏——五種形狀。
+4. 加場景：完整、sentinel／閘門、有損、稀疏，以及**若該家有第二種方言**才加方言等價。
+5. 在 `package.json` 加一條 `simulate:<vendor>`。

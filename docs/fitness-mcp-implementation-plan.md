@@ -115,7 +115,7 @@
 | **R3** | **證據等級階梯拆成兩軸。** 現 `EVIDENCE_LEVELS` 把研究設計（`systematic_review`／`rct`／`observational`）與機構背書（`guideline`／`position_stand`／`expert_consensus`）混在同一條 | GRADE 分開 *certainty of evidence*（研究設計、偏誤風險）與 *strength of recommendation*（另計利弊、價值觀、資源）。**強建議可以建立在低確定性證據上**，混成一條會讓規則從一份 recommendation 繼承強度，而沒有任何欄位顯示它自己的證據被評為多少。順帶補 `narrative_review`（EVD-R-007 卡在這個缺口） | `packages/rules/src/models.js`、`session-rules.json` |
 | **R4** | **出處覆核要有觸發點。** `lastReview` 有欄位，但過期不會有人失敗、不會有人提醒 | 2026-08-07 那次覆核**兩個既定入口都不是**（沒有新文獻、沒有 outcome 異常），是人工重讀已有的引用，結果撤回兩項。生命週期缺這第三個入口。**到期天數未定，不得自行決定** | `scripts/review-phase.js` 加一條 gate |
 | **R5** | `verificationStatus` 加 enum 硬檢查，並讓 `sources` 強制帶它 | 五級詞彙已於 2026-08-07 寫進 `readMe`，但**打錯字不會有人發現**（＝C11）。做法照 `assertProvenanceHonesty`：結構性禁止，不靠慣例 | `packages/rules/src/models.js` |
-| **R6** | **把 canonical model 是「雙軌」寫進現行文件。** `healthMetrics`（6 型別）與 `vendorAssessments`（4 型別）是兩軌，各有自己的新鮮度窗與權重 | **現在沒有任何一份現行文件描述雙軌**，而 `開發計畫` §3.1 寫的是把四家複合分數併成一個 `enum [Low, Moderate, High]` 的單軌——**文件講的和程式做的相反**，會誤導下一個讀它的人 | `docs/product-spec.md` 或本檔現況 |
+| ~~**R6**~~ | ✅ **已完成（2026-08-07）**：雙軌寫進 [`schemas/README.md`](../schemas/README.md) 的「the vocabulary has two tracks」一節，含為什麼不能併成單一 `enum [Low, Moderate, High]`（三家複合分數不是同一個量；而且 readiness 門檻切在 40／60／85，三格裝不下） | 放在 schemas/README 而非 product-spec：那裡才是**加平台的人真的會讀的地方**，而這件事最容易在加平台時做錯 | — |
 | **R7** | **C8（Evidence Quality）的形狀已定：用既有 `*Basis` 分類事實，不做純量。** 既有模式：`loadSources`／`rpeBasis`／`maxHeartRateIsAgeEstimate`——記「這個數字站在什麼上面」的 enum | `開發計畫` §3.2 的 `quality: 0.94` 是 `internal_composite`，而它會乘進 confidence。**confidence 正是使用者用來判斷「要不要信」的那個數字**，拿發明的權重去調它就是把可信度指標本身變成不可稽核 | 尚未有檔案 |
 
 #### 0.1 明確不採用（**別再重新推導一次**）
@@ -180,8 +180,12 @@
 
 ### 5. 來源覆蓋（Phase 5 剩餘）
 
-Oura／Whoop 只有 registry 宣告、無 parser。Google Health Connect（API 方言，非
-Takeout）目前停在 `scripts/`，是否升格為正式 connector 未定案。
+**六個平台都有 parser 了**（2026-08-07 補上 Oura 與 WHOOP）。**剩下的不是家數，是成熟度**：
+Oura／WHOOP 照兩家自己的 OpenAPI 寫，尚未對過任何真實回應——見技術債 C13，
+關掉它只需要一份去識別化的真實回應。
+
+Google Health Connect（API 方言，非 Takeout）目前停在 `scripts/`，是否升格為正式
+connector 未定案。
 
 ### 6. Phase 9 協定升級（不急，非主軸）
 
