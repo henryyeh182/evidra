@@ -1,6 +1,6 @@
 # Evidra — Fitness Decision Engine
 
-> 使用者用自己已訂閱的 AI App 對話；AI 自動取得使用者授權的運動證據，
+> 使用者用自己已訂閱的 AI App 對話；AI 或使用者把授權可用的運動證據交給 Evidra，
 > Fitness MCP 以最小化資料計算訓練決策，AI 再以自然語言提供個人化、可解釋的教練回覆。
 
 **AI host 是教練的大腦與對話介面；Fitness MCP 是教練背後的運動科學計算與安全判斷引擎。**
@@ -12,11 +12,11 @@
 
 ```
 使用者
-  │ 手機輸入：
+  │ 在 Claude Desktop 或手機輸入：
   │「我今天的課表是什麼？」
   │「昨天運動量很大，今天適合做什麼？」
   ▼
-Claude / ChatGPT Mobile
+Claude Desktop / Claude or ChatGPT Mobile
   │ 理解問題、判斷需要哪些資料
   ▼
 資料來源 connector
@@ -36,6 +36,9 @@ Claude / ChatGPT
   ▼
 使用者得到個人化教練回覆
 ```
+
+今天已走通的是 **Claude Desktop + desktop extension（MCPB）**。手機情境需要 remote MCP
+server，因此仍卡在 authorization server、OAuth 簽章驗證、HTTPS 公開部署與 hosted 版隱私政策。
 
 ## 三段分工
 
@@ -129,21 +132,28 @@ Privacy questions and requests: **evidramcp@icloud.com**
 
 不能說 `We never process health data`——接收並計算 Evidence 本身就是 transient processing。
 
-### 兩種部署
+### 三種形態
 
-**Phase 1 — Hosted decision service**：hosted MCP 短暫處理最小化 Evidence，
-不持久化、不保管、不二次利用；不直接連資料供應商、不持有來源 OAuth refresh token。
+這不是三個階段，是三種使用者處境；三者共用同一套 domain packages 與確定性決策邏輯。
 
-**Phase 2 — User-controlled private engine**：source connectors、`packages/evidence`、
-`packages/semantic-engine`、`packages/db` 與 decision computation 全部在使用者控制的環境執行，
+**Form 1 — Desktop extension（MCPB）**：目前第一個可用形態，跑在使用者自己的電腦上，
+走 stdio。上面英文 Privacy Policy 描述的是這個已發布 bundle 的行為：不 outbound、
+不持久化、不呼叫模型、不需要帳號。
+
+**Form 2 — Remote MCP server**：手機唯一可行的路，也是未來商業化形態。hosted MCP
+只能短暫處理最小化 Evidence，不持久化、不保管、不二次利用；不直接連資料供應商、
+不持有來源 OAuth refresh token。這條目前還是 NO-GO。
+
+**Form 3 — User-controlled private engine**：source connectors、`packages/evidence`、
+`packages/semantic-engine`、`packages/db` 與 decision computation 全部在使用者控制的環境執行。
 hosted service 不接觸 raw health Evidence。**MCP 從遠端資料處理中心變成
 安裝在使用者環境裡的 local data plane。**
 
-**持久化只存在於 Phase 2。** `packages/db` 會寫入 provider 原始 payload、HRV／睡眠、
-每日狀態——Phase 1 界線禁止把 raw Evidence 寫進 database，那些表在 hosted 一張都不能建。
-所以 Phase 1 hosted 永遠無狀態，計畫由呼叫端持有並隨每次呼叫傳入；Phase 2 才有持久層。
+**持久化只存在於 Form 3。** `packages/db` 會寫入 provider 原始 payload、HRV／睡眠、
+每日狀態——Form 2 界線禁止把 raw Evidence 寫進 database，那些表在 hosted 一張都不能建。
+所以 Form 2 hosted 永遠無狀態，計畫由呼叫端持有並隨每次呼叫傳入；Form 3 才有持久層。
 
-Phase 2 是核心宗旨要的那個版本，不是選配。兩種模式共用同一套 domain packages。
+Form 3 是核心宗旨要的那個版本，不是選配。它排在後面是因為尚未開工，不是因為不重要。
 
 ## 對外工具
 
@@ -168,7 +178,7 @@ Phase 2 是核心宗旨要的那個版本，不是選配。兩種模式共用同
 | 傳輸 | stdio ✅ · Streamable HTTP ✅ |
 | OAuth | 只做了「檢查 token claims」那一半；**簽章驗證器沒填、`serve:http` 進入點沒接線、沒有 authorization server** → 遠端連不起來 |
 | 協定版本 | `2025-06-18`；最新規格是 `2026-07-28`（stateless），升級走 dual-era |
-| Phase 2 | **一行程式都沒有** |
+| 產品形態 | Form 1 desktop extension 可用；Form 2 remote MCP server 目前 NO-GO；Form 3 user-controlled deployment **一行程式都沒有** |
 
 source schema 與匯出形狀 scenario **四家齊備**（Garmin／Google Health Takeout／Apple Health／Strava）。
 
@@ -187,9 +197,10 @@ source schema 與匯出形狀 scenario **四家齊備**（Garmin／Google Health
 
 ## 文件
 
-- [**產品規格需求書**](docs/product-spec.md) — 核心需求、架構、概念、使用者情境。**正本**
+- [User Journey](docs/user-journey.html) — 對外敘事正本：產品核心、獨特性、使用者情境
+- [**產品規格需求書**](docs/product-spec.md) — 核心需求、架構、概念、使用者情境
 - [Design Manifesto](docs/design-manifesto.md) — 原則與治理判準
-- [Implementation Plan](docs/fitness-mcp-implementation-plan.md) — 現況、順序、會變動的市場事實
+- [Implementation Plan](docs/fitness-mcp-implementation-plan.md) — 工程 roadmap 正本：現況、順序、會變動的市場事實
 - [MCP Server](docs/mcp-server.md) — server 與 tool 說明
 - [Phase Review](docs/phase-review.md) — 宣告完成前的審查機制
 - [Schemas](schemas/README.md) · [Eval](eval/README.md)
