@@ -495,7 +495,7 @@ Inspector 複驗：`{"hrv_ms":{"sources":["garmin"],"writers":[],"latest":"…"}
 | 5 | PulseMCP 自稱會自動收錄，實際收錄結果未驗 | ❌ 未驗——**要發完官方 registry 才驗得到** | 那是它的說法 |
 | 6 | ChatGPT Health 內第三方 app 能否讀到 Apple Health 數值；PHI 條款適用範圍 | ❌ 未查 | 決定 ChatGPT 那側是不是主線 |
 | 7 | 官方 registry 支不支援 Docker／OCI | ✅ **已解：支援**。`server.json` 的 `registryType` 含 `oci`（另有 npm／pypi／nuget／cargo／mcpb）。**但 API 抽樣 30 筆只見 npm／pypi** | 影響 remote 之外還有沒有第三種分發形態 |
-| 8 | Garmin Connect Developer Program 是不是暫停中 | ❌ **無定論**。官方 Health API 頁與 FAQ 都寫「Stay tuned for more updates on the program」，同時 FAQ 又寫「please request … we'll quickly review your application」（約兩個工作日）。**說暫停的只有一份第三方部落格**，Garmin 論壇 thread 438046 零回覆。剩下的路是寄 `connect-support@developer.garmin.com` | 已確認的是**只給企業／商業用途**、要申請要審核（見 [implementation plan P4](fitness-mcp-implementation-plan.md)）。是否暫停決定「能不能排程」而不是「能不能做」 |
+| 8 | Garmin Connect Developer Program 是不是暫停中 | ❌ **無定論**。官方 Health API 頁與 FAQ 都寫「Stay tuned for more updates on the program」，同時 FAQ 又寫「please request … we'll quickly review your application」（約兩個工作日）。**說暫停的只有一份第三方部落格**，Garmin 論壇 thread 438046 零回覆。剩下的路是寄 `connect-support@developer.garmin.com` | 已確認的是**只給企業／商業用途**、要申請要審核（見 [implementation plan history P4](fitness-mcp-implementation-plan-history.md)）。是否暫停決定「能不能排程」而不是「能不能做」 |
 | 9 | remote portal 的「不同使用者連不同 URL」實際怎麼運作 | ❌ 未查。官方文件只確認**這個選項存在**（Connection 一步：「whether every user connects to the same URL or different users connect to different URLs」），沒有說明審查怎麼驗、reviewer 用哪個 URL | 決定「使用者自己 host、我們不持有 evidence」這條路能不能上架 |
 | 10 | Team／Enterprise 方案的費用 | ❌ 未查 | remote portal 在 admin settings，個人方案進不去；這是走 remote 的固定成本 |
 | 11 | `review-criteria`（pre-submission checklist） | ✅ **已讀，逐條對照見上一節。** 查出三件本檔原本沒有的：讀寫必須分開、tool 名稱 64 字元上限、送審前要用 MCP Inspector ＋ custom connector 跑過每個 tool | — |
@@ -507,7 +507,8 @@ Inspector 複驗：`{"hrv_ms":{"sources":["garmin"],"writers":[],"latest":"…"}
 
 ## 相關但不在本檔
 
-- 完整盤點、門檻清單與價格比較：[implementation plan §3.5「通路決策」](fitness-mcp-implementation-plan.md)
+- 完整盤點、門檻清單與價格比較：[implementation plan history §3.5「通路決策」](fitness-mcp-implementation-plan-history.md)
+  （現況見 [implementation plan](fitness-mcp-implementation-plan.md)）
 ---
 
 ## Anthropic remote portal 的 11 個步驟（2026-08-03 查證，將來走 remote 直接照這個準備）

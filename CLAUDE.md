@@ -243,7 +243,9 @@ ChatGPT 那側**平行查證不平行開工**。
 > **查了幾家，就只能講幾家。**
 
 完整盤點、門檻清單與價格比較見
-[implementation plan §3.5「通路決策」](docs/fitness-mcp-implementation-plan.md)。
+[implementation plan history §3.5「通路決策」](docs/fitness-mcp-implementation-plan-history.md)
+（現況與下一步已搬到 [implementation plan](docs/fitness-mcp-implementation-plan.md)，
+history 只留完整推理過程）。
 
 ## 計價（2026-07-31）
 
