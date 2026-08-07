@@ -457,6 +457,55 @@ gate(
   }
 );
 
+// G8 — 對外文字不用內部詞彙，也不從「我們不做什麼」開頭
+//
+// 存在的理由是實測出來的，不是預防性的。2026-08-06～07 一整天，使用者連續抓到六件
+// 事，沒有一件是程式錯，全部是文字：失敗訊息被模型當人話唸給使用者聽、`limits` 的語
+// 氣像在推責任、送審文案寫得準卻沒人看得懂、擴充功能的描述說「All computation is
+// performed on the server」——那句話對一個裝在自己電腦上的東西來說，意思是反的。
+//
+// 每一次那六件事發生時，368 個測試與其餘七條 gate 全綠。它們比對的是數字與宣稱是否
+// 一致，沒有一條會讀一句話然後問「人看了會怎麼想」。這條補的就是那個洞，補得很粗
+// ——它只認得字串，認不得語氣——但它認得的那幾個字，是每一次都真的漏出去的那幾個。
+gate(
+  "G8",
+  "使用者讀得到的文字裡沒有內部詞彙",
+  "九條 gate 都不讀敘述句。這條只讀敘述句。",
+  () => {
+    const findings = [];
+
+    // 每一項都出現在真的漏出去過的句子裡。
+    const banned = [
+      [/\bcaller[- ]supplied\b/i, "caller-supplied——讀者不知道 caller 是他的 AI 助理"],
+      [/\bthe caller\b/i, "the caller——同上，對外要說 your assistant 或 you"],
+      [/from\s*(->|→)\s*to/i, "from -> to——內部記法，對外要講成做了什麼（keep／ease／swap／move）"],
+      [/\bsemantic fitness layer\b/i, "Semantic Fitness Layer——內部套件邊界的名字"],
+      [/computation is performed on the server/i, "「computation is performed on the server」——對裝在自己電腦上的擴充功能來說，這句話意思是反的"],
+      [/\btraining state to the next\b/i, "「transition from the current training state to the next」——已判定沒人看得懂"],
+      [/\bnever silently inferred\b/i, "silently inferred——內部用語，對外要講具體會發生什麼"]
+    ];
+
+    // 只掃使用者或審閱者真的會讀到的欄位，不掃程式註解與內部文件。
+    const manifest = JSON.parse(read("manifest.json"));
+    const server = JSON.parse(read("server.json"));
+    const surfaces = [
+      ["manifest.description", manifest.description],
+      ["manifest.long_description", manifest.long_description],
+      ["server.json description", server.description],
+      ...(manifest.tools || []).map((tool) => [`manifest.tools[${tool.name}]`, tool.description])
+    ];
+
+    for (const [where, text] of surfaces) {
+      if (!text) continue;
+      for (const [pattern, why] of banned) {
+        if (pattern.test(text)) findings.push(`${where}: ${why}`);
+      }
+    }
+
+    return findings;
+  }
+);
+
 // ---------------------------------------------------------------------------
 
 const resolved = [];
