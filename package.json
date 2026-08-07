@@ -14,6 +14,8 @@
     "simulate:apple-health": "node scripts/simulate-apple-health-scenarios.js",
     "simulate:google-health": "node scripts/simulate-google-health-scenarios.js",
     "simulate:strava": "node scripts/simulate-strava-scenarios.js",
+    "simulate:oura": "node scripts/simulate-oura-scenarios.js",
+    "simulate:whoop": "node scripts/simulate-whoop-scenarios.js",
     "import:apple-health": "node scripts/import-apple-health.js",
     "import:google-health-api": "node scripts/import-google-health-api.js",
     "build:bundle": "node scripts/build-bundle.js",

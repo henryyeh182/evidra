@@ -147,9 +147,11 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 - 對外 **6 個 tool**：`evidra_assess_fitness_state` · `evidra_decide_session` · `evidra_decide_exercise_substitution` ·
   `evidra_generate_plan` · `evidra_preview_adjust_plan` · `evidra_commit_adjust_plan`
-- **368 tests**、eval 20 golden cases，全綠
-- parser 實作 4 家（Apple Health／Garmin／Strava／Google Health Takeout；Strava 含 API 與
-  bulk export 兩種方言）；schema registry 涵蓋 6 個平台
+- **383 tests**、eval 20 golden cases，全綠
+- parser 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP；
+  Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 個平台。
+  **前四家照真實匯出檔寫；Oura 與 WHOOP 照兩家自己的 OpenAPI 寫（2026-08-07），
+  尚未對過任何真實回應**——講成熟度時要分開講，那是技術債 C13
 - Strava bulk export：CSV 按欄位**索引**解析（5 組同名欄單位不同）；`Activity Date` 是 UTC 無 offset，
   本地時區只能從 `activities/*.fit.gz` 的 `activity.local_timestamp − timestamp` 還原
   （opt-in `readLocalTimezone`）

@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/sources/whoop.api",
+  "title": "WHOOP API documents (raw)",
+  "description": "The subset of WHOOP's API responses that packages/connectors/src/providers/whoop reads. Field names are WHOOP's, not ours. Derived from WHOOP's own OpenAPI document (https://api.prod.whoop.com/developer/doc/openapi.json), read 2026-08-07; the descriptions below quote it. Two facts govern this dialect. First, score_state gates every record type: an unscored record still arrives, with score absent, and reading it as zero would report a night of no sleep or a day of no strain. Second, there is no field for time asleep — in-bed time is reported beside awake time, and asleep time has to be summed from the three sleep stages.",
+  "type": "object",
+  "properties": {
+    "recovery": {
+      "type": "array",
+      "description": "GET /v2/recovery — Recovery. Carries HRV, resting heart rate and WHOOP's recovery composite.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cycle_id": { "type": "integer", "description": "'The Recovery represents how recovered the user is for this physiological cycle'." },
+          "sleep_id": { "type": "string", "description": "'ID of the Sleep associated with the Recovery'." },
+          "created_at": { "type": "string", "description": "'The time the recovery was recorded in WHOOP'. Used as the reading's timestamp." },
+          "updated_at": { "type": "string" },
+          "score_state": {
+            "type": "string",
+            "enum": ["SCORED", "PENDING_SCORE", "UNSCORABLE"],
+            "description": "'SCORED means the recovery was scored and the measurement values will be present.' Anything else means score is absent. Nothing is read from a record that is not SCORED."
+          },
+          "score": {
+            "type": "object",
+            "description": "RecoveryScore. Present only when score_state is SCORED.",
+            "properties": {
+              "user_calibrating": {
+                "type": "boolean",
+                "description": "'True if the user is still calibrating and not enough data is available in WHOOP to provide an accurate recovery.' WHOOP's equivalent of Garmin's level NONE. While true the composite is withheld, but hrv_rmssd_milli and resting_heart_rate are still read: they are measurements, and it is the score built on them that WHOOP is not standing behind."
+              },
+              "recovery_score": {
+                "type": "number",
+                "description": "'Percentage (0-100%) that reflects how well prepared the user's body is to take on Strain.' Mapped to vendor_readiness."
+              },
+              "resting_heart_rate": { "type": "number", "description": "'The user's resting heart rate.' The spec states no unit; beats per minute is our reading of it." },
+              "hrv_rmssd_milli": {
+                "type": "number",
+                "description": "'The user's Heart Rate Variability measured using Root Mean Square of Successive Differences (RMSSD), in milliseconds.' A float, not an integer. Mapped to hrv_ms."
+              },
+              "spo2_percentage": { "type": "number", "description": "'Only present if the user is on 4.0 or greater.' Hardware-gated absence, never a zero." },
+              "skin_temp_celsius": { "type": "number", "description": "'The user's skin temperature, in Celsius. Only present if the user is on 4.0 or greater.'" }
+            }
+          }
+        }
+      }
+    },
+    "sleep": {
+      "type": "array",
+      "description": "GET /v2/activity/sleep — Sleep.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "cycle_id": { "type": "integer" },
+          "start": { "type": "string", "description": "'Start time bound of the sleep'." },
+          "end": { "type": "string", "description": "'End time bound of the sleep'. Used as the reading's timestamp." },
+          "timezone_offset": { "type": "string", "description": "'The user's timezone offset at the time the sleep was recorded.' Reported separately from the timestamps." },
+          "nap": {
+            "type": "boolean",
+            "description": "'If true, this sleep activity was a nap for the user.' Naps are excluded from a night's duration: a nap carries none of the overnight physiology recovery rests on, and adding it would report more sleep than the athlete got."
+          },
+          "score_state": { "type": "string", "enum": ["SCORED", "PENDING_SCORE", "UNSCORABLE"] },
+          "score": {
+            "type": "object",
+            "description": "SleepScore. Present only when score_state is SCORED.",
+            "properties": {
+              "stage_summary": {
+                "type": "object",
+                "description": "SleepStageSummary. Note what is not here: a total-asleep field.",
+                "properties": {
+                  "total_in_bed_time_milli": {
+                    "type": "integer",
+                    "description": "'Total time the user spent in bed, in milliseconds.' NOT sleep duration. Reading it as such overstates every night and overstates it most on the nights the athlete slept worst, pushing the recovery score up exactly when it should come down. This mapping was wrong in the registry until the spec was read."
+                  },
+                  "total_awake_time_milli": { "type": "integer", "description": "'Total time the user spent awake, in milliseconds.'" },
+                  "total_no_data_time_milli": { "type": "integer", "description": "'Total time WHOOP did not receive data from the user during the sleep, in milliseconds.'" },
+                  "total_light_sleep_time_milli": { "type": "integer", "description": "'Total time the user spent in light sleep, in milliseconds.' One of the three summed to give sleep_duration_hours." },
+                  "total_slow_wave_sleep_time_milli": { "type": "integer", "description": "'Total time the user spent in Slow Wave Sleep (SWS), in milliseconds.'" },
+                  "total_rem_sleep_time_milli": { "type": "integer", "description": "'Total time the user spent in Rapid Eye Movement (REM) sleep, in milliseconds.'" },
+                  "sleep_cycle_count": { "type": "integer" },
+                  "disturbance_count": { "type": "integer", "description": "'Number of times the user was disturbed during sleep'." }
+                }
+              },
+              "sleep_performance_percentage": {
+                "type": "number",
+                "description": "'A percentage (0-100%) of the time a user is asleep over the amount of sleep the user needed. May not be reported if WHOOP does not have enough data about a user yet.' Mapped to sleep_quality as the nearest canonical slot, but it is an attainment ratio rather than a quality judgement, and its absence is a genuine gap."
+              },
+              "sleep_efficiency_percentage": {
+                "type": "number",
+                "description": "'A percentage (0-100%) of the time you spend in bed that you are actually asleep.' The closer analogue of classical sleep efficiency, deliberately not mapped: sleep_quality feeds a score where attainment is the more useful of the two."
+              },
+              "sleep_consistency_percentage": { "type": "number", "description": "'May not be reported if WHOOP does not have enough sleep data about a user yet'." },
+              "respiratory_rate": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "cycles": {
+      "type": "array",
+      "description": "GET /v2/cycle — Cycle. A physiological cycle, which is WHOOP's unit of a day.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "start": { "type": "string", "description": "'Start time bound of the cycle'." },
+          "end": {
+            "type": "string",
+            "description": "'End time bound of the cycle. If not present, the user is currently in this cycle.' A cycle with no end is a partial day: its strain is still accumulating, so it is reported and flagged inProgress rather than dropped."
+          },
+          "timezone_offset": { "type": "string" },
+          "score_state": { "type": "string", "enum": ["SCORED", "PENDING_SCORE", "UNSCORABLE"] },
+          "score": {
+            "type": "object",
+            "description": "CycleScore. Present only when score_state is SCORED.",
+            "properties": {
+              "strain": {
+                "type": "number",
+                "description": "'WHOOP metric of the cardiovascular load - the level of strain on the user's cardiovascular system based on the user's heart rate during the cycle. Strain is scored on a scale from 0 to 21.' Mapped to vendor_acute_load. WHOOP's scale, not comparable with Garmin's EPOC load or Strava's Relative Effort."
+              },
+              "kilojoule": { "type": "number" },
+              "average_heart_rate": { "type": "integer" },
+              "max_heart_rate": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "workouts": {
+      "type": "array",
+      "description": "GET /v2/activity/workout — WorkoutV2.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "start": { "type": "string" },
+          "end": { "type": "string" },
+          "timezone_offset": { "type": "string" },
+          "sport_name": { "type": "string", "description": "'Name of the WHOOP Sport performed during the workout'." },
+          "score_state": {
+            "type": "string",
+            "enum": ["SCORED", "PENDING_SCORE", "UNSCORABLE"],
+            "description": "An unscored workout gets trainingLoad null rather than a duration estimate, and then travels as a session with no load through signalCoverage.training.missing."
+          },
+          "score": {
+            "type": "object",
+            "description": "WorkoutScore. Present only when score_state is SCORED.",
+            "properties": {
+              "strain": { "type": "number", "description": "Per-workout cardiovascular load on the same 0-21 scale. This is the workout's trainingLoad." },
+              "average_heart_rate": { "type": "integer", "description": "'The user's average heart rate (beats per minute) during the workout.'" },
+              "max_heart_rate": { "type": "integer" },
+              "kilojoule": { "type": "number" },
+              "percent_recorded": {
+                "type": "number",
+                "description": "'Percentage (0-100%) of heart rate data WHOOP received during the workout.' Carried through, because a strain computed from half a trace is a weaker figure than one computed from all of it."
+              },
+              "distance_meter": { "type": "number", "description": "'Only present if distance data sent to WHOOP'." },
+              "altitude_gain_meter": { "type": "number" },
+              "altitude_change_meter": { "type": "number" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

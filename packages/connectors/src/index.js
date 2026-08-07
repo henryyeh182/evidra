@@ -45,3 +45,18 @@ export {
   normalizeGarminHealthStatus,
   normalizeGarminActivities
 } from "./providers/garmin/index.js";
+export {
+  buildOuraEvidence,
+  normalizeOuraSleep,
+  normalizeOuraDailySleep,
+  normalizeOuraDailyReadiness,
+  normalizeOuraDailyActivity,
+  normalizeOuraWorkouts
+} from "./providers/oura/index.js";
+export {
+  buildWhoopEvidence,
+  normalizeWhoopRecovery,
+  normalizeWhoopSleep,
+  normalizeWhoopCycles,
+  normalizeWhoopWorkouts
+} from "./providers/whoop/index.js";

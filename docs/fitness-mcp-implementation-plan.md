@@ -18,7 +18,7 @@
 - **6 個對外決策 tool**：`evidra_assess_fitness_state`、`evidra_decide_session`、
   `evidra_decide_exercise_substitution`、`evidra_generate_plan`、
   `evidra_preview_adjust_plan`、`evidra_commit_adjust_plan`
-- **368 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
+- **383 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
 - **知識圖譜** 889 節點 / 5,785 邊；進退階 34 條（17 組互逆）；訓練目標五值域
 - **Rule Library**（`packages/rules` v1.1.0）：**8 條規則**，每條帶 `ruleId`／`version`／
   `category`／`priority`／`basis`／`evidenceLevel`／`sources`／`contested`／`limitations`。
@@ -27,9 +27,10 @@
   另五個 tool 的數字不在庫裡，見技術債 C9。連帶：**`decisionBasis` 也只有
   `evidra_decide_session` 回傳**（六個 tool 實測一個命中），server `instructions`
   已據此指名，不再宣稱每個決策都帶
-- **來源 parser：4 家**（Apple Health／Garmin／Google Health／Strava，Strava 另有 API
-  與 bulk export 兩種方言）。**Oura／Whoop 只有 registry 宣告，無 parser**——schema
-  registry 共宣告 6 個平台（8 種方言）
+- **來源 parser：6 家**（Apple Health／Garmin／Google Health／Strava／Oura／WHOOP，
+  Strava 另有 API 與 bulk export 兩種方言）。schema registry 共宣告 6 個平台（8 種方言）。
+  **前四家是照真實匯出檔寫的；Oura 與 WHOOP 是照各家自己的 OpenAPI 文件寫的
+  （2026-08-07），還沒對過任何一份真實回應**——見技術債 C13
 - **transport**：stdio ✅ · Streamable HTTP ✅（僅 `localhost:8787`，未公開部署）
 - **OAuth**：resource server 已實作（RFC 9728 metadata、audience 驗證、issuer 白名單、
   scope 檢查）；**簽章驗證器是空插槽、`http.js` 進入點沒接線、沒有 authorization
@@ -42,7 +43,7 @@
 
 | # | 能力 | 現況 | 缺口 |
 |---|---|---|---|
-| 1 | Semantic Fitness Layer | 🟡 | 4/6 平台有 parser；已有的四家方言等價已驗證 |
+| 1 | Semantic Fitness Layer | 🟡 | 6/6 平台有 parser；四家的方言等價已在真實匯出檔上驗證，Oura／WHOOP 只在 spec 與模擬文件上 |
 | 2 | Fitness Intelligence Engine | 🟢 | 確定性五層決策；ATL/CTL/TSB ＋ detraining 軸線 ＋ 個人基線 |
 | 3 | Fitness Knowledge Graph | 🟢 | 889 節點 / 5,785 邊，進退階與訓練目標皆有不變量把關 |
 | 4 | Feedback Learning | ✅ 已結（設計如此） | 三元組由呼叫端保存，hosted 不留 |
@@ -128,7 +129,7 @@
 | §3.7 Rule Package | 兩個存在理由都已被否決（`tier` 屬 A6 未定、自動更新牴觸已發布的 `PRIVACY.md`）。**類比本身也要拆**：病毒碼更新失敗是 fail-closed，訓練規則更新失敗是 fail-open |
 | §4「Confidence: High，幾乎不需質疑」 | 與整個庫的設計相反——每個引用強制填 `doesNotSupport`，理由是「in every case so far there is one」。repo 裡就住著反例：EVD-R-006 引 Gabbett，同時載入 Impellizzeri 的反對 |
 | §4 Exercise Science Board | **那個 board 不存在。** 維持 `reviewer` 實名。宣稱一個不存在的審查機構，跟宣稱一個撐不住的證據等級是同一類錯 |
-| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 368 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
+| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 383 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
 | §5 四個新 tool | 逐個理由見 history §4.6.5。**補一條**：§5 自己的表格就顯示五列缺口**全在既有 tool 的輸出欄位裡**，沒有一列是「少一個口」 |
 
 #### 0.2 版號規則（2026-08-07 起照這個走）
@@ -175,6 +176,7 @@
 | C10 | **兩套 detraining 門檻並存且數字不同**：`trainingLoad.js` 是 14 天／25%，EVD-R-007 是 42 天／60%。前者無出處，後者在庫裡 | 同上第一項 ＋ `packages/rules/data/session-rules.json` |
 | C11 | `verificationStatus` 沒有型別檢查，`sources` 也不強制帶它（EVD-R-002 的 Javaloyes 就沒有）。詞彙已定義在 `readMe`，但打錯字不會有人發現 | `packages/rules/src/models.js` |
 | C12 | **傷病邏輯在規則庫外執行**——有實作、每天在跑，但沒有 rule id、沒有出處、不受仲裁。`injury` 是仲裁矩陣最高的一格，而它是空的 | 見 §0 的 R2 |
+| C13 | **Oura／WHOOP 的 parser 沒對過真實回應。** 欄位路徑與單位來自兩家自己的 OpenAPI（權威），但**沒有任何一份真實 API 回應驗證過**——spec 說得對不等於實際回傳長那樣（真實資料裡的哨兵值、空陣列、部分欄位缺漏，前四家都是在真檔案上才發現的）。這是 C6 的加強版：C6 是「照匯出檔寫、沒對過真實流程」，這裡連匯出檔都沒有 | `packages/connectors/src/providers/oura`、`.../whoop` |
 
 ### 5. 來源覆蓋（Phase 5 剩餘）
 
