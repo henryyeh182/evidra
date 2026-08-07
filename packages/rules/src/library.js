@@ -69,9 +69,9 @@ export function getCategoryRank(categoryId) {
  *
  * `evidenceLevel: "internal_heuristic"` with an empty `sources` is a normal and
  * expected output here, not a gap to be filled in later. Six of the eight rules
- * in v1.0.0 are thresholds on scores Evidra computes itself, and for those no
- * citation is possible. Saying so is the disclosure; hiding it behind a
- * plausible-sounding reference would be the failure.
+ * are thresholds on scores Evidra computes itself, and for those no citation is
+ * possible. Saying so is the disclosure; hiding it behind a plausible-sounding
+ * reference would be the failure.
  */
 export function describeRule(ruleId, measured = null, { full = true } = {}) {
   const rule = getRule(ruleId);

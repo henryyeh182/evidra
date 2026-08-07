@@ -775,7 +775,7 @@ export function decideSession({
   // whether that threshold rests on published work or on a score Evidra
   // computes itself.
   //
-  // Six of the eight rules in library v1.0.0 come back as
+  // Six of the eight rules come back as
   // `basis: "internal_composite"`, `evidenceLevel: "internal_heuristic"`, with
   // no sources. That is the correct output, not a gap: those thresholds cut a
   // readiness or fatigue score built from weights we chose, and no publication

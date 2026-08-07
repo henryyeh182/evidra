@@ -1,7 +1,7 @@
 {
   "libraryId": "evidra.session-rules",
-  "version": "1.0.0",
-  "lastReview": "2026-08-06",
+  "version": "1.1.0",
+  "lastReview": "2026-08-07",
   "reviewer": "Henry Yeh",
 
   "readMe": [
@@ -30,7 +30,33 @@
     "real paper to an invented number and call the rule evidence-based. A",
     "reviewer who checks the citation would find it does not mention the score",
     "the threshold sits on. An empty `sources` on an internal_composite rule is",
-    "the honest state, not an unfinished one."
+    "the honest state, not an unfinished one.",
+    "",
+    "Every citation also carries `verificationStatus`, which says how far anyone",
+    "here has actually read it. A citation is a claim about a document, and that",
+    "claim is checkable independently of whether the document supports our",
+    "threshold. The vocabulary, strongest first:",
+    "",
+    "  primary_full_text_verified          The quoted figures were read in the",
+    "                                      primary text at the URL given.",
+    "  abstract_verified_full_text_not_read",
+    "                                      Bibliographic record and quoted",
+    "                                      phrases confirmed against the",
+    "                                      published abstract. The body is",
+    "                                      obtainable but nobody has read it.",
+    "  abstract_verified_full_text_paywalled",
+    "                                      As above, and the body is behind a",
+    "                                      paywall, so the gap will not close by",
+    "                                      someone simply getting round to it.",
+    "  numbers_from_secondary_sources      Figures came from summaries of the",
+    "                                      paper, not the paper. Treat as",
+    "                                      unconfirmed.",
+    "  citation_not_read_in_full           Legacy of the above two; do not use",
+    "                                      for new entries.",
+    "",
+    "A status may only move up when someone reads further, and moves down the",
+    "moment a check fails. Rules whose provenance was corrected downward record",
+    "the correction in `notes` rather than quietly dropping the old claim."
   ],
 
   "evidenceLevels": [
@@ -153,7 +179,7 @@
 
     {
       "ruleId": "EVD-R-004",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "status": "active",
       "title": "High fatigue in the target muscle group rules out hard work on it",
       "category": "recovery",
@@ -167,19 +193,25 @@
       "contested": [],
       "supportingLiterature": [
         {
-          "citation": "American College of Sports Medicine. Position Stand: Progression Models in Resistance Training for Healthy Adults. Med Sci Sports Exerc, 2009.",
+          "citation": "American College of Sports Medicine. Position Stand: Progression Models in Resistance Training for Healthy Adults. Med Sci Sports Exerc. 2009;41(3):687-708.",
           "url": "https://pubmed.ncbi.nlm.nih.gov/19204579/",
-          "supports": "That recovery of a trained muscle group governs how soon it may be loaded hard again, and that progression is managed per muscle group rather than globally.",
-          "doesNotSupport": "The value 65, and the decay model that produces the score it is compared against.",
-          "verificationStatus": "citation_not_read_in_full",
-          "whyItIsHereAnyway": "It supports the existence of a per-muscle-group recovery rule. It says nothing about our number."
+          "supports": "That resistance training is prescribed at a per-week frequency that rises with training status, verbatim: \"2-3 d x wk(-1) for novice training, 3-4 d x wk(-1) for intermediate training, and 4-5 d x wk(-1) for advanced training\"; and that sessions are sequenced by muscle group, verbatim: \"large before small muscle group exercises\". A frequency ceiling of this kind presupposes that a loaded muscle group needs recovery before it is loaded hard again, which is the direction of this rule.",
+          "doesNotSupport": "The value 65, the decay model that produces the score it is compared against, and the claim that recovery is tracked per muscle group rather than globally. The abstract prescribes whole-session weekly frequency, not a per-muscle-group recovery interval; our earlier wording asserted the latter and has been withdrawn.",
+          "verificationStatus": "abstract_verified_full_text_not_read",
+          "verification": {
+            "checkedOn": "2026-08-07",
+            "against": "PubMed record 19204579. Title, journal, year, volume, issue and pages confirmed; the two quoted phrases are in the published abstract.",
+            "outcome": "The bibliographic record and both quotations are confirmed against the abstract. The full 22-page position stand was not read, so anything it says beyond the abstract remains unchecked."
+          },
+          "whyItIsHereAnyway": "It supports the existence of a recovery interval between hard sessions for the same tissue. It says nothing about our number."
         }
       ],
       "limitations": [
         "65 is our own choice.",
-        "The supporting citation above was identified but not read in full; it is recorded as citation_not_read_in_full and must not be described as verified until it is."
+        "Only the abstract of the supporting citation has been read (verificationStatus: abstract_verified_full_text_not_read). It must not be described as fully verified until someone reads the position stand itself.",
+        "The abstract's frequency guidance is per week and per athlete, not per muscle group. This rule's per-muscle-group granularity is finer than anything the citation establishes, and that gap is ours, not the literature's."
       ],
-      "notes": ""
+      "notes": "Provenance re-reviewed 2026-08-07: the previous `supports` line claimed the position stand established per-muscle-group rather than global progression management. That is not in the abstract and was withdrawn rather than left standing on a citation nobody had opened."
     },
 
     {
@@ -202,7 +234,7 @@
 
     {
       "ruleId": "EVD-R-006",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "status": "active",
       "title": "An acute load spike pulls intensity down one step",
       "category": "recovery",
@@ -221,10 +253,15 @@
         {
           "citation": "Gabbett TJ. The training-injury prevention paradox: should athletes be training smarter and harder? Br J Sports Med. 2016;50(5):273-280.",
           "doi": "10.1136/bjsports-2015-095788",
-          "url": "https://efsma.org/images/pdf/publications/Br-J-Sports-Med-2016-Gabbett-273-80.pdf",
-          "supports": "That acute (1 week) to chronic (rolling 4-week) load ratio is associated with injury risk; reported lower-risk band approximately 0.8-1.3, spike above 1.5.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4789704/",
+          "supports": "That acute (1 week) to chronic (rolling 4-week) load ratio is associated with injury risk. Verbatim from the paper: a ratio \"within the range of 0.8-1.3 could be considered the training 'sweet spot'\"; ratios \">=1.5 represent the 'danger zone'\"; and at >=1.5 \"the risk of injury was 2-4 times greater in the subsequent 7 days\".",
           "doesNotSupport": "The value 1.4.",
-          "verificationStatus": "numbers_from_secondary_sources"
+          "verificationStatus": "primary_full_text_verified",
+          "verification": {
+            "checkedOn": "2026-08-07",
+            "against": "Open-access full text at PMC4789704, confirmed by its own record to be Br J Sports Med 2016;50(5):273-280, doi 10.1136/bjsports-2015-095788.",
+            "outcome": "The 0.8-1.3 band and the 1.5 spike are present in the primary text as the quotations above. They were previously carried from secondary summaries; that caveat is retired."
+          }
         }
       ],
       "contested": [
@@ -243,18 +280,18 @@
         "weeklyTrainingLoadTarget (360) is itself unsourced, so the baseline_floor state inherits an unsourced denominator.",
         "Given the objections above, read this as a ramp-rate guard, not injury prediction. That is why the effect is one step down and not a stop."
       ],
-      "notes": "The only rule here whose quantity is externally defined and externally studied, and therefore the only one carrying a contested list. Citing Gabbett without citing Impellizzeri would misrepresent the state of the field, so both travel together. On verification: the publisher PDF was fetched but is not machine-readable as text, so the 0.8-1.3 band and the 1.5 spike figure came from secondary summaries. Treat them as unconfirmed against the original until someone reads the paper — that is what verificationStatus: numbers_from_secondary_sources means. Sessions carrying no training load are excluded from both sums."
+      "notes": "The only rule here whose quantity is externally defined and externally studied, and therefore the only one carrying a contested list. Citing Gabbett without citing Impellizzeri would misrepresent the state of the field, so both travel together. On verification (2026-08-07): the earlier publisher PDF was not machine-readable, so the figures had been taken from secondary summaries; the open-access deposit at PMC4789704 is readable and both figures are confirmed verbatim in the primary text. The contested entries below are still unread in full and are recorded from their published objections, not from our reading of them. Sessions carrying no training load are excluded from both sums."
     },
 
     {
       "ruleId": "EVD-R-007",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "status": "active",
       "title": "The first session back after a break is scaled down",
       "category": "recovery",
       "priority": 85,
       "basis": "external_metric",
-      "evidenceLevel": "systematic_review",
+      "evidenceLevel": "expert_consensus",
       "measuredQuantity": {
         "name": "days since last session, and percentage loss of chronic training load from its recent peak",
         "computedBy": "packages/training-load/src/trainingLoad.js",
@@ -268,20 +305,38 @@
       "effect": { "decision": "adjust", "intent": "ease_back_after_break", "intensityStepsDown": "1, or 2 when either severe threshold is met", "durationCap": "max(15, planned x 0.6) minutes" },
       "sources": [
         {
-          "citation": "Mujika I, Padilla S. Detraining: loss of training-induced physiological and performance adaptations. Part I: short term insufficient training stimulus / Part II: long term insufficient training stimulus. Sports Med. 2000;30(2):79-87 and 30(3):145-154.",
+          "citation": "Mujika I, Padilla S. Detraining: loss of training-induced physiological and performance adaptations. Part I: short term insufficient training stimulus. Sports Med. 2000;30(2):79-87.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10966148/",
+          "supports": "That a break under 4 weeks already costs aerobic capacity. Verbatim: \"a rapid decline in maximal oxygen uptake (VO2max) and blood volume\", and \"Ventilatory efficiency and endurance performance are also impaired.\"",
+          "doesNotSupport": "Any percentage, any number of days, and the values 42, 60 and 0.6. The abstract gives no figures at all; \"rapid\" is the whole of its quantification.",
+          "verificationStatus": "abstract_verified_full_text_paywalled",
+          "verification": {
+            "checkedOn": "2026-08-07",
+            "against": "PubMed record 10966148. Title, journal, year, volume, issue and pages confirmed; both quotations are in the published abstract. Full text is behind the publisher paywall and was not obtained.",
+            "outcome": "Direction confirmed, magnitude not. The figure \"roughly 4-7% VO2max within 2-3 weeks\" that this source previously carried is not in the abstract of either part and could not be traced to the primary text; it has been removed rather than restated."
+          }
+        },
+        {
+          "citation": "Mujika I, Padilla S. Detraining: loss of training-induced physiological and performance adaptations. Part II: long term insufficient training stimulus. Sports Med. 2000;30(3):145-154.",
           "url": "https://pubmed.ncbi.nlm.nih.gov/10999420/",
-          "supports": "That aerobic capacity declines progressively with training cessation — roughly 4-7% VO2max within 2-3 weeks, substantially more beyond 4 weeks — so a returning athlete should not resume at prior load, and the reduction should scale with the length of the break.",
-          "doesNotSupport": "The specific values 42 days, 60%, and 0.6.",
-          "verificationStatus": "numbers_from_secondary_sources"
+          "supports": "That the loss keeps growing past 4 weeks and recent gains go first. Verbatim: \"declines markedly but remains above control values during long term detraining, whereas recently acquired VO2max gains are completely lost.\" That scaling is why this rule has a severe tier.",
+          "doesNotSupport": "Any percentage or cut point. \"Markedly\" is the strongest quantitative word in the abstract.",
+          "verificationStatus": "abstract_verified_full_text_paywalled",
+          "verification": {
+            "checkedOn": "2026-08-07",
+            "against": "PubMed record 10999420. Title, journal, year, volume, issue and pages confirmed; the quotation is in the published abstract. Full text is behind the publisher paywall and was not obtained.",
+            "outcome": "The monotonic direction is confirmed from the primary abstract. Nothing numeric is."
+          }
         }
       ],
       "contested": [],
       "limitations": [
-        "42, 60 and 0.6 are our own choices. The literature supports a monotonic decline and a scaled return, not these cut points.",
+        "42, 60 and 0.6 are our own choices. The sources support the direction only; neither abstract contains a single number, so there is nothing in them for these cut points to be near or far from.",
         "The detraining literature measures VO2max. Our trigger measures modelled chronic training load — a proxy for training done, not for fitness retained.",
-        "0.6 sits inside the common 'half to two-thirds of prior volume' return guidance, which is practitioner convention rather than a trial result."
+        "0.6 sits inside the common 'half to two-thirds of prior volume' return guidance, which is practitioner convention rather than a trial result.",
+        "Both sources are narrative reviews read at abstract level only, which is why evidenceLevel is expert_consensus and not systematic_review."
       ],
-      "notes": "This rule exists because no recovery signal can see it. An athlete two months off reads rested: readiness high, muscle fatigue near zero, and ACWR at 0 — the safest possible value to EVD-R-006. Every other guard passes. Lost fitness therefore needs its own trigger rather than being inferred from recovery. On verification: the percentage figures came from review summaries, not the primary papers."
+      "notes": "This rule exists because no recovery signal can see it. An athlete two months off reads rested: readiness high, muscle fatigue near zero, and ACWR at 0 — the safest possible value to EVD-R-006. Every other guard passes. Lost fitness therefore needs its own trigger rather than being inferred from recovery. Provenance re-reviewed 2026-08-07: this rule previously claimed \"roughly 4-7% VO2max within 2-3 weeks, substantially more beyond 4 weeks\" and an evidenceLevel of systematic_review. Neither survived the check — the percentages are in neither abstract, the full texts are paywalled, and both papers are narrative reviews by two authors with no systematic search method described. Both claims were corrected downward. This library's vocabulary has no narrative_review level, so expert_consensus is the nearest honest rung; adding one is a schema change, not something to fake with the levels available. Retracting a claim is the expected outcome of a provenance review, not a failure of one."
     },
 
     {
