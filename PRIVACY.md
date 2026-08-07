@@ -18,11 +18,11 @@ puts into a tool call, which may include:
 - Recovery signals for the current day — sleep, heart rate variability, resting heart
   rate, stress, and vendor-computed composite scores such as readiness or Body Battery
 - Recent training — session type, duration, and training load
-- The session you already had scheduled, and your plan, when the caller holds one
+- The session you already had scheduled, and your plan, when your assistant is holding one
 - Context you state yourself, such as an injury or the equipment available to you
 
-We call these inputs *evidence*. Evidence is supplied per call, by the caller, and only
-what a given decision requires.
+We call these inputs *evidence*. Your assistant supplies it once per question, and only
+the part a given decision needs.
 
 ## How Evidra processes it
 
