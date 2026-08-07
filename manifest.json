@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "fitness-mcp",
   "display_name": "Evidra Fitness",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Turns the training evidence you already have into a decision about today's session.",
-  "long_description": "Evidra turns the evidence a caller already holds into a training decision — not advice invented from nothing, but a well-supported transition from the current training state to the next, grounded in the evidence submitted and the rules applied. All computation is performed on the server. The server does not fetch, store, or retain evidence, nor does it invoke or rely on any model of its own.",
+  "long_description": "Ask your assistant whether today's planned session still makes sense, and Evidra Fitness answers from your own recent training and whatever recovery readings you have: keep the session, ease it, swap a movement, or move it — with the reading and the rule behind the answer. It runs on your own machine. It fetches nothing on its own, keeps nothing once the answer is returned, and calls no AI model of its own. A reading nobody gave it is reported as missing rather than guessed at, and the confidence it reports drops to match.",
   "icon": "icon.png",
   "author": {
     "name": "Henry Yeh",
@@ -44,11 +44,11 @@
     },
     {
       "name": "evidra_decide_session",
-      "description": "Decide what today's scheduled session should become, returning from -> to with the evidence behind the change."
+      "description": "Decide what today's scheduled session should become — keep it, ease it, or change it — with the evidence behind the change."
     },
     {
       "name": "evidra_decide_exercise_substitution",
-      "description": "Decide what a movement the user cannot do today should be replaced with, returning from -> to with contraindications hard-filtered."
+      "description": "Decide what to do instead of a movement the user cannot do today, with anything their injuries rule out filtered out first."
     },
     {
       "name": "evidra_generate_plan",
@@ -60,7 +60,7 @@
     },
     {
       "name": "evidra_commit_adjust_plan",
-      "description": "Compute the plan a previewed adjustment produces, once the user has accepted the preview. The caller keeps the result; this server stores nothing."
+      "description": "Compute the plan a previewed adjustment produces, once the user has accepted the preview. Your assistant keeps the result; this extension stores nothing."
     }
   ],
   "compatibility": {
