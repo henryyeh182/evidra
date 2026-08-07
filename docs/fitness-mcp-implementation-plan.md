@@ -57,7 +57,7 @@ Phase 2 也不是 remote 的續集。
 
 | 形態 | 是什麼 | 現況 | 對應本文件哪裡 |
 |---|---|---|---|
-| **Form 1** desktop extension（MCPB） | 跑在使用者自己的電腦上，stdio；**第一個可用形態** | ✅ v0.3.7 可裝，registry 已送出、MCPB 表單審查中 | 「通路與上架」順位 1／3 |
+| **Form 1** desktop extension（MCPB） | 跑在使用者自己的電腦上，stdio；**第一個可用形態** | ✅ v0.3.7 可裝，registry 已上架、MCPB 表單審查中 | 「通路與上架」順位 1／3 |
 | **Form 2** remote MCP server | 跑在我們的機器上；**手機唯一可行的路，也是商業化形態**（計價暫定 per-MAU） | 🔴 NO-GO（現在），四個缺口 | 「remote 的四個缺口」、下一步順位 9 |
 | **Form 3** user-controlled deployment | 整組搬進使用者／機構控制的環境；**高隱私與企業形態**，唯一能保存個人縱向歷史的形態 | 🔴 一行程式都沒有 | CLAUDE.md 的 Phase 2；本文件尚無工作包 |
 
@@ -97,7 +97,7 @@ LLM 負責理解使用者與表達結果；決策本身必須由 Evidra 的 evid
 
 | 順位 | 通路 | 判定 |
 |---|---|---|
-| 1 | 官方 MCP registry | ✅ **已送出**（2026-08-07，`io.github.henryyeh182/evidra` v0.3.7） |
+| 1 | 官方 MCP registry | ✅ **已上架**（`io.github.henryyeh182/evidra` v0.3.7，`status: active`／`isLatest: true`；registry 無審查流程，publish 即生效） |
 | 2 | PulseMCP | 🟢 隨順位 1 自動抓取，或使用者自行填表 |
 | 3 | Anthropic MCPB 表單 | ✅ **已送出，審查中**（2026-08-07，閉源） |
 | 4 | Smithery（Local MCPB） | 🟡 低優先，未做 |
