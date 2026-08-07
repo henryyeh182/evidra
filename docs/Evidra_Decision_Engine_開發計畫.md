@@ -6,6 +6,12 @@
 > **不要照本檔開工**——其中的定價分級、IP 保護、新增 4 個 tool、Cloud 排序四項
 > 與已定案的決策衝突，處置理由在 §4.6.5 與 §0.0.2。
 > 本檔提到的 tool 名稱是 v0.2.0 改名前的舊名（現為 `evidra_*`）。
+>
+> **仍保留的價值**：本檔是 Evidra 護城河與定位語言的來源之一，尤其是
+> **Decision Infrastructure**、**Rule Library + Decision Graph + Evidence Model**、
+> 以及「LLM 只做理解與表達，決策由 Evidra 決定」這三件事。這些已在
+> [fitness-mcp-implementation-plan.md](fitness-mcp-implementation-plan.md) 的「護城河正本」收斂；
+> 開工順序仍以那份正本為準。
 
 > 整合來源：AthleteData vs Evidra 定位分析、Exercise Science Decision Infrastructure、Evidence Governance（證據治理）、Decision Science Architecture（決策科學架構）、`.mcpb` 本機部署策略調整
 > 對應現況：Evidra 既有 MCP tools — `assess_fitness_state`、`decide_session`、`generate_plan`、`decide_exercise_substitution`、`preview_adjust_plan`、`commit_adjust_plan`

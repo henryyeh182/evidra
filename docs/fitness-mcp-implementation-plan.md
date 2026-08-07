@@ -30,7 +30,10 @@
 - **來源 parser：6 家**（Apple Health／Garmin／Google Health／Strava／Oura／WHOOP，
   Strava 另有 API 與 bulk export 兩種方言）。schema registry 共宣告 6 個平台（8 種方言）。
   **前四家是照真實匯出檔寫的；Oura 與 WHOOP 是照各家自己的 OpenAPI 文件寫的
-  （2026-08-07），還沒對過任何一份真實回應**——見技術債 C13
+  （2026-08-07），還沒對過任何一份真實回應**——見技術債 C13。
+  Garmin 已消化 2026-08-06 交接檔提到的 GDPR 匯出差異：Health Status HRV 已補 parser，
+  `hrvWeeklyAverage` sentinel 仍不映射；剩下的來源成熟度缺口不是 Garmin 欄位路徑，
+  而是真實 AI host / 第三方 MCP server 傳進來的 evidence 形狀（C6）
 - **transport**：stdio ✅ · Streamable HTTP ✅（僅 `localhost:8787`，未公開部署）
 - **OAuth**：resource server 已實作（RFC 9728 metadata、audience 驗證、issuer 白名單、
   scope 檢查）；**簽章驗證器是空插槽、`http.js` 進入點沒接線、沒有 authorization
@@ -41,9 +44,27 @@
 
 ### 護城河缺口
 
+**護城河正本（從 `Evidra_Decision_Engine_開發計畫.md` 保留）**：
+Evidra 的護城河不是 MCP server、不是資料庫、不是動作內容庫，也不是「比 AI 更會講健身」。
+它是 **Rule Library + Decision Graph + Evidence Model** 組成的 Decision Infrastructure：
+把使用者交出的 evidence 轉成可解釋、可重現、vendor-neutral 的訓練決策。
+
+| 護城河 | 現在對應 | 下一步怎麼加深 |
+|---|---|---|
+| **Evidence Model** | `packages/evidence`、source schema、6 家 parser、coverage／freshness | 補 C8/R7 的 evidence basis；驗 C6 真實 host 傳入形狀；補 C13 Oura／WHOOP 真實回應 |
+| **Rule Library** | `packages/rules` v1.1.0，8 條 `decide_session` 規則，含出處、限制與仲裁欄位 | 做 R3/R5 schema guardrails；做 R2/C12 injury rules；收編 C9/C10 其他模組門檻 |
+| **Decision Graph** | `decide_session` 的 rule arbitration、knowledge graph 的替代／進退階不變量、planning patch validator | 把 injury、substitution、plan generation 的決策路徑接上 rule id 與 `decisionBasis`，讓多 tool 都能 trace |
+
+**定位句**：A deterministic exercise-science decision engine that converts evidence into explainable training decisions.
+LLM 負責理解使用者與表達結果；決策本身必須由 Evidra 的 evidence、rules、graph 算出來。
+這就是它和「另一個 AI Coach」的分界。
+
+**不能從開發計畫照搬的部分**：商業分級、Rule Package 自動更新、IP 加密／機器指紋、
+四個新 tool、Cloud 排序仍以本文件「已定案方向」與 history §4.6 的處置為準。
+
 | # | 能力 | 現況 | 缺口 |
 |---|---|---|---|
-| 1 | Semantic Fitness Layer | 🟡 | 6/6 平台有 parser；四家的方言等價已在真實匯出檔上驗證，Oura／WHOOP 只在 spec 與模擬文件上 |
+| 1 | Semantic Fitness Layer | 🟡 | 6/6 平台有 parser；Apple Health／Garmin／Google Health／Strava 已用真實匯出或真實 API 匯出形狀驗證，Oura／WHOOP 只在 spec 與模擬文件上 |
 | 2 | Fitness Intelligence Engine | 🟢 | 確定性五層決策；ATL/CTL/TSB ＋ detraining 軸線 ＋ 個人基線 |
 | 3 | Fitness Knowledge Graph | 🟢 | 889 節點 / 5,785 邊，進退階與訓練目標皆有不變量把關 |
 | 4 | Feedback Learning | ✅ 已結（設計如此） | 三元組由呼叫端保存，hosted 不留 |
@@ -102,6 +123,33 @@
 上架三步（registry／MCPB／release）與 Rule Schema 都已完成，**沒有一件事擋著上架**。
 但 2026-08-07 對 `開發計畫` §3–§5 做過一次逐節 review，產出一組**可直接開工**的項目，
 列在第 0 節；其餘照舊分五類。
+
+**交接檔對照（2026-08-06）**：本次交接以
+`~/dev/claude-brain/journal/2026-08-06-evidra-mbp-rd.md` 為準。那份裡的上架待辦、
+Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google Health API v4
+仍只停在 `scripts/`，見第 5 節。
+
+### 開工順序（目前建議）
+
+這裡只排「接下來陸續完成什麼」，不重寫 history 的決策理由。原則是：
+**先補可驗證的不變量，再補規則覆蓋，再補來源成熟度；remote 仍等使用者決定後才開工。**
+
+| 順位 | 工作包 | 包含項目 | 為什麼排這裡 | 狀態 |
+|---|---|---|---|---|
+| **1** | Rule schema guardrails | R5 `verificationStatus` enum／`sources` 強制帶狀態；R3 證據等級拆成「研究設計」與「建議強度」兩軸 | 這兩項是規則庫的地基。先把資料形狀鎖住，後面加傷病規則或收編 C9 數字才不會繼續累積無法稽核的欄位 | 可開工 |
+| **2** | Injury rules 入庫 | R2／C12：把現有 injury restriction、contraindication filter 變成有 rule id、category、priority、來源與限制的規則 | `injury` 是仲裁矩陣最高類別，但現況規則庫裡沒有 injury 規則；這是 rule coverage 最大洞 | 可開工 |
+| **3** | 收編非 `decide_session` 門檻 | C9／C10：ATL/CTL、TSB、detraining、baseline fallback、staleness、phase multiplier、return ramp 的數字進治理；先處理兩套 detraining 衝突 | 這決定 R1 能不能做。沒有規則與來源，其他 tool 就算補 `decisionBasis` 也無 rule 可 trace | 可開工，但可能需要撤回或降級沒有出處的數字 |
+| **4** | 擴大 decision trace | R1：視第 2–3 項結果，決定要不要把 `decisionBasis` 補到另外五個 tool | 對外已誠實縮回「只有 `evidra_decide_session` 有」，所以這是能力擴充，不是修誠信缺口 | 等第 2–3 項 |
+| **5** | Evidence quality 形狀 | R7／C8：用既有 `*Basis` 類 enum 表示數字站在哪裡，不做 `quality: 0.94` 純量 | 這是 Semantic Fitness Layer 下一個真缺口，但要避開發明權重去影響 confidence | 可設計，實作需小心契約 |
+| **6** | Source maturity | C13：拿 Oura／WHOOP 去識別化真實回應驗 parser；Google Health API v4 決定是否升格正式 connector；C6 對照 AI host／第三方 MCP server 傳入形狀 | 六家 parser 已有，下一步不是再加家數，是確認真實流程裡進來的形狀不會偏 | Oura／WHOOP 需要真實回應；Google API 需使用者決定是否升格 |
+| **7** | 小但硬的技術債 | C1 `maxSampleGapSeconds = 30` 出處或改成 caller 提供；C2 移除 `trainingLoad ?? 分鐘數` 編造負荷 | 這些不擋上架，但會直接影響「不編造」承諾 | 可開工 |
+| **8** | 產品裁決 | A4 tool 改名、A5 理由由引擎寫或交給 Claude、A6 商業分級、A8 local-first vs remote、B2 宣言字句 | 這些不是工程可自行決定；決定後才會改 schema、文案、部署路線 | 等使用者 |
+| **9** | Remote path | A1 authorization server 選型 → OAuth 三缺口 → HTTPS 公開部署 → privacy policy 改寫 → remote 上架清單 | 目前 remote 是 NO-GO（現在）。一旦 A8/A1 決定推進，這條才變成主線 | 暫不開工 |
+| **10** | Protocol dual-era | Phase 9：`2026-07-28` stateless dual-era | 不急；唯一前置影響是 authorization server 選型要支援 CIMD | 暫不開工 |
+
+**下一個最小可完成版本**：做完順位 1–3，應該得到 Rule Library v1.2.0：
+規則 schema 更硬、injury 類別不再空、`decide_session` 以外的關鍵門檻開始被治理。
+之後再決定是否把 `decisionBasis` 擴到五個其他 tool。
 
 ### 0. Rule Library 治理（2026-08-07 review 產出）
 
@@ -184,8 +232,10 @@
 Oura／WHOOP 照兩家自己的 OpenAPI 寫，尚未對過任何真實回應——見技術債 C13，
 關掉它只需要一份去識別化的真實回應。
 
-Google Health Connect（API 方言，非 Takeout）目前停在 `scripts/`，是否升格為正式
-connector 未定案。
+Google Health API v4（非 Takeout；Google Health API 匯出／轉換腳本）目前停在 `scripts/`
+的 `import:google-health-api`，是否升格為正式 connector 未定案。交接檔裡的剩餘問題仍是
+`dailyRollUp` steps、sleep filter 成員名、是否把 API 方言納入 schema registry／scenario／測試；
+出貨前還要把目前測試用 Web client + 手貼 authorization code 路徑改成 Desktop app client + loopback。
 
 ### 6. Phase 9 協定升級（不急，非主軸）
 
