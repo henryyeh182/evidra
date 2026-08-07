@@ -74,6 +74,42 @@
             ]
           }
         },
+        "vendorAssessments": {
+          "type": "array",
+          "description": "Composite scores the device maker computed, sent as they stand rather than recomputed: Garmin Body Battery, Oura or Whoop readiness, Garmin recovery time. Send these when the source has them — they carry more of the athlete's state than any raw signal, because the vendor integrated sensors this server never sees, and the recovery score weights them above the raw readings accordingly. A source that publishes one and does not send it here is decided about on less than it had.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "vendor_readiness",
+                  "body_battery",
+                  "recovery_time_minutes",
+                  "vendor_acute_load"
+                ],
+                "description": "Canonical and case-sensitive. vendor_readiness covers any vendor's own readiness or recovery score (Oura Readiness, Whoop Recovery); body_battery is Garmin's."
+              },
+              "value": {
+                "type": "number",
+                "description": "As the vendor reports it; the 0-100 scores are not rescaled."
+              },
+              "recordedAt": {
+                "type": "string",
+                "description": "ISO 8601 timestamp."
+              },
+              "source": {
+                "type": "string",
+                "description": "e.g. garmin | oura | whoop."
+              }
+            },
+            "required": [
+              "type",
+              "value",
+              "recordedAt"
+            ]
+          }
+        },
         "workouts": {
           "type": "array",
           "description": "Completed sessions, usually the last 7-28 days.",

@@ -20,7 +20,8 @@ import {
 import {
   evidenceToUserContext,
   describeEvidence,
-  EVIDENCE_METRIC_TYPES
+  EVIDENCE_METRIC_TYPES,
+  EVIDENCE_VENDOR_ASSESSMENT_TYPES
 } from "../../../packages/evidence/src/index.js";
 import { isCalendarDay, todayInTimezone } from "../../../packages/domain/src/dates.js";
 import {
@@ -160,6 +161,12 @@ function invalidEvidence(toolName, problem) {
         recordedAt: "ISO 8601 timestamp",
         source: "optional, e.g. garmin | strava | apple_health"
       },
+      "evidence.vendorAssessments[]": {
+        type: `one of: ${EVIDENCE_VENDOR_ASSESSMENT_TYPES.join(", ")}`,
+        value: "number, as the vendor reports it",
+        recordedAt: "ISO 8601 timestamp",
+        source: "optional, e.g. garmin | oura | whoop"
+      },
       "evidence.workouts[]": {
         startedAt: "ISO 8601 timestamp — required",
         durationMinutes: "number — required",
@@ -169,7 +176,7 @@ function invalidEvidence(toolName, problem) {
       }
     },
     note:
-      "Metric names are canonical and case-sensitive: sleepDurationHours is not sleep_duration_hours. Send what you actually have; omitted signals come back reported as missing."
+      "Metric names are canonical and case-sensitive: sleepDurationHours is not sleep_duration_hours. A vendor composite (Body Battery, Oura or Whoop readiness) belongs in vendorAssessments, not healthMetrics, and is worth sending — the recovery score weights it above the raw signals. Send what you actually have; omitted signals come back reported as missing."
   });
 }
 

@@ -5,7 +5,8 @@ export {
   assertValidEvidence,
   evidenceToUserContext,
   describeEvidence,
-  EVIDENCE_METRIC_TYPES
+  EVIDENCE_METRIC_TYPES,
+  EVIDENCE_VENDOR_ASSESSMENT_TYPES
 } from "./model.js";
 export {
   CANONICAL_SIGNALS,

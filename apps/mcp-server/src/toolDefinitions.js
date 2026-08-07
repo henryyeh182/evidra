@@ -1,7 +1,10 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
-import { EVIDENCE_METRIC_TYPES } from "../../../packages/evidence/src/index.js";
+import {
+  EVIDENCE_METRIC_TYPES,
+  EVIDENCE_VENDOR_ASSESSMENT_TYPES
+} from "../../../packages/evidence/src/index.js";
 
 import { outputSchemas } from "./outputSchemas.js";
 
@@ -52,6 +55,26 @@ const EVIDENCE_INPUT = {
           value: { type: "number" },
           recordedAt: { type: "string", description: "ISO 8601 timestamp." },
           source: { type: "string", description: "Where the reading came from, e.g. garmin | strava | apple_health." }
+        },
+        required: ["type", "value", "recordedAt"]
+      }
+    },
+    vendorAssessments: {
+      type: "array",
+      description:
+        "Composite scores the device maker computed, sent as they stand rather than recomputed: Garmin Body Battery, Oura or Whoop readiness, Garmin recovery time. Send these when the source has them — they carry more of the athlete's state than any raw signal, because the vendor integrated sensors this server never sees, and the recovery score weights them above the raw readings accordingly. A source that publishes one and does not send it here is decided about on less than it had.",
+      items: {
+        type: "object",
+        properties: {
+          type: {
+            type: "string",
+            enum: [...EVIDENCE_VENDOR_ASSESSMENT_TYPES],
+            description:
+              "Canonical and case-sensitive. vendor_readiness covers any vendor's own readiness or recovery score (Oura Readiness, Whoop Recovery); body_battery is Garmin's."
+          },
+          value: { type: "number", description: "As the vendor reports it; the 0-100 scores are not rescaled." },
+          recordedAt: { type: "string", description: "ISO 8601 timestamp." },
+          source: { type: "string", description: "e.g. garmin | oura | whoop." }
         },
         required: ["type", "value", "recordedAt"]
       }

@@ -71,11 +71,32 @@ const METRIC_TYPES = new Set([
 ]);
 
 /**
+ * The vendor composites, kept apart from the raw metrics because they are a
+ * different kind of claim: a score the device maker computed from signals we
+ * cannot see, which is why the recovery score weights them above anything we
+ * derive ourselves.
+ *
+ * They were previously typed only in a JSDoc comment, which meant nothing
+ * checked them. An entry reading `bodyBattery` instead of `body_battery` was
+ * accepted, ignored by the engine, and reported as a missing signal — the
+ * caller's strongest reading silently became an absent one. That is the exact
+ * failure the metric-type check above exists to prevent.
+ */
+const VENDOR_ASSESSMENT_TYPES = new Set([
+  "vendor_readiness",
+  "body_battery",
+  "recovery_time_minutes",
+  "vendor_acute_load"
+]);
+
+/**
  * The accepted metric names, exported so a rejection can hand back the list.
  * A caller told only that `sleepDurationHours` is unknown has to guess what is
  * known; a caller shown the six names can correct itself in one turn.
  */
 export const EVIDENCE_METRIC_TYPES = Object.freeze([...METRIC_TYPES]);
+
+export const EVIDENCE_VENDOR_ASSESSMENT_TYPES = Object.freeze([...VENDOR_ASSESSMENT_TYPES]);
 
 export function assertValidEvidence(evidence) {
   if (!evidence || typeof evidence !== "object") {
@@ -97,6 +118,14 @@ export function assertValidEvidence(evidence) {
   for (const workout of evidence.workouts || []) {
     if (!workout.startedAt || typeof workout.durationMinutes !== "number") {
       throw new Error("Evidence workout needs startedAt and numeric durationMinutes.");
+    }
+  }
+  for (const assessment of evidence.vendorAssessments || []) {
+    if (!VENDOR_ASSESSMENT_TYPES.has(assessment.type)) {
+      throw new Error(`Unknown evidence vendor assessment type: ${assessment.type}`);
+    }
+    if (typeof assessment.value !== "number" || !assessment.recordedAt) {
+      throw new Error(`Evidence vendor assessment ${assessment.type} needs a numeric value and recordedAt.`);
     }
   }
   return true;

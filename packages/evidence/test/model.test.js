@@ -4,7 +4,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { assertValidEvidence, evidenceToUserContext, describeEvidence } from "../src/index.js";
+import {
+  assertValidEvidence,
+  evidenceToUserContext,
+  describeEvidence,
+  EVIDENCE_VENDOR_ASSESSMENT_TYPES
+} from "../src/index.js";
 
 const evidence = {
   profile: { timezone: "Asia/Taipei", fitnessLevel: "advanced" },
@@ -63,6 +68,42 @@ test("unknown metric types are rejected rather than silently ignored", () => {
     () => assertValidEvidence({ healthMetrics: [{ type: "vo2max", value: 50, recordedAt: "2026-07-27" }] }),
     /Unknown evidence metric type/
   );
+});
+
+// The vendor composite is the reading the recovery score weights highest, and
+// it was the one field nothing validated. A misspelt type passed, the engine
+// found no composite, and the caller's strongest signal was reported back as
+// missing — a wrong answer that looked like a well-covered one.
+test("an unknown vendor assessment type is rejected rather than silently ignored", () => {
+  assert.throws(
+    () =>
+      assertValidEvidence({
+        vendorAssessments: [{ type: "bodyBattery", value: 24, recordedAt: "2026-08-06T06:00:00Z" }]
+      }),
+    /Unknown evidence vendor assessment type/
+  );
+});
+
+test("a vendor assessment without a value or timestamp is rejected", () => {
+  assert.throws(
+    () => assertValidEvidence({ vendorAssessments: [{ type: "body_battery", value: "low", recordedAt: "2026-08-06" }] }),
+    /numeric value/
+  );
+});
+
+test("the vendor assessment vocabulary is the one the engine reads", () => {
+  // Both halves matter: a type the schema advertises but the engine ignores is
+  // a promise the caller cannot collect on.
+  assert.deepEqual(
+    [...EVIDENCE_VENDOR_ASSESSMENT_TYPES],
+    ["vendor_readiness", "body_battery", "recovery_time_minutes", "vendor_acute_load"]
+  );
+  for (const type of EVIDENCE_VENDOR_ASSESSMENT_TYPES) {
+    assert.doesNotThrow(
+      () => assertValidEvidence({ vendorAssessments: [{ type, value: 50, recordedAt: "2026-08-06T06:00:00Z" }] }),
+      `${type} is advertised but rejected`
+    );
+  }
 });
 
 test("a metric without a value or timestamp is rejected", () => {
