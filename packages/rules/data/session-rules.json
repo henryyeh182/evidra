@@ -80,7 +80,7 @@
   "arbitrationPolicy": {
     "id": "category_then_priority",
     "description": "Which rule the decision is attributed to. Rules sort by category rank ascending, then priority descending, then ruleId. The first is the governing rule.",
-    "note": "Every rule in this library version is in the recovery category, so this policy does not yet arbitrate between categories. It is implemented now so that adding the first injury or illness rule does not also require inventing the ordering under time pressure."
+    "note": "The full ordering is implemented ahead of the rules that will need it, so that adding the first injury or illness rule does not also require inventing the ordering under time pressure. Which categories are currently populated is not restated here: it is derivable by counting `category` across `rules`, and an earlier version of this note asserted a count that a later rule made false. Prose in this file states design intent; the data states the facts."
   },
 
   "combinationPolicy": {

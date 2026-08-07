@@ -10,7 +10,7 @@ export {
   describeRule
 } from "./library.js";
 
-export { arbitrate, combineIntensitySteps, getPolicies } from "./arbitrate.js";
+export { arbitrate, combineIntensitySteps, getPolicies, describePolicies } from "./arbitrate.js";
 
 export {
   assertValidRuleLibrary,
