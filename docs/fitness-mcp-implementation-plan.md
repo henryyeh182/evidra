@@ -29,16 +29,18 @@
 
 | 順位 | 通路 | 性質 | 還缺什麼 | 誰能做 | 判定 |
 |---|---|---|---|---|---|
-| **1** | **官方 MCP registry** | 開發者 discovery | 一次 `mcp-publisher` 登入（GitHub OAuth）。`server.json` ✅ 已寫、v0.2.0 的 sha 已對過 | **只有使用者**（Claude 不能代登） | 🟢 **GO** |
-| **2** | **PulseMCP** | 開發者 discovery | **零**。發完順位 1 之後它每天抓、每週處理；不想等就填表單（只要一個 URL） | 自動／使用者填表 | 🟢 **GO**（與順位 1 綁在一起，不是獨立工作） |
-| **3** | **Anthropic MCPB 表單** | **真通路**（Claude Desktop 使用者） | `manifest.json` 的 `author.url`（可現在補）＋ GitHub Link 填哪個 repo（綁 **G/N-1**） | 補欄位＝Claude；送表單＋在 Claude 裡跑 custom connector＝使用者 | 🟢 **GO，但先答 G/N-1** |
+| **1** | **官方 MCP registry** | 開發者 discovery | **已送出**（2026-08-07，`mcp-publisher` 登入完成）。`server.json` 對應 **v0.3.7** 的 sha 已對過 | **只有使用者**（Claude 不能代登） | ✅ **已送出** |
+| **2** | **PulseMCP** | 開發者 discovery | **零**。順位 1 已送出（2026-08-07），它每天抓、每週處理；不想等就填表單（只要一個 URL） | 自動／使用者填表 | 🟢 **GO**（與順位 1 綁在一起，不是獨立工作） |
+| **3** | **Anthropic MCPB 表單** | **真通路**（Claude Desktop 使用者） | **已送出**（2026-08-07，閉源，依 **G/N-1** 定案）。等待審查結果 | 補欄位＝Claude；送表單＋在 Claude 裡跑 custom connector＝使用者 | ✅ **已送出，審查中** |
 | **4** | **Smithery（Local MCPB 路徑）** | 開發者 discovery | config schema ＋ server page metadata | Claude 可備妥，使用者發布 | 🟡 **GO（低優先）**——尚未查證 #1（會不會從官方 registry 自動抓）未解，可能白做一次 |
 | **5** | **mcp.so 免費送審** | 開發者 discovery | 一個表單 | 使用者 | 🟡 順手做。**$39 刊登：🔴 NO-GO**（受眾自承是開發者，我們付錢買曝光且無分潤） |
 | **6** | **Anthropic remote portal** | **真通路**（所有 Claude 介面，含手機） | Team 帳號 ＋ authorization server ＋ HTTPS 公開部署 ＋ 隱私政策改寫，**四件** | — | 🔴 **NO-GO（現在）**——見 0.0.3 |
 | **7** | **ChatGPT App Directory／Health** | **真通路** | 未查證 #6 未解 | — | 🔴 **NO-GO（現在）**：**平行查證，不平行開工** |
 
-**順位 1–3 加起來的工程量是「補一個 `author.url`」。** 其餘全是使用者帳號動作與一個授權決定
-——**這就是「go/no-go 先完成」要處理的東西：擋住上架的不是程式。**
+**順位 1–3 已於 2026-08-07 全數送出**（官方 registry、MCPB 表單皆已提交，release **v0.3.7** 已發布）。
+其餘全是使用者帳號動作與一個授權決定——**這就是「go/no-go 先完成」要處理的東西：擋住上架的不是程式。**
+**下一步不是等審查結果，是 G/N-2 的 Rule Schema**（見下）——它排在「順位 1–3 的上架動作」之後，
+而那個之後現在已經到了。
 
 ### 0.0.2 三個 Go／No-Go 決定（**2026-08-06 使用者已定案**）
 
