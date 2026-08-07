@@ -203,6 +203,37 @@
   .finding p { font-size: 13.5px; color: var(--text-2); line-height: 1.55; }
 
   .footnote { margin-top: 56px; font-size: 12.5px; color: var(--text-3); line-height: 1.6; }
+
+  /* ---------- document role ---------- */
+  .docrole {
+    display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline;
+    font-family: var(--mono); font-size: 11px; color: var(--text-3);
+    border: 1px solid var(--line); border-radius: 5px;
+    padding: 11px 15px; background: var(--surface); margin-bottom: 40px;
+  }
+  .docrole b { color: var(--text); font-weight: 620; }
+
+  /* ---------- deployment forms ---------- */
+  .forms { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .form { border: 1px solid var(--line); border-radius: 6px; padding: 20px 22px; background: var(--surface); }
+  .form.now { border-color: var(--mint-dim); background: var(--mint-soft); }
+  .form .stage {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--text-3); margin-bottom: 10px;
+  }
+  .form.now .stage { color: var(--mint); }
+  .form h4 { font-size: 16.5px; font-weight: 640; margin-bottom: 4px; }
+  .form .who { font-size: 12.5px; color: var(--text-3); margin-bottom: 12px; }
+  .form p { font-size: 13.5px; color: var(--text-2); line-height: 1.55; margin-bottom: 12px; }
+  .form p strong { color: var(--text); font-weight: 600; }
+  .form .status {
+    font-family: var(--mono); font-size: 11.5px; line-height: 1.55;
+    padding-top: 11px; border-top: 1px solid var(--line-2); color: var(--text-2);
+  }
+  .form .status b { font-weight: 620; }
+  .form .status.ok b { color: var(--mint); }
+  .form .status.wait b { color: var(--warn); }
+  .form .status.none b { color: var(--stop); }
 </style>
 
 <div class="wrap">
@@ -229,6 +260,12 @@
         <div class="brand-name">Evidra</div>
         <div class="brand-sub">Deterministic Fitness Intelligence</div>
       </div>
+    </div>
+
+    <div class="docrole">
+      <span><b>對外敘事正本</b>　stakeholder / marketing narrative</span>
+      <span>v0.3.7 · 2026-08-07</span>
+      <span>工程 roadmap 在 implementation plan，不在這裡</span>
     </div>
 
     <h1>任何模型都能給你<em>建議</em>。<br>只有握有證據的系統能給<em>決策</em>。</h1>
@@ -272,45 +309,45 @@
     <p class="section-label">Before The Chain</p>
     <h2>證據怎麼到 AI 手上</h2>
     <p class="lede">
-      實際情境是這樣開始的：使用者在手機上打開 Claude，說「今天該練什麼」。
-      決策鏈要能開始，證據得先進到那句對話裡——而這段路上的每一步，
-      <strong>不是每一步都由我們走</strong>。誰負責哪一步，決定了這個產品什麼時候能上手機。
+      決策鏈要能開始，證據得先進到「今天該練什麼」那句對話裡——而這段路上的每一步，
+      <strong>不是每一步都由我們走</strong>。而且同一條路在桌機與手機上長得不一樣：
+      <strong>桌機今天就走得通，手機還沒有</strong>。誰負責哪一步，決定了哪一種形態先能出貨。
     </p>
     <div class="scroller">
       <table>
         <thead>
-          <tr><th>步驟</th><th>做的人</th><th>現況</th></tr>
+          <tr><th>步驟</th><th>做的人</th><th>桌機（今天）</th><th>手機</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td class="sig-name">在手機上開 Claude 對話</td>
+            <td class="sig-name">開 Claude 對話</td>
             <td>Anthropic</td>
+            <td class="yes">✓ 已存在</td>
             <td class="yes">✓ 已存在</td>
           </tr>
           <tr>
             <td class="sig-name">Claude 連上 Evidra</td>
-            <td><b>我們</b>　遠端 MCP server ＋ OAuth 2.1</td>
-            <td class="no">— 未完成</td>
+            <td><b>我們</b></td>
+            <td class="yes">✓ desktop extension v0.3.7（stdio）</td>
+            <td class="no">— 手機只支援 remote，尚未完成</td>
           </tr>
           <tr>
-            <td class="sig-name">取得 Apple Health 資料</td>
-            <td>Claude app 的 HealthKit 權限</td>
-            <td class="no">— 不在我們手上</td>
-          </tr>
-          <tr>
-            <td class="sig-name">取得 Garmin Connect 資料</td>
-            <td>Garmin OAuth，授權對象是 host</td>
+            <td class="sig-name">取得 Apple Health／Garmin 資料</td>
+            <td>host app 的權限與各家 OAuth</td>
+            <td class="no">— 不在我們手上（今天走匯出檔或口述）</td>
             <td class="no">— 不在我們手上</td>
           </tr>
           <tr>
             <td class="sig-name">證據以參數進入 tool call</td>
             <td><b>我們</b>　Fitness Evidence Model</td>
             <td class="yes">✓ 已完成</td>
+            <td class="yes">✓ 同一份實作</td>
           </tr>
           <tr>
             <td class="sig-name">五層決策</td>
             <td><b>我們</b>　Fitness Decision Engine</td>
             <td class="yes">✓ 已完成，見下</td>
+            <td class="yes">✓ 同一份實作</td>
           </tr>
         </tbody>
       </table>
@@ -322,10 +359,75 @@
       <strong>不需要靠承諾來保證，架構上就做不到</strong>。
     </p>
     <p class="note warn">
-      中間那三步全是紅的，而且只有第一步是我們做得完的。
-      OAuth 做好，Apple Health 與 Garmin 的取用也不會自動出現——
+      第三列<strong>兩欄都是紅的，而且沒有一欄是我們做得完的</strong>。
+      remote 做好，Apple Health 與 Garmin 的取用也不會跟著出現——
       <strong>手機情境能不能成立，有一半取決於 host 支援到哪裡。</strong>
       這一段之所以要寫進來，是為了不讓「等 OAuth 做完就好了」變成一句誤導人的話。
+      今天走得通的證據來源是匯出檔與使用者自己說的話，那也是兩種合法的證據。
+    </p>
+  </section>
+
+  <section class="spine">
+    <p class="section-label">Three Forms</p>
+    <h2>同一顆引擎，三種形態</h2>
+    <p class="lede">
+      底下的決策鏈在三種形態裡是<strong>同一份實作</strong>，差別只在它跑在誰的機器上、
+      證據怎麼進來、誰付錢。<strong>這不是三個階段，是三種使用者處境</strong>——
+      remote 上線不會取代 desktop extension，Phase 2 也不是 remote 的續集。
+    </p>
+
+    <div class="forms">
+      <div class="form now">
+        <div class="stage">Form 1 — 第一個可用形態</div>
+        <h4>Desktop extension（MCPB）</h4>
+        <div class="who">跑在使用者自己的電腦上 · v0.3.7</div>
+        <p>
+          <strong>今天就能裝的那一個。</strong>使用者在 Claude Desktop 安裝一顆
+          <code>.mcpb</code>，走 stdio，整個決策計算發生在他自己的機器上。
+          證據來自他手上的匯出檔，或他自己說的話——由 Claude 整理成參數傳進來。
+        </p>
+        <p class="status ok">
+          <b>✓ 可用</b><br>
+          已上架官方 MCP registry；Anthropic MCPB 表單已送出，審查中
+        </p>
+      </div>
+
+      <div class="form">
+        <div class="stage">Form 2 — 商業化形態</div>
+        <h4>Remote MCP server</h4>
+        <div class="who">跑在我們的機器上 · 手機唯一可行的路</div>
+        <p>
+          手機上的 Claude <strong>只連得到 remote</strong>，所以「在手機上問今天該練什麼」
+          完全卡在這個形態。它也是計價會發生的地方（暫定按月活躍使用者計）。
+          <strong>證據一樣不留</strong>——hosted 無狀態是這個形態的硬條件，不是可交換的設計選項。
+        </p>
+        <p class="status wait">
+          <b>— 未完成，目前 NO-GO</b><br>
+          缺 authorization server · OAuth 簽章驗證 · HTTPS 公開部署 · 隱私政策改寫
+        </p>
+      </div>
+
+      <div class="form">
+        <div class="stage">Form 3 — 高隱私／企業形態</div>
+        <h4>User-controlled deployment</h4>
+        <div class="who">跑在使用者或機構自己控制的環境</div>
+        <p>
+          connector、證據模型、決策引擎與持久層整組搬進對方控制的環境，
+          Evidra 變成本機資料層。<strong>這是唯一能保存個人縱向歷史的形態</strong>——
+          因為那份資料從頭到尾沒有離開他。醫療與企業要的是這一個，
+          <strong>核心宗旨要的也是這一個</strong>。
+        </p>
+        <p class="status none">
+          <b>— 一行程式都沒有</b><br>
+          方向已定，尚未開工
+        </p>
+      </div>
+    </div>
+
+    <p class="note">
+      Form 1 與 Form 3 的計算都在使用者那邊，<strong>Form 2 是唯一把計算放在我們這裡的</strong>，
+      也因此是唯一需要「無狀態」這條硬約束的。這三者的排序依核心宗旨，不依開發編號——
+      <strong>Form 3 排最後不是因為它最不重要，是因為它最晚開工</strong>。
     </p>
   </section>
 
@@ -508,35 +610,46 @@
 
   <section class="spine">
     <p class="section-label">Semantic Fitness Layer</p>
-    <h2>四家匯出檔，一套語彙</h2>
+    <h2>六個平台，一套語彙</h2>
     <p class="lede">
       Garmin 叫 <code>sleepTimeSeconds</code>，Apple 發 <code>HKCategoryTypeIdentifierSleepAnalysis</code> 區間，
-      Google 的匯出檔把本地午夜寫成 UTC，Strava 的 CSV 有五組同名欄位、單位各不相同。
+      Google 的匯出檔把本地午夜寫成 UTC，Strava 的 CSV 有五組同名欄位、單位各不相同，
+      WHOOP 的訓練負荷是自家的 0–21 分。
       這些方言<strong>不該有任何一個抵達決策規則</strong>。新增一家＝加一張映射表，下游一行不動。
     </p>
     <div class="scroller">
       <table>
         <thead>
-          <tr><th>Canonical signal</th><th>Apple</th><th>Garmin</th><th>Google</th><th>Strava</th></tr>
+          <tr><th>Canonical signal</th><th>Apple</th><th>Garmin</th><th>Google</th><th>Strava</th><th>Oura</th><th>WHOOP</th></tr>
         </thead>
         <tbody>
-          <tr><td class="sig-name">sleep_duration_hours</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td class="sig-name">hrv_ms</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td class="sig-name">resting_hr_bpm</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td></tr>
-          <tr><td class="sig-name">vendor_readiness</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
-          <tr><td class="sig-name">body_battery</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+          <tr><td class="sig-name">sleep_duration_hours</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td class="sig-name">hrv_ms</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td class="sig-name">resting_hr_bpm</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td class="sig-name">vendor_readiness</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td class="sig-name">body_battery</td><td class="no">—</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+          <tr><td class="sig-name">每場訓練的負荷</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="yes">✓</td></tr>
         </tbody>
       </table>
     </div>
     <p class="note">
-      廠商自己算好的複合分數（readiness、Body Battery）當作<strong>一等證據</strong>收進來，不忽略重算——
-      裝置在手腕上，它整合了我們看不到的訊號。
+      廠商自己算好的複合分數（readiness、Body Battery、WHOOP strain）當作<strong>一等證據</strong>收進來，
+      不忽略重算——裝置在手腕上，它整合了我們看不到的訊號。
     </p>
     <p class="note">
-      <strong>這張表講的是「我們讀得懂誰的匯出檔」，目前是這四家。</strong>
-      Oura、Whoop 已經在語彙裡有對應位置，但還沒有讀檔的解析器——
-      它們的數值今天要由 AI 那端整理成同一套語彙傳進來。
-      <strong>把「已經設計好」與「已經做好」分開講，是這個產品該有的樣子</strong>：
+      最後一列的那個「—」值得看一眼：<strong>Oura 不算訓練負荷，所以我們也不算</strong>。
+      拿時長乘上強度標籤湊一個數字出來很容易，而且沒有人看得出來——
+      但那條負荷曲線之後會變成 ACWR、變成疲勞、變成一句「今天減量」。
+      <strong>沒量到就是沒量到</strong>：那場訓練列進 <code>signalCoverage.training.missing</code>，
+      不計入疲勞，信心跟著下調。
+    </p>
+    <p class="note">
+      <strong>六家都有解析器了，但成熟度要分兩種講。</strong>
+      Apple、Garmin、Google、Strava 是<strong>照真實匯出檔寫的</strong>——哨兵值、空陣列、
+      欄位缺漏這些事，都是在真檔案上才發現的。
+      Oura 與 WHOOP 是<strong>照兩家自己的 OpenAPI 文件寫的（2026-08-07），
+      還沒對過任何一份真實回應</strong>：規格說得對，不等於實際回傳長那樣。
+      <strong>把「已經設計好」與「已經驗過」分開講，是這個產品該有的樣子</strong>：
       表上多一個勾很容易，收回來很難。
     </p>
 
@@ -596,6 +709,16 @@
             <td class="sig-name">只有 Garmin</td>
             <td>Body Battery · recovery time · 負荷</td>
             <td class="yes">依廠商複合分數與負荷調整</td>
+          </tr>
+          <tr>
+            <td class="sig-name">只有 Oura</td>
+            <td>睡眠 · HRV · 靜息心率 · Readiness</td>
+            <td class="yes">依恢復狀態調整（無負荷曲線）</td>
+          </tr>
+          <tr>
+            <td class="sig-name">只有 WHOOP</td>
+            <td>恢復訊號 ＋ 每場 strain</td>
+            <td class="yes">恢復與負荷兩側都有</td>
           </tr>
           <tr>
             <td class="sig-name">Garmin ＋ Apple Health</td>
@@ -725,11 +848,15 @@
       </div>
       <div class="finding gap">
         <h4>還沒到位的　我們的工</h4>
-        <p>OAuth 2.1 與遠端部署尚未完成。<strong>那擋的是手機</strong>：手機只支援 remote。桌機這條路不經過它——desktop extension（現行 v0.3.7）走 stdio，已經可以裝，且已送出 Anthropic MCPB 上架表單與官方 MCP registry（2026-08-07，審查中）。</p>
+        <p><strong>Form 2（remote）與 Form 3（user-controlled）都還沒到位</strong>：前者缺 authorization server、OAuth 簽章驗證、HTTPS 部署與隱私政策改寫，後者一行程式都沒有。<strong>那擋的是手機與企業，不擋今天</strong>——Form 1 的 desktop extension（v0.3.7）已經可以裝。</p>
       </div>
       <div class="finding gap">
         <h4>還沒到位的　不是我們的工</h4>
-        <p>手機上的 Apple Health 要 host app 具備 HealthKit 權限，Garmin Connect 的授權對象也是 host。上面那項做完，這兩項不會跟著出現——所以今天走得通的路徑是使用者口述的證據。</p>
+        <p>手機上的 Apple Health 要 host app 具備 HealthKit 權限，Garmin Connect 的授權對象也是 host。remote 做完，這兩項不會跟著出現——所以今天走得通的證據路徑是匯出檔與使用者自己說的話。</p>
+      </div>
+      <div class="finding gap">
+        <h4>還沒到位的　來源成熟度</h4>
+        <p>Oura 與 WHOOP 的解析器照兩家自己的 OpenAPI 寫成，尚未對過真實回應。關掉這個缺口只需要一份去識別化的真實回應——在那之前，它們在成熟度上與另外四家不同級。</p>
       </div>
     </div>
 
@@ -737,6 +864,13 @@
       本頁所有數值皆為引擎實際輸出，非示意：readiness 50、legs 疲勞 92、CTL 33.8 / ATL 34.6 / TSB −5.8、
       ACWR 1.02、HRV 個人基線 48（40 筆樣本）。決策為 <code>adjust / reduce_today_intensity</code>，
       action 為 VO₂max Intervals 60 min <code>high → low</code>。
+      <br><br>
+      <b>這份文件的角色</b>：對外敘事正本，講產品是什麼、為什麼難被取代、今天走得通哪些路。
+      工程 roadmap、開工順序、技術債與待裁決問題在
+      <code>docs/fitness-mcp-implementation-plan.md</code>，不重複寫在這裡；
+      兩份衝突時，以那份的現況表為準。
+      <br>
+      對照日期 2026-08-07，對照對象是 v0.3.7 的實際程式碼與規則庫（v1.1.0，8 條規則）。
     </p>
   </section>
 
