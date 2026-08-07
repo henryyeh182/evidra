@@ -612,6 +612,76 @@
   </section>
 
   <section class="spine">
+    <p class="section-label">Provenance</p>
+    <h2>每個門檻都說得出哪來的——包括說不出的那些</h2>
+    <p class="lede">
+      決策靠的是門檻：readiness 低於 60 就降強度、ACWR 高過 1.4 就減量。
+      真正的問題是<strong>那些數字是誰決定的</strong>。
+      Evidra 把每一條門檻連同它的出處存成資料，決策回傳時一併帶出來——
+      <strong>包括「這個數字沒有出處」這件事本身</strong>。
+    </p>
+
+    <div class="daygrid">
+      <div class="day">
+        <div class="day-tag">EVD-R-006　外部定義的量</div>
+        <div class="readout">
+          <div class="row"><span class="k">門檻</span><span class="v">acwr &gt; 1.4</span></div>
+          <div class="row"><span class="k">basis</span><span class="v mint">external_metric</span></div>
+          <div class="row"><span class="k">依據</span><span class="v">Gabbett 2016 · BJSM</span></div>
+          <div class="row"><span class="k">同時載入的反對</span><span class="v warn">Impellizzeri 2020 · Lolli</span></div>
+        </div>
+        <p class="note">
+          原文寫的是 0.8–1.3 為 sweet spot、≥1.5 才是 danger zone。
+          <strong>1.4 兩個都不是，它是我們挑的</strong>——這句話就寫在規則自己的限制欄位裡。
+          引用 Gabbett 卻不引用批評他的人，才是會被查出來的破綻。
+        </p>
+      </div>
+      <div class="day">
+        <div class="day-tag">EVD-R-002　我們自己組的分數</div>
+        <div class="readout">
+          <div class="row"><span class="k">門檻</span><span class="v">readiness &lt; 60</span></div>
+          <div class="row"><span class="k">basis</span><span class="v warn">internal_composite</span></div>
+          <div class="row"><span class="k">sources</span><span class="v stop">空的</span></div>
+          <div class="row"><span class="k">evidence level</span><span class="v dim">internal_heuristic</span></div>
+        </div>
+        <p class="note">
+          readiness 是我們用自己挑的權重組出來的分數。
+          <strong>沒有任何一篇研究用過這個分數，所以它的門檻永遠不可能有出處。</strong>
+          空的 sources 是誠實的狀態，不是還沒填完。
+        </p>
+      </div>
+    </div>
+
+    <p class="note warn" style="margin-top:22px">
+      <strong>八條規則裡有六條是後者。</strong>
+      規則庫載入時會<strong>結構性擋下</strong>「在自創分數的門檻上掛真實論文」這個動作——
+      不是寫在規範裡靠人自律，是掛了就啟動失敗。
+      把一篇真論文貼到一個自己發明的數字上，是這種產品能犯的最嚴重的錯。
+    </p>
+
+    <h4 style="margin-top:38px;font-size:18px;font-weight:620">每一筆引用都要說「它不支持什麼」</h4>
+    <p class="lede" style="margin-bottom:22px">
+      這個欄位是強制的，理由很直接：<strong>到目前為止每一筆引用都與門檻有落差</strong>，
+      落差要寫出來，不能等讀的人自己發現。每筆引用另外帶一個「讀到什麼程度」的標記。
+    </p>
+    <div class="reasons">
+      <div class="reason"><i>01</i><span><code>primary_full_text_verified</code>　數字是在原文裡讀到的</span></div>
+      <div class="reason"><i>02</i><span><code>abstract_verified_full_text_not_read</code>　書目與引句對過摘要，本文沒讀</span></div>
+      <div class="reason"><i>03</i><span><code>numbers_from_secondary_sources</code>　數字來自二手摘要，尚未確認</span></div>
+    </div>
+    <p class="note">
+      2026-08-07 覆核了三條規則的出處，結果是<strong>一升兩降</strong>：Gabbett 那條對到開放原文，升級；
+      另一條原本寫著「VO₂max 兩到三週掉 4–7%」，查下去兩份摘要都沒有這個數字、原文在付費牆後，
+      <strong>整段撤掉而不是換句話寫</strong>。
+      <strong>覆核會撤回東西，那正是它有在運作的證據。</strong>
+    </p>
+    <p class="note">
+      目前帶完整出處的是 <code>decide_session</code>。其餘工具的門檻還沒進規則庫，
+      所以它們不回傳這個欄位——同上一節，<strong>已經做好與還沒做好分開講</strong>。
+    </p>
+  </section>
+
+  <section class="spine">
     <p class="section-label">Guarantee</p>
     <h2>寫入前必須先看見</h2>
     <p class="lede">
@@ -648,6 +718,10 @@
       <div class="finding ok">
         <h4>來源</h4>
         <p>每筆讀數帶著誰寫的、最後一次是什麼時候。它分得出「這個訊號還在」與「這個訊號兩年前就停了」——而那兩件事在原始資料裡長得一模一樣。</p>
+      </div>
+      <div class="finding ok">
+        <h4>說得出憑什麼</h4>
+        <p>每條門檻連著它的出處，沒有出處的會被標成沒有出處，程式擋著不讓它假裝有。GPT-6 講得出運動科學，講不出「這個數字是誰定的、第幾版、誰反對過」。</p>
       </div>
       <div class="finding gap">
         <h4>還沒到位的　我們的工</h4>
