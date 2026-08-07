@@ -217,8 +217,13 @@ the paper.
 
 Body Battery, Oura Readiness and Whoop Recovery are treated as first-class
 evidence and are **not recomputed**. The watch was on your wrist; it integrated
-signals Evidra never sees. Supply one and it weighs more than the raw readings —
-and confidence rises, because less is missing.
+signals Evidra never sees, so when one reaches the engine it weighs more than any
+raw reading.
+
+In v0.3.7 the field carrying it is not yet named in the tool schema, so your
+assistant may not find it and may send the raw signals on their own. **The
+decision comes out the same either way** — what changes is the confidence
+attached to it. The next release names the field.
 
 **4 · Asking to go harder**
 
