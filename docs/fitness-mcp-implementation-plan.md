@@ -20,9 +20,13 @@
   `evidra_preview_adjust_plan`、`evidra_commit_adjust_plan`
 - **368 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
 - **知識圖譜** 889 節點 / 5,785 邊；進退階 34 條（17 組互逆）；訓練目標五值域
-- **Rule Library**（`packages/rules` v1.0.0）：**8 條規則**，每條帶 `ruleId`／`version`／
+- **Rule Library**（`packages/rules` v1.1.0）：**8 條規則**，每條帶 `ruleId`／`version`／
   `category`／`priority`／`basis`／`evidenceLevel`／`sources`／`contested`／`limitations`。
-  決策引擎沒有自己的門檻——`RULES = THRESHOLDS`，改 JSON 就改行為
+  決策引擎沒有自己的門檻——`RULES = THRESHOLDS`，改 JSON 就改行為。
+  **只涵蓋 `decide_session` 的 11 個門檻**（`assertThresholdsMatch` 的清單）；
+  另五個 tool 的數字不在庫裡，見技術債 C9。連帶：**`decisionBasis` 也只有
+  `evidra_decide_session` 回傳**（六個 tool 實測一個命中），server `instructions`
+  已據此指名，不再宣稱每個決策都帶
 - **來源 parser：4 家**（Apple Health／Garmin／Google Health／Strava，Strava 另有 API
   與 bulk export 兩種方言）。**Oura／Whoop 只有 registry 宣告，無 parser**——schema
   registry 共宣告 6 個平台（8 種方言）
@@ -86,7 +90,7 @@
 | D-REGISTRATION | authorization server 選型硬條件：支援 CIMD |
 | D-LICENSE | 閉源送 Anthropic MCPB；已送出，退件理由決定要不要公開 |
 | D-IPGUARD | `開發計畫` §8 的 IP 保護（加密／License Token／機器指紋）全部 NO-GO（現在） |
-| D-RULESCHEMA | ✅ **已實作**（`packages/rules` v1.0.0，8 條規則，見上「對外元件」） |
+| D-RULESCHEMA | ✅ **已實作**（`packages/rules` v1.1.0，8 條規則，見上「對外元件」）。2026-08-07 做過一次出處覆核：Gabbett 升為主文驗證，Mujika 撤回一組查不到的百分比並降級 evidenceLevel，ACSM 撤回一句摘要沒講的話 |
 
 每條的完整理由、出處、反對意見在 history 的 §5「決策日誌」。
 
@@ -94,8 +98,47 @@
 
 ## 下一步
 
-**沒有單一件「現在非做不可」的事**——上架三步（registry／MCPB／release）與 Rule
-Schema 都已完成，剩下的分三類：
+上架三步（registry／MCPB／release）與 Rule Schema 都已完成，**沒有一件事擋著上架**。
+但 2026-08-07 對 `開發計畫` §3–§5 做過一次逐節 review，產出一組**可直接開工**的項目，
+列在第 0 節；其餘照舊分五類。
+
+### 0. Rule Library 治理（2026-08-07 review 產出）
+
+**依賴關係先講**：R1 卡在 R2／C9 後面——沒有規則就沒有 rule 可以 trace。
+不要先做 R1。
+
+| # | 項目 | 為什麼 | 位置 |
+|---|---|---|---|
+| **R2** | **傷病邏輯有實作但不在規則庫**：`graph.js:176` 依 `contraindications` 過濾動作、`generatePlan.js:119` 依 active injury 的 `restrictions` 過濾。**沒有 rule id、沒有出處、不受仲裁。** | 仲裁矩陣把 `injury` 排在最上面，**而排最上面的那一格是空的**（現況：recovery 7、training_goal 1）。傷病決策每天在跑，卻是規則庫看不見的那部分。這是 C9 裡優先級最高的一塊 | `packages/knowledge-graph/src/graph.js`、`packages/planning/src/generatePlan.js` |
+| **R1** | `decisionBasis` **只有 `evidra_decide_session` 有**（實測 `outputSchemas`，六個 tool 一個命中）。要不要補到另外五個是實作決定 | 對外宣稱已於 2026-08-07 縮回事實（`INSTRUCTIONS` 現在指名是哪一個 tool，並說明其他沒有）。**所以這不是誠信問題了，是功能決定**——但補之前那些 tool 的數字得先進庫，否則沒有 rule 可指 | `apps/mcp-server/src/outputSchemas.js` 五份契約 |
+| **R3** | **證據等級階梯拆成兩軸。** 現 `EVIDENCE_LEVELS` 把研究設計（`systematic_review`／`rct`／`observational`）與機構背書（`guideline`／`position_stand`／`expert_consensus`）混在同一條 | GRADE 分開 *certainty of evidence*（研究設計、偏誤風險）與 *strength of recommendation*（另計利弊、價值觀、資源）。**強建議可以建立在低確定性證據上**，混成一條會讓規則從一份 recommendation 繼承強度，而沒有任何欄位顯示它自己的證據被評為多少。順帶補 `narrative_review`（EVD-R-007 卡在這個缺口） | `packages/rules/src/models.js`、`session-rules.json` |
+| **R4** | **出處覆核要有觸發點。** `lastReview` 有欄位，但過期不會有人失敗、不會有人提醒 | 2026-08-07 那次覆核**兩個既定入口都不是**（沒有新文獻、沒有 outcome 異常），是人工重讀已有的引用，結果撤回兩項。生命週期缺這第三個入口。**到期天數未定，不得自行決定** | `scripts/review-phase.js` 加一條 gate |
+| **R5** | `verificationStatus` 加 enum 硬檢查，並讓 `sources` 強制帶它 | 五級詞彙已於 2026-08-07 寫進 `readMe`，但**打錯字不會有人發現**（＝C11）。做法照 `assertProvenanceHonesty`：結構性禁止，不靠慣例 | `packages/rules/src/models.js` |
+| **R6** | **把 canonical model 是「雙軌」寫進現行文件。** `healthMetrics`（6 型別）與 `vendorAssessments`（4 型別）是兩軌，各有自己的新鮮度窗與權重 | **現在沒有任何一份現行文件描述雙軌**，而 `開發計畫` §3.1 寫的是把四家複合分數併成一個 `enum [Low, Moderate, High]` 的單軌——**文件講的和程式做的相反**，會誤導下一個讀它的人 | `docs/product-spec.md` 或本檔現況 |
+| **R7** | **C8（Evidence Quality）的形狀已定：用既有 `*Basis` 分類事實，不做純量。** 既有模式：`loadSources`／`rpeBasis`／`maxHeartRateIsAgeEstimate`——記「這個數字站在什麼上面」的 enum | `開發計畫` §3.2 的 `quality: 0.94` 是 `internal_composite`，而它會乘進 confidence。**confidence 正是使用者用來判斷「要不要信」的那個數字**，拿發明的權重去調它就是把可信度指標本身變成不可稽核 | 尚未有檔案 |
+
+#### 0.1 明確不採用（**別再重新推導一次**）
+
+| 來源 | 不採用的理由 |
+|---|---|
+| §3.2 `quality: 0.94` 純量 | 見 R7 |
+| §3.3 `trigger: RPE_previous >= 8` | 違反紀律 2 與已實作的決定。`generateSemanticFitnessState.js:129-132`：乘 RPE 會 double-count 強度（廠商負荷已含強度），且讓不供 RPE 的來源算不出疲勞——「which is most of them」 |
+| §3.3 規則級 `confidence: 0.93` | 類別錯誤。confidence 隨每次呼叫的 coverage 變動，規則本身沒有。而 §3.5 的 case 又有一個 `confidence: 0.82`，同名兩個意思 |
+| §3.5／§3.6 Decision Case／Outcome Record | D-DATA 已定：三元組由呼叫端保存。**另外設計上也有問題**：`evidence_coverage: 0.87` 是純量，藏掉缺的是 recovery 還是 training；`rule_applied` 是單數，存不下「哪些規則輸了」 |
+| §3.7 Rule Package | 兩個存在理由都已被否決（`tier` 屬 A6 未定、自動更新牴觸已發布的 `PRIVACY.md`）。**類比本身也要拆**：病毒碼更新失敗是 fail-closed，訓練規則更新失敗是 fail-open |
+| §4「Confidence: High，幾乎不需質疑」 | 與整個庫的設計相反——每個引用強制填 `doesNotSupport`，理由是「in every case so far there is one」。repo 裡就住著反例：EVD-R-006 引 Gabbett，同時載入 Impellizzeri 的反對 |
+| §4 Exercise Science Board | **那個 board 不存在。** 維持 `reviewer` 實名。宣稱一個不存在的審查機構，跟宣稱一個撐不住的證據等級是同一類錯 |
+| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 368 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
+| §5 四個新 tool | 逐個理由見 history §4.6.5。**補一條**：§5 自己的表格就顯示五列缺口**全在既有 tool 的輸出欄位裡**，沒有一列是「少一個口」 |
+
+#### 0.2 版號規則（2026-08-07 起照這個走）
+
+生命週期圖只寫「Release（version bump）」，沒說 bump 哪一個。實際同時有三個版號：
+
+- **規則 patch**（`1.0.0 → 1.0.1`）＝只動出處，行為不變
+- **規則 minor**＝門檻或 `effect` 改了
+- **library minor**（`1.0.0 → 1.1.0`）＝任何規則變動
+- **門檻一改就必須重打 `.mcpb`**——bundle 是把 `session-rules.json` 內嵌進去的
 
 ### 1. 等外部結果（不是我們的工作）
 
@@ -128,6 +171,10 @@ Schema 都已完成，剩下的分三類：
 | C2 | `trainingLoad ?? 分鐘數` 仍在編造負荷值 | `packages/evidence/src/model.js:155` |
 | C6 | 我們的 parser 是照**匯出檔**寫的，沒對照過真實流程裡「Claude 從別家 MCP server 拿到的證據」形狀 | `packages/connectors/src/providers/*/normalize.js` |
 | C8 | Evidence Quality 維度不存在（只有 coverage 與新鮮度，沒有「這個來源多可信」） | 尚未有檔案 |
+| C9 | **Rule Library 只治理 `decide_session`**。ATL/CTL 時間常數（42／7）、TSB 分帶（5／−10／−30）、`DETRAINING`（14 天／25%）、`DEFAULT_BASELINES`（HRV 52／RHR 57／週負荷 360）、`SIGNAL_STALENESS_DAYS` 八個值、`PHASE_MULTIPLIERS`、`RETURN_RAMP`＝全部無出處，且不受 `assertThresholdsMatch` 兩向檢查保護 | `packages/training-load/src/trainingLoad.js`、`packages/semantic-engine/src/generateSemanticFitnessState.js`、`packages/planning/src/generatePlan.js` |
+| C10 | **兩套 detraining 門檻並存且數字不同**：`trainingLoad.js` 是 14 天／25%，EVD-R-007 是 42 天／60%。前者無出處，後者在庫裡 | 同上第一項 ＋ `packages/rules/data/session-rules.json` |
+| C11 | `verificationStatus` 沒有型別檢查，`sources` 也不強制帶它（EVD-R-002 的 Javaloyes 就沒有）。詞彙已定義在 `readMe`，但打錯字不會有人發現 | `packages/rules/src/models.js` |
+| C12 | **傷病邏輯在規則庫外執行**——有實作、每天在跑，但沒有 rule id、沒有出處、不受仲裁。`injury` 是仲裁矩陣最高的一格，而它是空的 | 見 §0 的 R2 |
 
 ### 5. 來源覆蓋（Phase 5 剩餘）
 
