@@ -1,4 +1,4 @@
-<title>Evidra — 使用者旅程</title>
+<title>Evidra — 從證據到今天的訓練決策</title>
 <style>
   :root {
     /* Anthropic 系統色：米灰底 + 駝色層次 */
@@ -234,6 +234,56 @@
   .form .status.ok b { color: var(--mint); }
   .form .status.wait b { color: var(--warn); }
   .form .status.none b { color: var(--stop); }
+
+  /* ---------- install ---------- */
+  .cta {
+    display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center;
+    margin-top: 30px; font-size: 13.5px;
+  }
+  .cta a {
+    display: inline-block; text-decoration: none;
+    border-radius: 5px; padding: 9px 17px; font-weight: 600;
+  }
+  .cta a.primary { background: var(--mint); color: var(--surface); }
+  .cta a.secondary { border: 1px solid var(--line); color: var(--text); background: var(--surface); }
+  .cta span { color: var(--text-3); font-family: var(--mono); font-size: 11.5px; }
+
+  .steps { display: grid; gap: 18px; margin-top: 28px; }
+  .step { display: grid; grid-template-columns: 26px 1fr; gap: 15px; align-items: start; }
+  .step-n {
+    font-family: var(--mono); font-size: 11px; color: var(--mint);
+    border: 1px solid var(--mint-dim); border-radius: 50%;
+    width: 25px; height: 25px; display: grid; place-items: center; margin-top: 1px;
+  }
+  .step h4 { font-size: 15px; font-weight: 620; margin-bottom: 5px; }
+  .step p { font-size: 13.5px; color: var(--text-2); line-height: 1.6; }
+  .step p strong { color: var(--text); font-weight: 600; }
+  .step .hash {
+    font-family: var(--mono); font-size: 11px; color: var(--text-3);
+    word-break: break-all; margin-top: 7px; line-height: 1.5;
+  }
+
+  /* ---------- try ---------- */
+  .tries { display: grid; gap: 15px; margin-top: 28px; }
+  .try { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow: hidden; }
+  .try .ask { padding: 17px 21px 15px; }
+  .try .ask .who {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--text-3); margin-bottom: 8px;
+  }
+  .try .ask q {
+    display: block; font-size: 14.5px; line-height: 1.6; color: var(--text); quotes: none;
+  }
+  .try .got {
+    border-top: 1px solid var(--line-2); background: var(--surface-2);
+    padding: 14px 21px; display: flex; flex-wrap: wrap; gap: 6px 22px;
+    font-family: var(--mono); font-size: 11.5px; color: var(--text-2);
+  }
+  .try .got b { color: var(--text); font-weight: 620; }
+  .try .got .mint { color: var(--mint); font-weight: 620; }
+  .try .got .warn { color: var(--warn); font-weight: 620; }
+  .try .why { padding: 13px 21px 16px; font-size: 13px; color: var(--text-2); line-height: 1.6; }
+  .try .why strong { color: var(--text); font-weight: 600; }
 </style>
 
 <div class="wrap">
@@ -263,9 +313,9 @@
     </div>
 
     <div class="docrole">
-      <span><b>對外敘事正本</b>　stakeholder / marketing narrative</span>
-      <span>v0.3.7 · 2026-08-07</span>
-      <span>工程 roadmap 在 implementation plan，不在這裡</span>
+      <span><b>Claude Desktop extension</b>　v0.3.7 · stdio</span>
+      <span>6 tools · 6 資料來源 · 8 條規則</span>
+      <span>不需要帳號、不需要設定、不連任何雲端</span>
     </div>
 
     <h1>任何模型都能給你<em>建議</em>。<br>只有握有證據的系統能給<em>決策</em>。</h1>
@@ -273,8 +323,14 @@
       「建議今天跑 Zone 2」是憑空發出的一句話，GPT-6 也說得出來。
       「今天排定的 VO₂max Intervals 改成 Zone 2」不一樣——它是<strong>對既有狀態的變更</strong>，
       前提是<strong>知道你今天原本要做什麼</strong>，以及<strong>你現在的身體證據</strong>。
-      這份文件的所有數字，都來自實際跑出來的引擎輸出。
+      本頁的所有數字，都來自實際跑出來的引擎輸出。
     </p>
+
+    <div class="cta">
+      <a class="primary" href="https://github.com/henryyeh182/evidra/releases/latest">下載 evidra.mcpb</a>
+      <a class="secondary" href="#install">怎麼裝、怎麼試</a>
+      <span>Claude Desktop · 不需帳號 · 原始碼不開放，行為可驗證</span>
+    </div>
 
     <div class="contrast">
       <div class="card weak">
@@ -428,6 +484,180 @@
       Form 1 與 Form 3 的計算都在使用者那邊，<strong>Form 2 是唯一把計算放在我們這裡的</strong>，
       也因此是唯一需要「無狀態」這條硬約束的。這三者的排序依核心宗旨，不依開發編號——
       <strong>Form 3 排最後不是因為它最不重要，是因為它最晚開工</strong>。
+    </p>
+  </section>
+
+  <section class="spine" id="install">
+    <p class="section-label">Install</p>
+    <h2>四步，沒有一步是登入</h2>
+    <p class="lede">
+      Form 1 今天就能裝。整段安裝沒有帳號、沒有 API key、沒有任何設定欄位——
+      <strong>因為 Evidra 不去拿你的資料</strong>，就沒有東西需要授權。
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">1</div>
+        <div>
+          <h4>下載 <code>evidra.mcpb</code></h4>
+          <p>
+            從 <a href="https://github.com/henryyeh182/evidra/releases/latest">releases/latest</a> 取得。
+            單一檔案，內含編譯好的 server 與整份規則庫。
+          </p>
+          <p class="hash">
+            v0.3.7 · sha256 6c1ce9068d01bdd08ebe85cba59826b9e5fbc39e4437b3bd23f2b9f7e8968cd3
+          </p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <div>
+          <h4>核對 checksum（可略過，但這是重點之一）</h4>
+          <p>
+            <code>shasum -a 256 evidra.mcpb</code>，比對
+            <a href="https://registry.modelcontextprotocol.io/v0/servers?search=evidra">官方 MCP registry</a>
+            上該版本的 <code>fileSha256</code>——<strong>那串數字存在一個我們控制不了的地方</strong>，
+            所以不是我們自己替自己背書。
+            而且 <strong>v0.1.0 起的每一版都保留不覆蓋</strong>，去年驗過的那顆今天仍然驗得過。
+          </p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">3</div>
+        <div>
+          <h4>Claude Desktop → 設定 → 擴充功能 → 安裝</h4>
+          <p>
+            拖進去就好。<strong>沒有設定畫面</strong>——這顆 extension 沒有宣告任何
+            <code>user_config</code> 欄位，因為它不需要知道你是誰。
+          </p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">4</div>
+        <div>
+          <h4>直接問</h4>
+          <p>
+            六個 tool 立刻可用。<strong>不需要先匯入資料</strong>：你自己講的話就是合法的證據，
+            匯出檔也是。下一節有五則可以整段複製的問法。
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">
+      也在<a href="https://github.com/modelcontextprotocol/registry">官方 MCP registry</a> 上架，
+      識別碼 <code>io.github.henryyeh182/evidra</code>。Anthropic 的 MCPB 目錄審查中。
+    </p>
+  </section>
+
+  <section class="spine">
+    <p class="section-label">Try</p>
+    <h2>五種問法，五種不同的決策</h2>
+    <p class="lede">
+      裝好之後貼上去就會跑。<strong>底下每一則的輸出都是引擎實際產生的</strong>，
+      並且由測試釘住——這份頁面寫的數字若和程式不一致，測試會紅。
+      證據樣本與完整輸出在 <code>examples/README.md</code>。
+    </p>
+
+    <div class="tries">
+      <div class="try">
+        <div class="ask">
+          <div class="who">01 · 零設定，只用嘴巴講</div>
+          <q>我昨天跑了 80 分鐘，感覺蠻累的，昨晚睡了 6 小時。今天課表排的是 VO₂max 間歇 60 分鐘，我還該照做嗎？</q>
+        </div>
+        <div class="got">
+          <span>decision <b class="mint">keep</b></span>
+          <span>action 照原定執行</span>
+          <span>confidence <b class="warn">low</b></span>
+          <span>缺 hrv · restingHeartRate · stress</span>
+        </div>
+        <p class="why">
+          <strong>重點是它沒有改課表。</strong> keep 也是決策——「檢查過了，可以執行」，
+          不是「沒事發生」。而且它老實說信心低：四個恢復訊號只有睡眠一個。
+          <strong>一句「今天照練」配上「我只看得到這些」，才是完整的答案。</strong>
+        </p>
+      </div>
+
+      <div class="try">
+        <div class="ask">
+          <div class="who">02 · 只有 Strava——零恢復訊號</div>
+          <q>這是我最近四週的 Strava 訓練紀錄（附檔）。今天排的是 Threshold Repeats 60 分鐘高強度，該照跑嗎？</q>
+        </div>
+        <div class="got">
+          <span>decision <b class="mint">adjust</b></span>
+          <span>action high <b>→</b> moderate</span>
+          <span>規則 <b>EVD-R-006</b> · ACWR <b>1.61</b></span>
+          <span>confidence <b class="warn">low</b></span>
+        </div>
+        <p class="why">
+          Strava 不量 HRV、不量睡眠。它有的是每一場訓練的負荷——<strong>這樣就足以做出決策</strong>。
+          再追問「1.4 是誰定的」，會拿到 Gabbett 2016、<strong>同時載入的反對意見</strong>，
+          以及一句「1.4 兩個發表數字都不是，是我們挑的」。
+        </p>
+      </div>
+
+      <div class="try">
+        <div class="ask">
+          <div class="who">03 · 只有 Garmin——廠商複合分數當一等證據</div>
+          <q>這是我今天的 Garmin 數據（附檔）。今天排 Tempo Run 50 分鐘高強度。</q>
+        </div>
+        <div class="got">
+          <span>decision <b class="mint">adjust</b></span>
+          <span>action high <b>→</b> moderate</span>
+          <span>規則 <b>EVD-R-002</b> · readiness <b>48</b></span>
+          <span>confidence <b class="mint">high</b></span>
+          <span>缺 —</span>
+        </div>
+        <p class="why">
+          和第 2 則對照著看：<strong>同樣是 adjust、同樣降一級，理由卻完全不同</strong>
+          （負荷爬太快 vs 今天恢復不良），而且這次信心是 high。
+          Body Battery 是 Garmin 自己算的分數，Evidra <strong>不重算它</strong>——
+          錶在手腕上，它整合了我們看不到的訊號。
+        </p>
+      </div>
+
+      <div class="try">
+        <div class="ask">
+          <div class="who">04 · 只有 Oura——沒有訓練負荷，一樣做得出決策</div>
+          <q>這是我今天的 Oura 數據（附檔）。今天排了低強度的間歇 60 分鐘，我感覺很好，可以加強度嗎？</q>
+        </div>
+        <div class="got">
+          <span>decision <b class="mint">advance</b></span>
+          <span>action low <b>→</b> moderate</span>
+          <span>規則 <b>EVD-R-008</b> · readiness <b>96</b></span>
+          <span>confidence <b class="warn">low</b></span>
+        </div>
+        <p class="why">
+          <strong>這則是往上調，不是往下。</strong> 決策不是只會叫你少練——證據支持就往上加。
+          信心仍然低，因為 Oura 不算訓練負荷、<strong>所以我們也不算</strong>：
+          拿時長乘強度標籤湊一個數字很容易，而那條曲線之後會變成一句「今天減量」。
+        </p>
+      </div>
+
+      <div class="try">
+        <div class="ask">
+          <div class="who">05 · 傷病替代——硬過濾，不是建議</div>
+          <q>我膝蓋不舒服，今天的深蹲能換成什麼？我只有啞鈴跟徒手。</q>
+        </div>
+        <div class="got">
+          <span>decision <b class="mint">substitute</b></span>
+          <span>action Back Squat <b>→</b> Bodyweight Squat</span>
+          <span>其他選項 Goblet Squat</span>
+          <span>confidence <b class="mint">high</b></span>
+        </div>
+        <p class="why">
+          回傳的理由裡有一句 <strong>“Movements contraindicated for knee were hard-filtered out.”</strong>
+          ——字面意思：對膝蓋有禁忌的動作不是被扣分，是根本不在候選名單裡。
+          <strong>模型可以被說服繞過安全規則，確定性的過濾器不會。</strong>
+        </p>
+      </div>
+    </div>
+
+    <p class="note warn">
+      第 1 則沒有附任何檔案，第 5 則也沒有。<strong>「先匯入資料」不是使用 Evidra 的前提</strong>——
+      問「今天練什麼」而手上沒有課表時，它會回
+      <q>This is a recommendation question, not a decision.</q>
+      並且不編一個出來。<strong>引擎自己講得出這條界線在哪。</strong>
     </p>
   </section>
 
@@ -751,6 +981,8 @@
           <div class="row"><span class="k">門檻</span><span class="v">acwr &gt; 1.4</span></div>
           <div class="row"><span class="k">basis</span><span class="v mint">external_metric</span></div>
           <div class="row"><span class="k">依據</span><span class="v">Gabbett 2016 · BJSM</span></div>
+          <div class="row"><span class="k">研究設計</span><span class="v">observational</span></div>
+          <div class="row"><span class="k">對門檻的支持度</span><span class="v warn">supports_direction_only</span></div>
           <div class="row"><span class="k">同時載入的反對</span><span class="v warn">Impellizzeri 2020 · Lolli</span></div>
         </div>
         <p class="note">
@@ -765,7 +997,8 @@
           <div class="row"><span class="k">門檻</span><span class="v">readiness &lt; 60</span></div>
           <div class="row"><span class="k">basis</span><span class="v warn">internal_composite</span></div>
           <div class="row"><span class="k">sources</span><span class="v stop">空的</span></div>
-          <div class="row"><span class="k">evidence level</span><span class="v dim">internal_heuristic</span></div>
+          <div class="row"><span class="k">研究設計</span><span class="v stop">none</span></div>
+          <div class="row"><span class="k">對門檻的支持度</span><span class="v stop">internal_heuristic</span></div>
         </div>
         <p class="note">
           readiness 是我們用自己挑的權重組出來的分數。
@@ -785,18 +1018,29 @@
     <h4 style="margin-top:38px;font-size:18px;font-weight:620">每一筆引用都要說「它不支持什麼」</h4>
     <p class="lede" style="margin-bottom:22px">
       這個欄位是強制的，理由很直接：<strong>到目前為止每一筆引用都與門檻有落差</strong>，
-      落差要寫出來，不能等讀的人自己發現。每筆引用另外帶一個「讀到什麼程度」的標記。
+      落差要寫出來，不能等讀的人自己發現。每筆引用另外<strong>必須</strong>帶一個
+      「讀到什麼程度」的標記，值不合法或漏填都會讓規則庫載入失敗。
     </p>
     <div class="reasons">
       <div class="reason"><i>01</i><span><code>primary_full_text_verified</code>　數字是在原文裡讀到的</span></div>
       <div class="reason"><i>02</i><span><code>abstract_verified_full_text_not_read</code>　書目與引句對過摘要，本文沒讀</span></div>
-      <div class="reason"><i>03</i><span><code>numbers_from_secondary_sources</code>　數字來自二手摘要，尚未確認</span></div>
+      <div class="reason"><i>03</i><span><code>abstract_verified_full_text_paywalled</code>　同上，且本文在付費牆後</span></div>
+      <div class="reason"><i>04</i><span><code>numbers_from_secondary_sources</code>　數字來自二手摘要，尚未確認</span></div>
+      <div class="reason"><i>05</i><span><code>citation_not_read_in_full</code>　舊值，新引用不再使用</span></div>
+      <div class="reason"><i>06</i><span><code>unverified</code>　<strong>沒有人查過這筆引用</strong></span></div>
     </div>
     <p class="note">
       2026-08-07 覆核了三條規則的出處，結果是<strong>一升兩降</strong>：Gabbett 那條對到開放原文，升級；
       另一條原本寫著「VO₂max 兩到三週掉 4–7%」，查下去兩份摘要都沒有這個數字、原文在付費牆後，
       <strong>整段撤掉而不是換句話寫</strong>。
       <strong>覆核會撤回東西，那正是它有在運作的證據。</strong>
+    </p>
+    <p class="note warn">
+      同一天把這個欄位改成強制之後，<strong>立刻翻出一筆從來沒有人查證過的引用</strong>——
+      它躲過了那次覆核，而在欄位還是選填的時候，
+      <strong>「沒查過」與「沒東西好講」在輸出上長得一模一樣</strong>。
+      它現在標著 <code>unverified</code>，並且寫進那條規則的限制欄位裡。
+      <strong>一個機制的價值，看它有沒有抓到自己人。</strong>
     </p>
     <p class="note">
       目前帶完整出處的是 <code>decide_session</code>。其餘工具的門檻還沒進規則庫，
@@ -865,12 +1109,15 @@
       ACWR 1.02、HRV 個人基線 48（40 筆樣本）。決策為 <code>adjust / reduce_today_intensity</code>，
       action 為 VO₂max Intervals 60 min <code>high → low</code>。
       <br><br>
-      <b>這份文件的角色</b>：對外敘事正本，講產品是什麼、為什麼難被取代、今天走得通哪些路。
+      <b>這份文件的角色</b>：對外敘事正本，同時是<b>未來產品頁的原型</b>——講產品是什麼、
+      怎麼裝、怎麼試、為什麼難被取代、今天走得通哪些路。
       工程 roadmap、開工順序、技術債與待裁決問題在
       <code>docs/fitness-mcp-implementation-plan.md</code>，不重複寫在這裡；
       兩份衝突時，以那份的現況表為準。
       <br>
-      對照日期 2026-08-07，對照對象是 v0.3.7 的實際程式碼與規則庫（v1.1.0，8 條規則）。
+      對照日期 2026-08-07，對照對象是 v0.3.7 的實際程式碼與規則庫（v1.2.0，8 條規則）。
+      可複製的 demo prompts 與 sample evidence 在 <code>examples/README.md</code>，
+      每一則的輸出都由測試釘住。
     </p>
   </section>
 
