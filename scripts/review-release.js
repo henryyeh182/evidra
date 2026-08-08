@@ -35,6 +35,8 @@ import { fileURLToPath } from "node:url";
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PUBLIC_REPO = "henryyeh182/evidra";
+const REGISTRY_NAME = "io.github.henryyeh182/evidra";
+const REGISTRY_SEARCH = "https://registry.modelcontextprotocol.io/v0/servers?search=evidra";
 
 const checks = [];
 function check(id, title, why, run) {
@@ -49,6 +51,7 @@ const sh = (cmd, args, opts = {}) =>
 const serverJson = JSON.parse(readFileSync(join(rootDir, "server.json"), "utf8"));
 const declaredVersion = serverJson.version;
 const declaredSha = serverJson.packages?.[0]?.fileSha256;
+const declaredUrl = serverJson.packages?.[0]?.identifier;
 
 let work = null;
 let mode = null;
@@ -77,9 +80,10 @@ function loadArtifact() {
   const tag = `v${declaredVersion}`;
 
   try {
-    sh("gh", ["release", "download", tag, "--repo", PUBLIC_REPO, "--pattern", "*.mcpb", "--dir", work], {
-      stdio: ["ignore", "pipe", "ignore"]
-    });
+    // 走 server.json 宣告的那條網址，不是用 tag 抓。registry 公布給使用者的就是
+    // 這條，所以要走使用者實際走的路：identifier 寫錯版本時，用 tag 下載會拿到
+    // 對的檔案、然後說一切正常，而使用者拿到的是另一顆。
+    sh("curl", ["-fsSL", "-o", join(work, "evidra.mcpb"), declaredUrl]);
     archive = join(work, "evidra.mcpb");
     mode = "published";
   } catch {
@@ -119,8 +123,8 @@ check(
 
 check(
   "R2",
-  "下載回來的 .mcpb 與 server.json 的 sha256 相符，且內含版本一致",
-  "checksum 是我們請使用者去 registry 核對的那一串。它對不上，那段安裝說明就是假的。",
+  "下載回來的 .mcpb、server.json 與官方 registry 三者一致",
+  "我們請使用者拿 registry 上那串 sha256 去核對。三邊只要有一邊不同，那段安裝說明就是假的。",
   () => {
     const findings = [];
     const actual = createHash("sha256").update(readFileSync(archive)).digest("hex");
@@ -134,6 +138,30 @@ check(
     }
     if (bundledManifest.version !== declaredVersion) {
       findings.push(`archive 內 manifest.json 是 ${bundledManifest.version}，server.json 是 ${declaredVersion}`);
+    }
+
+    // registry 是我們控制不了的第三方，而使用者被請去核對的就是它上面那串。
+    // 它與我們自己的 server.json 不一致時，安裝說明會把人導向對不上的數字。
+    if (mode === "published") {
+      const listing = JSON.parse(sh("curl", ["-fsSL", REGISTRY_SEARCH]));
+      const latest = (listing.servers || [])
+        .map((entry) => ({ srv: entry.server || entry, meta: entry._meta?.["io.modelcontextprotocol.registry/official"] || {} }))
+        .find(({ srv, meta }) => srv.name === REGISTRY_NAME && meta.isLatest);
+
+      if (!latest) {
+        findings.push(`registry 上找不到 ${REGISTRY_NAME} 的 latest`);
+      } else {
+        const pkg = (latest.srv.packages || [])[0] || {};
+        if (latest.srv.version !== declaredVersion) {
+          findings.push(`registry 的 latest 是 ${latest.srv.version}，server.json 是 ${declaredVersion}`);
+        }
+        if (pkg.fileSha256 !== declaredSha) {
+          findings.push(`registry 公布的 sha256 ${pkg.fileSha256} 與 server.json 的 ${declaredSha} 不同`);
+        }
+        if (pkg.identifier !== declaredUrl) {
+          findings.push(`registry 公布的下載網址 ${pkg.identifier} 與 server.json 的 ${declaredUrl} 不同`);
+        }
+      }
     }
     return findings;
   }
