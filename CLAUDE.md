@@ -136,7 +136,9 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 **寫在這裡不等於做得到**——2026-08-03 實測：`D-CHANNEL` 早就列著四家通路的名字、
 還註明「別再重新推導一次」，我照樣只查兩家就給了完整語氣的建議，
 而且把那個結論寫進本檔與交接，下一段 session 便照著錯的範圍繼續做。
-**九條 gate 一條都攔不到——它們檢查程式與文件是否一致，不檢查建議建立在多少查證上。**
+**當時九條 gate 一條都攔不到——它們檢查程式與文件是否一致，不檢查建議建立在多少查證上。**
+（2026-08-07 補了 G9／G10 之後仍然如此：那兩條驗的是「落差有沒有被寫下來」與
+「roadmap 內容有沒有跑進產品頁」，不驗一句建議站在多少查證上。）
 所以這條沒有強制力，**不要拿「已經寫進 CLAUDE.md 了」當這件事的解法**。
 
 另外兩個同形狀的錯，一併記著：**技術關係不要用形容詞代替**
@@ -147,7 +149,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 - 對外 **6 個 tool**：`evidra_assess_fitness_state` · `evidra_decide_session` · `evidra_decide_exercise_substitution` ·
   `evidra_generate_plan` · `evidra_preview_adjust_plan` · `evidra_commit_adjust_plan`
-- **407 tests**、eval 20 golden cases，全綠
+- **409 tests**、eval 20 golden cases，全綠
 - parser 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP；
   Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 個平台。
   **前四家照真實匯出檔寫；Oura 與 WHOOP 照兩家自己的 OpenAPI 寫（2026-08-07），
@@ -321,7 +323,7 @@ title `Evidra Fitness`，用 `mcp-publisher publish` 送的（token 效期很短
 
 它帶的是 MCP 官方慣例——tool 命名與前綴、annotations 的定義、**呼叫端的失誤要回在
 result 裡而不是協定層**、structured output、transport 選擇。**這些判準不在本檔，
-九條 gate 也一條都驗不到。** 2026-08-04 靠它一次查出：`evidra_decide_exercise_substitution`
+十二條 gate 也一條都驗不到。** 2026-08-04 靠它一次查出：`evidra_decide_exercise_substitution`
 的描述要呼叫端傳一個 schema 裡不存在的 `evidence`（同一句錯話還在 `manifest.json`
 與 `evidra/README.md`）、3 個 tool 把呼叫端可以自己修的失誤送成 JSON-RPC error、
 `evidra_generate_plan` 宣告會寫入但它是純函數、HTTP 綁全部介面卻印「local only」。
@@ -348,7 +350,7 @@ npm run serve:http           # HTTP transport
 
 要說某個 Phase／偏差／修正「做完了」，先走 [docs/phase-review.md](docs/phase-review.md)：
 先讀（memory → 本檔 → product-spec → 宣言 → README → plan → user-journey），
-再跑 `npm run review:phase` 的九條 gate，最後回答機械驗不到的判斷題
+再跑 `npm run review:phase` 的十二條 gate，最後回答機械驗不到的判斷題
 （GPT-6 判準、Decision ≠ Recommendation、五條紀律…）。
 **gate 紅的不得宣告完成**——紅的是宣稱與現況的落差，不是待辦功能。
 

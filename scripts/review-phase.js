@@ -470,7 +470,7 @@ gate(
 gate(
   "G8",
   "使用者讀得到的文字裡沒有內部詞彙",
-  "九條 gate 都不讀敘述句。這條只讀敘述句。",
+  "其餘 gate 都不讀敘述句。這條只讀敘述句。",
   () => {
     const findings = [];
 
@@ -500,6 +500,117 @@ gate(
       for (const [pattern, why] of banned) {
         if (pattern.test(text)) findings.push(`${where}: ${why}`);
       }
+    }
+
+    return findings;
+  }
+);
+
+// 2026-08-07：對外文件描述了一個沒有人裝得到的版本。
+//
+// `manifest.json` 的 `documentation` 與 `privacy_policies` 指向 `blob/main/...`，
+// 所以審閱者讀到的永遠是 main 的最新文件；他們裝到的卻是最後一個 release。這兩者
+// 之間有落差是**預設狀態**，不是意外——只要不逐一改動發版，落差就一直存在。
+//
+// 那天實際發生的是：`vendorAssessments` 當天才進 tool schema，而公開 README 照著
+// 修好之後的行為寫了一整段，推上正在送審的 repo。八條 gate 全綠，因為它們比對的是
+// 「文件與 working tree」，沒有一條問過「文件與**已發布那顆**」。
+//
+// 這條不試圖判斷哪一句話對外不成立——那要跑程式、要讀語意。它只做一件機械的事：
+// 公開行為面一旦與已發布版本不同，roadmap 正本就必須指名那個版本、把落差寫出來。
+// 落差被寫下來之後，改對外敘述的人至少看得到它存在。
+gate(
+  "G9",
+  "已發布版本與 main 的公開行為落差有被寫下來",
+  "文件跟著 main、bundle 停在 release，落差是預設狀態。沒寫下來的落差，會變成對外承諾。",
+  () => {
+    const findings = [];
+    const released = JSON.parse(read("server.json")).version;
+
+    // 呼叫端與使用者觀察得到的那一面。內部重構不算，這幾份改了就是行為改了。
+    const publicSurface = [
+      "apps/mcp-server/src/toolDefinitions.js",
+      "apps/mcp-server/src/server.js",
+      "apps/mcp-server/src/outputSchemas.js",
+      "packages/rules/data/session-rules.json",
+      "packages/evidence/src/model.js"
+    ];
+
+    let releaseCommit;
+    try {
+      // 設定該版號的那個 commit，取最早一筆——後續 commit 也可能碰到同一行。
+      const log = execFileSync(
+        "git",
+        ["log", "--format=%H", "-S", `"version": "${released}"`, "--", "server.json"],
+        { cwd: rootDir, encoding: "utf8" }
+      ).trim().split("\n").filter(Boolean);
+      releaseCommit = log[log.length - 1];
+    } catch (cause) {
+      return [`找不到 v${released} 的 commit（${cause.message.split("\n")[0]}）。無法驗證落差，當作沒過。`];
+    }
+    if (!releaseCommit) {
+      return [`server.json 宣告 v${released}，但 git 史裡找不到設定該版號的 commit。`];
+    }
+
+    const changed = execFileSync(
+      "git",
+      ["diff", "--name-only", releaseCommit, "HEAD", "--", ...publicSurface],
+      { cwd: rootDir, encoding: "utf8" }
+    ).trim().split("\n").filter(Boolean);
+
+    if (changed.length === 0) return findings;
+
+    // 有落差就必須在 roadmap 正本裡指名那個版號。指名是刻意的：發下一版之後，
+    // 舊的宣告會因為版號對不上而重新亮紅，不會就這樣留著腐爛。
+    const plan = read("docs/fitness-mcp-implementation-plan.md");
+    if (!plan.includes(`v${released}`) || !/已發布的\s*v\d+\.\d+\.\d+\s*與\s*main\s*的落差/.test(plan)) {
+      findings.push(
+        `公開行為面有 ${changed.length} 個檔案與 v${released} 不同（${changed.join("、")}），` +
+          `但 docs/fitness-mcp-implementation-plan.md 沒有「已發布的 v${released} 與 main 的落差」這一段。` +
+          `審閱者讀的是 main 的文件、裝的是 v${released}。`
+      );
+    }
+
+    return findings;
+  }
+);
+
+// user-journey 是給 stakeholder 讀的方向，不是工程進度。
+//
+// 這個分工 2026-08-07 就寫在 implementation plan 開頭了，然後同一天我往那份文件塞了
+// 一張「已發布 vs working tree」的差異表，還把結尾三張卡的標題寫成「還沒到位的」。
+// 使用者的話是準的：**告訴 stakeholder 這個沒有、那個沒功能，他不會再看第二次。**
+//
+// 沒有任何 gate 讀得懂「這段話屬於哪份文件」。這條也讀不懂，它只認幾個字——但那幾個
+// 字只會出現在 roadmap 內容裡。另外正向驗一件事：產品核心那句是固定文案，不得被改寫。
+gate(
+  "G10",
+  "user-journey 講方向，不講開工順序與技術債",
+  "一份一直在講自己缺什麼的文件，stakeholder 讀第二次就不會再讀。工程進度在 implementation plan。",
+  () => {
+    const findings = [];
+    const journey = read("docs/user-journey.html");
+
+    const CORE = "Evidra is a <b>Fitness Decision Engine</b>";
+    if (!journey.includes(CORE)) {
+      findings.push(
+        "產品核心那句不見了或被改寫。固定文案：" +
+          "「Evidra is a Fitness Decision Engine, not a fitness data connector and not an AI coach.」"
+      );
+    }
+
+    const roadmapMarkers = [
+      [/技術債/, "技術債——編號與清單屬於 implementation plan"],
+      [/開工順位|順位\s*\d/, "開工順位——排順序是 roadmap 正本的事"],
+      [/待裁決|未決事項/, "待裁決問題——不寫進對外敘事"],
+      [/working tree|目前建置/, "working tree／目前建置——build 狀態不是產品方向"],
+      [/與\s*v\d+\.\d+\.\d+\s*的差距|差距表/, "版本差異表——讀者不該替我們的發版流程做對帳"],
+      [/還沒到位的/, "「還沒到位的」——同一件事要講成往哪裡走，不是缺什麼"]
+    ];
+
+    for (const [pattern, why] of roadmapMarkers) {
+      const match = pattern.exec(journey);
+      if (match) findings.push(`${locate("docs/user-journey.html", journey, match.index)}: ${why}`);
     }
 
     return findings;
