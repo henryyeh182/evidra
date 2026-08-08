@@ -110,6 +110,49 @@ export function deriveEvidenceLevel(evidence) {
 }
 
 /**
+ * The statuses that mean nobody here has confirmed this citation against a
+ * primary record — not the paper, not even its published abstract.
+ */
+const UNCONFIRMED_STATUSES = ["numbers_from_secondary_sources", "citation_not_read_in_full", "unverified"];
+
+/**
+ * The invariant this library most needed and did not have.
+ *
+ * EVD-R-007 shipped in five public releases carrying "roughly 4-7% VO2max
+ * within 2-3 weeks" attributed to Mujika & Padilla. The figure is in neither
+ * abstract, the full texts are paywalled, and it could not be traced to
+ * anything. It was written on 2026-08-06 with `verificationStatus:
+ * numbers_from_secondary_sources` and no summary named — and the same entry
+ * merged both parts of the review under Part II's URL, which is not what an
+ * entry assembled from open papers looks like.
+ *
+ * So the number was not carried from a secondary source. It was produced, and
+ * then labelled with the nearest status that sounded like diligence. The label
+ * was invented by the same process as the figure.
+ *
+ * A reviewer reading `numbers_from_secondary_sources` treats it as weak
+ * sourcing rather than as no sourcing, which is exactly the misreading that let
+ * it ship. This check removes the option: a citation nobody has confirmed
+ * against a primary record may not carry a quantity at all. Say what the paper
+ * establishes in words, or verify it and quote it.
+ *
+ * Had it existed that day the library would have failed to load, and v0.3.3
+ * would never have been built.
+ */
+function assertNoUnconfirmedFigures(item, where, field) {
+  if (!UNCONFIRMED_STATUSES.includes(item.verificationStatus)) return;
+  if (!/\d/.test(item.supports ?? "")) return;
+
+  fail(
+    `${where} ${field} "${item.citation}" is ${item.verificationStatus} — nobody here has ` +
+      `checked it against a primary record — yet its "supports" states a figure: ` +
+      `"${item.supports}". An unconfirmed citation may describe what a paper establishes, ` +
+      `never quantify it. A number attached to a real journal reference reads as sourced to ` +
+      `every reader who does not go and check.`
+  );
+}
+
+/**
  * Every citation must say how far it has been read, in the vocabulary the
  * library declares.
  *
@@ -205,6 +248,7 @@ function assertProvenanceHonesty(rule) {
       );
     }
     assertVerifiable(source, where, "source");
+    assertNoUnconfirmedFigures(source, where, "source");
   }
 
   for (const item of rule.supportingLiterature ?? []) {
@@ -213,6 +257,7 @@ function assertProvenanceHonesty(rule) {
       fail(`${where} supportingLiterature "${item.citation}" must state what it does not support.`);
     }
     assertVerifiable(item, where, "supportingLiterature");
+    assertNoUnconfirmedFigures(item, where, "supportingLiterature");
   }
 
   for (const item of rule.contested ?? []) {

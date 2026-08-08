@@ -182,6 +182,51 @@ test("supportingLiterature is held to the same standard as sources", () => {
   assert.throws(() => assertValidRuleLibrary(tampered), /supportingLiterature.*no verificationStatus/is);
 });
 
+// The regression this library exists for, using the entry that actually shipped.
+//
+// Written 2026-08-06, released in v0.3.3 through v0.3.7, retracted 2026-08-07:
+// the figure is in neither abstract, the full texts are paywalled, and it could
+// not be traced to any summary either. It carried a real journal reference and a
+// status that reads as weak sourcing rather than none, which is what let five
+// releases go out with it. Verbatim below so the case cannot be softened into a
+// tidier example than the one that happened.
+test("a citation nobody confirmed cannot carry a number — the EVD-R-007 case", () => {
+  const tampered = clone();
+  const rule = tampered.rules.find((entry) => entry.ruleId === "EVD-R-007");
+  rule.sources = [
+    {
+      citation:
+        "Mujika I, Padilla S. Detraining: loss of training-induced physiological and performance adaptations. " +
+        "Part I: short term insufficient training stimulus / Part II: long term insufficient training stimulus. " +
+        "Sports Med. 2000;30(2):79-87 and 30(3):145-154.",
+      url: "https://pubmed.ncbi.nlm.nih.gov/10999420/",
+      supports:
+        "That aerobic capacity declines progressively with training cessation — roughly 4-7% VO2max within " +
+        "2-3 weeks, substantially more beyond 4 weeks — so a returning athlete should not resume at prior load, " +
+        "and the reduction should scale with the length of the break.",
+      doesNotSupport: "The specific values 42 days, 60%, and 0.6.",
+      verificationStatus: "numbers_from_secondary_sources"
+    }
+  ];
+  delete rule.evidenceLevel;
+
+  assert.throws(
+    () => assertValidRuleLibrary(tampered),
+    /states a figure/i,
+    "the library must refuse to load rather than ship an unconfirmed number attached to a real paper"
+  );
+});
+
+test("a confirmed citation may still quote the figures it verified", () => {
+  // The check has to distinguish "nobody looked" from "someone looked and this
+  // is what it said" — otherwise the honest fix is to delete the evidence.
+  assert.doesNotThrow(() => assertValidRuleLibrary(clone()));
+
+  const gabbett = getRule("EVD-R-006").sources[0];
+  assert.equal(gabbett.verificationStatus, "primary_full_text_verified");
+  assert.match(gabbett.supports, /0\.8-1\.3/, "a verified citation keeps the numbers it verified");
+});
+
 test("the unchecked citation says so rather than saying nothing", () => {
   const rule = getRule("EVD-R-002");
 
