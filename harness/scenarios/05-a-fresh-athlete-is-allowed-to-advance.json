@@ -1,0 +1,124 @@
+{
+  "id": "a-fresh-athlete-is-allowed-to-advance",
+  "what": "Ample readiness on a fresh muscle group with an easy session scheduled. The only scenario here where the decision moves upward, which is the direction a safety-shaped harness is least likely to be watching.",
+  "date": "2026-08-06",
+  "scheduledSession": {
+    "id": "session_harness_05",
+    "focus": "Easy Aerobic",
+    "type": "run",
+    "durationMinutes": 45,
+    "intensity": "low",
+    "targetMuscleGroups": [
+      "legs"
+    ],
+    "exerciseIds": [
+      "exercise_recovery_walk"
+    ]
+  },
+  "expectedDecision": {
+    "type": "advance",
+    "intent": "increase_today_intensity",
+    "governingRule": "EVD-R-008",
+    "firedRules": [
+      "EVD-R-008"
+    ],
+    "changed": [
+      "intensity"
+    ],
+    "to": {
+      "intensity": "moderate",
+      "durationMinutes": 45
+    }
+  },
+  "evidence": {
+    "profile": {
+      "userId": "user_harness",
+      "name": "Harness Athlete",
+      "timezone": "Asia/Taipei",
+      "heightCm": 178,
+      "weightKg": 74,
+      "fitnessLevel": "intermediate"
+    },
+    "goals": [
+      {
+        "id": "goal_endurance",
+        "type": "endurance",
+        "label": "Half marathon",
+        "priority": 1
+      }
+    ],
+    "constraints": {
+      "equipment": [
+        {
+          "type": "none",
+          "location": "outdoor",
+          "available": true
+        }
+      ]
+    },
+    "workouts": [
+      {
+        "id": "w_0731",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-07-31T07:00:00+08:00",
+        "durationMinutes": 35,
+        "trainingLoad": 40,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0803",
+        "type": "strength",
+        "name": "Upper body",
+        "startedAt": "2026-08-03T18:00:00+08:00",
+        "durationMinutes": 35,
+        "trainingLoad": 35,
+        "muscleGroups": [
+          "back",
+          "arms"
+        ],
+        "source": "manual"
+      }
+    ],
+    "healthMetrics": [
+      {
+        "type": "sleep_duration_hours",
+        "value": 8,
+        "unit": "hours",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "sleep_quality",
+        "value": 88,
+        "unit": "score",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "hrv_ms",
+        "value": 62,
+        "unit": "ms",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "resting_hr_bpm",
+        "value": 51,
+        "unit": "bpm",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "stress",
+        "value": 15,
+        "unit": "score",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      }
+    ]
+  }
+}

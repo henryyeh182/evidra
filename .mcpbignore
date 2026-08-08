@@ -21,6 +21,11 @@ schemas/
 # Development surface: none of it is reachable from the entry point.
 docs/
 eval/
+# The decision harness, and the fixed evidence it runs on. Invented readings for
+# an invented athlete, but they are shaped exactly like a real person's health
+# record — and this list exists because that shape, not its truth, is what must
+# not travel inside something other people install.
+harness/
 scripts/
 # Demo prompts and sample evidence. They are read by a person on GitHub before
 # installing, not by the server after it — evidence arrives as call arguments,

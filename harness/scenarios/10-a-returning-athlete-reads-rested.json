@@ -1,0 +1,137 @@
+{
+  "id": "a-returning-athlete-reads-rested",
+  "what": "Seven weeks off. Every recovery signal is excellent, target-muscle fatigue is zero and the load ratio is at its safest possible value — the state in which every guard except the detraining rule reads all-clear, and the one where 'the evidence looks fine' is exactly the wrong conclusion.",
+  "date": "2026-08-06",
+  "scheduledSession": {
+    "id": "session_harness_10",
+    "focus": "Threshold Intervals",
+    "type": "run",
+    "durationMinutes": 60,
+    "intensity": "high",
+    "targetMuscleGroups": [
+      "legs"
+    ],
+    "exerciseIds": [
+      "exercise_recovery_walk"
+    ]
+  },
+  "expectedDecision": {
+    "type": "adjust",
+    "intent": "ease_back_after_break",
+    "governingRule": "EVD-R-007",
+    "firedRules": [
+      "EVD-R-007"
+    ],
+    "changed": [
+      "focus",
+      "durationMinutes",
+      "intensity"
+    ],
+    "to": {
+      "intensity": "low",
+      "durationMinutes": 36
+    }
+  },
+  "evidence": {
+    "profile": {
+      "userId": "user_harness",
+      "name": "Harness Athlete",
+      "timezone": "Asia/Taipei",
+      "heightCm": 178,
+      "weightKg": 74,
+      "fitnessLevel": "intermediate"
+    },
+    "goals": [
+      {
+        "id": "goal_endurance",
+        "type": "endurance",
+        "label": "Half marathon",
+        "priority": 1
+      }
+    ],
+    "constraints": {
+      "equipment": [
+        {
+          "type": "none",
+          "location": "outdoor",
+          "available": true
+        }
+      ]
+    },
+    "workouts": [
+      {
+        "id": "w_0605",
+        "type": "run",
+        "name": "Long run",
+        "startedAt": "2026-06-05T07:00:00+08:00",
+        "durationMinutes": 90,
+        "trainingLoad": 130,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0610",
+        "type": "run",
+        "name": "Intervals",
+        "startedAt": "2026-06-10T07:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 115,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0615",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-06-15T07:00:00+08:00",
+        "durationMinutes": 45,
+        "trainingLoad": 70,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      }
+    ],
+    "healthMetrics": [
+      {
+        "type": "sleep_duration_hours",
+        "value": 8,
+        "unit": "hours",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "sleep_quality",
+        "value": 88,
+        "unit": "score",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "hrv_ms",
+        "value": 62,
+        "unit": "ms",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "resting_hr_bpm",
+        "value": 51,
+        "unit": "bpm",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "stress",
+        "value": 15,
+        "unit": "score",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      }
+    ]
+  }
+}

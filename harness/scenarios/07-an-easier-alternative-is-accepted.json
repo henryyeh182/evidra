@@ -1,0 +1,153 @@
+{
+  "id": "an-easier-alternative-is-accepted",
+  "what": "The athlete asks for mobility work instead, inside the ceiling the rules just set. The proposal becomes the action, so `from -> to` has to describe a swap the athlete asked for rather than one the engine chose.",
+  "date": "2026-08-06",
+  "scheduledSession": {
+    "id": "session_harness_07",
+    "focus": "Threshold Intervals",
+    "type": "run",
+    "durationMinutes": 60,
+    "intensity": "high",
+    "targetMuscleGroups": [
+      "legs"
+    ],
+    "exerciseIds": [
+      "exercise_recovery_walk"
+    ]
+  },
+  "proposedSession": {
+    "id": "session_harness_07_proposed",
+    "focus": "Mobility",
+    "type": "mobility",
+    "durationMinutes": 30,
+    "intensity": "low",
+    "targetMuscleGroups": [
+      "legs"
+    ],
+    "exerciseIds": [
+      "exercise_lower_body_mobility"
+    ]
+  },
+  "expectedDecision": {
+    "type": "substitute",
+    "intent": "accept_athlete_proposal",
+    "governingRule": "EVD-R-002",
+    "firedRules": [
+      "EVD-R-002"
+    ],
+    "changed": [
+      "focus",
+      "type",
+      "durationMinutes",
+      "intensity",
+      "exercises"
+    ],
+    "to": {
+      "intensity": "low",
+      "durationMinutes": 30
+    }
+  },
+  "evidence": {
+    "profile": {
+      "userId": "user_harness",
+      "name": "Harness Athlete",
+      "timezone": "Asia/Taipei",
+      "heightCm": 178,
+      "weightKg": 74,
+      "fitnessLevel": "intermediate"
+    },
+    "goals": [
+      {
+        "id": "goal_endurance",
+        "type": "endurance",
+        "label": "Half marathon",
+        "priority": 1
+      }
+    ],
+    "constraints": {
+      "equipment": [
+        {
+          "type": "none",
+          "location": "outdoor",
+          "available": true
+        }
+      ]
+    },
+    "workouts": [
+      {
+        "id": "w_0730",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-07-30T07:00:00+08:00",
+        "durationMinutes": 45,
+        "trainingLoad": 55,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0801",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-08-01T07:00:00+08:00",
+        "durationMinutes": 40,
+        "trainingLoad": 50,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0803",
+        "type": "strength",
+        "name": "Upper body",
+        "startedAt": "2026-08-03T18:00:00+08:00",
+        "durationMinutes": 40,
+        "trainingLoad": 45,
+        "muscleGroups": [
+          "back",
+          "arms"
+        ],
+        "source": "manual"
+      }
+    ],
+    "healthMetrics": [
+      {
+        "type": "sleep_duration_hours",
+        "value": 5,
+        "unit": "hours",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "sleep_quality",
+        "value": 50,
+        "unit": "score",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "hrv_ms",
+        "value": 30,
+        "unit": "ms",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "resting_hr_bpm",
+        "value": 65,
+        "unit": "bpm",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "stress",
+        "value": 60,
+        "unit": "score",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      }
+    ]
+  }
+}

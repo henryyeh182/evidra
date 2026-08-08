@@ -1,0 +1,100 @@
+{
+  "id": "training-load-alone-still-decides",
+  "what": "A runner who owns no wearable: sessions with loads, no recovery signal of any kind. Readiness is not scored and must not be stood in for. The decision still has to be made, on what is there.",
+  "date": "2026-08-06",
+  "scheduledSession": {
+    "id": "session_harness_06",
+    "focus": "Tempo Run",
+    "type": "run",
+    "durationMinutes": 50,
+    "intensity": "high",
+    "targetMuscleGroups": [
+      "legs"
+    ],
+    "exerciseIds": [
+      "exercise_recovery_walk"
+    ]
+  },
+  "expectedDecision": {
+    "type": "adjust",
+    "intent": "reduce_today_intensity",
+    "governingRule": "EVD-R-003",
+    "firedRules": [
+      "EVD-R-003"
+    ],
+    "changed": [
+      "focus",
+      "intensity"
+    ],
+    "to": {
+      "intensity": "low",
+      "durationMinutes": 50
+    }
+  },
+  "evidence": {
+    "profile": {
+      "userId": "user_harness",
+      "name": "Harness Athlete",
+      "timezone": "Asia/Taipei",
+      "heightCm": 178,
+      "weightKg": 74,
+      "fitnessLevel": "intermediate"
+    },
+    "goals": [
+      {
+        "id": "goal_endurance",
+        "type": "endurance",
+        "label": "Half marathon",
+        "priority": 1
+      }
+    ],
+    "constraints": {
+      "equipment": [
+        {
+          "type": "none",
+          "location": "outdoor",
+          "available": true
+        }
+      ]
+    },
+    "workouts": [
+      {
+        "id": "w_0802",
+        "type": "run",
+        "name": "Long run",
+        "startedAt": "2026-08-02T07:00:00+08:00",
+        "durationMinutes": 95,
+        "trainingLoad": 140,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      },
+      {
+        "id": "w_0804",
+        "type": "run",
+        "name": "Intervals",
+        "startedAt": "2026-08-04T07:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 120,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      },
+      {
+        "id": "w_0805",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-08-05T07:00:00+08:00",
+        "durationMinutes": 40,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      }
+    ],
+    "healthMetrics": []
+  }
+}

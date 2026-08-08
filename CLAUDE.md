@@ -149,7 +149,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 - 對外 **6 個 tool**：`evidra_assess_fitness_state` · `evidra_decide_session` · `evidra_decide_exercise_substitution` ·
   `evidra_generate_plan` · `evidra_preview_adjust_plan` · `evidra_commit_adjust_plan`
-- **410 tests**、eval 20 golden cases，全綠
+- **417 tests**、eval 20 golden cases，全綠
 - parser 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP；
   Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 個平台。
   **前四家照真實匯出檔寫；Oura 與 WHOOP 照兩家自己的 OpenAPI 寫（2026-08-07），
@@ -363,11 +363,34 @@ npm run review:release
 對外 README 描述了當天才進 schema、還沒出貨的欄位；而 `PRIVACY.md` 對已編譯檔逐條做的
 宣稱，從發布到那天為止**沒有人拿真正的 archive 核對過一次**。
 
+## 動 Rule Library 的門檻／category／effect 之前
+
+**改 `packages/rules/data/session-rules.json` 裡的 `thresholds`、`category`、`priority`、
+`effect` 或 `status`，必須跑過 Decision Harness 才算數。**
+
+這條有機制擋，不是靠這裡寫著：`harness/rule-fingerprint.json` 對那幾個欄位各存一個 digest，
+`npm test` 在它與規則庫不一致時就紅。流程是
+
+```bash
+npm run harness                              # 先看決策變成什麼
+node harness/runner.js --update-fingerprint  # 看過了，才承認它
+```
+
+**重點不是那個 hash，是 commit 裡同時有「動了哪個門檻」與「有人看過它動出什麼」。**
+
+**它跟 `regression.test.js` 的差別要講準，不要誇大**（2026-08-08 實測）：那組案例刻意坐在
+各自門檻邊上，`acwrHigh` 1.4→1.5 它**當場就紅**。指紋多出來的只有兩件事——
+一是它涵蓋 9 條規則，regression 只有 7 條（EVD-R-005 與 EVD-R-007 在那邊明列為例外）；
+二是 regression 的案例本身是測試，**攔住你的那個案例可以在同一個 commit 裡一起改**：
+門檻改 1.5、案例證據改 1.51，416 個測試全綠。指紋不是行為測試，紅的時候沒有一個測試在
+邀請你去改它，所以它會一直紅到有人刻意動它為止。
+
 ## 常用指令
 
 ```bash
 npm test                     # 全套測試
-npm run eval                 # golden set 計分
+npm run eval                 # golden set 計分（tool 輸出契約）
+npm run harness              # Decision Harness（決策鏈本身；改規則或引擎之後必跑）
 npm run review:phase         # 階段完成審查（宣告「做完了」之前必跑）
 npm run build:graph          # 重建知識圖譜
 npm run audit:graph          # 圖譜品質稽核

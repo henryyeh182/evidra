@@ -1,0 +1,196 @@
+{
+  "id": "load-ramped-too-fast-this-week",
+  "what": "Four quiet weeks and then a heavy one, on muscle groups today's session does not touch. Recovery reads fine and the target group is fresh, so the only thing that can catch this is the ramp rate itself — the one rule here whose quantity is defined outside Evidra and carries both citations and published objections.",
+  "date": "2026-08-06",
+  "scheduledSession": {
+    "id": "session_harness_13",
+    "focus": "Upper Body Strength",
+    "type": "strength",
+    "durationMinutes": 50,
+    "intensity": "high",
+    "targetMuscleGroups": [
+      "chest"
+    ],
+    "exerciseIds": [
+      "exercise_bent_over_row"
+    ]
+  },
+  "expectedDecision": {
+    "type": "adjust",
+    "intent": "reduce_today_intensity",
+    "governingRule": "EVD-R-006",
+    "firedRules": [
+      "EVD-R-006"
+    ],
+    "changed": [
+      "focus",
+      "intensity"
+    ],
+    "to": {
+      "intensity": "moderate",
+      "durationMinutes": 50
+    }
+  },
+  "evidence": {
+    "profile": {
+      "userId": "user_harness",
+      "name": "Harness Athlete",
+      "timezone": "Asia/Taipei",
+      "heightCm": 178,
+      "weightKg": 74,
+      "fitnessLevel": "intermediate"
+    },
+    "goals": [
+      {
+        "id": "goal_endurance",
+        "type": "endurance",
+        "label": "Half marathon",
+        "priority": 1
+      }
+    ],
+    "constraints": {
+      "equipment": [
+        {
+          "type": "none",
+          "location": "outdoor",
+          "available": true
+        }
+      ]
+    },
+    "workouts": [
+      {
+        "id": "w_0712",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-07-12T07:00:00+08:00",
+        "durationMinutes": 30,
+        "trainingLoad": 25,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      },
+      {
+        "id": "w_0716",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-07-16T07:00:00+08:00",
+        "durationMinutes": 30,
+        "trainingLoad": 25,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      },
+      {
+        "id": "w_0720",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-07-20T07:00:00+08:00",
+        "durationMinutes": 30,
+        "trainingLoad": 25,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      },
+      {
+        "id": "w_0724",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-07-24T07:00:00+08:00",
+        "durationMinutes": 30,
+        "trainingLoad": 25,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      },
+      {
+        "id": "w_0728",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-07-28T07:00:00+08:00",
+        "durationMinutes": 30,
+        "trainingLoad": 25,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      },
+      {
+        "id": "w_0731",
+        "type": "run",
+        "name": "Long run",
+        "startedAt": "2026-07-31T07:00:00+08:00",
+        "durationMinutes": 100,
+        "trainingLoad": 150,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      },
+      {
+        "id": "w_0802",
+        "type": "run",
+        "name": "Intervals",
+        "startedAt": "2026-08-02T07:00:00+08:00",
+        "durationMinutes": 60,
+        "trainingLoad": 140,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      },
+      {
+        "id": "w_0804",
+        "type": "run",
+        "name": "Tempo",
+        "startedAt": "2026-08-04T07:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 130,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      }
+    ],
+    "healthMetrics": [
+      {
+        "type": "sleep_duration_hours",
+        "value": 7.5,
+        "unit": "hours",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "sleep_quality",
+        "value": 82,
+        "unit": "score",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "hrv_ms",
+        "value": 55,
+        "unit": "ms",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "resting_hr_bpm",
+        "value": 54,
+        "unit": "bpm",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      },
+      {
+        "type": "stress",
+        "value": 25,
+        "unit": "score",
+        "recordedAt": "2026-08-06T06:30:00+08:00",
+        "source": "manual"
+      }
+    ]
+  }
+}

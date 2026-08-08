@@ -1,0 +1,32 @@
+{
+  "readMe": [
+    "Generated. Do not hand-edit a hash.",
+    "",
+    "One digest per rule over the fields that can move a decision: category,",
+    "priority, thresholds, effect, status. Prose is deliberately outside — a",
+    "retitled rule or a corrected citation must not turn this red, or it gets",
+    "turned off.",
+    "",
+    "When a test points here, the file is not the problem. Run `npm run harness`",
+    "and read what the decisions became; the answer may be that nothing moved,",
+    "which is worth knowing rather than assuming. Then regenerate:",
+    "",
+    "    node harness/runner.js --update-fingerprint",
+    "",
+    "and commit the result alongside the rule edit, so the diff shows both the",
+    "threshold that changed and the acknowledgement that someone looked."
+  ],
+  "libraryVersion": "1.1.0",
+  "policies": "55406c5ae37129f8",
+  "rules": {
+    "EVD-R-001": "94a8fc8c6d9e0515",
+    "EVD-R-002": "d675e59827ebc926",
+    "EVD-R-003": "a918510fe9135093",
+    "EVD-R-004": "12dce723b2377f25",
+    "EVD-R-005": "91b04dc52718a2b4",
+    "EVD-R-006": "6827cf711088f59e",
+    "EVD-R-007": "6b8f78b663bf2417",
+    "EVD-R-008": "5db6e4337dd7ca57",
+    "EVD-R-009": "6616b148336b2d82"
+  }
+}
