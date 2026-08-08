@@ -453,9 +453,88 @@ gate(
       }
     }
 
+    findings.push(...outboundFindings());
     return findings;
   }
 );
+
+/**
+ * 「Evidra itself performs no outbound network requests」是已發布的承諾。
+ *
+ * 那句話印在 README、evidra/README 與 PRIVACY.md 上，而在 2026-08-07 之前
+ * **沒有任何東西在驗它**——G7 只認得 `api.openai.com` 那幾個字串，任何人寫一行
+ * `import { request } from "node:https"` 都不會有東西叫。這跟 EVD-R-007 的
+ * 4-7% 是同一個形狀：對外承諾了一件事，而驗證它的機制不存在。
+ *
+ * 檢查的範圍要跟承諾的範圍一樣。README 寫的是「As a desktop extension, this is
+ * checkable against the one compiled server file it ships」，所以這裡從
+ * `.mcpb` 真正的進入點 `stdio.js` 追 import graph，只驗會被編進去的那一組。
+ *
+ * 這個範圍是必要的，不是取巧：`apps/mcp-server/src/http.js` 用 `node:http`
+ * 開 Streamable HTTP 的**接聽**端口，那是 inbound，而且它不在 bundle 圖裡。
+ * 掃整個 `apps/` 會把它誤報成 outbound，而誤報會讓人學會忽略這支。
+ */
+function outboundFindings() {
+  const findings = [];
+  const entry = join(rootDir, "apps/mcp-server/src/stdio.js");
+
+  // 具備對外連線或另起行程能力的內建模組。有一個進得了 bundle，那句話就不成立。
+  const CAPABLE = /^node:(https?|net|dns|dgram|tls|child_process|worker_threads|cluster)$/;
+
+  const seen = new Set();
+  const builtins = new Map();
+
+  // 只認真正的 import／export 語句。用寬鬆的 /from "..."/ 掃過會把 tool 描述裡的
+  // 英文句子當成模組名（實測撈出 "what should I do today"）。
+  const specifiers = (text) => [
+    ...[...text.matchAll(/(?:^|\n)\s*(?:import|export)\b[^;\n]*?\bfrom\s*"([^"]+)"/g)].map((m) => m[1]),
+    ...[...text.matchAll(/(?:^|\n)\s*import\s*"([^"]+)"/g)].map((m) => m[1]),
+    ...[...text.matchAll(/\bimport\s*\(\s*"([^"]+)"\s*\)/g)].map((m) => m[1])
+  ];
+
+  const walk = (file) => {
+    if (seen.has(file)) return;
+    seen.add(file);
+    let text;
+    try {
+      text = readFileSync(file, "utf8");
+    } catch {
+      return;
+    }
+    const relative = file.slice(rootDir.length + 1);
+
+    if (/\bfetch\s*\(/.test(text)) {
+      findings.push(`${relative} 在 bundle 路徑呼叫 fetch()——與「no outbound network requests」牴觸`);
+    }
+
+    for (const spec of specifiers(text)) {
+      if (spec.startsWith(".")) {
+        walk(join(dirname(file), spec));
+      } else if (spec.startsWith("node:")) {
+        if (CAPABLE.test(spec) && !builtins.has(spec)) builtins.set(spec, relative);
+      } else {
+        findings.push(`${relative} 匯入第三方套件 ${spec}——bundle 宣稱只用標準庫`);
+      }
+    }
+  };
+
+  walk(entry);
+
+  for (const [spec, where] of builtins) {
+    findings.push(
+      `${where} 匯入 ${spec}——它會被編進 .mcpb，` +
+        `而 README 與 PRIVACY.md 對外寫的是「no outbound HTTP, fetch, socket, or DNS calls」`
+    );
+  }
+
+  // 圖追不動就是紅的，不是跳過：一條「無法測量」與一條「已驗證相符」在輸出上
+  // 長得一樣，才是這支工具最危險的失敗。
+  if (seen.size < 10) {
+    findings.push(`從 ${entry.slice(rootDir.length + 1)} 只追到 ${seen.size} 個檔案，import graph 追不動，這條這次等於沒驗`);
+  }
+
+  return findings;
+}
 
 // G8 — 對外文字不用內部詞彙，也不從「我們不做什麼」開頭
 //
