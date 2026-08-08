@@ -44,5 +44,15 @@
  * differently; the prose a caller reads to the athlete does, so minor rather
  * than patch, by the same standard as 1.2.0 above. Found by the decision
  * harness once its scenarios stopped all targeting a trained muscle group.
+ *
+ * 1.4.0, also the same day: `describeRule` now emits `verificationStatus` on
+ * every entry in a governing rule's `contested` list, and stops emitting `url`
+ * there. The first half follows the library making that field mandatory, and on
+ * its own would be announced well enough by libraryVersion moving to 2.0.0. The
+ * second half would not: the identifiers are still in the library data and it is
+ * this code that decided to leave them out of the frame, so a caller diffing two
+ * decisions would see a field disappear with nothing in the library version to
+ * explain it. No verdict moves and no rule fires differently; what a caller
+ * receives does, which is the 1.2.0 standard.
  */
-export const ENGINE_VERSION = "1.3.0";
+export const ENGINE_VERSION = "1.4.0";
