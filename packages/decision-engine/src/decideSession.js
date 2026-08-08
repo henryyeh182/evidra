@@ -2,6 +2,7 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 import { assertValidDecision } from "./models.js";
+import { ENGINE_VERSION } from "./version.js";
 import {
   THRESHOLDS,
   LIBRARY_VERSION,
@@ -790,6 +791,7 @@ export function decideSession({
   const readingFor = new Map(fired.map((entry) => [entry.ruleId, entry]));
   const decisionBasis = {
     libraryVersion: LIBRARY_VERSION,
+    engineVersion: ENGINE_VERSION,
     policies: getPolicies(),
     governingRule: arbitration.governing
       ? describeRule(arbitration.governing.ruleId, readingFor.get(arbitration.governing.ruleId)?.measured)

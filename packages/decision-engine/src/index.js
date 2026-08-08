@@ -3,3 +3,4 @@
 
 export { decideSession, RULES } from "./decideSession.js";
 export { assertValidDecision, DECISION_TYPES } from "./models.js";
+export { ENGINE_VERSION } from "./version.js";

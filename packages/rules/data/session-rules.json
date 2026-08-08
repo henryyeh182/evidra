@@ -1,6 +1,6 @@
 {
   "libraryId": "evidra.session-rules",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "lastReview": "2026-08-07",
   "reviewer": "Henry Yeh",
 
@@ -101,7 +101,28 @@
     "`contested` entries do not yet carry a verificationStatus. That is a known",
     "gap, not a statement that they have been checked: EVD-R-006's notes record",
     "that its two objections are taken from their published abstracts and not",
-    "from anyone's reading of the papers."
+    "from anyone's reading of the papers.",
+    "",
+    "`version` is this library's own number and nothing else's. It is not the",
+    "version of the packaged extension (server.json) and not the version of the",
+    "code that applies these rules (ENGINE_VERSION). Those three move for three",
+    "different reasons, and a caller comparing two decisions needs to see which",
+    "one moved: this number and the engine's both travel out on every decision,",
+    "in decisionBasis. What each part means here:",
+    "",
+    "  major  The shape changed. A field was added, removed, or given a new",
+    "         meaning, so a reader of the old shape has to change. Splitting",
+    "         evidenceLevel into two axes was one of these.",
+    "  minor  The library decides differently or stands on different provenance:",
+    "         a threshold value moved, a rule was added or retired, a citation",
+    "         was corrected or regraded. The shape is untouched.",
+    "  patch  Wording that no decision rests on.",
+    "",
+    "1.0.0 is the first version issued under this rule, on 2026-08-08. Numbers",
+    "before it were assigned without one and carry no meaning; in particular the",
+    "released v0.3.7 extension has a library reading 1.0.0 whose content predates",
+    "the 2026-08-07 provenance review. That archive cannot be edited, so the",
+    "collision is recorded here and in the implementation plan instead."
   ],
 
   "studyDesigns": [
