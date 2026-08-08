@@ -153,6 +153,23 @@ const identityDisplay = (id) => id;
 // by a routine intensity tweak.
 const TYPE_SEVERITY = { keep: 0, advance: 1, adjust: 2, substitute: 3, defer: 4 };
 
+/**
+ * The part of `decisionBasis` that is true of every decision, rule or no rule:
+ * which library, which engine, which policies were in force. Both returns below
+ * build on this rather than each assembling their own, so the shape a caller
+ * parses cannot differ between a decision that fired rules and one that did
+ * not.
+ */
+function emptyBasis() {
+  return {
+    libraryVersion: LIBRARY_VERSION,
+    engineVersion: ENGINE_VERSION,
+    policies: getPolicies(),
+    governingRule: null,
+    appliedRules: []
+  };
+}
+
 function lowerIntensity(intensity) {
   const index = INTENSITY_ORDER.indexOf(intensity);
   return INTENSITY_ORDER[Math.max(0, index - 1)];
@@ -327,6 +344,14 @@ export function decideSession({
       reason: [
         "Nothing is scheduled today, so there is no prior state to change. This is a recommendation question, not a decision."
       ],
+      // No rule fired, which is a thing to state rather than to omit. This
+      // return used to carry no `decisionBasis` at all — a required field on
+      // this tool's own output schema, missing on every call that arrived
+      // without a scheduled session, and never caught because the golden set's
+      // one decide_session case always supplies one. "No rule was applied" and
+      // "we are not saying what this rests on" are different answers, and only
+      // the first is true here.
+      decisionBasis: emptyBasis(),
       confidence: state.confidence || "low",
       signalCoverage: normalizeCoverage(state.signalCoverage),
       limits: ["Without a plan only a recommendation is possible; a decision needs a scheduled session."]
@@ -832,9 +857,7 @@ export function decideSession({
   const arbitration = arbitrate(fired.map((entry) => entry.ruleId));
   const readingFor = new Map(fired.map((entry) => [entry.ruleId, entry]));
   const decisionBasis = {
-    libraryVersion: LIBRARY_VERSION,
-    engineVersion: ENGINE_VERSION,
-    policies: getPolicies(),
+    ...emptyBasis(),
     governingRule: arbitration.governing
       ? describeRule(arbitration.governing.ruleId, readingFor.get(arbitration.governing.ruleId)?.measured)
       : null,

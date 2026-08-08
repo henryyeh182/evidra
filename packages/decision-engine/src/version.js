@@ -25,5 +25,13 @@
  * arbitration. No verdict moves — the same movements are removed as before —
  * but `decisionBasis.governingRule` does on any day a restriction bites, which
  * is observable and therefore not a patch.
+ *
+ * 1.2.0, also the same day: a call with no scheduled session now carries
+ * `decisionBasis` like every other decision, saying that no rule was applied
+ * rather than saying nothing. It had been omitted entirely — a required field
+ * on the tool's own output schema, absent on every such call, and invisible to
+ * the golden set because its one decide_session case always supplies a session.
+ * The decision itself is unchanged; what a caller receives is not, so this is a
+ * minor rather than a patch. Found by the decision harness on its first run.
  */
-export const ENGINE_VERSION = "1.1.0";
+export const ENGINE_VERSION = "1.2.0";
