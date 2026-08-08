@@ -154,15 +154,11 @@ Evidra ships as a Claude Desktop extension (`.mcpb`).
 shasum -a 256 evidra.mcpb
 ```
 
-Compare it against the `fileSha256` published for that version in the
-[MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=evidra),
-under `io.github.henryyeh182/evidra`.
+Compare it with the `fileSha256` for your version in the
+[MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.henryyeh182/evidra).
 
-Two things make that check worth the minute it takes. The checksum is held by a
-registry we do not control, so it is not us vouching for ourselves. And **every
-release from v0.1.0 onward is kept and never overwritten**, so a build you
-verified last year still verifies today — the file you checked is the file that
-stays at that URL.
+That checksum is held by a registry we don't control, and releases are never
+overwritten — a file you verify once still verifies later.
 
 An extension is a copy taken at install time. After installing a new version, restart
 Claude Desktop completely — closing the window is not enough.
@@ -178,70 +174,52 @@ Claude Desktop completely — closing the window is not enough.
 
 ## Five questions to start with
 
-Two of these need nothing but the sentence. The other three want whatever export
-you already have — Evidra reads what your assistant hands it, so "attach my
-Strava export" and "here is what I did yesterday" are the same kind of input.
-
-**Figures are deliberately not quoted below.** What comes back depends on your
-evidence, and a number printed here would be a number from someone else's body.
-What is fixed is the *kind* of answer, and that every one of them arrives with
-the evidence and the rule attached.
+Two need nothing but the sentence. The rest take whatever export you already have.
 
 **1 · Nothing but what you can say out loud**
 
 > I ran 80 minutes yesterday and felt pretty beaten up. Slept about six hours.
 > Today's plan says VO₂max intervals, 60 minutes. Should I still do them?
 
-Often this comes back `keep` — and that is the point. Keeping the session is a
-decision, not the absence of one: it means the evidence was checked and the
-session stands. Confidence will be low, because one sleep figure is most of what
-you gave it, and it will say so rather than sounding sure.
+Often comes back `keep`. Keeping the session is a decision — the evidence was
+checked and it stands. Confidence will be low, and it says so.
 
 **2 · Training load with no recovery signal at all**
 
 > Here's my Strava export. Today is threshold repeats, 60 minutes hard — am I
 > overcooking it?
 
-Strava measures no HRV and no sleep. It has the load of every session, and that
-alone decides. If your recent load has climbed too fast against the preceding
-weeks, the intensity comes down and the rule that did it is named. With only a
-little history the comparison falls back to an assumed weekly target instead of
-your own past, and the response says which of the two it used. Ask where
-its threshold came from and you get the citation, **plus the published objections
-to that citation**, plus a plain statement that our cut point is not the one in
-the paper.
+Strava has no HRV and no sleep. Session load alone decides. Ask where the
+threshold came from and you get the citation, the published objections to it,
+and a plain statement that our cut point is not the one in the paper.
 
 **3 · A vendor's own score, taken as it stands**
 
 > Here's my Garmin data for today. I've got a tempo run scheduled, 50 minutes hard.
 
-Body Battery, Oura Readiness and Whoop Recovery are treated as first-class
-evidence and are **not recomputed**. The watch was on your wrist; it integrated
-signals Evidra never sees, so when one reaches the engine it weighs more than any
-raw reading.
+Body Battery, Oura Readiness and Whoop Recovery are used as they stand, never
+recomputed, and weigh more than any raw reading.
 
-In v0.3.7 the field carrying it is not yet named in the tool schema, so your
-assistant may not find it and may send the raw signals on their own. **The
-decision comes out the same either way** — what changes is the confidence
-attached to it. The next release names the field.
+In v0.3.7 the field carrying them is not yet named in the tool schema, so your
+assistant may send the raw signals instead. The decision is the same either way;
+the confidence differs. The next release names the field.
 
 **4 · Asking to go harder**
 
 > Here's my Oura data. Today is an easy session but I feel great — can I push?
 
-Decisions are not only downward. With recovery high and the target muscles fresh,
-this comes back `advance`, and the session moves up. Oura reports no training
-load, so **Evidra computes none** — it will not multiply duration by an intensity
-label to manufacture a number that later turns into "take it easy today".
+Decisions are not only downward — this one comes back `advance`. Oura reports no
+training load, so Evidra computes none rather than inventing a number.
 
 **5 · Training around an injury**
 
 > My knee's been bothering me. What can I do instead of squats today? I've only
 > got dumbbells and bodyweight.
 
-Movements contraindicated for the knee are **filtered out, not ranked down**. The
-reason you get back says so in as many words. A model can be talked past a safety
-rule; a deterministic filter cannot.
+Contraindicated movements are filtered out, not ranked down. A model can be
+talked past a safety rule; a filter cannot.
+
+Figures are not quoted here — what comes back depends on your evidence.
 
 ---
 
