@@ -335,17 +335,27 @@ result 裡而不是協定層**、structured output、transport 選擇。**這些
 另兩個 `mcp-server-dev:*` 這裡用不到，不必叫：`build-mcp-server` 是決定部署模型的入口
 （已定案）；`build-mcp-app` 是做互動 widget／Apps SDK 的（「聊天介面」在「明確不做」裡）。
 
-## 發布／上架之前一定要跑
+## 發布／上架前後都要跑
 
 ```bash
-npm run review:release          # 對「已發布的那顆」，不是對 working tree
+npm run review:release
 ```
 
-**每一次發布、每一次上架、每一次動對外文件，都要跑這支。** 它下載 GitHub 上真正的
-`.mcpb`、驗 sha256、解開來逐條核對 `PRIVACY.md` 寫的那些可執行斷言
-（搜 `node:http`／`fetch(`／`writeFile` 應為零命中）、跑 build-mcpb skill 的
-`local-security` 出貨前清單，再抓 `evidra` 公開 repo 的 README 與 PRIVACY 對版本、
-對 tool 清單。
+**每一次發布、每一次上架、每一次動對外文件，都要跑這支。** 它自己判斷驗哪一顆，
+並在標頭印出來：
+
+| `server.json` 宣告的版本 | 驗的 artifact | 用在 |
+|---|---|---|
+| GitHub 上已有該 release | **下載回來的那顆** | 發布後對帳、平常確認現況 |
+| 還沒發布 | **本機 `dist/evidra.mcpb`** | 發布前對帳 |
+
+**`.mcpb` 從來不進 git**（`dist/` 在 `.gitignore`），它只存在於 GitHub Release 的 asset。
+所以本機模式驗的是 `npm run pack` 剛產出的那顆——**忘了重打包會被 R2 抓到**
+（archive 內 `manifest.json` 的版本與 `server.json` 不符）。
+
+五條：版號一致 · sha256 一致 · **`PRIVACY.md` 逐條可執行斷言**（搜 `node:http`／
+`fetch(`／`writeFile` 應為零命中）· build-mcpb skill 的 `local-security` 出貨前清單 ·
+公開 repo 的 README／PRIVACY 對版本與 tool 清單。
 
 **為什麼要獨立一支**：`manifest.json` 的 `documentation`／`privacy_policies` 指向
 `blob/main/...`，讀者永遠讀到最新文件、卻裝到最後一個 release。**兩者分離是預設狀態。**

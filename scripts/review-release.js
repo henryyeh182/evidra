@@ -51,17 +51,44 @@ const declaredVersion = serverJson.version;
 const declaredSha = serverJson.packages?.[0]?.fileSha256;
 
 let work = null;
+let mode = null;
 let archive = null;
 let compiled = null;
 let archiveList = "";
 let bundledManifest = null;
 let bundledPackage = null;
 
-/** 只抓一次，後面每條 check 共用。 */
-function fetchRelease() {
+/**
+ * 兩種時機，兩個 artifact。
+ *
+ * 這支原本只認「已經在 GitHub 上的那顆」，結果是**發布前根本跑不動**：版號一 bump，
+ * `gh release download v0.3.8` 直接 not found，五條檢查一條都到不了。而發布前正是
+ * 最需要它的時候——那時候還來得及修。
+ *
+ * 所以先看 `server.json` 宣告的版本有沒有對應的 release：
+ *   有 → 驗**已發布**的那顆（發布後對帳，也是平常想確認現況時跑的）
+ *   沒有 → 驗 `npm run pack` 剛產出的 `dist/evidra.mcpb`（發布前對帳）
+ *
+ * 兩種模式都會在標頭印出**驗的是哪一顆**。這件事不能靠讀的人自己推——一份說
+ * 「全部通過」卻沒說驗了什麼的輸出，比不跑更糟。
+ */
+function loadArtifact() {
   work = mkdtempSync(join(tmpdir(), "evidra-release-"));
-  sh("gh", ["release", "download", `v${declaredVersion}`, "--repo", PUBLIC_REPO, "--pattern", "*.mcpb", "--dir", work]);
-  archive = join(work, "evidra.mcpb");
+  const tag = `v${declaredVersion}`;
+
+  try {
+    sh("gh", ["release", "download", tag, "--repo", PUBLIC_REPO, "--pattern", "*.mcpb", "--dir", work], {
+      stdio: ["ignore", "pipe", "ignore"]
+    });
+    archive = join(work, "evidra.mcpb");
+    mode = "published";
+  } catch {
+    archive = join(rootDir, "dist/evidra.mcpb");
+    mode = "local";
+    // 本機那顆不存在就是紅的：這代表還沒 `npm run pack`，沒有東西可驗。
+    readFileSync(archive);
+  }
+
   sh("unzip", ["-oq", archive, "-d", join(work, "x")]);
   archiveList = sh("unzip", ["-l", archive]);
   compiled = readFileSync(join(work, "x/dist/evidra-server.mjs"), "utf8");
@@ -78,9 +105,14 @@ check(
   () => {
     const findings = [];
     const latest = sh("gh", ["release", "view", "--repo", PUBLIC_REPO, "--json", "tagName", "--jq", ".tagName"]).trim();
-    if (latest !== `v${declaredVersion}`) {
-      findings.push(`server.json 宣告 v${declaredVersion}，GitHub 的 latest 是 ${latest}`);
+    if (latest === `v${declaredVersion}`) return findings;
+
+    // 發布前這是預期狀態，不是錯——但要講出來，因為它代表底下四條驗的是還沒出去的東西。
+    if (mode === "local") {
+      console.log(`    （發布前：GitHub 的 latest 仍是 ${latest}，底下驗的是本機 dist/evidra.mcpb）`);
+      return findings;
     }
+    findings.push(`server.json 宣告 v${declaredVersion}，GitHub 的 latest 是 ${latest}`);
     return findings;
   }
 );
@@ -93,7 +125,12 @@ check(
     const findings = [];
     const actual = createHash("sha256").update(readFileSync(archive)).digest("hex");
     if (actual !== declaredSha) {
-      findings.push(`下載的 sha256 ${actual}，server.json 宣告 ${declaredSha}`);
+      findings.push(
+        mode === "published"
+          ? `下載的 sha256 ${actual}，server.json 宣告 ${declaredSha}`
+          : `本機 dist/evidra.mcpb 的 sha256 ${actual} 與 server.json 的 ${declaredSha} 不符——` +
+            `重打包之後要跑 stamp-release，否則發布出去的 checksum 會是錯的`
+      );
     }
     if (bundledManifest.version !== declaredVersion) {
       findings.push(`archive 內 manifest.json 是 ${bundledManifest.version}，server.json 是 ${declaredVersion}`);
@@ -193,7 +230,12 @@ check(
 
     // 對外宣告的版本必須是這一版。
     if (!readme.includes(`v${declaredVersion}`)) {
-      findings.push(`evidra/README.md 沒有提到 v${declaredVersion}——讀者對不到自己裝的是哪一版`);
+      findings.push(
+        `evidra/README.md 沒有提到 v${declaredVersion}——` +
+          (mode === "local"
+            ? "發布前就要改好，否則 release 一出去，公開文件講的就是上一版"
+            : "讀者對不到自己裝的是哪一版")
+      );
     }
 
     // 對外列出的 tool 必須真的在出貨物裡。少一個是漏做，多一個是宣稱不存在的功能。
@@ -219,17 +261,22 @@ check(
 
 console.log("\n發布前對帳 —— 對已發布的那顆");
 console.log("================================\n");
-console.log(`  server.json 宣告：v${declaredVersion}`);
-console.log(`  公開 repo：${PUBLIC_REPO}\n`);
-
 let failed = 0;
 try {
-  fetchRelease();
+  loadArtifact();
 } catch (cause) {
-  console.log(`✖ 取不到 v${declaredVersion} 的 release：${cause.message.split("\n")[0]}`);
-  console.log("\n取不到就是紅的，不是跳過——「無法檢查」與「檢查通過」不能長得一樣。\n");
+  console.log(`✖ 沒有可驗的 artifact：${cause.message.split("\n")[0]}`);
+  console.log("\n先 `npm run pack`，或確認 release 存在。取不到就是紅的，不是跳過。\n");
   process.exit(1);
 }
+
+console.log(`  server.json 宣告：v${declaredVersion}`);
+console.log(`  公開 repo：${PUBLIC_REPO}`);
+console.log(
+  mode === "published"
+    ? `  驗的是：GitHub release v${declaredVersion} 下載回來的 evidra.mcpb\n`
+    : `  驗的是：本機 dist/evidra.mcpb（v${declaredVersion} 尚未發布 —— 發布前對帳）\n`
+);
 
 for (const { id, title, why, run } of checks) {
   let findings = [];
@@ -259,4 +306,8 @@ if (failed > 0) {
   console.log(`${failed} 條未通過。已發布的東西與對外說法不一致——修好再上架。\n`);
   process.exit(1);
 }
-console.log("全部通過。已發布的那顆與公開文件對得上。\n");
+console.log(
+  mode === "published"
+    ? "全部通過。已發布的那顆與公開文件對得上。\n"
+    : "全部通過。這顆可以發布——發布後再跑一次，模式會切成 published。\n"
+);
