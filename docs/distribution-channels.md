@@ -221,6 +221,42 @@ registry 這欄另寫一句 93 字元：
 
 ---
 
+## 各通路現況（2026-08-08 實查）
+
+| 通路 | 現況 |
+|---|---|
+| 官方 MCP registry | ✅ 五個版本都在（0.3.3／0.3.4／0.3.5／0.3.6／0.3.7），v0.3.7 為 `isLatest`、`status: active`，2026-08-07 01:02 上架 |
+| PulseMCP | ❌ **還沒出現**。搜 evidra 只有別人的 `Evidra vitas`（AI 稽核記錄，2026-03-12）。registry 是 08-07 才發的，**每週處理，還沒到一週，屬正常**。一週後仍無再寄 `hello@pulsemcp.com` |
+| Anthropic MCPB | ⏳ **查不到，而且是設計上查不到**（見下） |
+| mcp.so | 未送 |
+| Smithery | 未送 |
+
+### MCPB 送件沒有任何查得到進度的地方
+
+2026-08-08 查證，來源 `claude.com/docs/connectors/building/managing-your-listing`，原文：
+
+> The dashboard covers directory-listed remote MCP servers only.
+> **Custom connectors and local servers (desktop extensions) don't appear here**
+
+所以 MCPB **沒有 submissions dashboard、沒有狀態、沒有 reviewer feedback 頁**。
+remote 那條路才有（且要 Team／Enterprise）。唯一管道是他們主動寄信，
+或自己寄 `mcp-review@anthropic.com`。**「審查中」這個狀態無法由我方查證。**
+
+### ⚠️ 一句沒有出處的話
+
+CLAUDE.md 寫著「他們評估時看的是連結指向的最新版」。**2026-08-08 找不到出處**：
+submission 頁、managing-your-listing 頁、以及本檔存的 8 題表單原文，三處都沒有這句。
+表單同時收 GitHub 連結**與** `.mcpb` 附檔（附上去的是 v0.3.6 那顆），
+**哪一個為準沒有任何文件說明**。要用這句話做決定之前先寄信問。
+
+送件後的義務倒是有明文（submission 頁）：
+
+> By submitting a connector, you also agree to: **Maintain your connector's security and functionality**
+
+**沒有任何一句說送件期間不得更新或發版。** 這是查無禁止，不是明文允許。
+
+---
+
 ## PulseMCP（2026-08-03 一手，來源 `pulsemcp.com/submit`）
 
 **兩條路：**
@@ -490,8 +526,9 @@ Inspector 複驗：`{"hrv_ms":{"sources":["garmin"],"writers":[],"latest":"…"}
 |---|---|---|---|
 | 1 | Smithery 會不會也從官方 registry 抓 | ❌ **查過仍無定論**。Smithery 文件 59 頁全無提及；官方 registry 的 README／`community-projects.md`／`registry-aggregators.mdx`／發佈公告都不點名任何消費者；站內抽查 2 筆官方 registry 項目，1 筆在（命名空間不同）1 筆不在。**唯一給答案的第三方部落格，同句話把 PulseMCP 講錯，不可用。剩下的路只有問 Smithery 本人。** | 決定「發一次全解決」還是「發兩次」 |
 | 2 | Smithery 對 MCPB 路徑收不收費 | ✅ **已解：免費**（pricing FAQ 原文見上） | — |
-| 3 | PulseMCP 的審查政策與營利模式 | ✅ **已解：官方未公布**。`submit` 與 `about` 兩頁都沒有審查、把關、營利的敘述。**「未公布」不等於「沒有審查」** | 影響它算不算通路 |
+| 3 | PulseMCP 的審查政策與營利模式 | ✅ **已解：官方未公布**。`submit` 與 `about` 兩頁都沒有審查、把關、營利的敘述。**「未公布」不等於「沒有審查」**。※ 抓取節奏是明文的（每天抓、每週處理），與審查政策是兩回事，不要混為一談 | 影響它算不算通路 |
 | 4 | GitHub MCP Registry 是否從官方 registry 抓 | ❌ 未查 | 同 #1 |
+| 14 | **MCPB 送件後，評估的是表單附檔（v0.3.6）還是 GitHub 連結指向的最新版** | ❌ **三處官方文件都沒寫**（2026-08-08 查）。CLAUDE.md 曾把「看最新版」當事實寫下，無出處 | 決定「發不發版會不會影響送審」，也決定審查者實際看到哪一版 |
 | 5 | PulseMCP 自稱會自動收錄，實際收錄結果未驗 | ❌ 未驗——**要發完官方 registry 才驗得到** | 那是它的說法 |
 | 6 | ChatGPT Health 內第三方 app 能否讀到 Apple Health 數值；PHI 條款適用範圍 | ❌ 未查 | 決定 ChatGPT 那側是不是主線 |
 | 7 | 官方 registry 支不支援 Docker／OCI | ✅ **已解：支援**。`server.json` 的 `registryType` 含 `oci`（另有 npm／pypi／nuget／cargo／mcpb）。**但 API 抽樣 30 筆只見 npm／pypi** | 影響 remote 之外還有沒有第三種分發形態 |

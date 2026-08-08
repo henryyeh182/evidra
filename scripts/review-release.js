@@ -273,7 +273,26 @@ check(
       }
     }
 
-    // PRIVACY.md 指名要搜的那幾個詞，必須真的還在政策裡——政策改寫時最容易掉的
+    // README 叫使用者拿 checksum 去比對。那串數字必須真的在他看得到的地方。
+    //
+    // 這裡改過三次才對。第一版連到 `?search=evidra`：七筆 JSON，含另一個同名產品。
+    // 第二版收窄到我們的識別碼：五筆，而**第一筆是最舊的 0.3.3**，照頁面第一個數字
+    // 比對的人會得到不符、以為檔案被動過。第三版加 version=latest：數字對了，但那頁
+    // 仍然是 JSON API 的原始輸出——**沒有人要看那個**。
+    //
+    // 三次都是我沒點開過自己放的連結。現在數字直接印在 release notes 裡，就在他按
+    // 下載的那一頁，這條檢查確認它真的在那裡。
+    if (mode === "published") {
+      const notes = sh("gh", ["release", "view", `v${declaredVersion}`, "--repo", PUBLIC_REPO, "--json", "body", "--jq", ".body"]);
+      if (!notes.includes(declaredSha)) {
+        findings.push(
+          `v${declaredVersion} 的 release notes 沒有印出 checksum ${declaredSha.slice(0, 16)}…，` +
+            `但 README 叫使用者去那裡對照`
+        );
+      }
+    }
+
+// PRIVACY.md 指名要搜的那幾個詞，必須真的還在政策裡——政策改寫時最容易掉的
     // 就是這種「叫讀者自己驗」的句子，而掉了不會有人發現。
     for (const token of ["node:http", "fetch(", "writeFile"]) {
       if (!privacy.includes(token)) {
