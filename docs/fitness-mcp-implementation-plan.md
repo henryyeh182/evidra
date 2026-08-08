@@ -225,16 +225,38 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 官方 registry 與 MCPB 表單審查結果。收到 MCPB 退件理由時，那就是 D-LICENSE 待查證項
 （MIT 條文是否真的存在）的答案，不是失敗訊號。
 
-**已發布的 v0.3.7 與 main 的落差（2026-08-07 量測，發版時要一起帶出去）**：v0.3.7 凍結於
-`e39faee`（08-07 00:56），而當天的出處覆核 `0337166` 是 11:20——**差 2.5 小時**。所以那顆裡
-規則庫仍是 **1.0.0**、**EVD-R-007 仍宣稱 `systematic_review` 並仍帶著已撤回的「VO₂max
-兩到三週掉 4–7%」**、Gabbett 仍停在 `numbers_from_secondary_sources`、`verificationStatus`
-不強制、`vendorAssessments` 不在 tool schema（引擎讀得到但呼叫端無從得知）。
+**已發布的 v0.3.7 與 main 的落差（發版時要一起帶出去）**：v0.3.7 凍結於 `e39faee`
+（08-07 08:56 本地時間），而當天的出處覆核 `0337166` 是 11:20——**差 2.5 小時**。
+
+**第一批（2026-08-07 量測）**：那顆裡規則庫仍是 **1.0.0**、**EVD-R-007 仍宣稱
+`systematic_review` 並仍帶著已撤回的「VO₂max 兩到三週掉 4–7%」**、Gabbett 仍停在
+`numbers_from_secondary_sources`、`verificationStatus` 不強制、`vendorAssessments`
+不在 tool schema（引擎讀得到但呼叫端無從得知）。
 
 **最要緊的是第二項**：撤回一個撐不住的證據等級之後，公開可安裝的版本還在宣稱它。
 `vendorAssessments` 那項實測影響最小——決策與治理規則兩版相同，只有 confidence
-high → medium。**這段話刻意不寫進 user-journey 或 README**：那是產品頁與對外敘事，
-build 落差屬於本文件。要消除落差只有兩條路——發版，或讓文件照 v0.3.7 寫。
+high → medium。
+
+**第二批（2026-08-08 量測，全部是 08-08 當天進 main 的）**。這批的共同點是
+**決策本身多半沒變、但呼叫端收到的東西變了**，所以照 `version.js` 的判準全屬 minor
+而非 patch，一項都不能當作「使用者看不出來」略過：
+
+| commit | 進 main | v0.3.7 那顆的行為 | 引擎版本 |
+|---|---|---|---|
+| `3867370` | 15:22 | **沒有 EVD-R-009。** 有傷病限制的日子，`governingRule` 會歸給旁邊那條恢復規則、或整個從缺；被移除的動作兩版相同 | → 1.1.0（庫 → 1.1.0） |
+| `ed4434b` | 16:04 | **沒有排定課表的呼叫完全不帶 `decisionBasis`**——而它是該 tool 輸出 schema 的必填欄位 | → 1.2.0 |
+| `2d7718c` | 17:03 | **目標肌群沒有讀數時會報「target-muscle fatigue 0」**，那個 0 是加總器的初始值，不是量測值 | → 1.3.0 |
+
+另外，**v0.3.7 那顆裡根本沒有 `packages/decision-engine/src/version.js`**——把引擎與
+規則庫版本從發布版號拆開的 `ceb1789` 是 08-08 10:09，也晚於發布。所以上表的「引擎版本」
+一欄在那顆裡沒有對應物可比。
+
+**這幾段刻意不寫進 user-journey 或 README**：那是產品頁與對外敘事，build 落差屬於本文件。
+要消除落差只有兩條路——發版，或讓文件照 v0.3.7 寫。
+
+**這段會過期，而 G9 攔不到**：G9 驗的是這個章節存不存在，不驗內容跟不跟得上 main。
+2026-08-08 就是這樣漏掉整批的——當天三次引擎變動都進了 main，這段仍停在前一天的量測。
+**動到 `packages/decision-engine`、`packages/rules` 或 tool schema 就要回來補這裡。**
 
 ### 2. 待使用者裁決的開放問題
 
