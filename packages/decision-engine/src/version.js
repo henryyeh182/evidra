@@ -20,5 +20,10 @@
  * means here: major when a decision that fired before stops firing or changes
  * type on unchanged evidence, minor when the engine gains a capability without
  * changing existing verdicts, patch for anything a caller cannot observe.
+ *
+ * 1.1.0, the same day: the injury filter now fires EVD-R-009 and so enters
+ * arbitration. No verdict moves — the same movements are removed as before —
+ * but `decisionBasis.governingRule` does on any day a restriction bites, which
+ * is observable and therefore not a patch.
  */
-export const ENGINE_VERSION = "1.0.0";
+export const ENGINE_VERSION = "1.1.0";

@@ -116,6 +116,17 @@ const CASES = [
     state: restedState({ readinessScore: 85, muscleFatigue: { legs: 5 } }),
     session: { ...HARD_RUN, intensity: "low" },
     expect: { governing: "EVD-R-008", decision: "advance", intensity: "moderate" }
+  },
+  {
+    ruleId: "EVD-R-009",
+    what: "a restriction naming a scheduled movement removes it",
+    // Readiness low enough that EVD-R-002 fires too. That is the case worth
+    // pinning: injury is rank 1, so the removal must be what the decision is
+    // attributed to even though another rule fired and is what actually moves
+    // the intensity.
+    state: restedState({ readinessScore: 55, avoid: ["avoid heavy squat"] }),
+    session: LEG_STRENGTH,
+    expect: { governing: "EVD-R-009", decision: "substitute", intensity: "moderate" }
   }
 ];
 

@@ -105,7 +105,9 @@ assertThresholdsMatch(getRuleLibrary(), [
   "recoveryCapMinutes",
   "returnDurationFactor",
   "returnSevereIdleDays",
-  "returnSevereCtlLossPct"
+  "returnSevereCtlLossPct",
+  "restrictedMovementsPresent",
+  "restrictionTokenMinLength"
 ]);
 
 const INTENSITY_ORDER = ["low", "moderate", "high"];
@@ -170,6 +172,33 @@ function targetFatigue(session, muscleFatigue = {}) {
     if (value > worst.value) worst = { group, value };
   }
   return worst;
+}
+
+/**
+ * Which of these movements an active restriction names — EVD-R-009's quantity.
+ *
+ * One function because it is one rule, asked twice: of the session the plan
+ * scheduled, and of the alternative the athlete proposed. It was two copies of
+ * the same eight lines, which is how the two came to be edited apart from each
+ * other and how `restrictionTokenMinLength` came to be written out twice as a
+ * bare 3.
+ *
+ * Matched against the spoken name only. Restrictions are written the way a
+ * person talks ("avoid heavy lower body"), and an id's slug carries anatomy
+ * words that are not claims about the movement — matching the raw id made
+ * "avoid heavy lower body" strike exercise_lower_body_mobility, the very
+ * movement the recovery swap relies on being safe.
+ */
+function movementsMatchingRestrictions(exerciseIds, restrictions, speak) {
+  return exerciseIds.filter((id) => {
+    const haystack = String(speak(id)).toLowerCase();
+    return restrictions.some((restriction) => {
+      const words = String(restriction).toLowerCase().replace(/^avoid\s+/, "").split(/[\s-]+/);
+      return words.some(
+        (word) => word.length > RULES.restrictionTokenMinLength && haystack.includes(word)
+      );
+    });
+  });
 }
 
 function toSessionShape(session, displayNameFor) {
@@ -319,21 +348,11 @@ export function decideSession({
   };
 
   // 1. Safety first: injury restrictions hard-filter the session's movements.
-  //    This is a guarantee, not advice — it cannot be reasoned away.
+  //    This is a guarantee, not advice — it cannot be reasoned away. EVD-R-009
+  //    is the rule; it fires below, once, after the proposal has been read.
   const restrictions = state.avoid || [];
-  // Matched against the spoken name only. Restrictions are written the way a
-  // person talks ("avoid heavy lower body"), and an id's slug carries anatomy
-  // words that are not claims about the movement — matching the raw id made
-  // "avoid heavy lower body" strike exercise_lower_body_mobility, the very
-  // movement the recovery swap relies on being safe.
-  const blockedIds = to.exerciseIds.filter((id) => {
-    const haystack = String(speak(id)).toLowerCase();
-    return restrictions.some((restriction) => {
-      const words = String(restriction).toLowerCase().replace(/^avoid\s+/, "").split(/[\s-]+/);
-      return words.some((word) => word.length > 3 && haystack.includes(word));
-    });
-  });
-  if (blockedIds.length > 0) {
+  const blockedIds = movementsMatchingRestrictions(to.exerciseIds, restrictions, speak);
+  if (blockedIds.length >= RULES.restrictedMovementsPresent) {
     to.exerciseIds = to.exerciseIds.filter((id) => !blockedIds.includes(id));
     if (to.exerciseIds.length === 0) to.exerciseIds = [FALLBACK_EXERCISE_ID];
     to.exercises = to.exerciseIds.map((id) => speak(id));
@@ -607,6 +626,8 @@ export function decideSession({
   //    than the ceiling is always allowed — an athlete may rest more than
   //    required, never less.
   let proposal = null;
+  // Declared out here because EVD-R-009 fires once for both places it looks.
+  let proposalBlockedIds = [];
   if (proposedSession) {
     const wanted = toSessionShape(proposedSession, speak);
     const violations = [];
@@ -634,16 +655,10 @@ export function decideSession({
 
     // Contraindications are a guarantee, so they apply to a proposal exactly as
     // they applied to the plan. Nothing the athlete asks for can switch them off.
-    const wantedBlocked = wanted.exerciseIds.filter((id) => {
-      const haystack = String(speak(id)).toLowerCase();
-      return restrictions.some((restriction) => {
-        const words = String(restriction).toLowerCase().replace(/^avoid\s+/, "").split(/[\s-]+/);
-        return words.some((word) => word.length > 3 && haystack.includes(word));
-      });
-    });
-    if (wantedBlocked.length > 0) {
+    proposalBlockedIds = movementsMatchingRestrictions(wanted.exerciseIds, restrictions, speak);
+    if (proposalBlockedIds.length >= RULES.restrictedMovementsPresent) {
       violations.push(
-        `The proposal includes restricted movements: ${wantedBlocked.map((id) => speak(id)).join(", ")} (restrictions: ${restrictions.join("; ")}).`
+        `The proposal includes restricted movements: ${proposalBlockedIds.map((id) => speak(id)).join(", ")} (restrictions: ${restrictions.join("; ")}).`
       );
     }
 
@@ -669,6 +684,30 @@ export function decideSession({
       for (const violation of violations) reason.push(violation);
       limits.push("The proposal was not accepted; the action stays what the evidence supports.");
     }
+  }
+
+  // The injury guarantee, recorded as the rule it has always been.
+  //
+  // Fired here rather than at either of the two places it looks, because it is
+  // one rule and `readingFor` is keyed by ruleId: firing twice would leave the
+  // decision reporting whichever reading came second as though it were the
+  // whole of what the rule saw. Order costs nothing — `arbitrate` sorts by
+  // category and priority, not by the order rules fired in.
+  //
+  // Being category `injury` this governs whenever it fires, which is the point:
+  // a session stripped of a contraindicated movement used to be attributed to
+  // whatever recovery rule happened to fire alongside it, or to no rule at all.
+  // It demands no intensity step, so what governs and what sets the size of the
+  // change are, correctly, two different rules on those days.
+  const restrictedMovements = blockedIds.length + proposalBlockedIds.length;
+  if (restrictedMovements >= RULES.restrictedMovementsPresent) {
+    fire("EVD-R-009", {
+      quantity: "restricted_movements",
+      value: restrictedMovements,
+      restrictions: [...restrictions],
+      ...(blockedIds.length ? { inScheduledSession: blockedIds.map((id) => speak(id)) } : {}),
+      ...(proposalBlockedIds.length ? { inProposal: proposalBlockedIds.map((id) => speak(id)) } : {})
+    });
   }
 
   const changed = diffShapes(from, to);
@@ -776,12 +815,15 @@ export function decideSession({
   // whether that threshold rests on published work or on a score Evidra
   // computes itself.
   //
-  // Six of the eight rules come back as `basis: "internal_composite"` with
+  // Seven of the nine rules come back as `basis: "internal_composite"` with
   // `evidence: { studyDesign: "none", recommendationStrength:
   // "internal_heuristic" }` and
-  // no sources. That is the correct output, not a gap: those thresholds cut a
-  // readiness or fatigue score built from weights we chose, and no publication
-  // has ever used those scores. The two that are externally defined
+  // no sources. That is the correct output, not a gap: six of those thresholds
+  // cut a readiness or fatigue score built from weights we chose, and no
+  // publication has ever used those scores; the seventh is EVD-R-009, whose
+  // threshold is definitional rather than empirical and which records in its own
+  // limitations that `internal_composite` is the nearest value and not an exact
+  // one. The two that are externally defined
   // (acute:chronic ratio, detraining) carry their citations and, for the ratio,
   // the published objections to it. A reader can therefore tell the difference
   // between the parts of this engine that rest on literature and the parts that

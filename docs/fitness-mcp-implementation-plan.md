@@ -25,9 +25,9 @@
 - **6 個對外決策 tool**：`evidra_assess_fitness_state`、`evidra_decide_session`、
   `evidra_decide_exercise_substitution`、`evidra_generate_plan`、
   `evidra_preview_adjust_plan`、`evidra_commit_adjust_plan`
-- **409 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
+- **410 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
 - **知識圖譜** 889 節點 / 5,785 邊；進退階 34 條（17 組互逆）；訓練目標五值域
-- **Rule Library**（`packages/rules` v1.0.0）：**8 條規則**，每條帶 `ruleId`／`version`／
+- **Rule Library**（`packages/rules` v1.1.0）：**9 條規則**，每條帶 `ruleId`／`version`／
   `category`／`priority`／`basis`／`evidence`（`studyDesign` ＋ `recommendationStrength`，
   舊的單軸 `evidenceLevel` 由兩軸推導後照常輸出）／`sources`／`contested`／`limitations`。
   `sources` 與 `supportingLiterature` 的每一筆都**必須**帶合法的 `verificationStatus`。
@@ -77,7 +77,7 @@ Evidra 的護城河不是 MCP server、不是資料庫、不是動作內容庫�
 | 護城河 | 現在對應 | 下一步怎麼加深 |
 |---|---|---|
 | **Evidence Model** | `packages/evidence`、source schema、6 家 parser、coverage／freshness | 補 C8/R7 的 evidence basis；驗 C6 真實 host 傳入形狀；補 C13 Oura／WHOOP 真實回應 |
-| **Rule Library** | `packages/rules` v1.0.0，8 條 `decide_session` 規則，含出處、限制與仲裁欄位；證據兩軸與 `verificationStatus` 皆為載入期強制 | 做 R2/C12 injury rules；收編 C9/C10 其他模組門檻（R3/R5 已完成） |
+| **Rule Library** | `packages/rules` v1.1.0，9 條 `decide_session` 規則，含出處、限制與仲裁欄位；證據兩軸與 `verificationStatus` 皆為載入期強制；`injury` 那格已由 EVD-R-009 填上 | 收編 C9/C10 其他模組門檻（R2/R3/R5 已完成）；`generatePlan`／catalog 兩處傷病過濾仍在庫外，隨 R1 一起處理 |
 | **Decision Graph** | `decide_session` 的 rule arbitration、knowledge graph 的替代／進退階不變量、planning patch validator | 把 injury、substitution、plan generation 的決策路徑接上 rule id 與 `decisionBasis`，讓多 tool 都能 trace |
 
 **定位句**：A deterministic exercise-science decision engine that converts evidence into explainable training decisions.
@@ -137,7 +137,7 @@ LLM 負責理解使用者與表達結果；決策本身必須由 Evidra 的 evid
 | D-REGISTRATION | authorization server 選型硬條件：支援 CIMD |
 | D-LICENSE | 閉源送 Anthropic MCPB；已送出，退件理由決定要不要公開 |
 | D-IPGUARD | `開發計畫` §8 的 IP 保護（加密／License Token／機器指紋）全部 NO-GO（現在） |
-| D-RULESCHEMA | ✅ **已實作**（`packages/rules` v1.0.0，8 條規則，見上「對外元件」）。2026-08-07 做過一次出處覆核：Gabbett 升為主文驗證，Mujika 撤回一組查不到的百分比並降級證據等級，ACSM 撤回一句摘要沒講的話。同日做 R3／R5：證據拆兩軸、`verificationStatus` 強制必填（見 §0） |
+| D-RULESCHEMA | ✅ **已實作**（`packages/rules` v1.1.0，9 條規則，見上「對外元件」）。2026-08-07 做過一次出處覆核：Gabbett 升為主文驗證，Mujika 撤回一組查不到的百分比並降級證據等級，ACSM 撤回一句摘要沒講的話。同日做 R3／R5：證據拆兩軸、`verificationStatus` 強制必填（見 §0） |
 
 每條的完整理由、出處、反對意見在 history 的 §5「決策日誌」。
 
@@ -162,7 +162,7 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 | 順位 | 工作包 | 包含項目 | 為什麼排這裡 | 狀態 |
 |---|---|---|---|---|
 | **1** | Rule schema guardrails | R5 `verificationStatus` enum／`sources` 強制帶狀態；R3 證據等級拆成「研究設計」與「建議強度」兩軸 | 這兩項是規則庫的地基。先把資料形狀鎖住，後面加傷病規則或收編 C9 數字才不會繼續累積無法稽核的欄位 | ✅ 已完成（2026-08-07，`8b15468`／`e171966`；未進 v0.3.7 bundle） |
-| **2** | Injury rules 入庫 | R2／C12：把現有 injury restriction、contraindication filter 變成有 rule id、category、priority、來源與限制的規則 | `injury` 是仲裁矩陣最高類別，但現況規則庫裡沒有 injury 規則；這是 rule coverage 最大洞 | 可開工 |
+| **2** | Injury rules 入庫 | R2／C12：把現有 injury restriction、contraindication filter 變成有 rule id、category、priority、來源與限制的規則 | `injury` 是仲裁矩陣最高類別，但現況規則庫裡沒有 injury 規則；這是 rule coverage 最大洞 | ✅ 已完成（2026-08-08，EVD-R-009，庫 1.1.0／引擎 1.1.0）。**只做了 `decide_session` 那一處**；`generatePlan` 與 catalog 兩處見 R2 |
 | **3** | 收編非 `decide_session` 門檻 | C9／C10：ATL/CTL、TSB、detraining、baseline fallback、staleness、phase multiplier、return ramp 的數字進治理；先處理兩套 detraining 衝突 | 這決定 R1 能不能做。沒有規則與來源，其他 tool 就算補 `decisionBasis` 也無 rule 可 trace | 可開工，但可能需要撤回或降級沒有出處的數字 |
 | **4** | 擴大 decision trace | R1：視第 2–3 項結果，決定要不要把 `decisionBasis` 補到另外五個 tool | 對外已誠實縮回「只有 `evidra_decide_session` 有」，所以這是能力擴充，不是修誠信缺口 | 等第 2–3 項 |
 | **5** | Evidence quality 形狀 | R7／C8：用既有 `*Basis` 類 enum 表示數字站在哪裡，不做 `quality: 0.94` 純量 | 這是 Semantic Fitness Layer 下一個真缺口，但要避開發明權重去影響 confidence | 可設計，實作需小心契約 |
@@ -179,7 +179,7 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 `"version":"1.0.0"` 是先前自編的 pre-release**，內容是出處覆核之前的舊規則庫，就地作廢
 ——archive 改不了，只能在這裡記一句。
 
-**下一個最小可完成版本**：做完順位 2–3，得到 injury 類別不再空、`decide_session` 以外的
+**下一個最小可完成版本**：順位 2 已完成（injury 類別不再空）；做完順位 3 得到 `decide_session` 以外的
 關鍵門檻開始被治理。之後再決定是否把 `decisionBasis` 擴到五個其他 tool。
 
 ### 0. Rule Library 治理（2026-08-07 review 產出）
@@ -189,7 +189,7 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 
 | # | 項目 | 為什麼 | 位置 |
 |---|---|---|---|
-| **R2** | **傷病邏輯有實作但不在規則庫**：`graph.js:176` 依 `contraindications` 過濾動作、`generatePlan.js:119` 依 active injury 的 `restrictions` 過濾。**沒有 rule id、沒有出處、不受仲裁。** | 仲裁矩陣把 `injury` 排在最上面，**而排最上面的那一格是空的**（現況：recovery 7、training_goal 1）。傷病決策每天在跑，卻是規則庫看不見的那部分。這是 C9 裡優先級最高的一塊 | `packages/knowledge-graph/src/graph.js`、`packages/planning/src/generatePlan.js` |
+| **R2** | 🟡 **一半已完成（2026-08-08）**：`decide_session` 的傷病過濾成為 **EVD-R-009**（`injury`／priority 95／`internal_composite`），進仲裁、進 `decisionBasis`。**這一列原本的「位置」欄是錯的**——它列了 `graph.js:176` 與 `generatePlan.js:119`，但那兩處沒有仲裁機制也不產 `decisionBasis`（`packages/rules` 當時只被 `decideSession.js` 與 `server.js` import），**真正「受仲裁卻沒有 rule id」的那一處是 `decideSession.js:321`，原本沒被列進來**。**剩下的**：`generatePlan` 與 catalog 兩處各自用不同機制過濾（前者把 restrictions 當 `excludeContraindications` 丟給 catalog，後者拿動作的 `contraindications` tag 做集合交集），仍在庫外，隨 R1 一起處理 | 仲裁矩陣把 `injury` 排在最上面，**而排最上面的那一格是空的**（當時：recovery 7、training_goal 1；現在 injury 1）。傷病決策每天在跑，卻是規則庫看不見的那部分 | ✅ `packages/decision-engine/src/decideSession.js`；🟡 `packages/knowledge-graph/src/graph.js`、`packages/planning/src/generatePlan.js` |
 | **R1** | `decisionBasis` **只有 `evidra_decide_session` 有**（實測 `outputSchemas`，六個 tool 一個命中）。要不要補到另外五個是實作決定 | 對外宣稱已於 2026-08-07 縮回事實（`INSTRUCTIONS` 現在指名是哪一個 tool，並說明其他沒有）。**所以這不是誠信問題了，是功能決定**——但補之前那些 tool 的數字得先進庫，否則沒有 rule 可指 | `apps/mcp-server/src/outputSchemas.js` 五份契約 |
 | ~~**R3**~~ | ✅ **已完成（2026-08-07）**：`evidence` 物件取代單軸 `evidenceLevel`——`studyDesign`（八值，含新增的 `narrative_review`）＋ `recommendationStrength`（`supports_threshold`／`supports_direction_only`／`internal_heuristic`）。EVD-R-007 卡的那個缺口關掉了：它現在直接寫 `narrative_review`，不再四捨五入到 `expert_consensus`。**舊 `evidenceLevel` 由兩軸推導後照常輸出**，8 條規則的值逐字不變，契約不動。**目前全庫沒有任何一條是 `supports_threshold`**——每筆引用的 `doesNotSupport` 都寫著數字不被支持，這件事現在由欄位講，不是由散文講 | `packages/rules/src/models.js`、`session-rules.json` |
 | **R4** | **出處覆核要有觸發點。** `lastReview` 有欄位，但過期不會有人失敗、不會有人提醒 | 2026-08-07 那次覆核**兩個既定入口都不是**（沒有新文獻、沒有 outcome 異常），是人工重讀已有的引用，結果撤回兩項。生命週期缺這第三個入口。**到期天數未定，不得自行決定** | `scripts/review-phase.js` 加一條 gate |
@@ -208,7 +208,7 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 | §3.7 Rule Package | 兩個存在理由都已被否決（`tier` 屬 A6 未定、自動更新牴觸已發布的 `PRIVACY.md`）。**類比本身也要拆**：病毒碼更新失敗是 fail-closed，訓練規則更新失敗是 fail-open |
 | §4「Confidence: High，幾乎不需質疑」 | 與整個庫的設計相反——每個引用強制填 `doesNotSupport`，理由是「in every case so far there is one」。repo 裡就住著反例：EVD-R-006 引 Gabbett，同時載入 Impellizzeri 的反對 |
 | §4 Exercise Science Board | **那個 board 不存在。** 維持 `reviewer` 實名。宣稱一個不存在的審查機構，跟宣稱一個撐不住的證據等級是同一類錯 |
-| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 409 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
+| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 410 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
 | §5 四個新 tool | 逐個理由見 history §4.6.5。**補一條**：§5 自己的表格就顯示五列缺口**全在既有 tool 的輸出欄位裡**，沒有一列是「少一個口」 |
 
 #### 0.2 版號規則（2026-08-07 起照這個走）
@@ -265,7 +265,7 @@ build 落差屬於本文件。要消除落差只有兩條路——發版，或�
 | C9 | **Rule Library 只治理 `decide_session`**。ATL/CTL 時間常數（42／7）、TSB 分帶（5／−10／−30）、`DETRAINING`（14 天／25%）、`DEFAULT_BASELINES`（HRV 52／RHR 57／週負荷 360）、`SIGNAL_STALENESS_DAYS` 八個值、`PHASE_MULTIPLIERS`、`RETURN_RAMP`＝全部無出處，且不受 `assertThresholdsMatch` 兩向檢查保護 | `packages/training-load/src/trainingLoad.js`、`packages/semantic-engine/src/generateSemanticFitnessState.js`、`packages/planning/src/generatePlan.js` |
 | C10 | **兩套 detraining 門檻並存且數字不同**：`trainingLoad.js` 是 14 天／25%，EVD-R-007 是 42 天／60%。前者無出處，後者在庫裡 | 同上第一項 ＋ `packages/rules/data/session-rules.json` |
 | ~~C11~~ | ✅ **已關閉（2026-08-07，R5）**：`verificationStatus` 成為載入期 enum 且兩個陣列都強制必填，檔案宣告的詞彙與載入器強制的詞彙也綁成不變量。**未進 v0.3.7 那顆 bundle**（commit 晚於發布） | `packages/rules/src/models.js` |
-| C12 | **傷病邏輯在規則庫外執行**——有實作、每天在跑，但沒有 rule id、沒有出處、不受仲裁。`injury` 是仲裁矩陣最高的一格，而它是空的 | 見 §0 的 R2 |
+| C12 | 🟡 **一半已完成（2026-08-08）**：`decide_session` 那處成為 EVD-R-009，`injury` 那格不再是空的。`generatePlan` 與 catalog 兩處仍在庫外 | 見 §0 的 R2 |
 | C13 | **Oura／WHOOP 的 parser 沒對過真實回應。** 欄位路徑與單位來自兩家自己的 OpenAPI（權威），但**沒有任何一份真實 API 回應驗證過**——spec 說得對不等於實際回傳長那樣（真實資料裡的哨兵值、空陣列、部分欄位缺漏，前四家都是在真檔案上才發現的）。這是 C6 的加強版：C6 是「照匯出檔寫、沒對過真實流程」，這裡連匯出檔都沒有 | `packages/connectors/src/providers/oura`、`.../whoop` |
 
 ### 5. 來源覆蓋（Phase 5 剩餘）

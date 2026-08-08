@@ -80,8 +80,9 @@ export function getCategoryRank(categoryId) {
  *
  * `evidence: { studyDesign: "none", recommendationStrength: "internal_heuristic" }`
  * with an empty `sources` is a normal and expected output here, not a gap to be
- * filled in later. Six of the eight rules are thresholds on scores Evidra
- * computes itself, and for those no citation is possible. Saying so is the
+ * filled in later. Seven of the nine rules have no citation available to them —
+ * six are thresholds on scores Evidra computes itself, and the seventh cuts a
+ * count of the athlete's own restrictions. Saying so is the
  * disclosure; hiding it behind a plausible-sounding reference would be the
  * failure.
  *

@@ -1,7 +1,7 @@
 {
   "libraryId": "evidra.session-rules",
-  "version": "1.0.0",
-  "lastReview": "2026-08-07",
+  "version": "1.1.0",
+  "lastReview": "2026-08-08",
   "reviewer": "Henry Yeh",
 
   "readMe": [
@@ -31,6 +31,17 @@
     "reviewer who checks the citation would find it does not mention the score",
     "the threshold sits on. An empty `sources` on an internal_composite rule is",
     "the honest state, not an unfinished one.",
+    "",
+    "Two values is one short. EVD-R-009's threshold is neither a cut point on an",
+    "externally defined quantity nor a cut point on a score we weighted together:",
+    "it is definitional, a count of the movements the athlete's own restrictions",
+    "name, triggered by any at all. `internal_composite` is the nearest value and",
+    "it is imprecise, so that rule's limitations say so in as many words. The gap",
+    "is recorded rather than closed because the same thing happened once before —",
+    "EVD-R-007 carried a note that the evidence vocabulary had no rung for a",
+    "narrative review, and `narrative_review` was added later, once the shape of",
+    "what was missing was clear from a rule rather than guessed at in advance. A",
+    "third `basis` value is a change to every contract that enumerates the two.",
     "",
     "`evidence` asks two questions that used to be one. The old `evidenceLevel`",
     "ladder mixed study design (systematic_review, rct, observational) with",
@@ -122,7 +133,12 @@
     "before it were assigned without one and carry no meaning; in particular the",
     "released v0.3.7 extension has a library reading 1.0.0 whose content predates",
     "the 2026-08-07 provenance review. That archive cannot be edited, so the",
-    "collision is recorded here and in the implementation plan instead."
+    "collision is recorded here and in the implementation plan instead.",
+    "",
+    "1.1.0, later the same day, adds EVD-R-009 and fills the `injury` category,",
+    "which had been the top rank of the arbitration matrix standing empty while",
+    "the filter it should have governed ran on every call. A rule was added and",
+    "nothing else moved, which is a minor by the rule above."
   ],
 
   "studyDesigns": [
@@ -450,7 +466,45 @@
         "85 and 45 are our own choices.",
         "A detrained athlete reads fresh on both quantities. This rule must therefore never fire while EVD-R-007 is active, and that exclusion is part of the rule, not an implementation detail."
       ],
-      "notes": "The only rule in this library outside the recovery category. It is what makes the arbitration policy observable today: when it and a recovery rule both trigger, category rank decides which rule the decision is attributed to."
+      "notes": "It is what made the arbitration policy observable at all: when it and a recovery rule both trigger, category rank decides which rule the decision is attributed to. It was the library's only rule outside the recovery category until EVD-R-009 arrived above it."
+    },
+
+    {
+      "ruleId": "EVD-R-009",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "An active restriction removes the movements it names",
+      "category": "injury",
+      "priority": 95,
+      "basis": "internal_composite",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
+      "measuredQuantity": {
+        "name": "movements in today's session matched by an active restriction",
+        "range": "0 upward",
+        "computedBy": "packages/decision-engine/src/decideSession.js:movementsMatchingRestrictions",
+        "definition": "The caller supplies restrictions in state.avoid, drawn from active injuries and stated avoid preferences. Each is lowercased, a leading \"avoid \" is dropped, and the remainder split on whitespace and hyphens. A movement matches when its spoken name contains any resulting token longer than restrictionTokenMinLength characters. The quantity is how many of the session's movements match — counted over the scheduled session and, when the athlete proposes an alternative, over that too.",
+        "whyNoSourceIsPossible": "The restrictions are this athlete's own and the count is produced by a string matcher we wrote. No publication has studied outcomes against \"how many scheduled movements have a spoken name containing a token from a restriction string\", because that quantity exists nowhere but inside Evidra."
+      },
+      "thresholds": [
+        { "key": "restrictedMovementsPresent", "operator": ">=", "value": 1, "unit": "movements" },
+        { "key": "restrictionTokenMinLength", "operator": ">", "value": 3, "unit": "characters" }
+      ],
+      "effect": {
+        "decision": "substitute",
+        "intent": "remove_contraindicated_movements",
+        "intensityStepsDown": 0
+      },
+      "sources": [],
+      "contested": [],
+      "limitations": [
+        "1 is not a calibrated cut point; it means any at all, and no larger number of matched movements is treated differently. The rule is definitional — the athlete said not to do this — rather than empirical, and the `basis` vocabulary has no value for that. `internal_composite` is the nearest and it is imprecise: this quantity is a count from a matcher, not a score built by weighting signals. See the readMe.",
+        "restrictionTokenMinLength is our own choice and it is load-bearing in a way that is easy to miss. Tokens of three characters or fewer never match, so \"hip\", \"arm\", \"leg\", \"rib\" and \"toe\" cannot match on their own: \"avoid hip\" and \"avoid arm day\" match nothing whatsoever, and the athlete is told only that the session was unchanged. It cuts the other way too — \"avoid hip work\" matches on \"work\", which appears in movements that have nothing to do with hips. The value was chosen to stop short tokens matching inside unrelated words and has been tuned against no corpus of how athletes actually phrase a restriction.",
+        "Matching is on the movement's spoken name, never on its id, because an id's slug carries anatomy words that are not claims about the movement — matched against ids, \"avoid heavy lower body\" struck exercise_lower_body_mobility, the movement the recovery swap depends on being safe. A caller that injects no catalog gets identityDisplay, where the spoken name is the id, and that failure mode returns.",
+        "Substring matching carries no notion of negation or of body side, so \"avoid left knee loading\" restricts every movement whose name contains \"knee\" or \"loading\", both legs included. Removing too much is the right direction for a safety filter and it is still an error, visible to the athlete as movements disappearing for no reason they can see.",
+        "Nothing validates the restrictions themselves. A restriction that was mistyped, or one the caller never sent, produces no match and no warning: this rule sees only what arrives in state.avoid, and there is no signalCoverage group that would report its absence.",
+        "Applied by decide_session only. generatePlan and the exercise catalog run their own injury filters by other mechanisms — the plan hands restrictions to the catalog as excludeContraindications, the catalog intersects them with each exercise's contraindications tags — and as of 2026-08-08 neither carries a rule id nor passes through arbitration."
+      ],
+      "notes": "The filter this rule describes has run on every call since the engine was written; what it did not have was an id, a stated provenance, or a place in the arbitration matrix. That matrix put `injury` at rank 1 from the start and the rank stood empty, so the one guarantee that outranks everything else was also the one the decision could not be attributed to: a session stripped of a contraindicated movement reported a recovery rule as governing, or no rule at all. Being rank 1 means this rule governs whenever it fires — but only the attribution. How large the change is stays with the combination policy, and this rule demands no intensity step of its own: it removes movements, and whatever else fired that day still sets the intensity."
     }
   ]
 }
