@@ -195,6 +195,83 @@ test("the harness runs the same chain the tool runs", async () => {
   assert.deepEqual(viaTool.reason, direct.decision.reason);
 });
 
+test("every threshold that decides something has a straddle at its edge", async () => {
+  // The set-level half of DH-BND, stated separately for the reason DH-COV is:
+  // a threshold nothing approaches is not a decision behaving badly, it is a
+  // number that could move without a single check going red.
+  const { boundaries } = await runHarness();
+  const unstraddled = boundaries.matrix.filter((row) => row.missing.length > 0);
+  assert.deepEqual(
+    unstraddled.map((row) => `${row.where} (${row.missing.join(", ")})`),
+    [],
+    "add a scenario to harness/scenarios, or the threshold is only ever seen from far away"
+  );
+
+  // An exemption has to cost a written reason. A silent one is how a threshold
+  // stops being checked and nobody finds out.
+  for (const row of boundaries.matrix) {
+    if (row.required.length < 2) {
+      assert.ok(
+        row.unreachable && row.unreachable.length > 20,
+        `${row.where} is exempt from having an edge and says nothing about why`
+      );
+    }
+  }
+});
+
+test("a declaration that misstates where it sits is caught", async () => {
+  // DH-BND's declarations were written against a verified run, so of course
+  // they hold — which makes it indistinguishable from a check that does not
+  // run. These are the three ways a straddle can lie, fed in deliberately.
+  const { checkBoundaries } = await import("../lib/boundaries.js");
+  const scenarios = await loadScenarios();
+  const base = scenarios.find((entry) => entry.id === "target-fatigue-exactly-at-the-moderate-line");
+  assert.ok(base, "the scenario this test rewrites has been renamed or removed");
+
+  const ownFindings = async (rulePosition) => {
+    const scenario = { ...base, rulePosition };
+    const result = await runChain(scenario);
+    const { findings } = await checkBoundaries([{ scenario, result }]);
+    return findings.filter((finding) => finding.scenario === scenario.id);
+  };
+
+  // Truthful: fatigue is 45 and the threshold is 45.
+  assert.deepEqual(
+    await ownFindings([{ rule: "EVD-R-005", threshold: "muscleFatigueModerate", position: "boundary" }]),
+    []
+  );
+
+  // A boundary that is not on the boundary. 45 is the value EVD-R-004 is not.
+  const wrongThreshold = await ownFindings([
+    { rule: "EVD-R-004", threshold: "muscleFatigueHigh", position: "boundary" }
+  ]);
+  assert.ok(
+    wrongThreshold.some((finding) => /boundary/.test(finding.failure)),
+    `a reading nowhere near the threshold passed as a boundary case: ${JSON.stringify(wrongThreshold)}`
+  );
+
+  // A silence claimed for a threshold that is not causing it: EVD-R-003 is
+  // quiet here, but at 45 it is quiet by a mile, not by one step.
+  const notJustBelow = await ownFindings([
+    { rule: "EVD-R-003", threshold: "muscleFatigueMaxed", position: "just_below" }
+  ]);
+  assert.ok(
+    notJustBelow.some((finding) => /more than one step/.test(finding.failure)),
+    `44 points short of a threshold passed as "just below": ${JSON.stringify(notJustBelow)}`
+  );
+
+  // A straddle declared against a cap the rule applies after firing. There is
+  // no side to be on, and accepting it would report coverage of a number
+  // nothing is ever compared against.
+  const notAComparison = await ownFindings([
+    { rule: "EVD-R-001", threshold: "recoveryCapMinutes", position: "triggers" }
+  ]);
+  assert.ok(
+    notAComparison.some((finding) => /no side to be on/.test(finding.failure)),
+    `a cap was accepted as a threshold to straddle: ${JSON.stringify(notAComparison)}`
+  );
+});
+
 test("every check is asked of every scenario", async () => {
   // A check that quietly stops running looks exactly like a check that passes.
   const { scenarios } = await runHarness();

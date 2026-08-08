@@ -22,6 +22,7 @@
     "firedRules": [
       "EVD-R-003"
     ],
+    "overruledRules": [],
     "changed": [
       "focus",
       "intensity"
@@ -31,6 +32,9 @@
       "durationMinutes": 50
     }
   },
+  "rulePosition": [
+    { "rule": "EVD-R-003", "threshold": "muscleFatigueMaxed", "position": "triggers" }
+  ],
   "evidence": {
     "profile": {
       "userId": "user_harness",

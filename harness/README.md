@@ -56,17 +56,24 @@ rather than argue for it. The argument for a threshold lives in the rule
 library; the argument for a rule still firing lives in
 `packages/rules/test/regression.test.js`.
 
-And two that are properties of the whole set rather than of any decision:
+And three that are properties of the whole set rather than of any decision:
 
 | | question |
 |---|---|
 | DH-COV | Is every active rule in the library reachable from a scenario? |
+| DH-BND | Is every threshold exercised at its edge, and quiet one step short of it? |
 | DH-FP | Has any rule's threshold, category or effect moved without being acknowledged? |
 
 DH-COV is what makes this a place a rule can be re-run, verified and traced,
 rather than a sample of whichever rules the scenarios happened to hit. A rule
 added to the library needs a scenario here, or the seven checks above keep
 passing while saying nothing about it.
+
+DH-BND asks the same question of the *number* rather than the rule, and is
+documented in [Straddling a threshold](#straddling-a-threshold) below. A rule
+can be covered and its threshold still free to move: every scenario that fired
+EVD-R-004 sat at a fatigue in the eighties, so 65 could have become 55 or 75
+and nothing here would have gone red.
 
 It overlaps `packages/rules/test/regression.test.js` only in name. That set pins
 one rule per case against a hand-written state, which protects the threshold and
@@ -162,7 +169,7 @@ instead, and because a subdirectory of `eval/` reads as a subset of it when the
 table above is the whole point. The cost of standing outside both is one line in
 `.mcpbignore` that has to be remembered — `eval/` and `packages/` are already
 listed there, this is not, and a harness packed into the archive would ship
-thirteen files shaped exactly like a person's health record.
+twenty-nine files shaped exactly like a person's health record.
 
 ```json
 {
@@ -177,9 +184,13 @@ thirteen files shaped exactly like a person's health record.
     "intent": "reduce_today_intensity",
     "governingRule": "EVD-R-002",
     "firedRules": ["EVD-R-002"],
+    "overruledRules": [],
     "changed": ["focus", "intensity"],
     "to": { "intensity": "moderate", "durationMinutes": 60 }
   },
+  "rulePosition": [
+    { "rule": "EVD-R-002", "threshold": "readinessReduce", "position": "triggers" }
+  ],
   "evidence": { "profile": {}, "goals": [], "constraints": {}, "workouts": [], "healthMetrics": [] }
 }
 ```
@@ -192,6 +203,104 @@ prior state and therefore no decision to make.
 pins only `type` is making only that claim, and DH-PIN says nothing about the
 rest. A scenario with no `expectedDecision` at all is still fully checked by the
 seven invariants — the pin is an addition to them, never a substitute.
+
+`overruledRules` is derived rather than read: `decisionBasis` carries no such
+field, and the information is in what it does carry — every rule in
+`appliedRules` that is not the governing one lost arbitration. It is pinned
+separately from `firedRules` because a rule can keep firing while quietly
+changing sides, and "fired" alone would not show it.
+
+`rulePosition` is what DH-BND reads, and is described next.
+
+## Straddling a threshold
+
+A scenario says where it sits relative to a rule's threshold, and three
+positions are available:
+
+| | the reading | and then |
+|---|---|---|
+| `triggers` | on the acting side | the rule acts |
+| `boundary` | **exactly** the threshold value | acts or not — the *operator* decides, not the scenario |
+| `just_below` | on the non-acting side, within one step | the rule stays quiet |
+
+That `boundary` does not say whether it fires is the point. `>= 90` acts at 90
+and `> 1.4` does not act at 1.4, so a scenario allowed to assert its own
+outcome could assert the wrong half of its own rule; DH-BND derives it from the
+library instead. For the same reason `just_below` is required only where the
+operator admits equality — on `<` and `>` the reading at the value is already
+the non-acting one, and asking for a third case would be asking for the same
+scenario twice.
+
+"Within one step" is what makes `just_below` a claim rather than a label. The
+step comes from the threshold's unit (1 for a score, 0.01 for a ratio), and a
+unit with no declared step is an error rather than a default, because a guessed
+step size silently widens every straddle written against it.
+
+Every number in these scenarios was found by searching the real chain for a
+reading that lands on the value, not chosen by eye. That is the opposite of
+fitting a threshold to data and must not be mistaken for it: the thresholds are
+fixed and the evidence is bent to meet them, which is what a boundary test is.
+Nothing here is evidence *for* a cut point — that argument lives in the rule
+library, and for most of these rules it is `internal_composite`, meaning there
+is none.
+
+### Proving a silence
+
+A scenario that does not fire a rule proves nothing on its own. On a rule with
+more than one threshold the silence may be some *other* condition failing, and
+from outside the two are identical.
+
+So every non-acting claim is made to prove itself: the same scenario is re-run
+with that one quantity pushed across the line and nothing else touched, and if
+the rule still does not act, the scenario is not testing what it says it tests.
+This is DH-6's ablation run in the other direction, and it is the only use of
+`runChain`'s `overrideState` — a scenario cannot reach it, so an
+evidence-driven harness cannot be turned into a state-driven one by writing a
+scenario file.
+
+Two of EVD-R-009's quantities are not fields of the state at all — the count of
+movements a restriction strikes out is computed inside the engine from two
+things the state does not hold — so those declarations name a sibling scenario
+in `provedBy` instead. Weaker, and visibly so: two scenarios can differ in more
+than one thing. The pair here differ in one word of one restriction.
+
+### Where the numbers are read from
+
+`lib/quantities.js` says, for every threshold in the library, where its quantity
+is read from and how to move it. It exists because a rule that did not fire
+records nothing in `decisionBasis`, so there is nowhere else to get the reading
+for the half of these scenarios where the rule stayed quiet.
+
+That is a second copy of what the engine measures, and it is guarded rather than
+denied: where a rule publishes the same quantity in its recorded reading,
+DH-BND compares the two and fails if they disagree. Where it does not — a rule
+records one reading, and EVD-R-009's is the movement count, so nothing in the
+record corresponds to the token length its second threshold cuts — the
+cross-check is skipped rather than pointed at whichever number happens to be
+there.
+
+`gates` in that file separates three things that look alike in the library and
+are not:
+
+- **firing** — crossing it decides whether the rule fires.
+- **severity** — the rule fires either side; crossing it decides how hard it
+  pushes. Both of EVD-R-007's thresholds are this. What decides whether that
+  rule fires at all is `detraining.active`, computed in
+  `packages/training-load/src/trainingLoad.js` from two bare constants — 14 idle
+  days and a 25% chronic-load loss — which are not in the rule library, carry no
+  provenance, and appear in no `decisionBasis`.
+- **effect** — a cap or a multiplier applied *after* the rule fires. There is no
+  side to be on, and a straddle declared against one is rejected.
+
+One threshold is exempt from having an edge, and the exemption costs a written
+reason that prints on every run. EVD-R-007's 42-idle-day arm is collinear with
+its 60%-chronic-loss arm: chronic load decays on a fixed curve once training
+stops, and measured against `computeTrainingLoad` on blocks of 3 and 12 sessions
+at loads of 30, 60 and 90, 38 idle days already gives exactly 60% lost, 41 gives
+63% and 42 gives 63–64%. `severe` is therefore true four days before the 42-day
+threshold is reached, and that number could hold any value above about 39
+without changing a decision. A scenario at 42 days would pass while proving
+nothing, which is worse than the exemption.
 
 ## Keeping it honest
 

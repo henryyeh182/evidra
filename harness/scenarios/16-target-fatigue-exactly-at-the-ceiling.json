@@ -1,39 +1,26 @@
 {
-  "id": "a-harder-alternative-is-refused",
-  "what": "The athlete asks for more than today's ceiling allows. The refusal has to name the axis that failed and leave the action as the engine's own — a rejected proposal must not leave the athlete with no answer.",
+  "id": "target-fatigue-exactly-at-the-ceiling",
+  "what": "Leg fatigue lands on 90 exactly. `>= 90` acts at the value, so this is the lightest evidence that still takes two steps off the session.",
   "date": "2026-08-06",
   "scheduledSession": {
-    "id": "session_harness_08",
-    "focus": "Threshold Intervals",
-    "type": "run",
+    "id": "session_harness_16",
+    "focus": "Lower Body Strength",
+    "type": "strength",
     "durationMinutes": 60,
     "intensity": "high",
     "targetMuscleGroups": [
       "legs"
     ],
     "exerciseIds": [
-      "exercise_recovery_walk"
-    ]
-  },
-  "proposedSession": {
-    "id": "session_harness_08_proposed",
-    "focus": "Race Simulation",
-    "type": "run",
-    "durationMinutes": 90,
-    "intensity": "high",
-    "targetMuscleGroups": [
-      "legs"
-    ],
-    "exerciseIds": [
-      "exercise_recovery_walk"
+      "exercise_leg_press"
     ]
   },
   "expectedDecision": {
     "type": "adjust",
     "intent": "reduce_today_intensity",
-    "governingRule": "EVD-R-002",
+    "governingRule": "EVD-R-003",
     "firedRules": [
-      "EVD-R-002"
+      "EVD-R-003"
     ],
     "overruledRules": [],
     "changed": [
@@ -41,10 +28,17 @@
       "intensity"
     ],
     "to": {
-      "intensity": "moderate",
+      "intensity": "low",
       "durationMinutes": 60
     }
   },
+  "rulePosition": [
+    {
+      "rule": "EVD-R-003",
+      "threshold": "muscleFatigueMaxed",
+      "position": "boundary"
+    }
+  ],
   "evidence": {
     "profile": {
       "userId": "user_harness",
@@ -56,56 +50,79 @@
     },
     "goals": [
       {
-        "id": "goal_endurance",
-        "type": "endurance",
-        "label": "Half marathon",
+        "id": "goal_strength",
+        "type": "build_muscle",
+        "label": "Build muscle",
         "priority": 1
       }
     ],
     "constraints": {
       "equipment": [
         {
-          "type": "none",
-          "location": "outdoor",
+          "type": "barbell",
+          "location": "gym",
           "available": true
         }
       ]
     },
     "workouts": [
       {
-        "id": "w_0730",
-        "type": "run",
-        "name": "Easy run",
-        "startedAt": "2026-07-30T07:00:00+08:00",
-        "durationMinutes": 45,
-        "trainingLoad": 55,
-        "muscleGroups": [
-          "legs"
-        ],
-        "source": "manual"
-      },
-      {
-        "id": "w_0801",
-        "type": "run",
-        "name": "Easy run",
-        "startedAt": "2026-08-01T07:00:00+08:00",
-        "durationMinutes": 40,
-        "trainingLoad": 50,
-        "muscleGroups": [
-          "legs"
-        ],
-        "source": "manual"
-      },
-      {
-        "id": "w_0803",
+        "id": "w_0716",
         "type": "strength",
-        "name": "Upper body",
-        "startedAt": "2026-08-03T18:00:00+08:00",
-        "durationMinutes": 40,
-        "trainingLoad": 45,
+        "name": "Lower body",
+        "startedAt": "2026-07-16T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
         "muscleGroups": [
-          "back",
-          "arms"
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0720",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-20T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0724",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-24T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0728",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-28T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0804",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-08-04T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 163,
+        "muscleGroups": [
+          "legs"
         ],
         "source": "manual"
       }
@@ -113,35 +130,35 @@
     "healthMetrics": [
       {
         "type": "sleep_duration_hours",
-        "value": 5,
+        "value": 7.5,
         "unit": "hours",
         "recordedAt": "2026-08-06T06:30:00+08:00",
         "source": "manual"
       },
       {
         "type": "sleep_quality",
-        "value": 50,
+        "value": 82,
         "unit": "score",
         "recordedAt": "2026-08-06T06:30:00+08:00",
         "source": "manual"
       },
       {
         "type": "hrv_ms",
-        "value": 30,
+        "value": 55,
         "unit": "ms",
         "recordedAt": "2026-08-06T06:30:00+08:00",
         "source": "manual"
       },
       {
         "type": "resting_hr_bpm",
-        "value": 65,
+        "value": 54,
         "unit": "bpm",
         "recordedAt": "2026-08-06T06:30:00+08:00",
         "source": "manual"
       },
       {
         "type": "stress",
-        "value": 60,
+        "value": 25,
         "unit": "score",
         "recordedAt": "2026-08-06T06:30:00+08:00",
         "source": "manual"

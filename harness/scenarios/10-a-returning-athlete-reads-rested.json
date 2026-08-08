@@ -22,6 +22,7 @@
     "firedRules": [
       "EVD-R-007"
     ],
+    "overruledRules": [],
     "changed": [
       "focus",
       "durationMinutes",
@@ -32,6 +33,10 @@
       "durationMinutes": 36
     }
   },
+  "rulePosition": [
+    { "rule": "EVD-R-007", "threshold": "returnSevereIdleDays", "position": "triggers" },
+    { "rule": "EVD-R-007", "threshold": "returnSevereCtlLossPct", "position": "triggers" }
+  ],
   "evidence": {
     "profile": {
       "userId": "user_harness",

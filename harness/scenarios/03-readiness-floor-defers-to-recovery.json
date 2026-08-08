@@ -22,6 +22,7 @@
     "firedRules": [
       "EVD-R-001"
     ],
+    "overruledRules": [],
     "changed": [
       "focus",
       "type",
@@ -34,6 +35,9 @@
       "durationMinutes": 30
     }
   },
+  "rulePosition": [
+    { "rule": "EVD-R-001", "threshold": "readinessRest", "position": "triggers" }
+  ],
   "evidence": {
     "profile": {
       "userId": "user_harness",

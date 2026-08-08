@@ -1,9 +1,9 @@
 {
-  "id": "a-high-fatigue-group-blocks-hard-work",
-  "what": "Yesterday's heavy leg session left the same muscle group high on fatigue while every recovery signal reads fine. Readiness alone would wave this through; the rule that catches it reads the group the session actually loads.",
+  "id": "chronic-loss-exactly-at-the-severe-line",
+  "what": "Thirty-eight days off, and chronic load has fallen exactly 60% from its peak. EVD-R-007 fires either side of this number; what the number decides is whether coming back costs one step of intensity or two.",
   "date": "2026-08-06",
   "scheduledSession": {
-    "id": "session_harness_11",
+    "id": "session_harness_23",
     "focus": "Lower Body Strength",
     "type": "strength",
     "durationMinutes": 60,
@@ -17,23 +17,28 @@
   },
   "expectedDecision": {
     "type": "adjust",
-    "intent": "reduce_today_intensity",
-    "governingRule": "EVD-R-004",
+    "intent": "ease_back_after_break",
+    "governingRule": "EVD-R-007",
     "firedRules": [
-      "EVD-R-004"
+      "EVD-R-007"
     ],
     "overruledRules": [],
     "changed": [
       "focus",
+      "durationMinutes",
       "intensity"
     ],
     "to": {
-      "intensity": "moderate",
-      "durationMinutes": 60
+      "intensity": "low",
+      "durationMinutes": 36
     }
   },
   "rulePosition": [
-    { "rule": "EVD-R-004", "threshold": "muscleFatigueHigh", "position": "triggers" }
+    {
+      "rule": "EVD-R-007",
+      "threshold": "returnSevereCtlLossPct",
+      "position": "boundary"
+    }
   ],
   "evidence": {
     "profile": {
@@ -63,72 +68,144 @@
     },
     "workouts": [
       {
-        "id": "w_0716",
+        "id": "w_0527",
         "type": "strength",
         "name": "Lower body",
-        "startedAt": "2026-07-16T18:00:00+08:00",
+        "startedAt": "2026-05-27T18:00:00+08:00",
         "durationMinutes": 55,
-        "trainingLoad": 85,
+        "trainingLoad": 60,
         "muscleGroups": [
           "legs"
         ],
         "source": "manual"
       },
       {
-        "id": "w_0720",
+        "id": "w_0530",
         "type": "strength",
         "name": "Lower body",
-        "startedAt": "2026-07-20T18:00:00+08:00",
+        "startedAt": "2026-05-30T18:00:00+08:00",
         "durationMinutes": 55,
-        "trainingLoad": 85,
+        "trainingLoad": 60,
         "muscleGroups": [
           "legs"
         ],
         "source": "manual"
       },
       {
-        "id": "w_0724",
+        "id": "w_0602",
         "type": "strength",
         "name": "Lower body",
-        "startedAt": "2026-07-24T18:00:00+08:00",
+        "startedAt": "2026-06-02T18:00:00+08:00",
         "durationMinutes": 55,
-        "trainingLoad": 85,
+        "trainingLoad": 60,
         "muscleGroups": [
           "legs"
         ],
         "source": "manual"
       },
       {
-        "id": "w_0728",
+        "id": "w_0605",
         "type": "strength",
         "name": "Lower body",
-        "startedAt": "2026-07-28T18:00:00+08:00",
+        "startedAt": "2026-06-05T18:00:00+08:00",
         "durationMinutes": 55,
-        "trainingLoad": 85,
+        "trainingLoad": 60,
         "muscleGroups": [
           "legs"
         ],
         "source": "manual"
       },
       {
-        "id": "w_0801",
+        "id": "w_0608",
         "type": "strength",
         "name": "Lower body",
-        "startedAt": "2026-08-01T18:00:00+08:00",
+        "startedAt": "2026-06-08T18:00:00+08:00",
         "durationMinutes": 55,
-        "trainingLoad": 85,
+        "trainingLoad": 60,
         "muscleGroups": [
           "legs"
         ],
         "source": "manual"
       },
       {
-        "id": "w_0805",
+        "id": "w_0611",
         "type": "strength",
-        "name": "Heavy squats",
-        "startedAt": "2026-08-05T18:00:00+08:00",
-        "durationMinutes": 70,
-        "trainingLoad": 90,
+        "name": "Lower body",
+        "startedAt": "2026-06-11T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0614",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-06-14T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0617",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-06-17T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0620",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-06-20T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0623",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-06-23T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0626",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-06-26T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0629",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-06-29T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
         "muscleGroups": [
           "legs"
         ],

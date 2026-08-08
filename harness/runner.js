@@ -29,6 +29,7 @@ import { dirname, join } from "node:path";
 
 import { loadScenarios, runChain } from "./lib/chain.js";
 import { CHECKS } from "./lib/checks.js";
+import { checkBoundaries } from "./lib/boundaries.js";
 import { ruleCoverage } from "./lib/coverage.js";
 import { computeFingerprint, compareFingerprint } from "./lib/fingerprint.js";
 
@@ -89,6 +90,12 @@ export async function runHarness(scenarios) {
     }
   }
 
+  // Every declared straddle, and whether every threshold has one. Set-level for
+  // the same reason coverage is: no scenario can say what the scenario beside
+  // it claimed about the same threshold.
+  const boundaries = await checkBoundaries(ran);
+  findings.push(...boundaries.findings);
+
   // A rule nothing here reaches is a rule this harness cannot say anything
   // about, so it is reported as a finding rather than left to be noticed.
   const coverage = ruleCoverage(ran);
@@ -102,7 +109,7 @@ export async function runHarness(scenarios) {
     });
   }
 
-  return { scenarios: ran, findings, errors, coverage };
+  return { scenarios: ran, findings, errors, coverage, boundaries };
 }
 
 async function main() {
@@ -120,12 +127,12 @@ async function main() {
 
   const drift = await fingerprintDrift();
 
-  return runHarness().then(({ scenarios, findings, errors, coverage }) => {
+  return runHarness().then(({ scenarios, findings, errors, coverage, boundaries }) => {
     const title = "Decision Harness";
     console.log(`\n${title}`);
     console.log("=".repeat(title.length));
     console.log(`Scenarios:  ${scenarios.length}`);
-    console.log(`Checks:     ${CHECKS.length} per scenario, 2 across the set\n`);
+    console.log(`Checks:     ${CHECKS.length} per scenario, 3 across the set\n`);
 
     for (const check of CHECKS) {
       const failed = findings.filter((finding) => finding.check === check.id);
@@ -146,6 +153,28 @@ async function main() {
       console.log(
         `         ${ruleId}  ${scenarioIds ? scenarioIds.join(", ") : "NOT REACHED BY ANY SCENARIO"}`
       );
+    }
+
+    const boundaryFailures = findings.filter((finding) => finding.check === "DH-BND");
+    console.log(
+      `\n  [${boundaryFailures.length === 0 ? "PASS" : "FAIL"}] DH-BND  ` +
+        `Is every threshold exercised at its edge, and quiet one step short of it?`
+    );
+    for (const finding of boundaryFailures) {
+      console.log(`         ${finding.scenario}: ${finding.failure}`);
+    }
+    for (const row of boundaries.matrix) {
+      const at = (position) => (row.positions.get(position) || []).join(", ") || "—";
+      const shape = `${row.operator} ${row.value}`.padEnd(8);
+      console.log(
+        `         ${row.where.padEnd(38)} ${shape} ` +
+          `triggers: ${at("triggers")}  |  ` +
+          `at ${row.value}${row.boundaryActs ? " (acts)" : " (quiet)"}: ${at("boundary")}` +
+          (row.required.includes("just_below") ? `  |  one step short: ${at("just_below")}` : ``)
+      );
+      if (row.unreachable) {
+        console.log(`         ${" ".repeat(38)} no edge to reach: ${row.unreachable}`);
+      }
     }
 
     const moved = [...drift.changed, ...drift.added, ...drift.removed];

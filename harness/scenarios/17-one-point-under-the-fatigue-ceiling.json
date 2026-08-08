@@ -1,9 +1,9 @@
 {
-  "id": "a-restriction-outranks-a-recovery-rule",
-  "what": "An active knee restriction names a scheduled movement on a day readiness also calls for a step down. Two rules fire in two categories, so which one the decision is attributed to is a choice the arbitration policy makes and this scenario pins.",
+  "id": "one-point-under-the-fatigue-ceiling",
+  "what": "The same day with two units less load: leg fatigue 89, and the ceiling rule stays out of it. The rule below takes the session instead, which is the difference a single point is supposed to make.",
   "date": "2026-08-06",
   "scheduledSession": {
-    "id": "session_harness_04",
+    "id": "session_harness_17",
     "focus": "Lower Body Strength",
     "type": "strength",
     "durationMinutes": 60,
@@ -12,25 +12,20 @@
       "legs"
     ],
     "exerciseIds": [
-      "exercise_back_squat",
-      "exercise_bent_over_row"
+      "exercise_leg_press"
     ]
   },
   "expectedDecision": {
-    "type": "substitute",
-    "intent": "remove_contraindicated_movements",
-    "governingRule": "EVD-R-009",
+    "type": "adjust",
+    "intent": "reduce_today_intensity",
+    "governingRule": "EVD-R-004",
     "firedRules": [
-      "EVD-R-002",
-      "EVD-R-009"
+      "EVD-R-004"
     ],
-    "overruledRules": [
-      "EVD-R-002"
-    ],
+    "overruledRules": [],
     "changed": [
       "focus",
-      "intensity",
-      "exercises"
+      "intensity"
     ],
     "to": {
       "intensity": "moderate",
@@ -38,8 +33,11 @@
     }
   },
   "rulePosition": [
-    { "rule": "EVD-R-009", "threshold": "restrictedMovementsPresent", "position": "boundary" },
-    { "rule": "EVD-R-009", "threshold": "restrictionTokenMinLength", "position": "triggers" }
+    {
+      "rule": "EVD-R-003",
+      "threshold": "muscleFatigueMaxed",
+      "position": "just_below"
+    }
   ],
   "evidence": {
     "profile": {
@@ -59,17 +57,6 @@
       }
     ],
     "constraints": {
-      "injuries": [
-        {
-          "id": "injury_knee",
-          "bodyRegion": "left_knee",
-          "severity": "moderate",
-          "restrictions": [
-            "avoid heavy squat"
-          ],
-          "status": "active"
-        }
-      ],
       "equipment": [
         {
           "type": "barbell",
@@ -80,39 +67,62 @@
     },
     "workouts": [
       {
-        "id": "w_0730",
-        "type": "run",
-        "name": "Easy run",
-        "startedAt": "2026-07-30T07:00:00+08:00",
-        "durationMinutes": 45,
-        "trainingLoad": 55,
-        "muscleGroups": [
-          "legs"
-        ],
-        "source": "manual"
-      },
-      {
-        "id": "w_0801",
-        "type": "run",
-        "name": "Easy run",
-        "startedAt": "2026-08-01T07:00:00+08:00",
-        "durationMinutes": 40,
-        "trainingLoad": 50,
-        "muscleGroups": [
-          "legs"
-        ],
-        "source": "manual"
-      },
-      {
-        "id": "w_0803",
+        "id": "w_0716",
         "type": "strength",
-        "name": "Upper body",
-        "startedAt": "2026-08-03T18:00:00+08:00",
-        "durationMinutes": 40,
-        "trainingLoad": 45,
+        "name": "Lower body",
+        "startedAt": "2026-07-16T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
         "muscleGroups": [
-          "back",
-          "arms"
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0720",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-20T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0724",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-24T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0728",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-28T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0804",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-08-04T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 161,
+        "muscleGroups": [
+          "legs"
         ],
         "source": "manual"
       }
@@ -120,35 +130,35 @@
     "healthMetrics": [
       {
         "type": "sleep_duration_hours",
-        "value": 5,
+        "value": 7.5,
         "unit": "hours",
         "recordedAt": "2026-08-06T06:30:00+08:00",
         "source": "manual"
       },
       {
         "type": "sleep_quality",
-        "value": 50,
+        "value": 82,
         "unit": "score",
         "recordedAt": "2026-08-06T06:30:00+08:00",
         "source": "manual"
       },
       {
         "type": "hrv_ms",
-        "value": 30,
+        "value": 55,
         "unit": "ms",
         "recordedAt": "2026-08-06T06:30:00+08:00",
         "source": "manual"
       },
       {
         "type": "resting_hr_bpm",
-        "value": 65,
+        "value": 54,
         "unit": "bpm",
         "recordedAt": "2026-08-06T06:30:00+08:00",
         "source": "manual"
       },
       {
         "type": "stress",
-        "value": 60,
+        "value": 25,
         "unit": "score",
         "recordedAt": "2026-08-06T06:30:00+08:00",
         "source": "manual"

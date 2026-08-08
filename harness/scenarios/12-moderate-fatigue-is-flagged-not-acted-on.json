@@ -22,12 +22,16 @@
     "firedRules": [
       "EVD-R-005"
     ],
+    "overruledRules": [],
     "changed": [],
     "to": {
       "intensity": "high",
       "durationMinutes": 60
     }
   },
+  "rulePosition": [
+    { "rule": "EVD-R-005", "threshold": "muscleFatigueModerate", "position": "triggers" }
+  ],
   "evidence": {
     "profile": {
       "userId": "user_harness",

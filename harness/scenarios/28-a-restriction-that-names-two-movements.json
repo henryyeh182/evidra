@@ -1,16 +1,45 @@
 {
-  "id": "nothing-scheduled-is-not-a-decision",
-  "what": "Good evidence and no plan. The product's central distinction lives here: with no prior state there is nothing to change, and the engine has to say so rather than degrade into a recommendation.",
+  "id": "a-restriction-that-names-two-movements",
+  "what": "One restriction, two movements struck out. Sits away from EVD-R-009's edge on purpose: the scenario beside it has the same session and a restriction one character shorter, and between them they fix both of this rule's numbers.",
   "date": "2026-08-06",
-  "scheduledSession": null,
-  "expectedDecision": {
-    "type": "keep",
-    "intent": "no_scheduled_session",
-    "governingRule": null,
-    "firedRules": [],
-    "overruledRules": [],
-    "changed": []
+  "scheduledSession": {
+    "id": "session_harness_28",
+    "focus": "Lower Body Strength",
+    "type": "strength",
+    "durationMinutes": 60,
+    "intensity": "high",
+    "targetMuscleGroups": [
+      "legs"
+    ],
+    "exerciseIds": [
+      "exercise_hip_thrust",
+      "exercise_fedb_heavy_bag_thrust",
+      "exercise_leg_press"
+    ]
   },
+  "expectedDecision": {
+    "type": "substitute",
+    "intent": "remove_contraindicated_movements",
+    "governingRule": "EVD-R-009",
+    "firedRules": [
+      "EVD-R-009"
+    ],
+    "overruledRules": [],
+    "changed": [
+      "exercises"
+    ],
+    "to": {
+      "intensity": "high",
+      "durationMinutes": 60
+    }
+  },
+  "rulePosition": [
+    {
+      "rule": "EVD-R-009",
+      "threshold": "restrictedMovementsPresent",
+      "position": "triggers"
+    }
+  ],
   "evidence": {
     "profile": {
       "userId": "user_harness",
@@ -22,22 +51,45 @@
     },
     "goals": [
       {
-        "id": "goal_endurance",
-        "type": "endurance",
-        "label": "Half marathon",
+        "id": "goal_strength",
+        "type": "build_muscle",
+        "label": "Build muscle",
         "priority": 1
       }
     ],
     "constraints": {
+      "injuries": [
+        {
+          "id": "injury_hip",
+          "bodyRegion": "right_hip",
+          "severity": "moderate",
+          "restrictions": [
+            "avoid thrust"
+          ],
+          "status": "active"
+        }
+      ],
       "equipment": [
         {
-          "type": "none",
-          "location": "outdoor",
+          "type": "barbell",
+          "location": "gym",
           "available": true
         }
       ]
     },
     "workouts": [
+      {
+        "id": "w_0730",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-07-30T07:00:00+08:00",
+        "durationMinutes": 45,
+        "trainingLoad": 55,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
       {
         "id": "w_0801",
         "type": "run",
@@ -46,7 +98,7 @@
         "durationMinutes": 40,
         "trainingLoad": 50,
         "muscleGroups": [
-          "legs"
+          "arms"
         ],
         "source": "manual"
       },
@@ -58,8 +110,7 @@
         "durationMinutes": 40,
         "trainingLoad": 45,
         "muscleGroups": [
-          "back",
-          "arms"
+          "back"
         ],
         "source": "manual"
       }

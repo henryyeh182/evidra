@@ -83,11 +83,24 @@ export function deepFreeze(value) {
  * once frozen to find out, once not, so the rest of the checks still have a
  * decision to examine — and reports the mutation as the finding it is.
  *
+ * `overrideState` is the boundary probe and it is the one place this file hands
+ * the engine a state it did not compute from the evidence. It exists because a
+ * scenario that sits just short of a threshold and does not fire proves less
+ * than it looks: on a rule with more than one threshold, the silence may be
+ * some *other* condition failing, and from outside the two are identical. The
+ * probe re-runs the same scenario with that one quantity pushed across the
+ * line; if the rule then fires, the silence is attributable. It is the same
+ * move DH-6 makes by removing a signal, done in the other direction.
+ *
+ * Nothing but `DH-BND` may use it. A scenario cannot reach it — it is not a
+ * field on the scenario file — so an evidence-driven harness cannot be turned
+ * into a state-driven one by writing a scenario.
+ *
  * @param {object} scenario a parsed harness scenario
- * @param {{ freeze?: boolean }} [options]
+ * @param {{ freeze?: boolean, overrideState?: (state: object) => object }} [options]
  * @returns {Promise<{ scenario: object, state: object, decision: object }>}
  */
-export async function runChain(scenario, { freeze = false } = {}) {
+export async function runChain(scenario, { freeze = false, overrideState = null } = {}) {
   const graph = await loadGraph();
   const displayNameFor = (id) => graph.displayNameFor(id);
   const toCanonicalIds = (values = []) =>
@@ -121,9 +134,11 @@ export async function runChain(scenario, { freeze = false } = {}) {
   // decision reads is the impulse-response one whenever the history has
   // converged, and a check that went back to the semantic state for it would be
   // comparing the decision against a number the decision never saw.
-  const engineState = trainingLoad.coverage.sufficient
+  const computedState = trainingLoad.coverage.sufficient
     ? { ...state, acuteChronicWorkloadRatio: trainingLoad.acwr, trainingLoad }
     : { ...state, trainingLoad };
+
+  const engineState = overrideState ? overrideState(structuredClone(computedState)) : computedState;
 
   const decision = decideSession({
     scheduledSession: canonicalize(scenario.scheduledSession),

@@ -1,26 +1,27 @@
 {
-  "id": "a-rested-day-runs-as-planned",
-  "what": "Four fresh recovery signals, light recent load, nothing to change. `keep` is a decision and has to survive the same checks as any other.",
-  "why-two-goals-out-of-order": "Deliberate, and not to be tidied. DH-1's second half asks whether the chain writes to the caller's own evidence, which it probes by freezing the context — and an in-place sort of a one-element array writes nothing, so a scenario with a single goal makes that probe silently inert. Two goals in the wrong order is the smallest input that makes an ordering mutation observable.",
+  "id": "one-point-under-the-high-fatigue-line",
+  "what": "Leg fatigue 64. The high-fatigue rule holds off and the advisory one picks it up — the session is kept, with the fatigue said out loud.",
   "date": "2026-08-06",
   "scheduledSession": {
-    "id": "session_harness_01",
-    "focus": "Threshold Intervals",
-    "type": "run",
+    "id": "session_harness_19",
+    "focus": "Lower Body Strength",
+    "type": "strength",
     "durationMinutes": 60,
     "intensity": "high",
     "targetMuscleGroups": [
       "legs"
     ],
     "exerciseIds": [
-      "exercise_recovery_walk"
+      "exercise_leg_press"
     ]
   },
   "expectedDecision": {
     "type": "keep",
     "intent": "proceed_as_planned",
-    "governingRule": null,
-    "firedRules": [],
+    "governingRule": "EVD-R-005",
+    "firedRules": [
+      "EVD-R-005"
+    ],
     "overruledRules": [],
     "changed": [],
     "to": {
@@ -28,6 +29,13 @@
       "durationMinutes": 60
     }
   },
+  "rulePosition": [
+    {
+      "rule": "EVD-R-004",
+      "threshold": "muscleFatigueHigh",
+      "position": "just_below"
+    }
+  ],
   "evidence": {
     "profile": {
       "userId": "user_harness",
@@ -41,60 +49,77 @@
       {
         "id": "goal_strength",
         "type": "build_muscle",
-        "label": "Keep strength",
-        "priority": 2
-      },
-      {
-        "id": "goal_endurance",
-        "type": "endurance",
-        "label": "Half marathon",
+        "label": "Build muscle",
         "priority": 1
       }
     ],
     "constraints": {
       "equipment": [
         {
-          "type": "none",
-          "location": "outdoor",
+          "type": "barbell",
+          "location": "gym",
           "available": true
         }
       ]
     },
     "workouts": [
       {
-        "id": "w_0730",
-        "type": "run",
-        "name": "Easy run",
-        "startedAt": "2026-07-30T07:00:00+08:00",
-        "durationMinutes": 45,
-        "trainingLoad": 55,
-        "muscleGroups": [
-          "legs"
-        ],
-        "source": "manual"
-      },
-      {
-        "id": "w_0801",
-        "type": "run",
-        "name": "Easy run",
-        "startedAt": "2026-08-01T07:00:00+08:00",
-        "durationMinutes": 40,
-        "trainingLoad": 50,
-        "muscleGroups": [
-          "legs"
-        ],
-        "source": "manual"
-      },
-      {
-        "id": "w_0803",
+        "id": "w_0716",
         "type": "strength",
-        "name": "Upper body",
-        "startedAt": "2026-08-03T18:00:00+08:00",
-        "durationMinutes": 40,
-        "trainingLoad": 45,
+        "name": "Lower body",
+        "startedAt": "2026-07-16T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
         "muscleGroups": [
-          "back",
-          "arms"
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0720",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-20T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0724",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-24T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0728",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-28T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "manual"
+      },
+      {
+        "id": "w_0804",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-08-04T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 116,
+        "muscleGroups": [
+          "legs"
         ],
         "source": "manual"
       }

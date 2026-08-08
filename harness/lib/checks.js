@@ -534,6 +534,19 @@ const pinnedDecision = {
       compare("fired rules", fired, [...expected.firedRules].sort());
     }
 
+    // Which rules fired and lost. Derived rather than read: `decisionBasis` has
+    // no `overruledRules` field, and the information is in what it does carry —
+    // every rule in `appliedRules` that is not the governing one was overruled.
+    // Pinning it separately from `firedRules` is the point: a rule can keep
+    // firing while quietly changing sides, and "fired" alone would not show it.
+    if (expected.overruledRules) {
+      const overruled = (decision.decisionBasis?.appliedRules || [])
+        .filter((rule) => rule.governing !== true)
+        .map((rule) => rule.ruleId)
+        .sort();
+      compare("overruled rules", overruled, [...expected.overruledRules].sort());
+    }
+
     return failures;
   }
 };

@@ -1,9 +1,9 @@
 {
-  "id": "load-ramped-too-fast-this-week",
-  "what": "Four quiet weeks and then a heavy one, on muscle groups today's session does not touch. Recovery reads fine and the target group is fresh, so the only thing that can catch this is the ramp rate itself — the one rule here whose quantity is defined outside Evidra and carries both citations and published objections.",
+  "id": "load-ramp-exactly-at-the-acwr-line",
+  "what": "The acute:chronic ratio comes out at 1.4 exactly. EVD-R-006 reads `> 1.4`, so the ramp at the line is allowed and the one at 1.41 is not — the only scenario here that pins a number the outside world defines rather than one Evidra invented.",
   "date": "2026-08-06",
   "scheduledSession": {
-    "id": "session_harness_13",
+    "id": "session_harness_22",
     "focus": "Upper Body Strength",
     "type": "strength",
     "durationMinutes": 50,
@@ -16,24 +16,23 @@
     ]
   },
   "expectedDecision": {
-    "type": "adjust",
-    "intent": "reduce_today_intensity",
-    "governingRule": "EVD-R-006",
-    "firedRules": [
-      "EVD-R-006"
-    ],
+    "type": "keep",
+    "intent": "proceed_as_planned",
+    "governingRule": null,
+    "firedRules": [],
     "overruledRules": [],
-    "changed": [
-      "focus",
-      "intensity"
-    ],
+    "changed": [],
     "to": {
-      "intensity": "moderate",
+      "intensity": "high",
       "durationMinutes": 50
     }
   },
   "rulePosition": [
-    { "rule": "EVD-R-006", "threshold": "acwrHigh", "position": "triggers" }
+    {
+      "rule": "EVD-R-006",
+      "threshold": "acwrHigh",
+      "position": "boundary"
+    }
   ],
   "evidence": {
     "profile": {
@@ -64,99 +63,99 @@
     "workouts": [
       {
         "id": "w_0712",
-        "type": "run",
-        "name": "Easy run",
-        "startedAt": "2026-07-12T07:00:00+08:00",
-        "durationMinutes": 30,
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-12T18:00:00+08:00",
+        "durationMinutes": 55,
         "trainingLoad": 25,
         "muscleGroups": [
           "legs"
         ],
-        "source": "strava"
+        "source": "manual"
       },
       {
         "id": "w_0716",
-        "type": "run",
-        "name": "Easy run",
-        "startedAt": "2026-07-16T07:00:00+08:00",
-        "durationMinutes": 30,
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-16T18:00:00+08:00",
+        "durationMinutes": 55,
         "trainingLoad": 25,
         "muscleGroups": [
           "legs"
         ],
-        "source": "strava"
+        "source": "manual"
       },
       {
         "id": "w_0720",
-        "type": "run",
-        "name": "Easy run",
-        "startedAt": "2026-07-20T07:00:00+08:00",
-        "durationMinutes": 30,
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-20T18:00:00+08:00",
+        "durationMinutes": 55,
         "trainingLoad": 25,
         "muscleGroups": [
           "legs"
         ],
-        "source": "strava"
+        "source": "manual"
       },
       {
         "id": "w_0724",
-        "type": "run",
-        "name": "Easy run",
-        "startedAt": "2026-07-24T07:00:00+08:00",
-        "durationMinutes": 30,
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-24T18:00:00+08:00",
+        "durationMinutes": 55,
         "trainingLoad": 25,
         "muscleGroups": [
           "legs"
         ],
-        "source": "strava"
+        "source": "manual"
       },
       {
         "id": "w_0728",
-        "type": "run",
-        "name": "Easy run",
-        "startedAt": "2026-07-28T07:00:00+08:00",
-        "durationMinutes": 30,
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-28T18:00:00+08:00",
+        "durationMinutes": 55,
         "trainingLoad": 25,
         "muscleGroups": [
           "legs"
         ],
-        "source": "strava"
+        "source": "manual"
       },
       {
         "id": "w_0731",
-        "type": "run",
-        "name": "Long run",
-        "startedAt": "2026-07-31T07:00:00+08:00",
-        "durationMinutes": 100,
-        "trainingLoad": 150,
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-07-31T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 78,
         "muscleGroups": [
           "legs"
         ],
-        "source": "strava"
+        "source": "manual"
       },
       {
         "id": "w_0802",
-        "type": "run",
-        "name": "Intervals",
-        "startedAt": "2026-08-02T07:00:00+08:00",
-        "durationMinutes": 60,
-        "trainingLoad": 140,
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-08-02T18:00:00+08:00",
+        "durationMinutes": 55,
+        "trainingLoad": 73,
         "muscleGroups": [
           "legs"
         ],
-        "source": "strava"
+        "source": "manual"
       },
       {
         "id": "w_0804",
-        "type": "run",
-        "name": "Tempo",
-        "startedAt": "2026-08-04T07:00:00+08:00",
+        "type": "strength",
+        "name": "Lower body",
+        "startedAt": "2026-08-04T18:00:00+08:00",
         "durationMinutes": 55,
-        "trainingLoad": 130,
+        "trainingLoad": 68,
         "muscleGroups": [
           "legs"
         ],
-        "source": "strava"
+        "source": "manual"
       }
     ],
     "healthMetrics": [
