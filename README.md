@@ -208,6 +208,12 @@ the confidence differs. The next release names the field.
 Decisions are not only downward — this one comes back `advance`. Oura reports no
 training load, so Evidra computes none rather than inventing a number.
 
+The Oura and Whoop readers are the two youngest here. They were written against
+those vendors' own published API specifications and have not yet been checked
+against a real response from either service — and every reader before them turned
+up something on real data that a specification did not mention. The Apple Health,
+Garmin, Google Health and Strava readers were built from actual export files.
+
 **5 · Training around an injury**
 
 > My knee's been bothering me. What can I do instead of squats today? I've only
