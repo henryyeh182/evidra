@@ -154,8 +154,8 @@ Evidra ships as a Claude Desktop extension (`.mcpb`).
 shasum -a 256 evidra.mcpb
 ```
 
-Compare it with the `fileSha256` for your version in the
-[MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.henryyeh182/evidra).
+Compare it with `fileSha256` in the
+[MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.henryyeh182/evidra&version=latest).
 
 That checksum is held by a registry we don't control, and releases are never
 overwritten — a file you verify once still verifies later.
