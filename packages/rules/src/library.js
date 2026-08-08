@@ -159,9 +159,20 @@ export function describeRule(ruleId, measured = null, { full = true } = {}) {
     ...(rule.contested?.length
       ? {
           contested: rule.contested.map((item) => ({
+            // No doi or url, unlike `sources`. The full description of the
+            // governing rule travels in every decision frame and is serialised
+            // twice in it, so the objections are held to citation, claim and
+            // status; the citation carries journal, volume, issue and pages,
+            // which is enough to resolve. The identifiers stay in
+            // session-rules.json for a reviewer reading the library directly.
             citation: item.citation,
-            ...(item.url ? { url: item.url } : {}),
-            objection: item.objection
+            objection: item.objection,
+            // Unconditional, for the reason it is unconditional on `sources`.
+            // An objection nobody has read and one confirmed against the
+            // primary text are worth different amounts to a reader deciding how
+            // much weight to put on the dispute, and until this field travelled
+            // they left the server looking identical.
+            verificationStatus: item.verificationStatus
           }))
         }
       : {}),

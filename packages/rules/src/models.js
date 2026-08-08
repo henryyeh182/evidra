@@ -139,14 +139,15 @@ const UNCONFIRMED_STATUSES = ["numbers_from_secondary_sources", "citation_not_re
  * Had it existed that day the library would have failed to load, and v0.3.3
  * would never have been built.
  */
-function assertNoUnconfirmedFigures(item, where, field) {
+function assertNoUnconfirmedFigures(item, where, field, claimKey = "supports") {
   if (!UNCONFIRMED_STATUSES.includes(item.verificationStatus)) return;
-  if (!/\d/.test(item.supports ?? "")) return;
+  const claim = item[claimKey] ?? "";
+  if (!/\d/.test(claim)) return;
 
   fail(
     `${where} ${field} "${item.citation}" is ${item.verificationStatus} — nobody here has ` +
-      `checked it against a primary record — yet its "supports" states a figure: ` +
-      `"${item.supports}". An unconfirmed citation may describe what a paper establishes, ` +
+      `checked it against a primary record — yet its "${claimKey}" states a figure: ` +
+      `"${claim}". An unconfirmed citation may describe what a paper establishes, ` +
       `never quantify it. A number attached to a real journal reference reads as sourced to ` +
       `every reader who does not go and check.`
   );
@@ -260,10 +261,21 @@ function assertProvenanceHonesty(rule) {
     assertNoUnconfirmedFigures(item, where, "supportingLiterature");
   }
 
+  // `contested` was exempt from both checks above until 2026-08-08, and the
+  // exemption was written into the library's own readMe as a known gap. It was
+  // the wrong place to make an exception. An objection is a claim about what a
+  // paper argues, exactly as `supports` is, and it is read the same way: a
+  // reader who sees a real journal reference next to a specific criticism takes
+  // the criticism to be that paper's. Closing the gap turned up what the
+  // exemption had been covering — one objection asserting something its
+  // abstract does not say, and one citation with no title that resolved to no
+  // single record.
   for (const item of rule.contested ?? []) {
     if (!item.citation || !item.objection) {
       fail(`${where} has a contested entry missing a citation or an objection.`);
     }
+    assertVerifiable(item, where, "contested");
+    assertNoUnconfirmedFigures(item, where, "contested", "objection");
   }
 }
 

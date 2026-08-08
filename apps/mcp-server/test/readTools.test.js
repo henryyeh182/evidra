@@ -177,17 +177,28 @@ test("a structured result costs its payload twice, and only where a schema is de
  * It is a budget we set, not a limit anyone published — the submission
  * checklist says only "keep responses reasonably sized for the task". The
  * previous 8192 came from "payload ~4KB, sent twice" and was chosen before
- * decisions carried their evidentiary basis. 12288 is set above the measured
- * worst case below, with headroom; it is not a finding and must not be cited as
- * one.
+ * decisions carried their evidentiary basis. Each value since has been set above
+ * the measured worst case below, with headroom; none is a finding and none must
+ * be cited as one.
  *
  * What pushes a decision to the top of the range is the two rules that carry
  * citations — the acute:chronic rule ships Gabbett 2016 plus the Impellizzeri
  * and Lolli objections, and detraining ships Mujika and Padilla. Trimming to
  * hold a rounder number would mean cutting exactly the material that lets those
  * rules be checked, which is the wrong trade.
+ *
+ * 12288 became 13312 on 2026-08-08, when verificationStatus became mandatory on
+ * `contested` and the check found both objections on the acute:chronic rule
+ * overstated. Correcting them cost bytes in the worst case here: the Lolli
+ * citation had carried no title and did not resolve to a single record, so it
+ * gained one, and both entries now declare how far they were read. That is the
+ * material the paragraph above says not to trade away, so the budget moved
+ * instead of the provenance. The objections themselves were shortened as far as
+ * they could go while still saying what each paper argues, and the verbatim
+ * abstract quotations were moved into session-rules.json's verification blocks,
+ * which a reviewer reads directly and no decision frame carries.
  */
-const FRAME_CEILING = 12288;
+const FRAME_CEILING = 13312;
 
 /**
  * The ceiling has to be tested against the worst case, not a convenient one.

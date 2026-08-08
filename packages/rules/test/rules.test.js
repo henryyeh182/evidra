@@ -346,6 +346,27 @@ test("the compact rule form keeps basis and evidence level", () => {
   assert.equal(compact.sources, undefined, "the compact form does not carry full citations");
 });
 
+// `contested` was the last array exempt from the verification vocabulary, and
+// the exemption was documented rather than defended. An objection is a claim
+// about what a named paper argues; a reader who does not go and check takes it
+// to be that paper's, exactly as they would a `supports`.
+test("an objection must say how far its paper was read", () => {
+  const tampered = clone();
+  const rule = tampered.rules.find((entry) => entry.contested?.length > 0);
+  delete rule.contested[0].verificationStatus;
+
+  assert.throws(() => assertValidRuleLibrary(tampered), /contested.*verificationStatus/is);
+});
+
+test("an objection nobody has read may not quantify what it objects to", () => {
+  const tampered = clone();
+  const rule = tampered.rules.find((entry) => entry.contested?.length > 0);
+  rule.contested[0].verificationStatus = "unverified";
+  rule.contested[0].objection = "The published sweet spot of 0.8-1.3 is an artefact.";
+
+  assert.throws(() => assertValidRuleLibrary(tampered), /objection.*states a figure/is);
+});
+
 test("the acute:chronic rule ships its own published objections", () => {
   const rule = getRule("EVD-R-006");
   const described = describeRule("EVD-R-006");
@@ -355,6 +376,15 @@ test("the acute:chronic rule ships its own published objections", () => {
     described.contested.length >= 2,
     "citing Gabbett without citing the published criticism would misrepresent the field"
   );
+  // Unconditional on the way out, for the same reason it is unconditional on
+  // `sources`: an objection confirmed against the abstract and one resting on a
+  // title alone are worth different amounts, and they used to look the same.
+  for (const item of described.contested) {
+    assert.ok(
+      VERIFICATION_STATUSES.includes(item.verificationStatus),
+      `${item.citation} left the library without a verification status a caller can read`
+    );
+  }
   assert.ok(
     described.limitations.some((line) => line.includes("1.4")),
     "the limitation that our threshold is not the literature's must be stated"

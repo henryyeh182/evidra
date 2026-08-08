@@ -1,6 +1,6 @@
 {
   "libraryId": "evidra.session-rules",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "lastReview": "2026-08-08",
   "reviewer": "Henry Yeh",
 
@@ -109,10 +109,12 @@
     "moment a check fails. Rules whose provenance was corrected downward record",
     "the correction in `notes` rather than quietly dropping the old claim.",
     "",
-    "`contested` entries do not yet carry a verificationStatus. That is a known",
-    "gap, not a statement that they have been checked: EVD-R-006's notes record",
-    "that its two objections are taken from their published abstracts and not",
-    "from anyone's reading of the papers.",
+    "`contested` entries carry it too, as of 2026-08-08. They were exempt before",
+    "that, and the exemption was recorded here as a known gap on the reasoning",
+    "that an objection is not a claim we are making. It is still a claim about",
+    "what a named paper argues, and it is read as one. Closing the exemption",
+    "found both of EVD-R-006's objections overstated against the record: see that",
+    "rule's notes and the verification block on each entry.",
     "",
     "`version` is this library's own number and nothing else's. It is not the",
     "version of the packaged extension (server.json) and not the version of the",
@@ -138,7 +140,15 @@
     "1.1.0, later the same day, adds EVD-R-009 and fills the `injury` category,",
     "which had been the top rank of the arbitration matrix standing empty while",
     "the filter it should have governed ran on every call. A rule was added and",
-    "nothing else moved, which is a minor by the rule above."
+    "nothing else moved, which is a minor by the rule above.",
+    "",
+    "2.0.0, on 2026-08-08, makes verificationStatus mandatory on `contested` as",
+    "well, so every entry in all three citation arrays now declares how far it",
+    "was read. The change is additive — nothing a caller reads today disappears —",
+    "but the rule above says a field added is a major, and grading this one down",
+    "to a minor because it happens to be convenient is the sort of judgement the",
+    "scheme is written to take out of anyone's hands. It also regrades two",
+    "citations, which would have been a minor on its own."
   ],
 
   "studyDesigns": [
@@ -340,7 +350,7 @@
 
     {
       "ruleId": "EVD-R-006",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "status": "active",
       "title": "An acute load spike pulls intensity down one step",
       "category": "recovery",
@@ -372,12 +382,28 @@
       ],
       "contested": [
         {
-          "citation": "Impellizzeri FM, Tenan MS, Kempton T, Novak A, Coutts AJ. Acute:Chronic Workload Ratio: Conceptual Issues and Fundamental Pitfalls. Int J Sports Physiol Perform. 2020.",
-          "objection": "Mathematical coupling (acute load appears in both numerator and denominator); no coherent causal interpretation; adds no predictive value over acute load alone."
+          "citation": "Impellizzeri FM, Tenan MS, Kempton T, Novak A, Coutts AJ. Acute:Chronic Workload Ratio: Conceptual Issues and Fundamental Pitfalls. Int J Sports Physiol Perform. 2020;15(6):907-913.",
+          "doi": "10.1123/ijspp.2019-0864",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/32502973/",
+          "objection": "That no study has estimated a causal effect, so managing training by this ratio to change injury rates is a conjecture; and that the ratio is an inaccurate metric which adds statistical artefacts.",
+          "verificationStatus": "abstract_verified_full_text_not_read",
+          "verification": {
+            "checkedOn": "2026-08-08",
+            "against": "PubMed record 32502973. Authors, title, journal, year, volume, issue and pages confirmed. The objection paraphrases three phrases in the published abstract, verbatim: \"There is no evidence supporting the use of ACWR in training-load-management systems or for training recommendations aimed at reducing injury risk\"; \"failing to normalize the numerator by the denominator even when uncoupled\"; and \"it adds noise and creates statistical artifacts\". The quotations are held here rather than in `objection` because the full rule description travels in every decision frame and is serialised twice in it; the ceiling that budget sits under is asserted in readTools.test.js.",
+            "outcome": "The bibliographic record and all three quotations are confirmed against the abstract; the full text was not read. One earlier clause was withdrawn: this objection asserted that ACWR \"adds no predictive value over acute load alone\", which the abstract does not claim and which nothing here traced to this paper. Volume, issue, pages and DOI were missing from the citation and have been added."
+          }
         },
         {
-          "citation": "Lolli L, Batterham AM, Hawkins R, et al. Br J Sports Med, 2017-2019.",
-          "objection": "Ratio indices invite spurious correlation and inflated odds ratios; the published 'sweet spot' figure is argued to be an artefact."
+          "citation": "Lolli L, Batterham AM, Hawkins R, et al. Mathematical coupling causes spurious correlation within the conventional acute-to-chronic workload ratio calculations. Br J Sports Med. 2019;53(15):921-922.",
+          "doi": "10.1136/bjsports-2017-098110",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/29101104/",
+          "objection": "That the acute period is part of the chronic period it is divided by, so the two correlate spuriously whether or not any physiological relationship exists.",
+          "verificationStatus": "unverified",
+          "verification": {
+            "checkedOn": "2026-08-08",
+            "against": "PubMed record 29101104. Authors, title, journal, year, volume, issue, pages and DOI confirmed. Publication type is Editorial; the record carries no abstract.",
+            "outcome": "The bibliographic record is confirmed and the title states the objection. Nothing beyond the title is confirmed, because the editorial was not read and has no abstract to read instead. `unverified` rather than citation_not_read_in_full: the latter is marked legacy in this file's vocabulary and not for new entries, and no status here fits an item whose record was checked but whose only readable surface is its title. Read it as the weakest available value, not as nobody having looked. Two earlier clauses were withdrawn: this objection asserted \"inflated odds ratios\" and that \"the published 'sweet spot' figure is argued to be an artefact\", neither of which is traceable to this reference. The citation previously read \"Lolli L, Batterham AM, Hawkins R, et al. Br J Sports Med, 2017-2019\" with no title, which put an online-first year and an issue year in one range and resolved to no single record."
+          }
         }
       ],
       "limitations": [
@@ -386,7 +412,7 @@
         "weeklyTrainingLoadTarget (360) is itself unsourced, so the baseline_floor state inherits an unsourced denominator.",
         "Given the objections above, read this as a ramp-rate guard, not injury prediction. That is why the effect is one step down and not a stop."
       ],
-      "notes": "The only rule here whose quantity is externally defined and externally studied, and therefore the only one carrying a contested list. Citing Gabbett without citing Impellizzeri would misrepresent the state of the field, so both travel together. On verification (2026-08-07): the earlier publisher PDF was not machine-readable, so the figures had been taken from secondary summaries; the open-access deposit at PMC4789704 is readable and both figures are confirmed verbatim in the primary text. The contested entries below are still unread in full and are recorded from their published objections, not from our reading of them. Sessions carrying no training load are excluded from both sums."
+      "notes": "The only rule here whose quantity is externally defined and externally studied, and therefore the only one carrying a contested list. Citing Gabbett without citing Impellizzeri would misrepresent the state of the field, so both travel together. On verification (2026-08-07): the earlier publisher PDF was not machine-readable, so the figures had been taken from secondary summaries; the open-access deposit at PMC4789704 is readable and both figures are confirmed verbatim in the primary text. The contested entries were checked on 2026-08-08, when verificationStatus became mandatory on them too, and neither survived the check as written. Both had been described in this file as taken from the papers' published abstracts. The Impellizzeri abstract does not contain the third of the three claims attributed to it. The Lolli item has no abstract at all — it is an editorial — so its two specific claims could not have come from one, and its citation carried no title and did not resolve to a single record. Both were corrected downward and the withdrawn wording is recorded in each entry's verification block rather than dropped. This is the second time in this library that an unread reference had been given a claim it does not make; the first was EVD-R-007, and the pattern is the same one the verificationStatus enum exists to expose. Sessions carrying no training load are excluded from both sums."
     },
 
     {
