@@ -161,6 +161,9 @@
     font-size: 14px; color: var(--text-2);
   }
   .reason i { color: var(--mint); font-style: normal; font-family: var(--mono); font-size: 11px; }
+  /* The verification statuses are long single tokens; without this they push
+     the page into a horizontal scroll on a narrow window. */
+  .reason span { min-width: 0; overflow-wrap: anywhere; }
 
   .note {
     margin-top: 14px; font-size: 13px; color: var(--text-3);
@@ -313,9 +316,10 @@
     </div>
 
     <div class="docrole">
-      <span><b>Claude Desktop extension</b>　v0.3.7 · stdio</span>
+      <span><b>Claude Desktop extension</b>　可安裝的是 v0.3.7 · stdio</span>
       <span>6 tools · 6 資料來源 · 8 條規則</span>
       <span>不需要帳號、不需要設定、不連任何雲端</span>
+      <span><b>本頁描述目前建置</b>，與 v0.3.7 的差異列在〈Install〉</span>
     </div>
 
     <h1>任何模型都能給你<em>建議</em>。<br>只有握有證據的系統能給<em>決策</em>。</h1>
@@ -548,6 +552,35 @@
       也在<a href="https://github.com/modelcontextprotocol/registry">官方 MCP registry</a> 上架，
       識別碼 <code>io.github.henryyeh182/evidra</code>。Anthropic 的 MCPB 目錄審查中。
     </p>
+
+    <h4 style="margin-top:38px;font-size:18px;font-weight:620">你裝到的 v0.3.7 與本頁的差距</h4>
+    <p class="lede" style="margin-bottom:20px">
+      本頁描述的是<strong>目前建置</strong>。可安裝的 v0.3.7 凍結於 2026-08-07 00:56，
+      而當天的出處覆核發生在 <strong>2.5 小時之後</strong>——所以底下這幾項，
+      <strong>你今天裝起來的那顆還沒有</strong>。列出來是因為
+      <strong>把「已經做好」與「已經出貨」混在一起講，跟把「有出處」與「沒出處」混在一起講是同一種錯</strong>。
+    </p>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>項目</th><th>v0.3.7（可安裝）</th><th>目前建置（本頁）</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>規則庫版本</td><td>1.0.0</td><td>1.2.0</td></tr>
+          <tr><td>證據兩軸 <code>studyDesign</code> / <code>recommendationStrength</code></td><td>沒有，只有單軸 <code>evidenceLevel</code></td><td>兩軸，舊欄位由兩軸推導</td></tr>
+          <tr><td>EVD-R-007 的證據等級</td><td><code>systematic_review</code>，且仍帶著已撤回的「VO₂max 兩到三週掉 4–7%」</td><td><code>narrative_review</code>，該數字已撤除</td></tr>
+          <tr><td>Gabbett 2016 的查證程度</td><td><code>numbers_from_secondary_sources</code></td><td><code>primary_full_text_verified</code></td></tr>
+          <tr><td><code>verificationStatus</code> 強制必填</td><td>否；EVD-R-002 那筆是空的</td><td>是；該筆標為 <code>unverified</code></td></tr>
+          <tr><td><code>vendorAssessments</code> 在 tool schema 裡</td><td>否——引擎讀得到，但呼叫端無從得知欄位存在</td><td>是，含型別驗證</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note warn">
+      最後一列影響底下第 3 則：v0.3.7 上你的 AI 助理可能找不到那個欄位，只送原始訊號。
+      <strong>決策不變（一樣是 adjust、一樣是 EVD-R-002），變的是信心 high → medium。</strong>
+      第 3 列與第 4 列則是反過來的方向——<strong>可安裝的那顆還宣稱著一個已經被我們自己撤回的證據等級</strong>。
+      這幾項會在下一版一起出貨；在那之前，這張表就是差距本身。
+    </p>
   </section>
 
   <section class="spine">
@@ -557,6 +590,8 @@
       裝好之後貼上去就會跑。<strong>底下每一則的輸出都是引擎實際產生的</strong>，
       並且由測試釘住——這份頁面寫的數字若和程式不一致，測試會紅。
       證據樣本與完整輸出在 <code>examples/README.md</code>。
+      <strong>數字取自目前建置</strong>；五則裡只有第 3 則在 v0.3.7 上會不同（信心 high → medium），
+      見上一節的差距表。
     </p>
 
     <div class="tries">
@@ -1036,6 +1071,12 @@
       <strong>覆核會撤回東西，那正是它有在運作的證據。</strong>
     </p>
     <p class="note warn">
+      <strong>這一整節講的是目前建置，不是 v0.3.7。</strong> 那顆凍結在覆核之前 2.5 小時，
+      所以你今天裝得到的版本<strong>仍然宣稱 EVD-R-007 是 <code>systematic_review</code>，也仍然帶著那個已撤回的百分比</strong>。
+      把這件事寫在這裡而不是等下一版再說，理由和整節的主張是同一個：
+      <strong>撤回一個宣稱，就不能只在新版裡撤、在舊版裡留著不提。</strong>
+    </p>
+    <p class="note warn">
       同一天把這個欄位改成強制之後，<strong>立刻翻出一筆從來沒有人查證過的引用</strong>——
       它躲過了那次覆核，而在欄位還是選填的時候，
       <strong>「沒查過」與「沒東西好講」在輸出上長得一模一樣</strong>。
@@ -1115,7 +1156,8 @@
       <code>docs/fitness-mcp-implementation-plan.md</code>，不重複寫在這裡；
       兩份衝突時，以那份的現況表為準。
       <br>
-      對照日期 2026-08-07，對照對象是 v0.3.7 的實際程式碼與規則庫（v1.2.0，8 條規則）。
+      對照日期 2026-08-07，對照對象是<b>目前建置</b>的實際程式碼與規則庫（v1.2.0，8 條規則）——
+      <b>不是可安裝的 v0.3.7</b>，差異見上方〈Install〉。
       可複製的 demo prompts 與 sample evidence 在 <code>examples/README.md</code>，
       每一則的輸出都由測試釘住。
     </p>
