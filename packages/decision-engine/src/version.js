@@ -48,7 +48,7 @@
  * 1.4.0, also the same day: `describeRule` now emits `verificationStatus` on
  * every entry in a governing rule's `contested` list, and stops emitting `url`
  * there. The first half follows the library making that field mandatory, and on
- * its own would be announced well enough by libraryVersion moving to 2.0.0. The
+ * its own would be announced well enough by libraryVersion moving to 1.2.0. The
  * second half would not: the identifiers are still in the library data and it is
  * this code that decided to leave them out of the frame, so a caller diffing two
  * decisions would see a field disappear with nothing in the library version to

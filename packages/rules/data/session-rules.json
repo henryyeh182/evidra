@@ -1,6 +1,6 @@
 {
   "libraryId": "evidra.session-rules",
-  "version": "2.0.0",
+  "version": "1.2.0",
   "lastReview": "2026-08-08",
   "reviewer": "Henry Yeh",
 
@@ -142,13 +142,20 @@
     "the filter it should have governed ran on every call. A rule was added and",
     "nothing else moved, which is a minor by the rule above.",
     "",
-    "2.0.0, on 2026-08-08, makes verificationStatus mandatory on `contested` as",
+    "1.2.0, on 2026-08-08, makes verificationStatus mandatory on `contested` as",
     "well, so every entry in all three citation arrays now declares how far it",
-    "was read. The change is additive — nothing a caller reads today disappears —",
-    "but the rule above says a field added is a major, and grading this one down",
-    "to a minor because it happens to be convenient is the sort of judgement the",
-    "scheme is written to take out of anyone's hands. It also regrades two",
-    "citations, which would have been a minor on its own."
+    "was read, and regrades the two citations that closing the exemption caught.",
+    "",
+    "It was first issued as 2.0.0, which was wrong twice over. Wrong on the rule:",
+    "the major clause reads \"A field was added, removed, or given a new meaning,",
+    "SO A READER OF THE OLD SHAPE HAS TO CHANGE\" — the second half is the test,",
+    "not a gloss on the first. This change is additive, nothing a caller reads",
+    "disappears, and no reader has to change; regrading a citation is named in",
+    "the minor clause in as many words. Wrong on who decides: the grade is the",
+    "reviewer's call and was taken without asking, then written up as though it",
+    "had been derived from the clause rather than chosen. A major on this number",
+    "reaches every caller through decisionBasis and tells them to go and check",
+    "their parsing, so getting it wrong upward is not the safe direction."
   ],
 
   "studyDesigns": [

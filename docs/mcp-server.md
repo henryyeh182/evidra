@@ -124,7 +124,7 @@ Returns the five-layer decision:
     "Some sessions in the last 7 days carry no training load, so muscle fatigue is read from an incomplete week."
   ],
   "decisionBasis": {
-    "libraryVersion": "2.0.0",
+    "libraryVersion": "1.2.0",
     "engineVersion": "1.4.0",
     "policies": { "arbitration": "category_then_priority", "combination": "most_restrictive_wins" },
     "governingRule": {
