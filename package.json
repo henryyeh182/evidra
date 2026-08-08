@@ -26,6 +26,7 @@
     "test": "node --test",
     "serve:http": "node apps/mcp-server/src/http.js",
     "review:phase": "node scripts/review-phase.js",
+    "review:release": "node scripts/review-release.js",
     "test:rules": "node --test \"packages/rules/test/*.test.js\""
   },
   "engines": {

@@ -335,6 +335,24 @@ result 裡而不是協定層**、structured output、transport 選擇。**這些
 另兩個 `mcp-server-dev:*` 這裡用不到，不必叫：`build-mcp-server` 是決定部署模型的入口
 （已定案）；`build-mcp-app` 是做互動 widget／Apps SDK 的（「聊天介面」在「明確不做」裡）。
 
+## 發布／上架之前一定要跑
+
+```bash
+npm run review:release          # 對「已發布的那顆」，不是對 working tree
+```
+
+**每一次發布、每一次上架、每一次動對外文件，都要跑這支。** 它下載 GitHub 上真正的
+`.mcpb`、驗 sha256、解開來逐條核對 `PRIVACY.md` 寫的那些可執行斷言
+（搜 `node:http`／`fetch(`／`writeFile` 應為零命中）、跑 build-mcpb skill 的
+`local-security` 出貨前清單，再抓 `evidra` 公開 repo 的 README 與 PRIVACY 對版本、
+對 tool 清單。
+
+**為什麼要獨立一支**：`manifest.json` 的 `documentation`／`privacy_policies` 指向
+`blob/main/...`，讀者永遠讀到最新文件、卻裝到最後一個 release。**兩者分離是預設狀態。**
+`review:phase` 全部在 working tree 上跑，驗不到這件事。2026-08-07 因此出過兩次錯：
+對外 README 描述了當天才進 schema、還沒出貨的欄位；而 `PRIVACY.md` 對已編譯檔逐條做的
+宣稱，從發布到那天為止**沒有人拿真正的 archive 核對過一次**。
+
 ## 常用指令
 
 ```bash
