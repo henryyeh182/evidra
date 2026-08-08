@@ -167,9 +167,9 @@ need deriving again. The shape, for the reason above. The location, because
 `packages/` holds libraries that `apps/` consumes and this consumes them
 instead, and because a subdirectory of `eval/` reads as a subset of it when the
 table above is the whole point. The cost of standing outside both is one line in
-`.mcpbignore` that has to be remembered — `eval/` and `packages/` are already
-listed there, this is not, and a harness packed into the archive would ship
-twenty-nine files shaped exactly like a person's health record.
+`.mcpbignore` that has to be remembered — it is line 28 there, alongside `eval/`
+and `packages/`, and a harness packed into the archive would ship thirty-one
+files shaped exactly like a person's health record.
 
 ```json
 {
@@ -301,6 +301,61 @@ at loads of 30, 60 and 90, 38 idle days already gives exactly 60% lost, 41 gives
 threshold is reached, and that number could hold any value above about 39
 without changing a decision. A scenario at 42 days would pass while proving
 nothing, which is worse than the exemption.
+
+## What the arbitration policy claims, and what a scenario can show
+
+`category_then_priority` sorts on three keys — category rank ascending, then
+priority descending, then ruleId. **Only the middle one can be reached from
+evidence.** Measured on 2026-08-08 against library v1.1.0 and
+`packages/decision-engine/src/decideSession.js`, and recorded here because a
+scenario set that covers every rule reads as though it covered every claim the
+policy makes.
+
+**Category ahead of priority: unreachable.** Exactly one pair of active rules has
+the two keys disagreeing — EVD-R-005 (`recovery`, priority 20) against
+EVD-R-008 (`training_goal`, priority 40) — and the chain cannot fire both.
+EVD-R-008 requires `type === "keep"` at the point it is tested
+(`decideSession.js:609`), and every other rule in the library escalates the type
+when it fires; EVD-R-005 is the one that does not, and it requires target-muscle
+fatigue `>= 45` with a planned intensity of `high`, both of which EVD-R-008's own
+conditions (`< 45`, and `!== "high"`) exclude. So `training_goal` never appears
+alongside another category at all, and no scenario written here can show category
+rank overriding a higher priority. `packages/rules/test/rules.test.js` does
+assert it — on `arbitrate` directly, with the pair the chain cannot produce.
+That is the sorter being tested, not the decision.
+
+**ruleId last: unreachable.** No two active rules share a category and a
+priority, so the tiebreak never runs. It orders nothing today, and a rule added
+with a priority already in use would be the first thing to reach it.
+
+**Priority ahead of ruleId: shown.** That is
+`30-priority-orders-three-recovery-rules`, where the rule the engine reaches
+first and which holds the lowest ruleId of the three fired — EVD-R-002 — governs
+nothing.
+
+Two more shapes of the library narrow what "several rules at once" can mean, and
+neither is visible from the rule data:
+
+- **EVD-R-001 never competes.** It sits in the `if` of an `if`/`else`
+  (`decideSession.js:440`) whose `else` holds EVD-R-002 through EVD-R-007, so
+  the highest-priority recovery rule in the library is the one recovery rule that
+  cannot be arbitrated against another. It can share a decision only with
+  EVD-R-009.
+- **EVD-R-003, EVD-R-004 and EVD-R-005 are `else if` on one quantity**, so at
+  most one of the three fires however high target-muscle fatigue reads.
+
+What is left, and what the two arbitration scenarios use: EVD-R-002, one of
+EVD-R-003/004/005, EVD-R-006 and EVD-R-007 may fire together, and EVD-R-009 may
+fire with any of them.
+
+The second of the two is there for the other policy.
+`31-an-injury-governs-what-recovery-sizes` has EVD-R-009 governing on category
+while demanding no intensity step, and the two steps the session comes down are
+EVD-R-003's — a rule that lost. `most_restrictive_wins` states that the
+governing rule explains the decision without necessarily setting the size of the
+change, and until that scenario the two were never separated: every other
+multi-rule case in this set has the governing rule and the largest demand
+belonging to the same rule.
 
 ## Keeping it honest
 
