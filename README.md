@@ -219,14 +219,6 @@ source schema 與匯出形狀 scenario **四家齊備**（Garmin／Google Health
 還沒進規則庫，所以不回傳這個欄位（技術債 C9）。
 **但它還沒有經過長期真實訓練週期的驗證。**
 
-**本檔與 `docs/`、`examples/` 描述的是這個 repo 的目前建置，不是 v0.3.7。**
-v0.3.7 凍結於 2026-08-07 00:56，而當天的出處覆核在 2.5 小時後才進來，所以那顆
-**規則庫還是 1.0.0、EVD-R-007 仍宣稱 `systematic_review`、仍帶著已撤回的「4–7%」、
-`vendorAssessments` 不在 tool schema 裡**。逐項差距表在
-[user-journey.html](docs/user-journey.html) 的〈Install〉一節，
-會在下一版一起出貨。**文件連結跟著 main 走、bundle 停在 release，這個落差是預設狀態**——
-改對外敘述時要主動對照已發布那顆，不是對照 working tree。
-
 **證據由呼叫端提供。** Evidra 不會代替使用者連上 Apple Health、Garmin、Strava
 或任何其他服務，也不需要綁定帳號——它讀的是呼叫時交給它的東西，可以單純是
 「昨天練了什麼、睡了多久」。已經匯出的資料也能當輸入評估。

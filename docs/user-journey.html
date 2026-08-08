@@ -87,6 +87,10 @@
   .lede { color: var(--text-2); font-size: 16px; max-width: 64ch; margin-bottom: 36px; text-wrap: pretty; }
 
   .layer { display: grid; grid-template-columns: 132px 1fr; gap: 28px; align-items: start; }
+  /* Grid items default to min-width:auto, so a monospace readout wider than its
+     column pushes the whole page into a horizontal scroll instead of scrolling
+     inside its own box. */
+  .layer > * { min-width: 0; }
   .layer + .layer { margin-top: 4px; }
   @media (max-width: 760px) { .layer { grid-template-columns: 1fr; gap: 10px; } }
 
@@ -205,7 +209,19 @@
   .finding h4 { font-size: 15px; font-weight: 620; margin-bottom: 8px; }
   .finding p { font-size: 13.5px; color: var(--text-2); line-height: 1.55; }
 
+  .whatsnext-h { margin-top: 56px; font-size: 22px; font-weight: 640; letter-spacing: -.02em; margin-bottom: 12px; }
+
   .footnote { margin-top: 56px; font-size: 12.5px; color: var(--text-3); line-height: 1.6; }
+
+  /* ---------- product core, fixed wording ---------- */
+  .corestatement {
+    font-size: 22px; line-height: 1.5; font-weight: 560; letter-spacing: -.01em;
+    color: var(--text); margin-bottom: 18px;
+    padding-left: 16px; border-left: 3px solid var(--mint);
+  }
+  .corestatement b { font-weight: 700; color: var(--mint); }
+  .docpurpose { font-size: 13.5px; line-height: 1.65; color: var(--text-2); margin-bottom: 30px; }
+  .docpurpose b { color: var(--text); font-weight: 620; }
 
   /* ---------- document role ---------- */
   .docrole {
@@ -315,11 +331,21 @@
       </div>
     </div>
 
+    <p class="corestatement">
+      Evidra is a <b>Fitness Decision Engine</b>,<br>
+      not a fitness data connector and not an AI coach.
+    </p>
+    <p class="docpurpose">
+      這份文件講的是<b>這個產品是什麼、往哪裡走</b>——給 stakeholder 看的方向，
+      不是功能清單，也不是開工順序。三種形態、五層決策、證據語彙與出處治理，
+      是同一個方向的四個切面。開工順序、技術債與待裁決問題在
+      <code>docs/fitness-mcp-implementation-plan.md</code>。
+    </p>
+
     <div class="docrole">
-      <span><b>Claude Desktop extension</b>　可安裝的是 v0.3.7 · stdio</span>
+      <span><b>Claude Desktop extension</b>　v0.3.7 · stdio</span>
       <span>6 tools · 6 資料來源 · 8 條規則</span>
       <span>不需要帳號、不需要設定、不連任何雲端</span>
-      <span><b>本頁描述目前建置</b>，與 v0.3.7 的差異列在〈Install〉</span>
     </div>
 
     <h1>任何模型都能給你<em>建議</em>。<br>只有握有證據的系統能給<em>決策</em>。</h1>
@@ -462,8 +488,8 @@
           <strong>證據一樣不留</strong>——hosted 無狀態是這個形態的硬條件，不是可交換的設計選項。
         </p>
         <p class="status wait">
-          <b>— 未完成，目前 NO-GO</b><br>
-          缺 authorization server · OAuth 簽章驗證 · HTTPS 公開部署 · 隱私政策改寫
+          <b>下一個形態</b><br>
+          待建：authorization server · OAuth 簽章驗證 · HTTPS 公開部署
         </p>
       </div>
 
@@ -478,8 +504,8 @@
           <strong>核心宗旨要的也是這一個</strong>。
         </p>
         <p class="status none">
-          <b>— 一行程式都沒有</b><br>
-          方向已定，尚未開工
+          <b>方向已定</b><br>
+          與 Form 1 共用同一份決策實作；尚未開工
         </p>
       </div>
     </div>
@@ -553,34 +579,6 @@
       識別碼 <code>io.github.henryyeh182/evidra</code>。Anthropic 的 MCPB 目錄審查中。
     </p>
 
-    <h4 style="margin-top:38px;font-size:18px;font-weight:620">你裝到的 v0.3.7 與本頁的差距</h4>
-    <p class="lede" style="margin-bottom:20px">
-      本頁描述的是<strong>目前建置</strong>。可安裝的 v0.3.7 凍結於 2026-08-07 00:56，
-      而當天的出處覆核發生在 <strong>2.5 小時之後</strong>——所以底下這幾項，
-      <strong>你今天裝起來的那顆還沒有</strong>。列出來是因為
-      <strong>把「已經做好」與「已經出貨」混在一起講，跟把「有出處」與「沒出處」混在一起講是同一種錯</strong>。
-    </p>
-    <div class="scroller">
-      <table>
-        <thead>
-          <tr><th>項目</th><th>v0.3.7（可安裝）</th><th>目前建置（本頁）</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>規則庫版本</td><td>1.0.0</td><td>1.2.0</td></tr>
-          <tr><td>證據兩軸 <code>studyDesign</code> / <code>recommendationStrength</code></td><td>沒有，只有單軸 <code>evidenceLevel</code></td><td>兩軸，舊欄位由兩軸推導</td></tr>
-          <tr><td>EVD-R-007 的證據等級</td><td><code>systematic_review</code>，且仍帶著已撤回的「VO₂max 兩到三週掉 4–7%」</td><td><code>narrative_review</code>，該數字已撤除</td></tr>
-          <tr><td>Gabbett 2016 的查證程度</td><td><code>numbers_from_secondary_sources</code></td><td><code>primary_full_text_verified</code></td></tr>
-          <tr><td><code>verificationStatus</code> 強制必填</td><td>否；EVD-R-002 那筆是空的</td><td>是；該筆標為 <code>unverified</code></td></tr>
-          <tr><td><code>vendorAssessments</code> 在 tool schema 裡</td><td>否——引擎讀得到，但呼叫端無從得知欄位存在</td><td>是，含型別驗證</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="note warn">
-      最後一列影響底下第 3 則：v0.3.7 上你的 AI 助理可能找不到那個欄位，只送原始訊號。
-      <strong>決策不變（一樣是 adjust、一樣是 EVD-R-002），變的是信心 high → medium。</strong>
-      第 3 列與第 4 列則是反過來的方向——<strong>可安裝的那顆還宣稱著一個已經被我們自己撤回的證據等級</strong>。
-      這幾項會在下一版一起出貨；在那之前，這張表就是差距本身。
-    </p>
   </section>
 
   <section class="spine">
@@ -590,8 +588,6 @@
       裝好之後貼上去就會跑。<strong>底下每一則的輸出都是引擎實際產生的</strong>，
       並且由測試釘住——這份頁面寫的數字若和程式不一致，測試會紅。
       證據樣本與完整輸出在 <code>examples/README.md</code>。
-      <strong>數字取自目前建置</strong>；五則裡只有第 3 則在 v0.3.7 上會不同（信心 high → medium），
-      見上一節的差距表。
     </p>
 
     <div class="tries">
@@ -1071,12 +1067,6 @@
       <strong>覆核會撤回東西，那正是它有在運作的證據。</strong>
     </p>
     <p class="note warn">
-      <strong>這一整節講的是目前建置，不是 v0.3.7。</strong> 那顆凍結在覆核之前 2.5 小時，
-      所以你今天裝得到的版本<strong>仍然宣稱 EVD-R-007 是 <code>systematic_review</code>，也仍然帶著那個已撤回的百分比</strong>。
-      把這件事寫在這裡而不是等下一版再說，理由和整節的主張是同一個：
-      <strong>撤回一個宣稱，就不能只在新版裡撤、在舊版裡留著不提。</strong>
-    </p>
-    <p class="note warn">
       同一天把這個欄位改成強制之後，<strong>立刻翻出一筆從來沒有人查證過的引用</strong>——
       它躲過了那次覆核，而在欄位還是選填的時候，
       <strong>「沒查過」與「沒東西好講」在輸出上長得一模一樣</strong>。
@@ -1131,19 +1121,33 @@
         <h4>說得出憑什麼</h4>
         <p>每條門檻連著它的出處，沒有出處的會被標成沒有出處，程式擋著不讓它假裝有。GPT-6 講得出運動科學，講不出「這個數字是誰定的、第幾版、誰反對過」。</p>
       </div>
-      <div class="finding gap">
-        <h4>還沒到位的　我們的工</h4>
-        <p><strong>Form 2（remote）與 Form 3（user-controlled）都還沒到位</strong>：前者缺 authorization server、OAuth 簽章驗證、HTTPS 部署與隱私政策改寫，後者一行程式都沒有。<strong>那擋的是手機與企業，不擋今天</strong>——Form 1 的 desktop extension（v0.3.7）已經可以裝。</p>
+    </div>
+
+    <h3 class="whatsnext-h">往哪裡走</h3>
+    <p class="lede" style="margin-bottom:22px">
+      同一顆引擎，往三個方向長。<strong>每一項都是把已經成立的決策鏈送到更多情境裡</strong>，
+      不是補上缺掉的零件——決策今天就做得出來，變的是誰的機器在跑、證據從哪條路進來。
+    </p>
+    <div class="findings">
+      <div class="finding ok">
+        <h4>手機　Form 2</h4>
+        <p>手機上的 Claude 只連得到 remote，所以那個形態一開，同一顆引擎就進了口袋。它也是計價會發生的地方。<strong>證據一樣不留</strong>——hosted 無狀態是這個形態的硬條件，不是可交換的設計選項。</p>
       </div>
-      <div class="finding gap">
-        <h4>還沒到位的　不是我們的工</h4>
-        <p>手機上的 Apple Health 要 host app 具備 HealthKit 權限，Garmin Connect 的授權對象也是 host。remote 做完，這兩項不會跟著出現——所以今天走得通的證據路徑是匯出檔與使用者自己說的話。</p>
+      <div class="finding ok">
+        <h4>企業與醫療　Form 3</h4>
+        <p>整組搬進對方控制的環境，Evidra 變成本機資料層。<strong>這是唯一能保存個人縱向歷史的形態</strong>，因為那份資料從頭到尾沒有離開他。核心宗旨要的是這一個。</p>
       </div>
-      <div class="finding gap">
-        <h4>還沒到位的　來源成熟度</h4>
-        <p>Oura 與 WHOOP 的解析器照兩家自己的 OpenAPI 寫成，尚未對過真實回應。關掉這個缺口只需要一份去識別化的真實回應——在那之前，它們在成熟度上與另外四家不同級。</p>
+      <div class="finding ok">
+        <h4>更多來源，同一套語彙</h4>
+        <p>新增一家等於加一張映射表，下游一行不動。<strong>接下來要做的是把 Oura 與 WHOOP 的解析器對到真實回應</strong>——目前是照兩家自己的 OpenAPI 寫的，規格說得對不等於實際回傳長那樣。</p>
       </div>
     </div>
+
+    <p class="note">
+      至於手機上的 Apple Health 與 Garmin Connect 授權，那一段授權對象是 host app 而不是我們——
+      <strong>今天走得通的證據路徑是匯出檔與使用者自己說的話，那也是兩種合法的證據</strong>。
+      寫在這裡是因為它決定了先做哪一個形態，不是因為它是缺口。
+    </p>
 
     <p class="footnote">
       本頁所有數值皆為引擎實際輸出，非示意：readiness 50、legs 疲勞 92、CTL 33.8 / ATL 34.6 / TSB −5.8、
@@ -1156,8 +1160,7 @@
       <code>docs/fitness-mcp-implementation-plan.md</code>，不重複寫在這裡；
       兩份衝突時，以那份的現況表為準。
       <br>
-      對照日期 2026-08-07，對照對象是<b>目前建置</b>的實際程式碼與規則庫（v1.2.0，8 條規則）——
-      <b>不是可安裝的 v0.3.7</b>，差異見上方〈Install〉。
+      對照日期 2026-08-07，對照對象是實際程式碼與規則庫（v1.2.0，8 條規則）。
       可複製的 demo prompts 與 sample evidence 在 <code>examples/README.md</code>，
       每一則的輸出都由測試釘住。
     </p>
