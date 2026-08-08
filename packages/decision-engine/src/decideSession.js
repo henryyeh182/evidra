@@ -745,12 +745,27 @@ export function decideSession({
     // rule fired and could not be applied. Saying it anyway would turn a
     // withheld adjustment into an all-clear, which is the opposite of what the
     // readings showed.
+    //
+    // `targetFatigue` returns a group only when one of the session's target
+    // muscles has a fatigue reading behind it. Where none does there is no
+    // number to quote, and `fatigue.value || 0` quoted the reducer's starting
+    // value as though it were one: an athlete with no upper-body work in the
+    // week was told "target-muscle fatigue 0" for a muscle group nothing in
+    // the evidence covers, which is the same fabrication the skipped-workout
+    // guard exists to prevent one function away. The gap is already reported
+    // in `signalCoverage`; these sentences now match it rather than fill it.
+    const fatigueRead = fatigue.group ? `target-muscle fatigue ${fatigue.value}` : null;
+    const noReading = `this session's target muscles carry no load from the last week`;
     reason.push(
       intensityUnstatedBlockedARule
-        ? `The session is unchanged, but not because the evidence was clear: readiness ${readiness} and target-muscle fatigue ${fatigue.value || 0} called for a lower intensity that could not be applied. See limits.`
+        ? `The session is unchanged, but not because the evidence was clear: readiness ${readiness}${fatigueRead ? ` and ${fatigueRead}` : ``} called for a lower intensity that could not be applied. See limits.`
         : readinessKnown
-          ? `Readiness ${readiness} and target-muscle fatigue ${fatigue.value || 0} are both within range, so the session runs as planned.`
-          : `Target-muscle fatigue ${fatigue.value || 0} and recent load leave nothing to change, so the session runs as planned.`
+          ? fatigueRead
+            ? `Readiness ${readiness} and ${fatigueRead} are both within range, so the session runs as planned.`
+            : `Readiness ${readiness} is within range and ${noReading}, so the session runs as planned.`
+          : fatigueRead
+            ? `Target-muscle fatigue ${fatigue.value} and recent load leave nothing to change, so the session runs as planned.`
+            : `Recent load leaves nothing to change and ${noReading}, so the session runs as planned.`
     );
   }
 

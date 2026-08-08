@@ -33,5 +33,16 @@
  * the golden set because its one decide_session case always supplies a session.
  * The decision itself is unchanged; what a caller receives is not, so this is a
  * minor rather than a patch. Found by the decision harness on its first run.
+ *
+ * 1.3.0, also the same day: a session targeting muscles with no training behind
+ * them used to be told "target-muscle fatigue 0". Nothing measured that zero —
+ * it is the starting value of the reducer that sums a week of load, surfaced
+ * through `fatigue.value || 0`, and the group it named appears in neither
+ * `evidence` nor `state.targetMuscleFatigue`. The sentence now says the target
+ * muscles carry no load from the last week, which is what the coverage fields
+ * were already saying underneath it. No verdict moves and no rule fires
+ * differently; the prose a caller reads to the athlete does, so minor rather
+ * than patch, by the same standard as 1.2.0 above. Found by the decision
+ * harness once its scenarios stopped all targeting a trained muscle group.
  */
-export const ENGINE_VERSION = "1.2.0";
+export const ENGINE_VERSION = "1.3.0";

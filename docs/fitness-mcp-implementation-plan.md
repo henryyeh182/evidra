@@ -25,7 +25,7 @@
 - **6 個對外決策 tool**：`evidra_assess_fitness_state`、`evidra_decide_session`、
   `evidra_decide_exercise_substitution`、`evidra_generate_plan`、
   `evidra_preview_adjust_plan`、`evidra_commit_adjust_plan`
-- **417 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
+- **419 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
 - **知識圖譜** 889 節點 / 5,785 邊；進退階 34 條（17 組互逆）；訓練目標五值域
 - **Rule Library**（`packages/rules` v1.1.0）：**9 條規則**，每條帶 `ruleId`／`version`／
   `category`／`priority`／`basis`／`evidence`（`studyDesign` ＋ `recommendationStrength`，
@@ -208,7 +208,7 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 | §3.7 Rule Package | 兩個存在理由都已被否決（`tier` 屬 A6 未定、自動更新牴觸已發布的 `PRIVACY.md`）。**類比本身也要拆**：病毒碼更新失敗是 fail-closed，訓練規則更新失敗是 fail-open |
 | §4「Confidence: High，幾乎不需質疑」 | 與整個庫的設計相反——每個引用強制填 `doesNotSupport`，理由是「in every case so far there is one」。repo 裡就住著反例：EVD-R-006 引 Gabbett，同時載入 Impellizzeri 的反對 |
 | §4 Exercise Science Board | **那個 board 不存在。** 維持 `reviewer` 實名。宣稱一個不存在的審查機構，跟宣稱一個撐不住的證據等級是同一類錯 |
-| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 417 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
+| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 419 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
 | §5 四個新 tool | 逐個理由見 history §4.6.5。**補一條**：§5 自己的表格就顯示五列缺口**全在既有 tool 的輸出欄位裡**，沒有一列是「少一個口」 |
 
 #### 0.2 版號規則（2026-08-07 起照這個走）
@@ -263,7 +263,7 @@ build 落差屬於本文件。要消除落差只有兩條路——發版，或�
 | C6 | 我們的 parser 是照**匯出檔**寫的，沒對照過真實流程裡「Claude 從別家 MCP server 拿到的證據」形狀 | `packages/connectors/src/providers/*/normalize.js` |
 | C8 | Evidence Quality 維度不存在（只有 coverage 與新鮮度，沒有「這個來源多可信」） | 尚未有檔案 |
 | C9 | **Rule Library 只治理 `decide_session`**。ATL/CTL 時間常數（42／7）、TSB 分帶（5／−10／−30）、`DETRAINING`（14 天／25%）、`DEFAULT_BASELINES`（HRV 52／RHR 57／週負荷 360）、`SIGNAL_STALENESS_DAYS` 八個值、`PHASE_MULTIPLIERS`、`RETURN_RAMP`＝全部無出處，且不受 `assertThresholdsMatch` 兩向檢查保護 | `packages/training-load/src/trainingLoad.js`、`packages/semantic-engine/src/generateSemanticFitnessState.js`、`packages/planning/src/generatePlan.js` |
-| C10 | **兩套 detraining 門檻並存且數字不同**：`trainingLoad.js` 是 14 天／25%，EVD-R-007 是 42 天／60%。前者無出處，後者在庫裡 | 同上第一項 ＋ `packages/rules/data/session-rules.json` |
+| C10 | **兩套 detraining 門檻並存且數字不同**：`trainingLoad.js` 是 14 天／25%，EVD-R-007 是 42 天／60%。前者無出處，後者在庫裡。**分工也與直覺相反**：規則開不開火由庫外那組決定，庫裡那組只決定降一級還是兩級，所以 `decisionBasis` 回傳的門檻不是觸發它的門檻。**且庫裡的 42 天是死的**（2026-08-08 用 `computeTrainingLoad` 實測 3 與 12 次課、負荷 30／60／90 三組）：停練後 CTL 沿固定曲線衰減，第 38 天就掉滿 60%，`severe` 的 `\|\|` 早四天由另一臂成立——42 改成 39 或 39000 都不會改變任何決策。DH-BND 因此對這條門檻掛書面豁免，每次跑會印 | 同上第一項 ＋ `packages/rules/data/session-rules.json`、`harness/lib/quantities.js` |
 | ~~C11~~ | ✅ **已關閉（2026-08-07，R5）**：`verificationStatus` 成為載入期 enum 且兩個陣列都強制必填，檔案宣告的詞彙與載入器強制的詞彙也綁成不變量。**未進 v0.3.7 那顆 bundle**（commit 晚於發布） | `packages/rules/src/models.js` |
 | C12 | 🟡 **一半已完成（2026-08-08）**：`decide_session` 那處成為 EVD-R-009，`injury` 那格不再是空的。`generatePlan` 與 catalog 兩處仍在庫外 | 見 §0 的 R2 |
 | C13 | **Oura／WHOOP 的 parser 沒對過真實回應。** 欄位路徑與單位來自兩家自己的 OpenAPI（權威），但**沒有任何一份真實 API 回應驗證過**——spec 說得對不等於實際回傳長那樣（真實資料裡的哨兵值、空陣列、部分欄位缺漏，前四家都是在真檔案上才發現的）。這是 C6 的加強版：C6 是「照匯出檔寫、沒對過真實流程」，這裡連匯出檔都沒有 | `packages/connectors/src/providers/oura`、`.../whoop` |
