@@ -122,9 +122,40 @@ Returns the five-layer decision:
   "limits": [
     "No sleep signal was available, so confidence is lowered.",
     "Some sessions in the last 7 days carry no training load, so muscle fatigue is read from an incomplete week."
-  ]
+  ],
+  "decisionBasis": {
+    "libraryVersion": "2.0.0",
+    "engineVersion": "1.4.0",
+    "policies": { "arbitration": "category_then_priority", "combination": "most_restrictive_wins" },
+    "governingRule": {
+      "ruleId": "EVD-R-006",
+      "title": "An acute load spike pulls intensity down one step",
+      "basis": "external_metric",
+      "evidence": { "studyDesign": "observational", "recommendationStrength": "supports_direction_only" },
+      "measured": { "quantity": "acwr", "value": 1.7 },
+      "thresholds": [{ "key": "acwrHigh", "operator": ">", "value": 1.4, "unit": "ratio" }],
+      "sources": ["… citation, what it supports, what it does not, verificationStatus …"],
+      "contested": ["… published objections, each with its own verificationStatus …"],
+      "limitations": ["1.4 matches neither published figure. It is our choice, not the literature's."]
+    },
+    "appliedRules": ["… the rules that also fired, in compact form …"]
+  }
 }
 ```
+
+`decisionBasis` is abridged above; the arrays come back populated. It is
+required on every `evidra_decide_session` result and returned by that tool
+alone — the other five tools' numbers are not in the rule library yet, so they
+do not carry it. Two rules fire on this evidence, readiness and acute load; the
+arbitration policy attributes the decision to the one with the higher priority
+inside the same category, and the other travels in `appliedRules`. Attribution
+and combination are separate: the governing rule explains the decision, it does
+not necessarily set the size of the change.
+
+`libraryVersion` and `engineVersion` move independently, and neither is the
+version of the installed extension — the thresholds and their provenance, the
+code that applied them, and the packaged release each change for their own
+reasons.
 
 `signalCoverage` is split in two because the gaps are different in kind:
 `recovery` is about how fresh today's sleep/HRV/resting-HR/stress readings are,
@@ -199,7 +230,24 @@ Client config sample: [`mcp-client-config.example.json`](mcp-client-config.examp
 
 ## Not yet built
 
-- OAuth 2.1 Resource Server with dynamic client registration, required before
-  third parties can connect (see D-PROTO in the [plan](fitness-mcp-implementation-plan.md))
-- Hosted deployment; the HTTP transport currently runs locally
-- `idempotency-key` on commit, and server-side resolution of relative dates
+Remote access is one piece of work, not three, and it belongs to Form 2 — the
+remote MCP server described in the [plan](fitness-mcp-implementation-plan.md).
+End-to-end OAuth, a public HTTPS deployment and an authorization server land
+together or not at all, and none of them is near-term. What exists today is
+Form 1: stdio, on the user's own machine.
+
+- **End-to-end OAuth.** The resource-server half is written and dormant:
+  `oauth.js` serves RFC 9728 protected-resource metadata and checks a token's
+  audience, issuer, expiry and scopes, and `createHttpServer` enforces all of it
+  when handed an `oauth` option. Nothing hands it one. Signature verification is
+  deliberately outside `checkTokenClaims` — it depends on the authorization
+  server's keys — and no verifier is configured anywhere, so nothing today
+  proves a token was minted rather than typed. The `serve:http` entry point
+  never passes `oauth`, so running it gives the shared-token mode described
+  above. Do not read the presence of `oauth.js` as OAuth being available.
+- **An authorization server.** None exists. The hard requirement on picking one
+  is CIMD support, recorded as D-REGISTRATION in the plan.
+- **A public HTTPS deployment.** The HTTP transport binds loopback by default
+  and has only ever run locally.
+- `idempotency-key` on commit, and server-side resolution of relative dates —
+  the one item here that is not Form 2 work
