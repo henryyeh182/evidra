@@ -154,11 +154,8 @@ Evidra ships as a Claude Desktop extension (`.mcpb`).
 shasum -a 256 evidra.mcpb
 ```
 
-Compare it with `fileSha256` in the
-[MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.henryyeh182/evidra&version=latest).
-
-That checksum is held by a registry we don't control, and releases are never
-overwritten — a file you verify once still verifies later.
+Compare it with the checksum printed in that release's notes, on the same page
+you downloaded from.
 
 An extension is a copy taken at install time. After installing a new version, restart
 Claude Desktop completely — closing the window is not enough.
