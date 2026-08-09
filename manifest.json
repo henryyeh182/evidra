@@ -1,6 +1,6 @@
 {
   "manifest_version": "0.3",
-  "name": "fitness-mcp",
+  "name": "Evidra Fitness",
   "display_name": "Evidra Fitness",
   "version": "0.4.1",
   "description": "Turns the training evidence you already have into a decision about today's session.",
