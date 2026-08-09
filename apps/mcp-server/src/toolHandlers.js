@@ -314,16 +314,29 @@ async function goalAlternativeLookup() {
     if (!trainingGoal) return null;
     const matches = graph.searchExercises({
       trainingGoal,
-      availableEquipment,
-      excludeContraindications,
-      limit: 20
+      availableEquipment
     });
+    const excludedByContraindication = matches
+      .filter((exercise) =>
+        (exercise.contraindications || []).some((tag) => (excludeContraindications || []).includes(tag))
+      )
+      .map((exercise) => ({
+        id: exercise.id,
+        name: exercise.name,
+        matchedTags: (exercise.contraindications || []).filter((tag) => (excludeContraindications || []).includes(tag))
+      }));
+    const safeMatches = matches
+      .filter((exercise) => !excludedByContraindication.some((item) => item.id === exercise.id))
+      .slice(0, 20);
     const avoided = (exercise) =>
       avoidMovements.some((movement) => {
         const term = String(movement).toLowerCase();
         return `${exercise.name} ${exercise.id}`.toLowerCase().includes(term);
       });
-    return matches.find((exercise) => !avoided(exercise))?.id ?? null;
+    return {
+      exerciseId: safeMatches.find((exercise) => !avoided(exercise))?.id ?? null,
+      excludedByContraindication
+    };
   };
 }
 

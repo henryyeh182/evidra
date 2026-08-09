@@ -25,7 +25,7 @@
 - **6 個對外決策 tool**：`evidra_assess_fitness_state`、`evidra_decide_session`、
   `evidra_decide_exercise_substitution`、`evidra_generate_plan`、
   `evidra_preview_adjust_plan`、`evidra_commit_adjust_plan`
-- **428 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
+- **430 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
 - **知識圖譜** 889 節點 / 5,785 邊；進退階 34 條（17 組互逆）；訓練目標五值域
 - **Rule Library**（`packages/rules` v1.2.0）：**9 條規則**，每條帶 `ruleId`／`version`／
   `category`／`priority`／`basis`／`evidence`（`studyDesign` ＋ `recommendationStrength`，
@@ -194,7 +194,7 @@ TSB、phase multiplier、return ramp 與兩套 detraining 衝突。**
 
 | # | 項目 | 為什麼 | 位置 |
 |---|---|---|---|
-| ~~**R2**~~ | ✅ **已完成（2026-08-09，庫 1.3.0）**：四處傷病過濾全部入庫並帶 `decisionBasis`——`decideSession` ＝ **EVD-R-009**（2026-08-08）、`generatePlan` 的高衝擊降強度 ＝ **EVD-R-010**、`adaptPlan` 的 `add_injury` ＝ **EVD-R-011**、catalog 的 contraindication 交集 ＝ **EVD-R-012**。四條寫成四條而不是一條，因為**它們的比對方式互不相同**（自由文字 token >3 字元／四個字面 regex／區域 token >=3 字元且 avoid 無長度下限／catalog tag 相等），寫成一條等於宣稱一致性。**入庫查出兩件與宣稱不符的事，都改為誠實記錄而非改行為（使用者決定）**：一，`generatePlan` 的 active injury restrictions **不會移除任何動作**（per-slot 過濾讀的是 `avoidMovements`，restrictions 落在另一個欄位），原本 `reasoning` 卻寫「Active injury constraints applied」；二，substitution 只要呼叫端有傳 avoid list 就無條件印「were hard-filtered out」，**即使一個候選都沒濾掉**（demo 5 正是這種情況：器材過濾先一步移除了那個候選）。兩句話都已改成與實際相符 | 仲裁矩陣把 `injury` 排在最上面，**而排最上面的那一格曾經是空的**（當時：recovery 7、training_goal 1；現在 injury 4） | `packages/decision-engine/src/decideSession.js`、`packages/planning/src/generatePlan.js`、`packages/planning/src/adaptPlan.js`、`packages/knowledge-graph/src/graph.js` |
+| ~~**R2**~~ | ✅ **已完成（2026-08-09，庫 1.3.0）**：四處傷病過濾全部入庫並帶 `decisionBasis`——`decideSession` ＝ **EVD-R-009**（2026-08-08）、`generatePlan` 的高衝擊降強度 ＝ **EVD-R-010**、`adaptPlan` 的 `add_injury` ＝ **EVD-R-011**、catalog 的 contraindication 交集 ＝ **EVD-R-012**。現在 `generatePlan` 在尋找 fallback movement 時若被 catalog hard-filter，也會把 EVD-R-012 與被排除候選寫進 plan trace；純 `searchExercises` 仍是查詢，不產生 decisionBasis。四條寫成四條而不是一條，因為**它們的比對方式互不相同**（自由文字 token >3 字元／四個字面 regex／區域 token >=3 字元且 avoid 無長度下限／catalog tag 相等），寫成一條等於宣稱一致性。**入庫查出兩件與宣稱不符的事，都改為誠實記錄而非改行為（使用者決定）**：一，`generatePlan` 的 active injury restrictions **不會移除任何動作**（per-slot 過濾讀的是 `avoidMovements`，restrictions 落在另一個欄位），原本 `reasoning` 卻寫「Active injury constraints applied」；二，substitution 只要呼叫端有傳 avoid list 就無條件印「were hard-filtered out」，**即使一個候選都沒濾掉**（demo 5 正是這種情況：器材過濾先一步移除了那個候選）。兩句話都已改成與實際相符 | 仲裁矩陣把 `injury` 排在最上面，**而排最上面的那一格曾經是空的**（當時：recovery 7、training_goal 1；現在 injury 4） | `packages/decision-engine/src/decideSession.js`、`packages/planning/src/generatePlan.js`、`packages/planning/src/adaptPlan.js`、`packages/knowledge-graph/src/graph.js` |
 | ~~**R1**~~ | ✅ **已完成（2026-08-09，引擎 1.5.0）**：`decisionBasis` 由 `packages/rules/src/basis.js` 的 `buildDecisionBasis` 統一產生，四支 tool 共用同一個形狀（`decide_session` 也改用它，輸出逐欄不變）。**沒有規則開火時欄位照樣回傳、內容為空**——這是這次的重點：缺欄位無法與「這條路徑不檢查」區分。`assess_fitness_state` 不帶，它回傳狀態不做決策 | 對外宣稱已於 2026-08-07 縮回事實，2026-08-09 隨能力擴充改回；server `INSTRUCTIONS` 同步改寫（2042／2048 bytes） | `apps/mcp-server/src/outputSchemas.js` ＋ `schemas/tools/` 四份契約 |
 | ~~**R3**~~ | ✅ **已完成（2026-08-07）**：`evidence` 物件取代單軸 `evidenceLevel`——`studyDesign`（八值，含新增的 `narrative_review`）＋ `recommendationStrength`（`supports_threshold`／`supports_direction_only`／`internal_heuristic`）。EVD-R-007 卡的那個缺口關掉了：它現在直接寫 `narrative_review`，不再四捨五入到 `expert_consensus`。**舊 `evidenceLevel` 由兩軸推導後照常輸出**，8 條規則的值逐字不變，契約不動。**目前全庫沒有任何一條是 `supports_threshold`**——每筆引用的 `doesNotSupport` 都寫著數字不被支持，這件事現在由欄位講，不是由散文講 | `packages/rules/src/models.js`、`session-rules.json` |
 | **R4** | **出處覆核要有觸發點。** `lastReview` 有欄位，但過期不會有人失敗、不會有人提醒 | 2026-08-07 那次覆核**兩個既定入口都不是**（沒有新文獻、沒有 outcome 異常），是人工重讀已有的引用，結果撤回兩項。生命週期缺這第三個入口。**到期天數未定，不得自行決定** | `scripts/review-phase.js` 加一條 gate |
@@ -213,7 +213,7 @@ TSB、phase multiplier、return ramp 與兩套 detraining 衝突。**
 | §3.7 Rule Package | 兩個存在理由都已被否決（`tier` 屬 A6 未定、自動更新牴觸已發布的 `PRIVACY.md`）。**類比本身也要拆**：病毒碼更新失敗是 fail-closed，訓練規則更新失敗是 fail-open |
 | §4「Confidence: High，幾乎不需質疑」 | 與整個庫的設計相反——每個引用強制填 `doesNotSupport`，理由是「in every case so far there is one」。repo 裡就住著反例：EVD-R-006 引 Gabbett，同時載入 Impellizzeri 的反對 |
 | §4 Exercise Science Board | **那個 board 不存在。** 維持 `reviewer` 實名。宣稱一個不存在的審查機構，跟宣稱一個撐不住的證據等級是同一類錯 |
-| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 428 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
+| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 430 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
 | §5 四個新 tool | 逐個理由見 history §4.6.5。**補一條**：§5 自己的表格就顯示五列缺口**全在既有 tool 的輸出欄位裡**，沒有一列是「少一個口」 |
 
 #### 0.2 版號規則（2026-08-07 起照這個走）

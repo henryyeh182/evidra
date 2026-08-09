@@ -39,6 +39,24 @@ test("applyPlanPreview rejects a stale caller-held plan", () => {
   assert.throws(() => applyPlanPreview(newerPlan, preview), /stale/);
 });
 
+test("applyPlanPreview rejects a tampered result or decision trace", () => {
+  const plan = seededPlan();
+  const preview = previewPlanChange(plan, { kind: "add_injury", bodyRegion: "knee" });
+
+  assert.throws(
+    () => applyPlanPreview(plan, { ...preview, decisionBasis: null }),
+    /integrity check failed for decisionBasis/
+  );
+  assert.throws(
+    () =>
+      applyPlanPreview(plan, {
+        ...preview,
+        resultingPlan: { ...preview.resultingPlan, status: "archived" }
+      }),
+    /integrity check failed for resultingPlan/
+  );
+});
+
 test("preview ids are deterministic across retries", () => {
   const plan = seededPlan();
   const request = { kind: "deload_week", weekIndex: 1 };

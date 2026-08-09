@@ -2,6 +2,8 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 import { assertValidPlan } from "./models.js";
+import { previewPlanChange } from "./adaptPlan.js";
+import { isDeepStrictEqual } from "node:util";
 
 /**
  * Apply a caller-held preview to a caller-held plan.
@@ -26,6 +28,21 @@ export function applyPlanPreview(plan, preview) {
   }
   if (!preview.resultingPlan) {
     throw new Error("Preview is missing resultingPlan.");
+  }
+
+  if (!preview.changeRequest) {
+    throw new Error("Preview is missing changeRequest.");
+  }
+
+  // The preview is caller-held by design, but its result is still a claim about
+  // a specific plan and request. Recompute that claim before applying it so a
+  // caller cannot keep the valid identity/version fields while replacing the
+  // resulting plan or erasing the decision trace.
+  const expected = previewPlanChange(plan, preview.changeRequest);
+  for (const field of ["previewId", "baseVersion", "planId", "summary", "diff", "resultingPlan", "decisionBasis"]) {
+    if (!isDeepStrictEqual(preview[field], expected[field])) {
+      throw new Error(`Preview integrity check failed for ${field}.`);
+    }
   }
 
   const committed = structuredClone(preview.resultingPlan);

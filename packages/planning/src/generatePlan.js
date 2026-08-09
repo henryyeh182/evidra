@@ -223,12 +223,19 @@ function applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor,
     // equipment is missing used to become a bodyweight squat — still a session,
     // but no longer the session the plan prescribed. Ask the catalog for
     // something that serves the same training goal before giving up on it.
-    const alternative = findGoalAlternative({
+    const alternativeResult = findGoalAlternative({
       trainingGoal: slot.trainingGoal,
       availableEquipment: [...availableSet],
       excludeContraindications: constraints.restrictions,
       avoidMovements: constraints.avoidMovements
     });
+    const alternative =
+      typeof alternativeResult === "string"
+        ? alternativeResult
+        : alternativeResult?.exerciseId ?? alternativeResult?.id ?? null;
+    if (alternativeResult?.excludedByContraindication?.length) {
+      trace.contraindicationCandidatesExcluded.push(...alternativeResult.excludedByContraindication);
+    }
 
     if (alternative) {
       exerciseIds.push(alternative);
@@ -331,7 +338,7 @@ export function generateTrainingPlan(context, options = {}) {
   // What the injury rule did, counted while it happens rather than inferred
   // from the finished plan: a session at moderate looks the same whether it was
   // held there by a restriction or was written that way in the template.
-  const trace = { sessionsHeldAtModerate: 0 };
+  const trace = { sessionsHeldAtModerate: 0, contraindicationCandidatesExcluded: [] };
 
   const weeks = [];
   for (let weekIndex = 0; weekIndex < totalWeeks; weekIndex += 1) {
@@ -389,18 +396,31 @@ export function generateTrainingPlan(context, options = {}) {
   // does not check".
   const highImpact = highImpactRestrictions(constraints);
   const fired =
-    trace.sessionsHeldAtModerate > 0
-      ? [
-          {
-            ruleId: "EVD-R-010",
-            measured: {
-              matchedRestrictions: highImpact,
-              highImpactRestrictionPresent: highImpact.length,
-              sessionsHeldAtModerate: trace.sessionsHeldAtModerate
+    [
+      ...(trace.sessionsHeldAtModerate > 0
+        ? [
+            {
+              ruleId: "EVD-R-010",
+              measured: {
+                matchedRestrictions: highImpact,
+                highImpactRestrictionPresent: highImpact.length,
+                sessionsHeldAtModerate: trace.sessionsHeldAtModerate
+              }
             }
-          }
-        ]
-      : [];
+          ]
+        : []),
+      ...(trace.contraindicationCandidatesExcluded.length > 0
+        ? [
+            {
+              ruleId: "EVD-R-012",
+              measured: {
+                contraindicationTagsMatched: trace.contraindicationCandidatesExcluded.length,
+                excluded: trace.contraindicationCandidatesExcluded
+              }
+            }
+          ]
+        : [])
+    ];
 
   return {
     id: options.planId || `plan_${context.user.id}_${startDate}`,

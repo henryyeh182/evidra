@@ -148,6 +148,31 @@ test("EVD-R-010 fires when a high-impact restriction meets a high-intensity run"
   );
 });
 
+test("generate_plan traces EVD-R-012 when a catalog fallback filters candidates", async () => {
+  const plan = await call("evidra_generate_plan", {
+    startDate: "2026-08-10",
+    weeks: 1,
+    evidence: {
+      ...EVIDENCE,
+      constraints: {
+        ...EVIDENCE.constraints,
+        equipment: [],
+        injuries: [{ bodyRegion: "knee", status: "active", restrictions: ["knee"] }]
+      }
+    }
+  });
+
+  const basis = record(plan.decisionBasis, "generate_plan fallback");
+  const rule = basis.appliedRules.find((entry) => entry.ruleId === "EVD-R-012");
+  assert.ok(rule, "the catalog filter changed a fallback choice without a trace");
+  assert.ok(rule.measured.excluded.length > 0, "the trace must name the excluded candidates");
+
+  const prescribed = plan.weeks.flatMap((week) => week.sessions).flatMap((session) => session.exerciseIds);
+  for (const excluded of rule.measured.excluded) {
+    assert.ok(!prescribed.includes(excluded.id), `excluded ${excluded.id} still reached the generated plan`);
+  }
+});
+
 test("a plan with no restriction still carries the frame, saying no rule applied", async () => {
   const plan = await call("evidra_generate_plan", { startDate: "2026-08-10", weeks: 1, evidence: EVIDENCE });
 
