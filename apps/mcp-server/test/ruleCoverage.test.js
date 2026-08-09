@@ -21,7 +21,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { handleJsonRpcMessage } from "../src/server.js";
-import { getRuleLibrary } from "../../../packages/rules/src/index.js";
+import { getRuleLibrary, getRule } from "../../../packages/rules/src/index.js";
 
 let nextId = 700;
 
@@ -38,8 +38,50 @@ async function call(name, args) {
 /** Rules seen firing across this file, collected for the closing check. */
 const fired = new Set();
 
-function record(basis) {
+/**
+ * The two things a governing rule must be able to say about itself, checked on
+ * every basis this file produces.
+ *
+ * Both were verified by hand on 2026-08-09 and passed, which is exactly why they
+ * are here: a check that has been run once is a fact about that afternoon, and a
+ * frame reporting a threshold the library does not hold would look no different
+ * from one reporting the truth.
+ *
+ * The equivalent for decide_session is DH-7 in the harness, which also asserts
+ * that a movement an injury rule named is gone from `action.to`. That is not
+ * repeated here — the rules below remove nothing from a session.
+ */
+function assertGoverningRuleIsTruthful(basis, where) {
+  const governing = basis.governingRule;
+  if (!governing) return basis;
+
+  // 1. The thresholds the caller is shown are the library's, verbatim. A frame
+  //    that paraphrased them would be unfalsifiable against the rule it names.
+  const declared = getRule(governing.ruleId).thresholds.map((t) => [t.key, t.operator, t.value, t.unit]);
+  const reported = governing.thresholds.map((t) => [t.key, t.operator, t.value, t.unit]);
+  assert.deepEqual(
+    reported,
+    declared,
+    `${where}: ${governing.ruleId} reports thresholds that are not the ones session-rules.json declares`
+  );
+
+  // 2. An internal_composite rule cuts a quantity Evidra computes or matches
+  //    itself, so no publication can support it. The loader enforces this on the
+  //    library; this is the same claim checked on what actually leaves the server.
+  if (governing.basis === "internal_composite") {
+    assert.equal(
+      governing.sources.length,
+      0,
+      `${where}: ${governing.ruleId} is internal_composite and shipped ${governing.sources.length} source(s), ` +
+        `which would read as evidence for a threshold no study has used`
+    );
+  }
+  return basis;
+}
+
+function record(basis, where = "basis") {
   for (const rule of basis?.appliedRules || []) fired.add(rule.ruleId);
+  assertGoverningRuleIsTruthful(basis, where);
   return basis;
 }
 
@@ -68,7 +110,7 @@ test("EVD-R-010 fires when a high-impact restriction meets a high-intensity run"
     }
   });
 
-  const basis = record(plan.decisionBasis);
+  const basis = record(plan.decisionBasis, "generate_plan");
   assert.equal(basis.governingRule?.ruleId, "EVD-R-010");
   assert.equal(basis.governingRule.category, "injury");
   assert.ok(
@@ -80,6 +122,23 @@ test("EVD-R-010 fires when a high-impact restriction meets a high-intensity run"
   const runs = plan.weeks[0].sessions.filter((session) => session.type === "run");
   assert.ok(runs.length > 0, "the template this test relies on no longer schedules a run");
   assert.ok(!runs.some((session) => session.intensity === "high"), "a run was left at high intensity");
+
+  // And the count it reports is the count it caused. Measured as a difference
+  // against the same plan generated without the injury, because "no run is at
+  // high intensity" is also true of a template that never scheduled one — the
+  // reading has to be attributable to this rule, not merely consistent with it.
+  const withoutInjury = await call("evidra_generate_plan", {
+    startDate: "2026-08-10",
+    weeks: 1,
+    evidence: EVIDENCE
+  });
+  const highRuns = (weeks) =>
+    weeks[0].sessions.filter((session) => session.type === "run" && session.intensity === "high").length;
+  assert.equal(
+    basis.governingRule.measured.sessionsHeldAtModerate,
+    highRuns(withoutInjury.weeks) - highRuns(plan.weeks),
+    "EVD-R-010 reports holding back a number of runs that the plan does not show having been held back"
+  );
 
   // And the part the rule is careful to disclaim, asserted so the disclaimer
   // stays true: this path removes no prescribed movement.
@@ -105,10 +164,29 @@ test("EVD-R-011 fires when an injury is added to an existing plan", async () => 
     changeRequest: { kind: "add_injury", bodyRegion: "knee", restrictions: ["no loaded knee flexion"], avoidMovements: ["squat"] }
   });
 
-  const basis = record(preview.decisionBasis);
+  const basis = record(preview.decisionBasis, "preview_adjust_plan");
   assert.equal(basis.governingRule?.ruleId, "EVD-R-011");
   assert.ok(basis.governingRule.measured.injuryAffectedSessionsPresent >= 1);
   assert.ok(preview.diff.length > 0, "the rule is attributed to a preview that changed nothing");
+
+  // Substance. A rule that names movements it removed and leaves them in the
+  // plan is the failure this whole frame exists to make visible, so it is
+  // checked against the plan the preview actually produces.
+  const measured = basis.governingRule.measured;
+  const remaining = preview.patch.resultingPlan.weeks
+    .flatMap((week) => week.sessions)
+    .flatMap((session) => session.exerciseIds || []);
+  assert.ok(measured.movementsRemoved.length > 0, "this case is meant to remove at least one movement");
+  for (const id of measured.movementsRemoved) {
+    assert.ok(!remaining.includes(id), `EVD-R-011 reports removing ${id} and the resulting plan still prescribes it`);
+  }
+
+  // And the session count is the plan's own count, not a tally kept beside it.
+  assert.equal(
+    measured.injuryAffectedSessionsPresent,
+    new Set(preview.diff.map((entry) => entry.date)).size,
+    "EVD-R-011 reports a number of affected sessions that the diff does not show"
+  );
 
   // The commit carries the same frame rather than deciding again.
   const committed = await call("evidra_commit_adjust_plan", { plan, preview: preview.patch });
@@ -133,9 +211,20 @@ test("EVD-R-012 fires when the catalog drops a contraindicated candidate", async
     availableEquipment: ["bodyweight", "dumbbell", "barbell", "squat_rack"]
   });
 
-  const basis = record(result.decisionBasis);
+  const basis = record(result.decisionBasis, "decide_exercise_substitution");
   assert.equal(basis.governingRule?.ruleId, "EVD-R-012");
   assert.ok(basis.governingRule.measured.excluded.length >= 1);
+
+  // Substance. "Excluded" has to mean absent from everything the caller is
+  // offered — the chosen movement and the alternatives alike. A candidate that
+  // came back as an alternative would make the hard filter a ranking.
+  const offered = [result.action.to?.exercise_id, ...result.alternatives.map((item) => item.exercise_id)];
+  for (const item of basis.governingRule.measured.excluded) {
+    assert.ok(
+      !offered.includes(item.id),
+      `EVD-R-012 reports excluding ${item.id} for ${item.matchedTags.join(", ")} and it is still offered`
+    );
+  }
   assert.ok(
     result.reason.some((line) => line.includes(basis.governingRule.measured.excluded[0].name)),
     "what the filter removed has to reach the athlete, not only the trace"
