@@ -295,7 +295,7 @@ sha256 同為 `294acd57b50cad0d0…eeb8`，`review:release` 六條全綠。
 | # | 項目 | 位置 |
 |---|---|---|
 | C1 | `maxSampleGapSeconds = 30` 沒有出處 | `packages/connectors/src/timeInZone.js:106` |
-| C2 | `trainingLoad ?? 分鐘數` 仍在編造負荷值 | `packages/evidence/src/model.js:155` |
+| ~~C2~~ | ✅ **已關閉（2026-08-09）**：缺少 `trainingLoad` 的 workout 保留為 `null`，不再用 duration 填入偽造負荷；`signalCoverage.training` 因此仍能報告 training load 缺口。已有 model test 與各來源 parser test 釘住此行為 | `packages/evidence/src/model.js`、`packages/evidence/test/model.test.js` |
 | C6 | 🟡 **部分關閉（2026-08-09）**：已用真實 Claude Desktop replay 驗證 host → Evidra 的 canonical evidence tool-call contract（正常 payload、缺 evidence、欄位拼錯、日期／時區錯誤都各有測試）；尚未取得「別家 MCP server → host → Evidra」的 source handoff payload，因此不能宣稱跨 connector handoff 已驗證 | `apps/mcp-server/test/readTools.test.js`；source adapter 仍見 `packages/connectors/src/providers/*/normalize.js` |
 | ~~C8~~ | ✅ **已關閉（2026-08-09，R7）**：Evidence Quality 不做不可稽核純量；health metric 用 `basis` enum，workout 仍用既有 `loadSources`／`rpeBasis` | `packages/evidence/src/model.js`、`schemas/evidence/fitness-evidence.json` |
 | ~~C9~~ | ✅ **已關閉（2026-08-09，parameter set 1.2.0）**：`DEFAULT_BASELINES`、staleness、ATL/CTL 時間常數（42／7）、TSB 分帶（5／−10／−30）、semantic training windows、recovery 權重、readiness 懲罰係數、plan phase multiplier、return ramp、plan-change deload/cap 全收進 `engine-parameters.json`（EVD-P-003～048）。各自帶 `basis`／`sources`／`limitations`，由 `assertParametersMatch` 兩向檢查、進 `rule-fingerprint.json`。**收編不等於有出處**——搬過去只是讓「沒有出處」變成資料裡的欄位。**原本 EVD-P-001／002 已於 C10 移進 EVD-R-007** | `packages/rules/data/engine-parameters.json`、`packages/training-load/src/trainingLoad.js`、`packages/semantic-engine/src/generateSemanticFitnessState.js`、`packages/planning/src/generatePlan.js`、`packages/planning/src/adaptPlan.js` |
