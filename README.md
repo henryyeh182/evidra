@@ -144,7 +144,7 @@ Evidra ships as a Claude Desktop extension (`.mcpb`).
 2. Check it against the published checksum (optional, and worth doing — see below)
 3. Open **Claude Desktop → Settings → Extensions**
 4. Install the `.mcpb` file
-5. Ask a question that needs a decision — [five to start with](#five-questions-to-start-with)
+5. Ask a question that needs a decision — [six to start with](#six-questions-to-start-with)
 
 **Requires Node.js 20 or newer.**
 
@@ -169,7 +169,7 @@ Claude Desktop completely — closing the window is not enough.
 
 ---
 
-## Five questions to start with
+## Six questions to start with
 
 Two need nothing but the sentence. The rest take whatever export you already have.
 
@@ -225,6 +225,22 @@ the ones that were removed. The equipment matters to the example: with only
 dumbbells to hand, the alternatives carrying a knee contraindication are already
 gone for want of a barbell, and the filter has nothing left to do. A model can be
 talked past a safety rule; a filter cannot.
+
+**6 · The day it takes the session away**
+
+> Here's my Whoop data for today. I've got VO₂max intervals scheduled, 60 minutes
+> hard. Should I still do them?
+
+This one comes back `defer`, and it is the type the other five never reach. The
+scheduled session is not eased — it is replaced: focus, type, duration, intensity
+and the movements themselves all change, and what you get instead is a recovery
+walk and a mobility flow inside thirty minutes.
+
+Confidence is high. Whoop does not measure stress, so that signal is reported
+missing, and the decision still stands on three recovery signals plus the
+vendor's own recovery score. An engine that only ever nudged would have nothing
+to say on a day like this one. See the note under question 4 about how far the
+Whoop reader has been checked.
 
 Figures are not quoted here — what comes back depends on your evidence.
 
