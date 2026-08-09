@@ -149,7 +149,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 - 對外 **6 個 tool**：`evidra_assess_fitness_state` · `evidra_decide_session` · `evidra_decide_exercise_substitution` ·
   `evidra_generate_plan` · `evidra_preview_adjust_plan` · `evidra_commit_adjust_plan`
-- **428 tests**、eval 20 golden cases，全綠
+- **430 tests**、eval 20 golden cases，全綠
 - parser 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP；
   Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 個平台。
   **前四家照真實匯出檔寫；Oura 與 WHOOP 照兩家自己的 OpenAPI 寫（2026-08-07），
@@ -353,9 +353,20 @@ npm run review:release
 所以本機模式驗的是 `npm run pack` 剛產出的那顆——**忘了重打包會被 R2 抓到**
 （archive 內 `manifest.json` 的版本與 `server.json` 不符）。
 
-五條：版號一致 · sha256 一致 · **`PRIVACY.md` 逐條可執行斷言**（搜 `node:http`／
-`fetch(`／`writeFile` 應為零命中）· build-mcpb skill 的 `local-security` 出貨前清單 ·
-公開 repo 的 README／PRIVACY 對版本與 tool 清單。
+六條：版號一致 · **sha256 一致（下載回來的 `.mcpb`、`server.json`、官方 registry 三方
+＋版號＋`isLatest`）** · **`PRIVACY.md` 逐條可執行斷言**（搜 `node:http`／`fetch(`／
+`writeFile` 應為零命中）· build-mcpb skill 的 `local-security` 出貨前清單 ·
+公開 repo 的 README／PRIVACY 對版本與 tool 清單 ·
+**R6：對外文件裡每個連結連得上，且點開是給人看的頁面**。
+
+**手動抽驗不算做過。** 2026-08-09 使用者要求比對 `shasum -a 256 evidra.mcpb` 與 registry 的
+`fileSha256`——那整件事就是 R2。手動只會查到自己想得到的那幾項，這支會查六項。
+
+**R6 於 2026-08-09 加入，加的當下就抓到一個。** R5 的註解記著 registry 連結「改過三次才對，
+三次都是我沒點開過自己放的連結」——那次修的是公開 repo 的 README，而
+`docs/user-journey.html` 裡原封不動留著第一版那個 `?search=evidra`，點開是一串 JSON。
+**教訓學在一個檔案、沒有套到另一個，在此之前沒有任何機制會發現。**
+R6 不看連結講得對不對（那是人的事），只問連得上嗎、點開是不是給人看的東西。
 
 **為什麼要獨立一支**：`manifest.json` 的 `documentation`／`privacy_policies` 指向
 `blob/main/...`，讀者永遠讀到最新文件、卻裝到最後一個 release。**兩者分離是預設狀態。**

@@ -304,6 +304,64 @@ check(
   }
 );
 
+// 這一條的由來寫在 R5 中段：registry 連結改過三次才對，三次都是沒點開過自己放的
+// 連結。那次修的是公開 repo 的 README——而 `docs/user-journey.html` 裡還留著第一版
+// 那個 `?search=evidra`，也就是同一個錯誤原封不動待在 R5 讀不到的檔案裡，直到
+// 2026-08-09 使用者自己點下去看到一串 JSON 才發現。
+//
+// 教訓學在一個檔案、沒有套到另一個，而沒有任何機制會發現這件事。所以這條不看
+// 內容講得對不對（那是人的事），只問兩件機械的事：連得上嗎，以及**點開來是給人
+// 看的東西嗎**。一個回 application/json 的網址，放在「官方 MCP registry」這種
+// 標籤底下，對讀者而言就是證明不了任何事的一串字。
+check(
+  "R6",
+  "對外文件裡的每個連結都連得上，而且點開是給人看的頁面",
+  "文件裡的連結沒有人會在改動時重點一次。壞掉的連結不會讓任何測試變紅，只會讓讀者自己撞上。",
+  () => {
+    const findings = [];
+    const targets = ["docs/user-journey.html", "README.md"];
+
+    for (const file of targets) {
+      const text = readFileSync(join(rootDir, file), "utf8");
+      const links = new Map();
+      for (const match of text.matchAll(/<a\b[^>]*href="(https?:[^"]+)"[^>]*>([\s\S]*?)<\/a>/g)) {
+        links.set(match[1], match[2].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim());
+      }
+      for (const match of text.matchAll(/\[([^\]]+)\]\((https?:[^)]+)\)/g)) {
+        links.set(match[2], match[1]);
+      }
+
+      for (const [url, label] of links) {
+        let status;
+        let contentType;
+        try {
+          const probe = sh("curl", ["-sL", "-o", "/dev/null", "-w", "%{http_code} %{content_type}", "--max-time", "25", url]);
+          [status, contentType = ""] = probe.trim().split(/\s+/);
+        } catch (cause) {
+          findings.push(`${file}：「${label}」連不上 ${url}（${cause.message.split("\n")[0]}）`);
+          continue;
+        }
+
+        if (status !== "200") {
+          findings.push(`${file}：「${label}」回 ${status} — ${url}`);
+          continue;
+        }
+
+        // 下載連結本來就不是頁面，二進位是對的。其餘的都是給人讀的。
+        const isDownload = /\.(mcpb|zip|tgz|json)$/.test(new URL(url).pathname);
+        if (!isDownload && /^application\/(json|problem\+json)/.test(contentType)) {
+          findings.push(
+            `${file}：「${label}」指向 ${url}，回的是 ${contentType}——` +
+              `讀者點開看到的是 API 原始輸出，不是能佐證這句話的頁面`
+          );
+        }
+      }
+    }
+
+    return findings;
+  }
+);
+
 // ---------------------------------------------------------------------------
 
 console.log("\n發布前對帳 —— 對已發布的那顆");
