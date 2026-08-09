@@ -116,6 +116,25 @@ test("MCP server lists core fitness tools", async () => {
   }
 });
 
+test("MCP server includes release identity in the advertised toolset", async () => {
+  const init = await handleJsonRpcMessage(
+    JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} })
+  );
+  const listed = await handleJsonRpcMessage(
+    JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} })
+  );
+  const version = init.result.serverInfo.version;
+
+  assert.ok(version);
+  for (const tool of listed.result.tools) {
+    assert.equal(
+      tool._meta?.["io.github.henryyeh182/evidra/toolsetVersion"],
+      version,
+      `${tool.name} does not carry the release version in tools/list`
+    );
+  }
+});
+
 test("MCP server calls evidra_assess_fitness_state", async () => {
   const response = await handleJsonRpcMessage(
     JSON.stringify({

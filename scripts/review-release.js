@@ -37,6 +37,7 @@ const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PUBLIC_REPO = "henryyeh182/evidra";
 const REGISTRY_NAME = "io.github.henryyeh182/evidra";
 const REGISTRY_SEARCH = "https://registry.modelcontextprotocol.io/v0/servers?search=evidra";
+const TOOLSET_META_KEY = "io.github.henryyeh182/evidra/toolsetVersion";
 
 const checks = [];
 function check(id, title, why, run) {
@@ -243,6 +244,96 @@ check(
 
 check(
   "R5",
+  "tools/list 帶著這一版的工具集身份",
+  "Claude 端觀察到的是 tools/list payload。release 只改規則或資料時，工具集如果沒有版本身份，digest 會看起來像上一版，排查安裝與快取問題時沒有任何抓手。",
+  () => {
+    const findings = [];
+    const init =
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: {
+          protocolVersion: "2025-06-18",
+          capabilities: {},
+          clientInfo: { name: "review-release", version: "1" }
+        }
+      }) + "\n";
+    const rest =
+      JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) +
+      "\n" +
+      JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }) +
+      "\n";
+    const messages = sh("node", [bundledManifest.server.entry_point], {
+      cwd: join(work, "x"),
+      input: init + rest,
+      stdio: ["pipe", "pipe", "ignore"]
+    })
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+
+    const initialize = messages.find((message) => message.id === 1);
+    const listed = messages.find((message) => message.id === 2);
+    const serverVersion = initialize?.result?.serverInfo?.version;
+    const tools = listed?.result?.tools || [];
+
+    if (serverVersion !== declaredVersion) {
+      findings.push(`initialize 回報版本 ${serverVersion || "(missing)"}，server.json 宣告 ${declaredVersion}`);
+    }
+
+    for (const tool of tools) {
+      const toolsetVersion = tool._meta?.[TOOLSET_META_KEY];
+      if (toolsetVersion !== declaredVersion) {
+        findings.push(`${tool.name} 的 ${TOOLSET_META_KEY} 是 ${toolsetVersion || "(missing)"}，不是 ${declaredVersion}`);
+      }
+      if (tool.outputSchema) {
+        findings.push(`${tool.name} 又把 outputSchema 放回 tools/list；v0.1.1 相容 wire shape 不能帶它`);
+      }
+    }
+
+    if (tools.length === 0) findings.push("tools/list 沒有回任何工具");
+
+    const substitution = tools.find((tool) => /substitution/.test(tool.name));
+    if (substitution) {
+      const callMessages = sh("node", [bundledManifest.server.entry_point], {
+        cwd: join(work, "x"),
+        input:
+          init +
+          rest.replace(JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }) + "\n", "") +
+          JSON.stringify({
+            jsonrpc: "2.0",
+            id: 3,
+            method: "tools/call",
+            params: {
+              name: substitution.name,
+              arguments: {
+                exerciseId: "back squat",
+                conditions: ["knee_injury"],
+                availableEquipment: ["bodyweight"],
+                avoidContraindications: ["knee"]
+              }
+            }
+          }) +
+          "\n",
+        stdio: ["pipe", "pipe", "ignore"]
+      })
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line));
+      const called = callMessages.find((message) => message.id === 3);
+      if (called?.error) {
+        findings.push(`實際 tools/call ${substitution.name} 失敗：${called.error.message}`);
+      } else if (called?.result?.structuredContent) {
+        findings.push(`${substitution.name} 又回 structuredContent；v0.1.1 相容 wire shape 只能回 content`);
+      }
+    }
+    return findings;
+  }
+);
+
+check(
+  "R6",
   "公開 repo 的 README 與 PRIVACY 沒有描述這顆沒有的東西",
   "文件連結跟著 main、bundle 停在 release。這個落差是預設狀態，所以每次發布都要對一次。",
   () => {
@@ -314,7 +405,7 @@ check(
 // 看的東西嗎**。一個回 application/json 的網址，放在「官方 MCP registry」這種
 // 標籤底下，對讀者而言就是證明不了任何事的一串字。
 check(
-  "R6",
+  "R7",
   "對外文件裡的每個連結都連得上，而且點開是給人看的頁面",
   "文件裡的連結沒有人會在改動時重點一次。壞掉的連結不會讓任何測試變紅，只會讓讀者自己撞上。",
   () => {

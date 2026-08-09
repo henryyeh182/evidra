@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { outputSchemas } from "../../apps/mcp-server/src/outputSchemas.js";
 import { toolDefinitions as defs, listedToolDefinitions } from "../../apps/mcp-server/src/toolDefinitions.js";
 import { loadContract } from "../lib/contracts.js";
 import { validate } from "../lib/jsonSchema.js";
@@ -42,20 +43,19 @@ test("every shipped tool has input and output contract files that match the serv
   }
 });
 
-test("every advertised tool declares the output schema its contract file describes", async () => {
-  // The contract files are what the eval runner validates real payloads against;
-  // outputSchemas.js is the copy clients are told. `schemas/` stays out of the
-  // packed bundle, so the server cannot read the file at runtime and the two
-  // exist separately — which means the only thing keeping the copy clients see
-  // honest is this assertion.
+test("internal output schemas match their contract files without being advertised", async () => {
+  // The contract files are what the eval runner validates real payloads against.
+  // `outputSchemas.js` is kept as the runtime-side copy for internal checks and
+  // future clients, but Claude Desktop is currently served the v0.1.1-compatible
+  // wire shape: no advertised outputSchema and no structuredContent duplicate.
   for (const tool of listedToolDefinitions()) {
-    assert.ok(tool.outputSchema, `${tool.name} is advertised without an output schema`);
+    assert.equal(tool.outputSchema, undefined, `${tool.name} should not advertise outputSchema in tools/list`);
 
     const contract = await loadContract(tool.name, "output");
     assert.deepEqual(
-      structural(tool.outputSchema),
+      structural(outputSchemas[tool.name]),
       structural(contract),
-      `the output schema sent to clients for ${tool.name} has drifted from schemas/tools/${tool.name}.output.json`
+      `the internal output schema for ${tool.name} has drifted from schemas/tools/${tool.name}.output.json`
     );
   }
 });

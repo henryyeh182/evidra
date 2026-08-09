@@ -6,7 +6,7 @@ import {
   EVIDENCE_VENDOR_ASSESSMENT_TYPES
 } from "../../../packages/evidence/src/index.js";
 
-import { outputSchemas } from "./outputSchemas.js";
+const TOOLSET_META_KEY = "io.github.henryyeh182/evidra/toolsetVersion";
 
 /**
  * The evidence object, written once.
@@ -498,16 +498,21 @@ export function resolveToolName(name) {
  * but are hidden from discovery, so new conversations only see the canonical
  * surface and the tool budget (R2) reflects what models actually choose from.
  *
- * The output schema is attached here rather than written into each definition:
- * only advertised tools have a contract worth declaring, and doing it in one
- * place means a new tool cannot quietly ship without one.
+ * Keep the advertised wire shape deliberately close to v0.1.1, the last release
+ * verified to trigger Claude tool calls reliably. Contract schemas still live
+ * in `outputSchemas.js` and `schemas/tools`, but they are not sent in
+ * `tools/list`: from v0.2.0 onward that doubled the static tool payload and
+ * made Claude's generated calls diverge from the release that worked.
  */
-export function listedToolDefinitions() {
+export function listedToolDefinitions(version) {
   return toolDefinitions
     .filter((tool) => !tool.deprecated)
     .map(({ deprecated, ...tool }) => ({
       ...tool,
-      ...(outputSchemas[tool.name] ? { outputSchema: outputSchemas[tool.name] } : {})
+      _meta: {
+        ...(tool._meta || {}),
+        [TOOLSET_META_KEY]: version
+      }
     }));
 }
 
@@ -520,7 +525,8 @@ export function listedToolDefinitions() {
  * and promising nothing in return.
  */
 export function outputSchemaFor(name) {
-  return outputSchemas[resolveToolName(name)] || null;
+  resolveToolName(name);
+  return null;
 }
 
 export function getToolDefinition(name) {

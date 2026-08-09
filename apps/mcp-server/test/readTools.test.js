@@ -141,32 +141,23 @@ test("read payloads stay inside the cross-model size budget", async () => {
   }
 });
 
-test("a structured result costs its payload twice, and only where a schema is declared", async () => {
-  // The protocol asks for the serialized JSON in a text block as well, so a tool
-  // that declares an output schema sends the payload twice. That is the price of
-  // a client that predates structured results still seeing an answer — but it is
-  // a real price, so the frame gets its own ceiling instead of going unmeasured.
+test("tool results stay content-only on the wire", async () => {
+  // v0.1.1, the last release verified to trigger Claude tool calls reliably,
+  // returned only the JSON text block. v0.2.0 started advertising outputSchema
+  // and returning structuredContent as a second copy; the direct protocol call
+  // still worked, but Claude's generated calls diverged in later releases. Keep
+  // the wire shape conservative and measure the frame that the model receives.
   const decision = await call("evidra_decide_session", {
     evidence: WORKING_EVIDENCE,
     scheduledSession: { focus: "intervals", type: "run", durationMinutes: 60, intensity: "high" }
   });
 
-  assert.ok(decision.structured, "an advertised tool answers with a structured result");
-  // Compared as it goes on the wire: the payload carries keys whose value is
-  // undefined, which serializing drops from both copies but which an in-process
-  // comparison would report as a difference that no client can observe.
-  assert.deepEqual(
-    JSON.parse(JSON.stringify(decision.structured)),
-    decision.payload,
-    "the two copies say the same thing"
-  );
+  assert.equal(decision.structured, undefined);
   assert.ok(
     decision.bytes <= FRAME_CEILING,
     `result frame of ${decision.bytes} bytes exceeds the ${FRAME_CEILING}-byte ceiling`
   );
 
-  // A tool with no declared schema gets no structured copy, so nothing pays
-  // twice for a shape no contract covers.
   const deprecated = await call("get_user_profile", { userId: "user_henry_demo" });
   assert.equal(deprecated.structured, undefined);
 });
