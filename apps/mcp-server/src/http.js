@@ -175,6 +175,11 @@ export function createHttpServer(options = {}) {
         deny(verdict.status, verdict.error, verdict.description);
         return;
       }
+      // OAuth `sub` is the cross-provider identity boundary. ChatGPT, Claude
+      // and Gemini may open different MCP sessions, but they can still address
+      // the same athlete record when the authorization server gives them the
+      // same subject. Never infer identity from a session id or IP address.
+      req.mcpIdentity = claims.sub || claims.user_id || claims.uid || null;
     } else if (requireToken) {
       // Local-development fallback: a shared secret, header only. It cannot
       // express an audience, so it is not OAuth and must not be mistaken for
@@ -245,7 +250,9 @@ export function createHttpServer(options = {}) {
     const responses = [];
 
     for (const message of messages) {
-      const response = await handleJsonRpcMessage(JSON.stringify(message));
+      const response = await handleJsonRpcMessage(JSON.stringify(message), {
+        identity: req.mcpIdentity || null
+      });
       // Notifications resolve to null and must not produce a frame.
       if (response !== null) responses.push(response);
     }

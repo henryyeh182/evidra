@@ -122,11 +122,14 @@ server，因此仍卡在 authorization server、OAuth 簽章驗證、HTTPS 公�
 > 底下的〈隱私邊界〉是給我們自己看的判準，兩者不要合併。
 > 完整政策：https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md
 
-Evidra runs locally on your own machine and does not retain your evidence.
+Evidra can run locally or as a remote MCP server. Anonymous calls are
+stateless; authenticated calls (or local calls with an explicit `userId`) keep
+the minimum normalized athlete record needed for continuity across AI hosts
+and conversations.
 
 We process only the minimum health-related evidence submitted by the caller, solely to
-compute the requested fitness decision. We do not retain, sell, use for training, or use
-it for unrelated purposes.
+compute the requested fitness decision and maintain that athlete's continuity record. We
+do not sell, use for training, or use it for unrelated purposes.
 
 Evidra never fetches your data — it only sees what the calling AI assistant passes into a
 tool call: recovery signals for today, recent training load, the session you had scheduled,
@@ -136,17 +139,21 @@ file imports:
 
 - **Evidra itself performs no outbound network requests.** No outbound HTTP, fetch, socket,
   or DNS calls, and it transmits your evidence nowhere.
-- **Evidra itself does not persist your evidence.** No database, no cache, no log file,
-  no history.
+- **Evidra persists only identified athlete records when continuity is enabled.** Records
+  are JSON files under `EVIDRA_STATE_DIR` (default `data/private/athletes`), with restrictive
+  file permissions; anonymous calls are not written.
 - **No runtime dependencies.** Node.js standard library only — no analytics, telemetry, or SDKs.
 - **No model calls.** Decisions are deterministic arithmetic and explicit rules.
-- **No accounts.** No sign-up, no login, no user identifier.
+- **No vendor accounts.** Evidra does not sign into Apple Health, Garmin, Strava, Oura or
+  Whoop; a remote deployment may use OAuth to identify the athlete.
 
 These statements describe Evidra's own behaviour, not the computer it runs on, the AI
 assistant that calls it, or the operating system and Node.js runtime underneath it.
 
-Evidence exists in memory for the duration of a single tool call. Nothing is written to
-durable storage, so there is nothing for us to keep, delete, or export on request.
+When continuity is enabled, the normalized record is written durably so another MCP host
+can continue from the same history. Operators must provide an account-level deletion and
+export path for a hosted deployment; the local record directory can be removed by its
+owner.
 
 Evidra is not a medical device and does not provide medical advice. It is intended for
 general fitness and training purposes only.

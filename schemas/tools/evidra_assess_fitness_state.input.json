@@ -159,7 +159,5 @@
       "description": "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server."
     }
   },
-  "required": [
-    "evidence"
-  ]
+  "required": []
 }

@@ -6,6 +6,11 @@ derived from them. Everything here except this README is git-ignored (see the
 the repository is public, and raw health data (HRV, resting HR, sleep, body
 mass…) must never enter git history.
 
+The MCP server's continuity store is `data/private/athletes/` by default. It
+contains one hashed-identity JSON record per identified athlete and is written
+only when a request has an OAuth subject or explicit `userId`. Anonymous tool
+calls remain stateless. Set `EVIDRA_STATE_DIR` to place these records elsewhere.
+
 ## How to load your Apple Health data
 
 1. On iPhone: **Health app → profile picture → Export All Health Data**. You get
