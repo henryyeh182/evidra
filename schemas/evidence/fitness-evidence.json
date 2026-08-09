@@ -133,9 +133,17 @@
             "type": "string",
             "description": "How the vendor identifies this reading in its own export."
           },
-          "confidence": {
-            "type": "number",
-            "description": "How much the connector trusts the reading, 0-1. Reflects the parse, not the physiology."
+          "basis": {
+            "type": "string",
+            "description": "What the value stands on. This replaces numeric confidence/quality scores: do not send `quality: 0.94` or `confidence: 0.9`; say whether the number was measured, reported, computed from records, derived from a synced source, user reported, or unstated.",
+            "enum": [
+              "device_measured",
+              "vendor_reported",
+              "user_reported",
+              "computed_from_records",
+              "derived_from_synced_source",
+              "unstated"
+            ]
           },
           "metadata": {
             "type": "object",

@@ -37,8 +37,9 @@
   planChange 2／catalog 1），聯集由 `assertThresholdsMatch` 雙向驗，並額外驗每條規則的
   `appliedBy` 與它宣告的門檻屬於同一個引擎。**`decisionBasis` 現在四個 tool 都回傳**
   （`decide_session`＋`generate_plan`＋`preview`／`commit_adjust_plan`＋
-  `decide_exercise_substitution`），規則開火與否都帶。剩下未進庫的是 ATL／CTL、TSB、
-  phase multiplier、return ramp，見技術債 C9
+  `decide_exercise_substitution`），規則開火與否都帶。非規則門檻與係數另由
+  `engine-parameters.json` 1.2.0 治理（ATL／CTL、TSB、recovery 權重、readiness 懲罰、
+  phase multiplier、return ramp 等），並由 `assertParametersMatch` 雙向驗。
 - **來源 parser：6 家**（Apple Health／Garmin／Google Health／Strava／Oura／WHOOP，
   Strava 另有 API 與 bulk export 兩種方言）。schema registry 共宣告 6 個平台（8 種方言）。
   **前四家是照真實匯出檔寫的；Oura 與 WHOOP 是照各家自己的 OpenAPI 文件寫的
@@ -79,8 +80,8 @@ Evidra 的護城河不是 MCP server、不是資料庫、不是動作內容庫�
 
 | 護城河 | 現在對應 | 下一步怎麼加深 |
 |---|---|---|
-| **Evidence Model** | `packages/evidence`、source schema、6 家 parser、coverage／freshness | 補 C8/R7 的 evidence basis；驗 C6 真實 host 傳入形狀；補 C13 Oura／WHOOP 真實回應 |
-| **Rule Library** | `packages/rules` v1.4.0，**12 條規則**（9 條 session ＋ EVD-R-010／011／012 分屬 plan／planChange／catalog），含出處、限制與仲裁欄位；證據兩軸與 `verificationStatus` 皆為載入期強制，三個引用陣列（含 `contested`）一律必填；`injury` 那格由四條規則填滿。每條規則必填 `appliedBy`，門檻按引擎分組雙向驗 | 收編 C9 其餘門檻（ATL/CTL、TSB、recovery 權重、readiness 懲罰係數、phase multiplier、return ramp）；R2／R3／R5／C10 已完成 |
+| **Evidence Model** | `packages/evidence`、source schema、6 家 parser、coverage／freshness；health metric 用 `basis` enum 表示數字來源，拒收 `quality`／`confidence` 純量 | 驗 C6 真實 host 傳入形狀；補 C13 Oura／WHOOP 真實回應 |
+| **Rule Library** | `packages/rules` v1.4.0，**12 條規則**（9 條 session ＋ EVD-R-010／011／012 分屬 plan／planChange／catalog），含出處、限制與仲裁欄位；證據兩軸與 `verificationStatus` 皆為載入期強制，三個引用陣列（含 `contested`）一律必填；`injury` 那格由四條規則填滿。每條規則必填 `appliedBy`，門檻按引擎分組雙向驗；engine parameter set v1.2.0 收編 ATL/CTL、TSB、recovery 權重、readiness 懲罰係數、phase multiplier、return ramp，並有 180 天 review gate | R2／R3／R4／R5／R7／C9／C10 已完成；下一步是真實週期驗證與 C13 |
 | **Decision Graph** | `decide_session` 的 rule arbitration、knowledge graph 的替代／進退階不變量、planning patch validator；v0.4.0 起四支 decision tool 都帶 `decisionBasis` | 補更強的跨工具衝突案例與 product-facing trace 範例，讓 stakeholder 看得懂 Rule Library 如何真的治理決策 |
 
 **定位句**：A deterministic exercise-science decision engine that converts evidence into explainable training decisions.
@@ -166,9 +167,9 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 |---|---|---|---|---|
 | **1** | Rule schema guardrails | R5 `verificationStatus` enum／`sources` 強制帶狀態；R3 證據等級拆成「研究設計」與「建議強度」兩軸；**R5-C** `contested` 也強制帶狀態 | 這兩項是規則庫的地基。先把資料形狀鎖住，後面加傷病規則或收編 C9 數字才不會繼續累積無法稽核的欄位 | ✅ 已完成（2026-08-07，`8b15468`／`e171966`；R5-C 於 2026-08-08，庫升 v1.2.0。**當時未進 v0.3.7 bundle，已隨 v0.4.0 出貨**） |
 | **2** | Injury rules 入庫 | R2／C12：把現有 injury restriction、contraindication filter 變成有 rule id、category、priority、來源與限制的規則 | `injury` 是仲裁矩陣最高類別，但現況規則庫裡沒有 injury 規則；這是 rule coverage 最大洞 | ✅ 已完成（2026-08-09，庫 1.3.0／引擎 1.5.0）。四處全數入庫：`decide_session`＝EVD-R-009（2026-08-08）、`generatePlan`＝EVD-R-010、`adaptPlan` 的 `add_injury`＝EVD-R-011、catalog＝EVD-R-012。**入庫過程查出 `generatePlan` 的傷病限制不會移除任何動作**（實測：帶膝傷、restriction 寫明 back squat，產出的計畫仍排深蹲）——依使用者決定不改行為，改為誠實記錄在 EVD-R-010 的 `limitations` 與計畫的 `reasoning` 裡 |
-| **3** | 收編非 `decide_session` 門檻 | C9／C10：ATL/CTL、TSB、detraining、baseline fallback、staleness、phase multiplier、return ramp 的數字進治理；先處理兩套 detraining 衝突 | 這決定 R1 能不能做。沒有規則與來源，其他 tool 就算補 `decisionBasis` 也無 rule 可 trace | 🟡 **一半（2026-08-08 起，2026-08-09 更新）**：會進決策的三組（detraining、baseline fallback、staleness）收進 `engine-parameters.json`（當時 EVD-P-001～009 九項），值一個都沒改、決策一條都沒動。**兩套 detraining 衝突已解（2026-08-09）**：EVD-P-001／002 移進 EVD-R-007 成為它自己的門檻，參數集降為七項，觸發它的數字現在會出現在 `decisionBasis` 裡。**過程中量出第二個惰性門檻**：`detrainingMinCtlLossPct`（25%）在閒置第 12 天就跨過，而閘門要第 14 天才開，所以它跟 `returnSevereIdleDays`（42）一樣永遠不是決定因素——EVD-R-007 四個門檻有兩個不做事，兩個都留著並在 limitations 講明。**ATL/CTL、TSB、recovery 權重、readiness 懲罰係數、phase multiplier、return ramp 仍未動** |
+| **3** | 收編非 `decide_session` 門檻 | C9／C10：ATL/CTL、TSB、detraining、baseline fallback、staleness、phase multiplier、return ramp 的數字進治理；先處理兩套 detraining 衝突 | 這決定 R1 能不能做。沒有規則與來源，其他 tool 就算補 `decisionBasis` 也無 rule 可 trace | ✅ **已完成（2026-08-09）**：detraining trigger 回到 EVD-R-007；baseline fallback、staleness、ATL/CTL、TSB、semantic training windows、recovery 權重、readiness 懲罰、planning phase multipliers、return ramp、plan-change deload/cap 全收進 `engine-parameters.json`（參數集 1.2.0，EVD-P-003～048）。值未改、決策未動；缺來源仍誠實記成 `internal_composite`／空 `sources`／`limitations`。`assertParametersMatch` 兩向檢查，fingerprint 已更新 |
 | **4** | 擴大 decision trace | R1：視第 2–3 項結果，決定要不要把 `decisionBasis` 補到另外五個 tool | 對外已誠實縮回「只有 `evidra_decide_session` 有」，所以這是能力擴充，不是修誠信缺口 | ✅ 已完成（2026-08-09）：`generate_plan`／`preview_adjust_plan`／`commit_adjust_plan`／`decide_exercise_substitution` 四支都帶，輸出契約與 `schemas/tools/` 同步。`assess_fitness_state` 不帶——它回傳狀態不做決策，沒有規則可指 |
-| **5** | Evidence quality 形狀 | R7／C8：用既有 `*Basis` 類 enum 表示數字站在哪裡，不做 `quality: 0.94` 純量 | 這是 Semantic Fitness Layer 下一個真缺口，但要避開發明權重去影響 confidence | 可設計，實作需小心契約 |
+| **5** | Evidence quality 形狀 | R7／C8：用既有 `*Basis` 類 enum 表示數字站在哪裡，不做 `quality: 0.94` 純量 | 這是 Semantic Fitness Layer 下一個真缺口，但要避開發明權重去影響 confidence | ✅ 已完成（2026-08-09）：health metric 增 `basis` enum，`describeEvidence` 回 `signalBases`，`assertValidEvidence` 拒收 numeric `quality`／`confidence` |
 | **6** | Source maturity | C13：拿 Oura／WHOOP 去識別化真實回應驗 parser；Google Health API v4 決定是否升格正式 connector；C6 對照 AI host／第三方 MCP server 傳入形狀 | 六家 parser 已有，下一步不是再加家數，是確認真實流程裡進來的形狀不會偏 | Oura／WHOOP 需要真實回應；Google API 需使用者決定是否升格 |
 | **7** | 小但硬的技術債 | C1 `maxSampleGapSeconds = 30` 出處或改成 caller 提供；C2 移除 `trainingLoad ?? 分鐘數` 編造負荷 | 這些不擋上架，但會直接影響「不編造」承諾 | 可開工 |
 | **8** | 產品裁決 | A4 tool 改名、A5 理由由引擎寫或交給 Claude、A6 商業分級、A8 local-first vs remote、B2 宣言字句 | 這些不是工程可自行決定；決定後才會改 schema、文案、部署路線 | 等使用者 |
@@ -184,10 +185,9 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 那個撞號只存在於 v0.3.7 以前的 archive 裡。
 
 **下一個最小可完成版本**：v0.4.0 已關閉發布落差；順位 2 與 4 已完成（injury 類別四條規則、
-四支 decision tool 帶 trace），順位 3 已處理 detraining 衝突。接下來先做 **Phase B：
-產品敘事校準**，把對外頁、README 與本 roadmap 的現況講成同一套話；之後再回到工程主線
-補 C9／R4／R7。**順位 3 剩下的是 ATL／CTL、TSB、recovery 權重、readiness 懲罰係數、
-phase multiplier 與 return ramp。**
+四支 decision tool 帶 trace）。Phase C 於 2026-08-09 補完 C9／R4／R7：剩餘裸常數進
+`engine-parameters.json`，`lastReview` 有 180 天 gate，evidence basis 取代 numeric quality。
+接下來先做 **Phase B：產品敘事校準**，把對外頁、README 與本 roadmap 的現況講成同一套話。
 
 ### Phase B — 產品敘事校準（2026-08-09 開工）
 
@@ -213,10 +213,10 @@ phase multiplier 與 return ramp。**
 | ~~**R2**~~ | ✅ **已完成（2026-08-09，庫 1.3.0）**：四處傷病過濾全部入庫並帶 `decisionBasis`——`decideSession` ＝ **EVD-R-009**（2026-08-08）、`generatePlan` 的高衝擊降強度 ＝ **EVD-R-010**、`adaptPlan` 的 `add_injury` ＝ **EVD-R-011**、catalog 的 contraindication 交集 ＝ **EVD-R-012**。現在 `generatePlan` 在尋找 fallback movement 時若被 catalog hard-filter，也會把 EVD-R-012 與被排除候選寫進 plan trace；純 `searchExercises` 仍是查詢，不產生 decisionBasis。四條寫成四條而不是一條，因為**它們的比對方式互不相同**（自由文字 token >3 字元／四個字面 regex／區域 token >=3 字元且 avoid 無長度下限／catalog tag 相等），寫成一條等於宣稱一致性。**入庫查出兩件與宣稱不符的事，都改為誠實記錄而非改行為（使用者決定）**：一，`generatePlan` 的 active injury restrictions **不會移除任何動作**（per-slot 過濾讀的是 `avoidMovements`，restrictions 落在另一個欄位），原本 `reasoning` 卻寫「Active injury constraints applied」；二，substitution 只要呼叫端有傳 avoid list 就無條件印「were hard-filtered out」，**即使一個候選都沒濾掉**（demo 5 正是這種情況：器材過濾先一步移除了那個候選）。兩句話都已改成與實際相符 | 仲裁矩陣把 `injury` 排在最上面，**而排最上面的那一格曾經是空的**（當時：recovery 7、training_goal 1；現在 injury 4） | `packages/decision-engine/src/decideSession.js`、`packages/planning/src/generatePlan.js`、`packages/planning/src/adaptPlan.js`、`packages/knowledge-graph/src/graph.js` |
 | ~~**R1**~~ | ✅ **已完成（2026-08-09，引擎 1.5.0）**：`decisionBasis` 由 `packages/rules/src/basis.js` 的 `buildDecisionBasis` 統一產生，四支 tool 共用同一個形狀（`decide_session` 也改用它，輸出逐欄不變）。**沒有規則開火時欄位照樣回傳、內容為空**——這是這次的重點：缺欄位無法與「這條路徑不檢查」區分。`assess_fitness_state` 不帶，它回傳狀態不做決策 | 對外宣稱已於 2026-08-07 縮回事實，2026-08-09 隨能力擴充改回；server `INSTRUCTIONS` 同步改寫（2042／2048 bytes） | `apps/mcp-server/src/outputSchemas.js` ＋ `schemas/tools/` 四份契約 |
 | ~~**R3**~~ | ✅ **已完成（2026-08-07）**：`evidence` 物件取代單軸 `evidenceLevel`——`studyDesign`（八值，含新增的 `narrative_review`）＋ `recommendationStrength`（`supports_threshold`／`supports_direction_only`／`internal_heuristic`）。EVD-R-007 卡的那個缺口關掉了：它現在直接寫 `narrative_review`，不再四捨五入到 `expert_consensus`。**舊 `evidenceLevel` 由兩軸推導後照常輸出**，當時 8 條規則的值逐字不變，契約不動。**目前全庫沒有任何一條是 `supports_threshold`**——每筆引用的 `doesNotSupport` 都寫著數字不被支持，這件事現在由欄位講，不是由散文講 | `packages/rules/src/models.js`、`session-rules.json` |
-| **R4** | **出處覆核要有觸發點。** `lastReview` 有欄位，但過期不會有人失敗、不會有人提醒 | 2026-08-07 那次覆核**兩個既定入口都不是**（沒有新文獻、沒有 outcome 異常），是人工重讀已有的引用，結果撤回兩項。生命週期缺這第三個入口。**到期天數未定，不得自行決定** | `scripts/review-phase.js` 加一條 gate |
+| ~~**R4**~~ | ✅ **已完成（2026-08-09）**：`session-rules.json` 與 `engine-parameters.json` 都必須帶 `reviewPolicy.maxAgeDays`，目前定為 **180 天**。loader 會檢查 `lastReview` 格式、不得在未來、不得超過最大天數；過期時啟動失敗。180 天是治理 cadence，不是生理學門檻 | 2026-08-07 那次覆核**兩個既定入口都不是**（沒有新文獻、沒有 outcome 異常），是人工重讀已有的引用，結果撤回兩項。生命週期缺這第三個入口 | `packages/rules/src/models.js`、`packages/rules/src/parameters.js` |
 | ~~**R5**~~ | ✅ **已完成（2026-08-07）**：`VERIFICATION_STATUSES` 成為載入期 enum，`sources` 與 `supportingLiterature` 兩邊都強制必填。**強制之後翻出一筆**：EVD-R-002 的 Javaloyes 引用是全庫唯一沒有 status 的，因為 2026-08-07 那次覆核只碰了 R-004／006／007（`git show 0337166 --stat` 可核）——**從來沒有人查證過它**。詞彙加第六格 `unverified`（比 `citation_not_read_in_full` 更弱，後者仍暗示有讀過一點），該規則的 `limitations` 也加一行明講。`describeRule` 改成無條件輸出這個欄位：原本「有才帶出」讓沒查過的引用和沒東西可講的引用長得一模一樣。順帶把「檔案宣告的詞彙 vs 載入器強制的詞彙」也綁成不變量 | `packages/rules/src/models.js` |
 | ~~**R6**~~ | ✅ **已完成（2026-08-07）**：雙軌寫進 [`schemas/README.md`](../schemas/README.md) 的「the vocabulary has two tracks」一節，含為什麼不能併成單一 `enum [Low, Moderate, High]`（三家複合分數不是同一個量；而且 readiness 門檻切在 40／60／85，三格裝不下） | 放在 schemas/README 而非 product-spec：那裡才是**加平台的人真的會讀的地方**，而這件事最容易在加平台時做錯 | — |
-| **R7** | **C8（Evidence Quality）的形狀已定：用既有 `*Basis` 分類事實，不做純量。** 既有模式：`loadSources`／`rpeBasis`／`maxHeartRateIsAgeEstimate`——記「這個數字站在什麼上面」的 enum | `開發計畫` §3.2 的 `quality: 0.94` 是 `internal_composite`，而它會乘進 confidence。**confidence 正是使用者用來判斷「要不要信」的那個數字**，拿發明的權重去調它就是把可信度指標本身變成不可稽核 | 尚未有檔案 |
+| ~~**R7**~~ | ✅ **已完成（2026-08-09）**：health metric 增 `basis` enum（device_measured／vendor_reported／user_reported／computed_from_records／derived_from_synced_source／unstated），`describeEvidence` 彙總 `signalBases`，`assertValidEvidence` 拒收 numeric `quality`／`confidence` | `開發計畫` §3.2 的 `quality: 0.94` 是 `internal_composite`，而它會乘進 confidence。這次只記 footing，不讓發明權重改使用者拿來判斷可信度的 confidence | `packages/evidence/src/model.js`、`schemas/evidence/fitness-evidence.json` |
 
 #### 0.1 明確不採用（**別再重新推導一次**）
 
@@ -297,11 +297,11 @@ sha256 同為 `294acd57b50cad0d0…eeb8`，`review:release` 六條全綠。
 | C1 | `maxSampleGapSeconds = 30` 沒有出處 | `packages/connectors/src/timeInZone.js:106` |
 | C2 | `trainingLoad ?? 分鐘數` 仍在編造負荷值 | `packages/evidence/src/model.js:155` |
 | C6 | 我們的 parser 是照**匯出檔**寫的，沒對照過真實流程裡「Claude 從別家 MCP server 拿到的證據」形狀 | `packages/connectors/src/providers/*/normalize.js` |
-| C8 | Evidence Quality 維度不存在（只有 coverage 與新鮮度，沒有「這個來源多可信」） | 尚未有檔案 |
-| C9 | 🟡 **一半已收編（2026-08-08 起，2026-08-09 更新）**：`DEFAULT_BASELINES`（HRV 52／RHR 57／週負荷 360）與 `SIGNAL_STALENESS_DAYS` 移入 `packages/rules/data/engine-parameters.json`，現為 **EVD-P-003～009 共七項**（參數集 1.1.0），各自帶 `basis`／`sources`（**七項全是 `internal_composite`、全部空陣列**）／`limitations`，由 `assertParametersMatch` 兩向檢查、進 `rule-fingerprint.json`。**原本的 EVD-P-001／002（detraining 14 天／25%）已於 2026-08-09 移出參數集、成為 EVD-R-007 自己的門檻**——它們決定那條規則開不開火，卻被放在規則的下一層且不進 `decisionBasis`；移進去之後呼叫端看到的門檻就是觸發它的門檻（見 C10）。**收編不等於有出處**——搬過去只是讓「沒有出處」變成資料裡的欄位。**仍在庫外、仍是裸常數**：ATL/CTL 時間常數（42／7）、TSB 分帶（5／−10／−30）、recovery 權重與 readiness 懲罰係數、`PHASE_MULTIPLIERS`、`RETURN_RAMP`。**七項參數一樣不進 `decisionBasis`**，呼叫端看不到——R1 已完成但只涵蓋規則，參數仍在外面 | `packages/rules/data/engine-parameters.json`、`packages/training-load/src/trainingLoad.js`、`packages/semantic-engine/src/generateSemanticFitnessState.js`、`packages/planning/src/generatePlan.js` |
+| ~~C8~~ | ✅ **已關閉（2026-08-09，R7）**：Evidence Quality 不做不可稽核純量；health metric 用 `basis` enum，workout 仍用既有 `loadSources`／`rpeBasis` | `packages/evidence/src/model.js`、`schemas/evidence/fitness-evidence.json` |
+| ~~C9~~ | ✅ **已關閉（2026-08-09，parameter set 1.2.0）**：`DEFAULT_BASELINES`、staleness、ATL/CTL 時間常數（42／7）、TSB 分帶（5／−10／−30）、semantic training windows、recovery 權重、readiness 懲罰係數、plan phase multiplier、return ramp、plan-change deload/cap 全收進 `engine-parameters.json`（EVD-P-003～048）。各自帶 `basis`／`sources`／`limitations`，由 `assertParametersMatch` 兩向檢查、進 `rule-fingerprint.json`。**收編不等於有出處**——搬過去只是讓「沒有出處」變成資料裡的欄位。**原本 EVD-P-001／002 已於 C10 移進 EVD-R-007** | `packages/rules/data/engine-parameters.json`、`packages/training-load/src/trainingLoad.js`、`packages/semantic-engine/src/generateSemanticFitnessState.js`、`packages/planning/src/generatePlan.js`、`packages/planning/src/adaptPlan.js` |
 | ~~C10~~ | ✅ **已解（2026-08-09）**：14 天／25% 從 `engine-parameters.json` 的 EVD-P-001／002 移進 EVD-R-007，成為那條規則自己的門檻。分工不再與直覺相反——觸發它的兩個數字現在跟決定降幾級的兩個數字在同一條規則裡，`decisionBasis` 回傳的門檻就是觸發它的門檻。值一個都沒改，harness 37 情境 10 項檢查全過。**但這條留著不刪，因為它查出的東西比原本記的多**：42 天是死的（第 38 天就由另一臂成立）之外，**25% 也是死的**——閒置第 12 天就跨過 25%，而 `&&` 的另一臂要第 14 天才成立，所以 `idle >= 14` 一為真，`loss >= 25` 必然早已為真。2026-08-09 用 `computeTrainingLoad` 量八組訓練史（3～90 堂課、負荷 30～200、間隔 1～3 天）：閒置 11 天一律 23%、12 天一律 25%、14 天最低 27%；代數同意——`(41/42)^14 = 0.714`。**EVD-R-007 四個門檻有兩個永遠不決定任何事**，兩個都保留、都在自己的 limitations 講明，DH-BND 各掛一條書面豁免，每次跑會印 | `packages/rules/data/session-rules.json`、`harness/lib/quantities.js` |
 | ~~C11~~ | ✅ **已關閉（2026-08-07，R5；2026-08-08 補完 `contested`）**：`verificationStatus` 成為載入期 enum，**三個陣列**（`sources`／`supportingLiterature`／`contested`）都強制必填，檔案宣告的詞彙與載入器強制的詞彙也綁成不變量。`contested` 原本刻意豁免並在庫的 readMe 裡記為 known gap，2026-08-08 收掉——**收掉當場抓到兩筆**：Impellizzeri 那筆的第三個子句摘要沒講，Lolli 那筆沒有標題、對不到單一文獻，且本身是 editorial 沒有摘要（所以「兩筆都取自已發表摘要」這句敘述對後者為假）。兩筆都下修，撤回的原文留在各自 `verification` 區塊。**當時未進 v0.3.7 bundle**（commit 晚於發布），**已隨 v0.4.0 出貨** | `packages/rules/src/models.js`、`packages/rules/data/session-rules.json` |
-| C12 | 🟡 **一半已完成（2026-08-08）**：`decide_session` 那處成為 EVD-R-009，`injury` 那格不再是空的。`generatePlan` 與 catalog 兩處仍在庫外 | 見 §0 的 R2 |
+| ~~C12~~ | ✅ **已關閉（2026-08-09，R2）**：`decide_session`＝EVD-R-009、`generatePlan`＝EVD-R-010、`adaptPlan`＝EVD-R-011、catalog＝EVD-R-012，四處傷病／contraindication 決策都已入庫並帶 trace | 見 §0 的 R2 |
 | C13 | **Oura／WHOOP 的 parser 沒對過真實回應。** 欄位路徑與單位來自兩家自己的 OpenAPI（權威），但**沒有任何一份真實 API 回應驗證過**——spec 說得對不等於實際回傳長那樣（真實資料裡的哨兵值、空陣列、部分欄位缺漏，前四家都是在真檔案上才發現的）。這是 C6 的加強版：C6 是「照匯出檔寫、沒對過真實流程」，這裡連匯出檔都沒有 | `packages/connectors/src/providers/oura`、`.../whoop` |
 
 ### 5. 來源覆蓋（Phase 5 剩餘）

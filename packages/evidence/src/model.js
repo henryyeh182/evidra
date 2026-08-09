@@ -23,6 +23,7 @@
  * @property {string} [unit]
  * @property {string} recordedAt   ISO 8601
  * @property {string} [source]     apple_health | garmin | oura | whoop | strava | manual
+ * @property {"device_measured"|"vendor_reported"|"user_reported"|"computed_from_records"|"derived_from_synced_source"|"unstated"} [basis]
  */
 
 /**
@@ -89,6 +90,15 @@ const VENDOR_ASSESSMENT_TYPES = new Set([
   "vendor_acute_load"
 ]);
 
+const EVIDENCE_VALUE_BASIS_SET = new Set([
+  "device_measured",
+  "vendor_reported",
+  "user_reported",
+  "computed_from_records",
+  "derived_from_synced_source",
+  "unstated"
+]);
+
 /**
  * The accepted metric names, exported so a rejection can hand back the list.
  * A caller told only that `sleepDurationHours` is unknown has to guess what is
@@ -97,6 +107,8 @@ const VENDOR_ASSESSMENT_TYPES = new Set([
 export const EVIDENCE_METRIC_TYPES = Object.freeze([...METRIC_TYPES]);
 
 export const EVIDENCE_VENDOR_ASSESSMENT_TYPES = Object.freeze([...VENDOR_ASSESSMENT_TYPES]);
+
+export const EVIDENCE_VALUE_BASES = Object.freeze([...EVIDENCE_VALUE_BASIS_SET]);
 
 export function assertValidEvidence(evidence) {
   if (!evidence || typeof evidence !== "object") {
@@ -108,8 +120,14 @@ export function assertValidEvidence(evidence) {
     }
   }
   for (const metric of evidence.healthMetrics || []) {
+    if (metric.quality !== undefined || metric.confidence !== undefined) {
+      throw new Error("Evidence metric quality/confidence must not be a numeric scalar; use basis instead.");
+    }
     if (!METRIC_TYPES.has(metric.type)) {
       throw new Error(`Unknown evidence metric type: ${metric.type}`);
+    }
+    if (metric.basis !== undefined && !EVIDENCE_VALUE_BASIS_SET.has(metric.basis)) {
+      throw new Error(`Unknown evidence value basis: ${metric.basis}`);
     }
     if (typeof metric.value !== "number" || !metric.recordedAt) {
       throw new Error(`Evidence metric ${metric.type} needs a numeric value and recordedAt.`);
@@ -218,7 +236,9 @@ export function evidenceToUserContext(evidence, options = {}) {
       value: metric.value,
       unit: metric.unit || "",
       recordedAt: metric.recordedAt,
-      source: metric.source || "manual"
+      source: metric.source || "manual",
+      basis: metric.basis || "unstated",
+      ...(metric.metadata ? { metadata: metric.metadata } : {})
     }))
   };
 }
@@ -250,11 +270,21 @@ export function describeEvidence(evidence) {
     latest: dates[dates.length - 1] || null,
     intensityDistributionCount: withDistribution.length,
     ...(boundarySources.length > 0 ? { intensityBoundarySources: boundarySources } : {}),
-    ...(Object.keys(writers).length > 0 ? { signalWriters: writers } : {}),
+    ...(Object.keys(writers).length > 0 ? { signalWriters: writers, signalBases: signalBases(metrics) } : {}),
     // Only when sessions arrived: empty objects on an evidence set with no
     // workouts would read as "asked and found nothing".
     ...(workouts.length > 0 ? { loadSources, rpeBasis } : {})
   };
+}
+
+function signalBases(metrics) {
+  const bases = {};
+  for (const metric of metrics) {
+    const basis = metric.basis || "unstated";
+    if (!bases[metric.type]) bases[metric.type] = {};
+    bases[metric.type][basis] = (bases[metric.type][basis] || 0) + 1;
+  }
+  return bases;
 }
 
 /**

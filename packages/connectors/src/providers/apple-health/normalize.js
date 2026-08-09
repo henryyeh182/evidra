@@ -49,7 +49,7 @@ function pointMetricEvent(record) {
     value: Number(record.value),
     unit: map.unit,
     recordedAt,
-    confidence: 0.9,
+    basis: record.sourceName ? "derived_from_synced_source" : "device_measured",
     metadata: { sourceName: record.sourceName ?? null }
   };
 }
@@ -84,7 +84,7 @@ function dailySumEvents(records) {
         value: Math.round(Math.max(...bySource.values())),
         unit: map.unit,
         recordedAt,
-        confidence: 0.9,
+        basis: "computed_from_records",
         metadata: {
           aggregation: "daily_max_across_sources",
           recorders: [...bySource.keys()].sort()
@@ -126,7 +126,7 @@ function sleepEvents(records) {
     value: Number(entry.hours.toFixed(2)),
     unit: "hours",
     recordedAt: `${night}T07:00:00`,
-    confidence: 0.85,
+    basis: "computed_from_records",
     metadata: { aggregation: "per_night", recorders: [...entry.recorders].sort() }
   }));
 }

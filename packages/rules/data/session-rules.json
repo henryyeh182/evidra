@@ -3,6 +3,10 @@
   "version": "1.4.0",
   "lastReview": "2026-08-09",
   "reviewer": "Henry Yeh",
+  "reviewPolicy": {
+    "maxAgeDays": 180,
+    "basis": "Rule provenance and threshold ownership must be reread at least every 180 days. The interval is a governance cadence, not a physiology claim."
+  },
 
   "readMe": [
     "Every threshold the session decision engine applies lives here, with the",

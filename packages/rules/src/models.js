@@ -89,9 +89,32 @@ const BASES = ["external_metric", "internal_composite"];
 const STATUSES = ["draft", "active", "deprecated"];
 const RULE_ID_PATTERN = /^EVD-R-\d{3}$/;
 const SEMVER_PATTERN = /^\d+\.\d+\.\d+$/;
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function fail(message) {
   throw new Error(`Rule library invariant violated: ${message}`);
+}
+
+function daysBetween(later, earlier) {
+  return Math.floor((Date.UTC(later.getUTCFullYear(), later.getUTCMonth(), later.getUTCDate()) - Date.UTC(earlier.getUTCFullYear(), earlier.getUTCMonth(), earlier.getUTCDate())) / 86400000);
+}
+
+function assertReviewFresh(library, asOf = new Date()) {
+  if (!ISO_DATE_PATTERN.test(library.lastReview || "")) fail(`lastReview "${library.lastReview}" is not YYYY-MM-DD.`);
+  const maxAgeDays = library.reviewPolicy?.maxAgeDays;
+  if (!Number.isInteger(maxAgeDays) || maxAgeDays <= 0) {
+    fail("reviewPolicy.maxAgeDays must be a positive integer; lastReview without a review window is decoration.");
+  }
+
+  const reviewed = new Date(`${library.lastReview}T00:00:00Z`);
+  const ageDays = daysBetween(asOf, reviewed);
+  if (ageDays < 0) fail(`lastReview "${library.lastReview}" is in the future.`);
+  if (ageDays > maxAgeDays) {
+    fail(
+      `lastReview "${library.lastReview}" is ${ageDays} days old, beyond reviewPolicy.maxAgeDays ` +
+        `${maxAgeDays}. Review the rule library before using these thresholds.`
+    );
+  }
 }
 
 /**
@@ -395,6 +418,7 @@ function assertVocabulariesMatch(library) {
 
 export function assertValidRuleLibrary(library) {
   if (!SEMVER_PATTERN.test(library.version ?? "")) fail(`library version "${library.version}" is not semver.`);
+  assertReviewFresh(library);
   if (!Array.isArray(library.rules) || library.rules.length === 0) fail("library has no rules.");
 
   assertVocabulariesMatch(library);

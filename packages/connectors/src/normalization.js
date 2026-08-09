@@ -43,7 +43,7 @@ export function normalizedHealthMetricToHealthMetric(event) {
     recordedAt: event.recordedAt,
     source: event.source,
     sourceRecordId: event.sourceRecordId,
-    confidence: event.confidence,
+    basis: event.basis || event.metadata?.basis || "unstated",
     ...(event.metadata ? { metadata: event.metadata } : {})
   };
 }

@@ -3,13 +3,20 @@
 
 import { assertValidPlan, assertValidChangeRequest } from "./models.js";
 import { createHash } from "node:crypto";
-import { THRESHOLDS, ENGINE_THRESHOLD_KEYS, buildDecisionBasis } from "../../rules/src/index.js";
+import { THRESHOLDS, ENGINE_THRESHOLD_KEYS, buildDecisionBasis, PARAMETERS, assertParametersMatch } from "../../rules/src/index.js";
 import { ENGINE_VERSION } from "../../decision-engine/src/version.js";
 
 // This applier's own thresholds, narrowed to the keys it declared.
 const RULES = Object.freeze(
   Object.fromEntries(ENGINE_THRESHOLD_KEYS.planChange.map((key) => [key, THRESHOLDS[key]]))
 );
+
+const PARAMETER_KEYS = [
+  "planChangeLongSessionAvailabilityFactor",
+  "planChangeMinSessionMinutes",
+  "planChangeDeloadFactor"
+];
+assertParametersMatch("packages/planning/src/adaptPlan.js", PARAMETER_KEYS);
 
 function clonePlan(plan) {
   return structuredClone(plan);
@@ -65,14 +72,14 @@ function matchesRegion(text, bodyRegion) {
 
 function applyReduceAvailability(plan, changeRequest, diff) {
   const weekdayCap = changeRequest.weekdayAvailableMinutes;
-  const longCap = Math.round(weekdayCap * 1.6);
+  const longCap = Math.round(weekdayCap * PARAMETERS.planChangeLongSessionAvailabilityFactor);
   plan.constraints.weekdayAvailableMinutes = weekdayCap;
   plan.constraints.longSessionMinutes = longCap;
 
   for (const week of selectWeeks(plan, changeRequest.weekIndexes)) {
     for (const session of week.sessions) {
       const cap = /long/i.test(session.focus) ? longCap : weekdayCap;
-      const next = Math.max(15, Math.min(session.durationMinutes, cap));
+      const next = Math.max(PARAMETERS.planChangeMinSessionMinutes, Math.min(session.durationMinutes, cap));
       if (next !== session.durationMinutes) {
         diff.push({
           weekIndex: week.weekIndex,
@@ -152,12 +159,12 @@ function applyDeloadWeek(plan, changeRequest, diff) {
     throw new Error(`Week ${changeRequest.weekIndex} does not exist in this plan.`);
   }
 
-  const factor = 0.6;
+  const factor = PARAMETERS.planChangeDeloadFactor;
   week.phase = "deload";
   week.loadMultiplier = Number((week.loadMultiplier * factor).toFixed(2));
 
   for (const session of week.sessions) {
-    const next = Math.max(15, Math.round(session.durationMinutes * factor));
+    const next = Math.max(PARAMETERS.planChangeMinSessionMinutes, Math.round(session.durationMinutes * factor));
     if (next !== session.durationMinutes) {
       diff.push({
         weekIndex: week.weekIndex,

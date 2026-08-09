@@ -21,14 +21,12 @@ import { getRule, getCategoryRank, getRuleLibrary } from "./library.js";
  * athlete needs to read. Combination separately resolves the effects.
  */
 export function arbitrate(triggeredRuleIds) {
-  const ordered = [...new Set(triggeredRuleIds)]
+  const entries = [...new Set(triggeredRuleIds)]
     .map((ruleId) => {
       const rule = getRule(ruleId);
       return { ruleId, rank: getCategoryRank(rule.category), priority: rule.priority, category: rule.category };
     })
-    .sort(
-      (a, b) => a.rank - b.rank || b.priority - a.priority || a.ruleId.localeCompare(b.ruleId)
-    );
+  const ordered = orderByPriorityMatrix(entries);
 
   return {
     governing: ordered[0] ?? null,
@@ -36,6 +34,15 @@ export function arbitrate(triggeredRuleIds) {
     // Named so a caller can show "we also saw these, and they lost".
     overruled: ordered.slice(1)
   };
+}
+
+export function orderByPriorityMatrix(entries) {
+  return entries
+    .map((entry) => ({
+      ...entry,
+      rank: entry.rank ?? getCategoryRank(entry.category)
+    }))
+    .sort((a, b) => a.rank - b.rank || b.priority - a.priority || a.ruleId.localeCompare(b.ruleId));
 }
 
 /**

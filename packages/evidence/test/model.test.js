@@ -8,7 +8,8 @@ import {
   assertValidEvidence,
   evidenceToUserContext,
   describeEvidence,
-  EVIDENCE_VENDOR_ASSESSMENT_TYPES
+  EVIDENCE_VENDOR_ASSESSMENT_TYPES,
+  EVIDENCE_VALUE_BASES
 } from "../src/index.js";
 
 const evidence = {
@@ -111,6 +112,69 @@ test("a metric without a value or timestamp is rejected", () => {
     () => assertValidEvidence({ healthMetrics: [{ type: "hrv_ms", value: "low", recordedAt: "2026-07-27" }] }),
     /numeric value/
   );
+});
+
+test("evidence basis is an enum, not an unauditable scalar", () => {
+  assert.deepEqual(
+    [...EVIDENCE_VALUE_BASES],
+    [
+      "device_measured",
+      "vendor_reported",
+      "user_reported",
+      "computed_from_records",
+      "derived_from_synced_source",
+      "unstated"
+    ]
+  );
+  assert.doesNotThrow(() =>
+    assertValidEvidence({
+      healthMetrics: [
+        {
+          type: "hrv_ms",
+          value: 42,
+          recordedAt: "2026-08-06T06:00:00Z",
+          basis: "device_measured"
+        }
+      ]
+    })
+  );
+});
+
+test("numeric evidence quality or confidence is rejected", () => {
+  assert.throws(
+    () =>
+      assertValidEvidence({
+        healthMetrics: [{ type: "hrv_ms", value: 42, recordedAt: "2026-08-06T06:00:00Z", quality: 0.94 }]
+      }),
+    /quality\/confidence.*basis/i
+  );
+  assert.throws(
+    () =>
+      assertValidEvidence({
+        healthMetrics: [{ type: "hrv_ms", value: 42, recordedAt: "2026-08-06T06:00:00Z", confidence: 0.9 }]
+      }),
+    /quality\/confidence.*basis/i
+  );
+});
+
+test("evidence basis travels into context and provenance", () => {
+  const input = {
+    healthMetrics: [
+      {
+        type: "sleep_duration_hours",
+        value: 7.5,
+        recordedAt: "2026-08-06T06:00:00Z",
+        source: "apple_health",
+        basis: "computed_from_records"
+      }
+    ]
+  };
+
+  const context = evidenceToUserContext(input);
+  const summary = describeEvidence(input);
+
+  assert.equal(context.healthMetrics[0].basis, "computed_from_records");
+  assert.deepEqual(summary.signalBases.sleep_duration_hours, { computed_from_records: 1 });
 });
 
 test("describeEvidence reports what actually arrived", () => {

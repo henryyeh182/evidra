@@ -19,17 +19,27 @@
  * no state. The resulting curve is returned so the caller can remember it.
  */
 
-import { THRESHOLDS } from "../../rules/src/index.js";
+import { THRESHOLDS, PARAMETERS, assertParametersMatch } from "../../rules/src/index.js";
 
-const CTL_DAYS = 42;
-const ATL_DAYS = 7;
+const PARAMETER_KEYS = [
+  "ctlTimeConstantDays",
+  "atlTimeConstantDays",
+  "tsbFreshMin",
+  "tsbNeutralMin",
+  "tsbProductiveMin",
+  "ctlHistorySufficientFactor"
+];
+assertParametersMatch("packages/training-load/src/trainingLoad.js", PARAMETER_KEYS);
+
+const CTL_DAYS = PARAMETERS.ctlTimeConstantDays;
+const ATL_DAYS = PARAMETERS.atlTimeConstantDays;
 
 /** Ramp-rate guidance. ACWR outside ~0.8–1.3 is where injury risk climbs. */
 export const LOAD_ZONES = {
-  fresh: { maxTsb: Infinity, minTsb: 5, label: "fresh", note: "Well recovered; can carry high intensity." },
-  neutral: { maxTsb: 5, minTsb: -10, label: "neutral", note: "Load and recovery are in balance." },
-  productive: { maxTsb: -10, minTsb: -30, label: "productive", note: "Productive training stress; watch recovery." },
-  overreaching: { maxTsb: -30, minTsb: -Infinity, label: "overreaching", note: "Overloaded; back the volume off." }
+  fresh: { maxTsb: Infinity, minTsb: PARAMETERS.tsbFreshMin, label: "fresh", note: "Well recovered; can carry high intensity." },
+  neutral: { maxTsb: PARAMETERS.tsbFreshMin, minTsb: PARAMETERS.tsbNeutralMin, label: "neutral", note: "Load and recovery are in balance." },
+  productive: { maxTsb: PARAMETERS.tsbNeutralMin, minTsb: PARAMETERS.tsbProductiveMin, label: "productive", note: "Productive training stress; watch recovery." },
+  overreaching: { maxTsb: PARAMETERS.tsbProductiveMin, minTsb: -Infinity, label: "overreaching", note: "Overloaded; back the volume off." }
 };
 
 // Both numbers belong to EVD-R-007 and are read from the rule library, not from
@@ -183,7 +193,7 @@ export function computeTrainingLoad(workouts = [], options = {}) {
   const coveredDays = observed.filter((day) => day > addDays(asOf, -CTL_DAYS) && day <= asOf).length;
   const historyDays = earliest ? Math.min(CTL_DAYS, Math.round((new Date(`${asOf}T00:00:00Z`) - new Date(`${earliest}T00:00:00Z`)) / 86400000)) : 0;
 
-  const sufficient = historyDays >= CTL_DAYS * 0.5;
+  const sufficient = historyDays >= CTL_DAYS * PARAMETERS.ctlHistorySufficientFactor;
 
   return {
     asOf,

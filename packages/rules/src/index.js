@@ -10,7 +10,7 @@ export {
   describeRule
 } from "./library.js";
 
-export { arbitrate, combineIntensitySteps, getPolicies, describePolicies } from "./arbitrate.js";
+export { arbitrate, orderByPriorityMatrix, combineIntensitySteps, getPolicies, describePolicies } from "./arbitrate.js";
 
 export { buildDecisionBasis } from "./basis.js";
 

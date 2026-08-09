@@ -9,6 +9,7 @@ import {
   getRule,
   describeRule,
   arbitrate,
+  orderByPriorityMatrix,
   combineIntensitySteps,
   THRESHOLDS,
   assertValidRuleLibrary,
@@ -17,14 +18,38 @@ import {
   EVIDENCE_LEVELS,
   STUDY_DESIGNS,
   RECOMMENDATION_STRENGTHS,
-  VERIFICATION_STATUSES
+  VERIFICATION_STATUSES,
+  getParameterSet,
+  assertValidParameterSet
 } from "../src/index.js";
 
 const library = getRuleLibrary();
+const parameterSet = getParameterSet();
 const clone = () => JSON.parse(JSON.stringify(library));
+const cloneParameters = () => JSON.parse(JSON.stringify(parameterSet));
 
 test("the shipped library satisfies its own invariants", () => {
   assert.doesNotThrow(() => assertValidRuleLibrary(clone()));
+});
+
+test("the shipped parameter set satisfies its own invariants", () => {
+  assert.doesNotThrow(() => assertValidParameterSet(cloneParameters()));
+});
+
+test("the library has an explicit review window, so lastReview is a gate", () => {
+  assert.equal(library.reviewPolicy.maxAgeDays, 180);
+
+  const tampered = clone();
+  delete tampered.reviewPolicy;
+  assert.throws(() => assertValidRuleLibrary(tampered), /lastReview without a review window/i);
+});
+
+test("the parameter set has an explicit review window, so lastReview is a gate", () => {
+  assert.equal(parameterSet.reviewPolicy.maxAgeDays, 180);
+
+  const tampered = cloneParameters();
+  delete tampered.reviewPolicy;
+  assert.throws(() => assertValidParameterSet(tampered), /lastReview without a review window/i);
 });
 
 // The invariant this library exists for. A citation attached to a threshold on
@@ -135,6 +160,47 @@ test("narrative_review collapses to expert_consensus and nothing else does", () 
       deriveEvidenceLevel({ studyDesign: design, recommendationStrength: "supports_direction_only" }) !== design
   );
   assert.deepEqual(lossy, ["narrative_review"], "a second lossy collapse appeared without anyone deciding to add one");
+});
+
+test("priority matrix orders conflicting categories before rule priority", () => {
+  const entries = [
+    { ruleId: "PREF-100", category: "preference", priority: 100 },
+    { ruleId: "GOAL-100", category: "training_goal", priority: 100 },
+    { ruleId: "REC-100", category: "recovery", priority: 100 },
+    { ruleId: "ILL-001", category: "illness", priority: 1 },
+    { ruleId: "INJ-001", category: "injury", priority: 1 }
+  ];
+
+  assert.deepEqual(
+    orderByPriorityMatrix(entries).map((entry) => entry.category),
+    ["injury", "illness", "recovery", "training_goal", "preference"]
+  );
+});
+
+test("priority matrix keeps injury above illness above recovery in a mixed conflict", () => {
+  const ordered = orderByPriorityMatrix([
+    { ruleId: "REC-090", category: "recovery", priority: 90 },
+    { ruleId: "INJ-010", category: "injury", priority: 10 },
+    { ruleId: "ILL-050", category: "illness", priority: 50 }
+  ]);
+
+  assert.deepEqual(
+    ordered.map((entry) => entry.ruleId),
+    ["INJ-010", "ILL-050", "REC-090"]
+  );
+});
+
+test("priority matrix keeps recovery above training goal above preference in a mixed conflict", () => {
+  const ordered = orderByPriorityMatrix([
+    { ruleId: "PREF-100", category: "preference", priority: 100 },
+    { ruleId: "REC-001", category: "recovery", priority: 1 },
+    { ruleId: "GOAL-050", category: "training_goal", priority: 50 }
+  ]);
+
+  assert.deepEqual(
+    ordered.map((entry) => entry.ruleId),
+    ["REC-001", "GOAL-050", "PREF-100"]
+  );
 });
 
 // R5. The vocabulary was written into readMe on 2026-08-07 and enforced by

@@ -4,7 +4,7 @@
 import { assertValidUserContext } from "../../domain/src/models.js";
 import { todayInTimezone } from "../../domain/src/dates.js";
 import { computeTrainingLoad } from "../../training-load/src/trainingLoad.js";
-import { THRESHOLDS, ENGINE_THRESHOLD_KEYS, buildDecisionBasis } from "../../rules/src/index.js";
+import { THRESHOLDS, ENGINE_THRESHOLD_KEYS, buildDecisionBasis, PARAMETERS, assertParametersMatch } from "../../rules/src/index.js";
 import { ENGINE_VERSION } from "../../decision-engine/src/version.js";
 
 // This generator's own thresholds, narrowed to the keys it declared. Same join
@@ -15,14 +15,26 @@ const RULES = Object.freeze(
   Object.fromEntries(ENGINE_THRESHOLD_KEYS.plan.map((key) => [key, THRESHOLDS[key]]))
 );
 
+const PARAMETER_KEYS = [
+  "defaultWeekdayAvailableMinutes",
+  "longSessionAvailabilityFactor",
+  "minPlannedSessionMinutes",
+  "phaseMultiplierBase",
+  "phaseMultiplierBuild",
+  "phaseMultiplierPeak",
+  "phaseMultiplierDeload",
+  "returnRampMultipliers"
+];
+assertParametersMatch("packages/planning/src/generatePlan.js", PARAMETER_KEYS);
+
 const UNIVERSAL_EQUIPMENT = new Set(["none", "bodyweight", "outdoor"]);
 
 const WEEK_PHASES = ["base", "build", "peak", "deload"];
 const PHASE_MULTIPLIERS = {
-  base: 1,
-  build: 1.1,
-  peak: 1.2,
-  deload: 0.65
+  base: PARAMETERS.phaseMultiplierBase,
+  build: PARAMETERS.phaseMultiplierBuild,
+  peak: PARAMETERS.phaseMultiplierPeak,
+  deload: PARAMETERS.phaseMultiplierDeload
 };
 
 // Load ratios for the first weeks back after a break. A "base" week is base
@@ -32,7 +44,7 @@ const PHASE_MULTIPLIERS = {
 // volume alone would still put a detrained athlete in a tempo session in week
 // one. Same return-to-training convention the session engine applies to a
 // single day, expressed across weeks.
-const RETURN_RAMP = [0.6, 0.75, 0.9];
+const RETURN_RAMP = PARAMETERS.returnRampMultipliers;
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -118,7 +130,8 @@ function deriveConstraints(context) {
   const schedulePref = context.preferences.find(
     (item) => item.category === "schedule" && item.key === "weekday_available_minutes"
   );
-  const weekdayAvailableMinutes = typeof schedulePref?.value === "number" ? schedulePref.value : 30;
+  const weekdayAvailableMinutes =
+    typeof schedulePref?.value === "number" ? schedulePref.value : PARAMETERS.defaultWeekdayAvailableMinutes;
 
   const avoidMovements = context.preferences
     .filter((item) => item.category === "avoid")
@@ -135,7 +148,7 @@ function deriveConstraints(context) {
 
   return {
     weekdayAvailableMinutes,
-    longSessionMinutes: Math.round(weekdayAvailableMinutes * 1.6),
+    longSessionMinutes: Math.round(weekdayAvailableMinutes * PARAMETERS.longSessionAvailabilityFactor),
     availableEquipment,
     restrictions,
     avoidMovements
@@ -256,7 +269,7 @@ function applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor,
 function buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier, displayNameFor, findGoalAlternative, trace) {
   const resolved = applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor, findGoalAlternative, trace);
   const targetMinutes = Math.round(slot.baseMinutes * multiplier);
-  const durationMinutes = Math.max(15, Math.min(targetMinutes, resolved.cap));
+  const durationMinutes = Math.max(PARAMETERS.minPlannedSessionMinutes, Math.min(targetMinutes, resolved.cap));
   const date = addDays(weekStartDate, slot.dayOffset);
 
   const notes = [...resolved.notes];

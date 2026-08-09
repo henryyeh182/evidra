@@ -22,7 +22,29 @@ const PARAMETER_KEYS = [
   "stalenessSleepDays",
   "stalenessAutonomicDays",
   "stalenessRestingHrDays",
-  "stalenessVendorCompositeDays"
+  "stalenessVendorCompositeDays",
+  "acuteTrainingWindowDays",
+  "chronicTrainingWindowDays",
+  "semanticHistorySufficientFactor",
+  "muscleFatigueWindowDays",
+  "muscleFatigueDecayFloor",
+  "muscleFatigueDecayDays",
+  "sleepReferenceHours",
+  "sleepDurationWeight",
+  "sleepQualityWeight",
+  "recoverySleepWeight",
+  "recoveryHrvWeight",
+  "recoveryRestingHrWeight",
+  "recoveryStressWeight",
+  "vendorReadinessWeight",
+  "bodyBatteryWeight",
+  "recoveryTimeWeight",
+  "recoveryTimeFullyDepletedMinutes",
+  "stressScoreMax",
+  "restingHrPenaltyPerBeat",
+  "acwrPenaltyStart",
+  "acwrPenaltyWeight",
+  "muscleFatiguePenaltyWeight"
 ];
 assertParametersMatch("packages/semantic-engine/src/generateSemanticFitnessState.js", PARAMETER_KEYS);
 
@@ -113,10 +135,10 @@ function workoutsWithinDays(workouts, anchorDate, days) {
 // The chronic half of the acute:chronic ratio looks back this far. Named rather
 // than inlined because the coverage caveat below is derived from it, so the two
 // cannot drift apart.
-const CHRONIC_WINDOW_DAYS = 28;
+const CHRONIC_WINDOW_DAYS = PARAMETERS.chronicTrainingWindowDays;
 
 function calculateTrainingLoad(workouts, anchorDate, baselines = DEFAULT_BASELINES) {
-  const recent7d = workoutsWithinDays(workouts, anchorDate, 7);
+  const recent7d = workoutsWithinDays(workouts, anchorDate, PARAMETERS.acuteTrainingWindowDays);
   const recent28d = workoutsWithinDays(workouts, anchorDate, CHRONIC_WINDOW_DAYS);
   // A session without a load adds nothing to the sum — it cannot, nobody
   // measured it. The gap is reported through `signalCoverage.training` rather
@@ -144,7 +166,7 @@ function calculateTrainingLoad(workouts, anchorDate, baselines = DEFAULT_BASELIN
   const historyDays = oldest
     ? Math.min(CHRONIC_WINDOW_DAYS, Math.round(daysBetween(anchorDate, oldest)))
     : 0;
-  const sufficientHistory = historyDays >= CHRONIC_WINDOW_DAYS * 0.5;
+  const sufficientHistory = historyDays >= CHRONIC_WINDOW_DAYS * PARAMETERS.semanticHistorySufficientFactor;
 
   // When observed load loses to the baseline floor, the ratio is no longer this
   // person's acute load against their own chronic load — it is their acute load
@@ -182,12 +204,12 @@ function calculateTrainingLoad(workouts, anchorDate, baselines = DEFAULT_BASELIN
 // RPE is still collected as evidence; it is simply not a term in this sum.
 function calculateMuscleFatigue(workouts, anchorDate) {
   const fatigue = {};
-  const window = workoutsWithinDays(workouts, anchorDate, 7);
+  const window = workoutsWithinDays(workouts, anchorDate, PARAMETERS.muscleFatigueWindowDays);
   let skipped = 0;
 
   for (const workout of window) {
     const ageDays = daysBetween(anchorDate, new Date(workout.startedAt));
-    const decay = Math.max(0.15, 1 - ageDays / 5);
+    const decay = Math.max(PARAMETERS.muscleFatigueDecayFloor, 1 - ageDays / PARAMETERS.muscleFatigueDecayDays);
     // No load, no fatigue contribution. Skipped rather than counted as zero:
     // zero is a claim that the session cost nothing, and nobody said that.
     if (typeof workout.trainingLoad !== "number") {
@@ -241,8 +263,8 @@ function calculateSleepScore(metrics, anchorDate) {
   }
 
   const parts = [];
-  if (duration !== undefined) parts.push({ score: clamp((duration / 8) * 100), weight: 0.45 });
-  if (quality !== undefined) parts.push({ score: clamp(quality), weight: 0.55 });
+  if (duration !== undefined) parts.push({ score: clamp((duration / PARAMETERS.sleepReferenceHours) * 100), weight: PARAMETERS.sleepDurationWeight });
+  if (quality !== undefined) parts.push({ score: clamp(quality), weight: PARAMETERS.sleepQualityWeight });
   const totalWeight = parts.reduce((sum, part) => sum + part.weight, 0);
   const score = clamp(parts.reduce((sum, part) => sum + part.score * part.weight, 0) / totalWeight);
 
@@ -277,36 +299,36 @@ function calculateRecoveryScore(metrics, anchorDate, baselines = DEFAULT_BASELIN
 
   if (sleep.present) {
     signals.sleep = sleep.score;
-    parts.push({ name: "sleep", score: sleep.score, weight: 0.35 });
+    parts.push({ name: "sleep", score: sleep.score, weight: PARAMETERS.recoverySleepWeight });
   }
   if (hrv !== undefined) {
     signals.hrv = clamp((hrv / baselines.hrvMs) * 100);
-    parts.push({ name: "hrv", score: signals.hrv, weight: 0.35 });
+    parts.push({ name: "hrv", score: signals.hrv, weight: PARAMETERS.recoveryHrvWeight });
   }
   if (restingHr !== undefined) {
-    signals.restingHeartRate = clamp(100 - Math.max(0, restingHr - baselines.restingHrBpm) * 5);
-    parts.push({ name: "restingHeartRate", score: signals.restingHeartRate, weight: 0.2 });
+    signals.restingHeartRate = clamp(100 - Math.max(0, restingHr - baselines.restingHrBpm) * PARAMETERS.restingHrPenaltyPerBeat);
+    parts.push({ name: "restingHeartRate", score: signals.restingHeartRate, weight: PARAMETERS.recoveryRestingHrWeight });
   }
   if (stress !== undefined) {
-    signals.stress = clamp(100 - stress);
-    parts.push({ name: "stress", score: signals.stress, weight: 0.1 });
+    signals.stress = clamp(PARAMETERS.stressScoreMax - stress);
+    parts.push({ name: "stress", score: signals.stress, weight: PARAMETERS.recoveryStressWeight });
   }
 
   // A vendor's own composite is weighted above our raw signals: it was computed
   // with the device on the wrist and integrates inputs we never receive.
   if (vendorReadiness !== undefined) {
     signals.vendorReadiness = clamp(vendorReadiness);
-    parts.push({ name: "vendorReadiness", score: signals.vendorReadiness, weight: 0.4 });
+    parts.push({ name: "vendorReadiness", score: signals.vendorReadiness, weight: PARAMETERS.vendorReadinessWeight });
   }
   if (bodyBattery !== undefined) {
     signals.bodyBattery = clamp(bodyBattery);
-    parts.push({ name: "bodyBattery", score: signals.bodyBattery, weight: 0.3 });
+    parts.push({ name: "bodyBattery", score: signals.bodyBattery, weight: PARAMETERS.bodyBatteryWeight });
   }
   if (recoveryMinutes !== undefined) {
     // Hours the vendor says are still owed. 24h+ outstanding reads as fully
     // depleted; zero as fully recovered.
-    signals.recoveryTime = clamp(100 - Math.min(100, (recoveryMinutes / 1440) * 100));
-    parts.push({ name: "recoveryTime", score: signals.recoveryTime, weight: 0.25 });
+    signals.recoveryTime = clamp(100 - Math.min(100, (recoveryMinutes / PARAMETERS.recoveryTimeFullyDepletedMinutes) * 100));
+    parts.push({ name: "recoveryTime", score: signals.recoveryTime, weight: PARAMETERS.recoveryTimeWeight });
   }
 
   const usable = parts.map((part) => part.name);
@@ -337,9 +359,11 @@ function calculateReadinessScore(recoveryScore, trainingLoad, muscleFatigue) {
   // is nothing to apply them to, and a number derived from nothing would be
   // indistinguishable from a measured one.
   if (recoveryScore === null) return null;
-  const workloadPenalty = Math.max(0, trainingLoad.acuteChronicWorkloadRatio - 1.2) * 22;
+  const workloadPenalty =
+    Math.max(0, trainingLoad.acuteChronicWorkloadRatio - PARAMETERS.acwrPenaltyStart) *
+    PARAMETERS.acwrPenaltyWeight;
   const maxMuscleFatigue = Math.max(0, ...Object.values(muscleFatigue));
-  const fatiguePenalty = maxMuscleFatigue * 0.22;
+  const fatiguePenalty = maxMuscleFatigue * PARAMETERS.muscleFatiguePenaltyWeight;
 
   return clamp(recoveryScore - workloadPenalty - fatiguePenalty);
 }

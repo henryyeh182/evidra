@@ -220,7 +220,8 @@ source schema 與匯出形狀 scenario **四家齊備**（Garmin／Google Health
 `evidra_decide_exercise_substitution` 也帶這個欄位，各自對應 EVD-R-010／011／012；
 沒有規則開火時欄位照樣回傳、內容為空，這樣呼叫端才分得出「沒有規則適用」與「這條路徑不檢查」。
 **那三條規則各自的 `limitations` 寫明它們不做什麼**——例如計畫產生器的傷病限制
-不會從課表移除任何動作。其餘的門檻（ATL／CTL、TSB、phase multiplier 等）仍在庫外（技術債 C9）。
+不會從課表移除任何動作。ATL／CTL、TSB、recovery 權重、readiness 懲罰係數、
+phase multiplier 與 return ramp 也已收進 `engine-parameters.json`；值未改，缺來源的狀態改成資料可稽核。
 **但它還沒有經過長期真實訓練週期的驗證。**
 
 **證據由呼叫端提供。** Evidra 不會代替使用者連上 Apple Health、Garmin、Strava

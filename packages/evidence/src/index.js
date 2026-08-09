@@ -6,7 +6,8 @@ export {
   evidenceToUserContext,
   describeEvidence,
   EVIDENCE_METRIC_TYPES,
-  EVIDENCE_VENDOR_ASSESSMENT_TYPES
+  EVIDENCE_VENDOR_ASSESSMENT_TYPES,
+  EVIDENCE_VALUE_BASES
 } from "./model.js";
 export {
   CANONICAL_SIGNALS,

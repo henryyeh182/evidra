@@ -25,6 +25,7 @@ const BASES = ["external_metric", "internal_composite"];
 const STATUSES = ["draft", "active", "deprecated"];
 const PARAMETER_ID_PATTERN = /^EVD-P-\d{3}$/;
 const SEMVER_PATTERN = /^\d+\.\d+\.\d+$/;
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function fail(message) {
   throw new Error(`Engine parameter set invariant violated: ${message}`);
@@ -36,6 +37,36 @@ function deepFreeze(value) {
     for (const key of Object.keys(value)) deepFreeze(value[key]);
   }
   return value;
+}
+
+function daysBetween(later, earlier) {
+  return Math.floor((Date.UTC(later.getUTCFullYear(), later.getUTCMonth(), later.getUTCDate()) - Date.UTC(earlier.getUTCFullYear(), earlier.getUTCMonth(), earlier.getUTCDate())) / 86400000);
+}
+
+function assertReviewFresh(set, asOf = new Date()) {
+  if (!ISO_DATE_PATTERN.test(set.lastReview || "")) fail(`lastReview "${set.lastReview}" is not YYYY-MM-DD.`);
+  const maxAgeDays = set.reviewPolicy?.maxAgeDays;
+  if (!Number.isInteger(maxAgeDays) || maxAgeDays <= 0) {
+    fail("reviewPolicy.maxAgeDays must be a positive integer; lastReview without a review window is decoration.");
+  }
+
+  const reviewed = new Date(`${set.lastReview}T00:00:00Z`);
+  const ageDays = daysBetween(asOf, reviewed);
+  if (ageDays < 0) fail(`lastReview "${set.lastReview}" is in the future.`);
+  if (ageDays > maxAgeDays) {
+    fail(
+      `lastReview "${set.lastReview}" is ${ageDays} days old, beyond reviewPolicy.maxAgeDays ` +
+        `${maxAgeDays}. Review the parameter set before using these governed numbers.`
+    );
+  }
+}
+
+function isNumericValue(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isNumericArray(value) {
+  return Array.isArray(value) && value.length > 0 && value.every(isNumericValue);
 }
 
 /**
@@ -50,6 +81,7 @@ function deepFreeze(value) {
 export function assertValidParameterSet(set) {
   if (!set || typeof set !== "object") fail("the set is not an object.");
   if (!SEMVER_PATTERN.test(set.version || "")) fail(`version "${set.version}" is not semver.`);
+  assertReviewFresh(set);
   if (!Array.isArray(set.parameters) || set.parameters.length === 0) {
     fail("the set declares no parameters.");
   }
@@ -78,7 +110,7 @@ export function assertValidParameterSet(set) {
     if (!STATUSES.includes(parameter.status)) fail(`${where} has status "${parameter.status}".`);
     if (!BASES.includes(parameter.basis)) fail(`${where} has basis "${parameter.basis}".`);
     if (!groupIds.has(parameter.group)) fail(`${where} names undeclared group "${parameter.group}".`);
-    if (typeof parameter.value !== "number" || !Number.isFinite(parameter.value)) {
+    if (!isNumericValue(parameter.value) && !isNumericArray(parameter.value)) {
       fail(`${where} has a non-numeric value.`);
     }
     if (typeof parameter.unit !== "string" || parameter.unit.length === 0) {
