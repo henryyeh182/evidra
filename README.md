@@ -13,7 +13,7 @@ It runs on your own machine, and it does not retain your evidence.
 
 ## Where this is
 
-The current release is v0.3.7. v0.1.0 was the first public release.
+The current release is v0.4.0. v0.1.0 was the first public release.
 
 The decision logic is covered by a deterministic test and evaluation suite:
 under the same version of Evidra, the same evidence produces the same decision,
@@ -197,9 +197,10 @@ and a plain statement that our cut point is not the one in the paper.
 Body Battery, Oura Readiness and Whoop Recovery are used as they stand, never
 recomputed, and weigh more than any raw reading.
 
-In v0.3.7 the field carrying them is not yet named in the tool schema, so your
-assistant may send the raw signals instead. The decision is the same either way;
-the confidence differs. The next release names the field.
+v0.4.0 names that field in the tool schema, so an assistant can send a vendor
+score as the vendor's own figure rather than falling back to the raw signals.
+Sent that way it counts for more, and the confidence reported alongside the
+decision reflects it.
 
 **4 · Asking to go harder**
 
@@ -216,10 +217,13 @@ Garmin, Google Health and Strava readers were built from actual export files.
 
 **5 · Training around an injury**
 
-> My knee's been bothering me. What can I do instead of squats today? I've only
-> got dumbbells and bodyweight.
+> My knee's been bothering me. What can I do instead of squats today? I've got a
+> barbell, a squat rack and dumbbells.
 
-Contraindicated movements are filtered out, not ranked down. A model can be
+Contraindicated movements are filtered out, not ranked down, and the reply names
+the ones that were removed. The equipment matters to the example: with only
+dumbbells to hand, the alternatives carrying a knee contraindication are already
+gone for want of a barbell, and the filter has nothing left to do. A model can be
 talked past a safety rule; a filter cannot.
 
 Figures are not quoted here — what comes back depends on your evidence.
