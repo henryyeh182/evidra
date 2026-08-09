@@ -163,6 +163,32 @@ test("demo 5: a contraindicated movement is filtered out, not ranked down", asyn
   assert.ok(!result.action.to.contraindications?.includes("knee"));
 });
 
+test("demo 6: a flat recovery day takes the session away rather than easing it", async () => {
+  const result = await call("evidra_decide_session", {
+    date: ANCHOR,
+    scheduledSession: { ...SESSION, focus: "VO₂max Intervals" },
+    evidence: await loadSample("evidence-whoop-flat.json")
+  });
+
+  // `defer` is the type the other five demos never reach, and the one that
+  // separates this engine from something that only nudges: five fields of the
+  // session change, including the movements.
+  assert.equal(result.decision.type, "defer");
+  assert.equal(result.decision.intent, "swap_to_recovery");
+  assert.equal(result.decisionBasis.governingRule.ruleId, "EVD-R-001");
+  assert.equal(result.action.to.durationMinutes, 30);
+  assert.equal(result.action.to.intensity, "low");
+  assert.deepEqual(
+    [...result.action.changed].sort(),
+    ["durationMinutes", "exercises", "focus", "intensity", "type"]
+  );
+
+  // Confidence is the point of choosing a source that reports a composite: the
+  // engine cancels a hard session on evidence it is sure of, not on a guess.
+  assert.equal(result.confidence, "high");
+  assert.deepEqual(result.signalCoverage.recovery.missing, ["stress"]);
+});
+
 test("the sample scheduled session is what makes any of this a decision", async () => {
   const scheduledSession = await loadSample("scheduled-session.json");
   assert.ok(scheduledSession.focus && scheduledSession.intensity);

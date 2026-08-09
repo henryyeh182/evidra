@@ -122,7 +122,7 @@ Oura 不算訓練負荷。**所以我們也不算**——不會拿時長乘強�
 ## 5 · 傷病替代：硬過濾，不是建議
 
 ```
-我膝蓋不舒服，今天的深蹲能換成什麼？我只有啞鈴跟徒手。
+我膝蓋不舒服，今天的深蹲能換成什麼？我有槓鈴、深蹲架跟啞鈴。
 ```
 
 實際輸出：
@@ -132,11 +132,47 @@ Oura 不算訓練負荷。**所以我們也不算**——不會拿時長乘強�
 | decision | `substitute` / `replace_contraindicated_exercise` |
 | action | Back Squat → **Bodyweight Squat** |
 | 其他選項 | Goblet Squat |
-| reason | Movements contraindicated for knee were **hard-filtered out**. · The substitute still serves the original training goal (strength, hypertrophy). |
+| 治理規則 | **EVD-R-012** · 剔除 **Front Squat**（`matchedTags: ["knee"]`） |
+| reason | Movements contraindicated for knee were **hard-filtered out: Front Squat**. · The substitute still serves the original training goal (strength, hypertrophy). |
 | confidence | high |
 
 **「hard-filtered」是字面意思**：對膝蓋有禁忌的動作不是被扣分，是根本不在候選名單裡。
 模型可以被說服繞過安全規則，確定性的過濾器不會。
+
+**器材列到深蹲架是有意的。** Front Squat 要槓鈴加深蹲架，少一樣它就會先被器材篩掉——
+那一次替代就成了器材問題，硬過濾根本沒開火，這一則也就證明不了自己的標題。
+原本這裡寫「我只有啞鈴跟徒手」，正是那個情況。
+
+---
+
+## 6 · 只有 Whoop：把課表拿走，不是調軟
+
+> 附上 [`evidence-whoop-flat.json`](evidence-whoop-flat.json)
+
+```
+這是我今天的 Whoop 數據（附檔）。今天排的是 VO₂max 間歇 60 分鐘高強度，
+我還是照做嗎？
+```
+
+實際輸出：
+
+| | |
+|---|---|
+| decision | **`defer`** / `swap_to_recovery` |
+| action | VO₂max Intervals 60min high → **Recovery + mobility 30min low** |
+| changed | `focus` · `type` · `durationMinutes` · `intensity` · `exercises` |
+| 換上的動作 | Recovery Walk · Mobility Flow |
+| 治理規則 | **EVD-R-001** · readiness score = **6** |
+| reason | Readiness 6 is below 40: no training load today, swapped to a recovery session of at most 30 minutes. |
+| confidence | **high** |
+| 缺的訊號 | `stress` |
+
+**這則和前面五則的差別在 `changed` 那一列**：五個欄位全動，連運動項目都換掉。
+其他幾則最多動兩三項。`adjust` 是把課表調軟，**`defer` 是把課表拿走換成別的**——
+兩者是不同的決策型別，不是程度差異。
+
+**而且 confidence 是 high。** Whoop 不量壓力，所以 `stress` 缺著，但四個恢復訊號裡
+有三個加上廠商自己的 recovery 分數都在——**證據足夠時它照樣敢把一整堂高強度課取消**。
 
 ---
 
@@ -147,6 +183,7 @@ Oura 不算訓練負荷。**所以我們也不算**——不會拿時長乘強�
 | [`evidence-strava-only.json`](evidence-strava-only.json) | 24 場跑步、只有 `trainingLoad`，零恢復訊號 |
 | [`evidence-garmin-hard-day.json`](evidence-garmin-hard-day.json) | 四項恢復訊號 ＋ `vendorAssessments` 的 Body Battery ＋ 一場硬跑 |
 | [`evidence-oura-only.json`](evidence-oura-only.json) | 睡眠／HRV／靜息心率 ＋ Oura Readiness，**沒有任何訓練** |
+| [`evidence-whoop-flat.json`](evidence-whoop-flat.json) | HRV／靜息心率／睡眠 ＋ WHOOP Recovery 12%，前一天一場硬跑——**恢復訊號全面見底** |
 | [`scheduled-session.json`](scheduled-session.json) | 今天排定的課表——**沒有這個就沒有決策，只有建議** |
 
 `scheduled-session.json` 值得單獨講一句。沒有它，`evidra_decide_session` 不會編一個課表出來，

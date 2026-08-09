@@ -1,0 +1,48 @@
+{
+  "profile": {
+    "timezone": "Asia/Taipei",
+    "fitnessLevel": "intermediate"
+  },
+  "healthMetrics": [
+    {
+      "type": "hrv_ms",
+      "value": 19,
+      "unit": "ms",
+      "recordedAt": "2026-08-06T06:00:00Z",
+      "source": "whoop"
+    },
+    {
+      "type": "resting_hr_bpm",
+      "value": 76,
+      "unit": "bpm",
+      "recordedAt": "2026-08-06T06:00:00Z",
+      "source": "whoop"
+    },
+    {
+      "type": "sleep_duration_hours",
+      "value": 4.1,
+      "unit": "hours",
+      "recordedAt": "2026-08-06T06:00:00Z",
+      "source": "whoop"
+    }
+  ],
+  "vendorAssessments": [
+    {
+      "type": "vendor_readiness",
+      "value": 12,
+      "unit": "score_0_100",
+      "recordedAt": "2026-08-06T06:00:00Z",
+      "source": "whoop"
+    }
+  ],
+  "workouts": [
+    {
+      "type": "run",
+      "startedAt": "2026-08-05T07:00:00Z",
+      "durationMinutes": 95,
+      "trainingLoad": 420,
+      "muscleGroups": ["legs"],
+      "source": "whoop"
+    }
+  ]
+}
