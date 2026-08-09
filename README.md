@@ -69,7 +69,7 @@ connector——Evidra 從不代替使用者連上 Apple Health、Garmin 或 Stra
 今天已走通的是 **Claude Desktop + desktop extension（MCPB）**。手機情境需要 remote MCP
 server，因此仍卡在 authorization server、OAuth 簽章驗證、HTTPS 公開部署與 hosted 版隱私政策。
 
-裝好之後貼上去就能跑的五則問法在 [`examples/README.md`](examples/README.md)。
+裝好之後貼上去就能跑的六則問法在 [`examples/README.md`](examples/README.md)——走完 `keep`／`adjust`／`advance`／`substitute`／`defer` 五種決策型別。
 
 ## 三段分工
 
