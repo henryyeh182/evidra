@@ -418,6 +418,19 @@ export function assertValidRuleLibrary(library) {
     if (!rule.title) fail(`${where} has no title.`);
     if (!STATUSES.includes(rule.status)) fail(`${where} has status "${rule.status}".`);
     if (!categoryIds.includes(rule.category)) fail(`${where} has category "${rule.category}".`);
+
+    // Which code applies this rule. Required because it decides which coverage
+    // check the rule falls under: the decision harness can only reach rules the
+    // session engine applies, and a rule that silently belonged to no engine
+    // would be one nothing was obliged to exercise. The vocabulary is not
+    // checked here — the engine names live with the engines, in
+    // engineThresholds.js, which validates this field against them.
+    if (typeof rule.appliedBy !== "string" || rule.appliedBy.length === 0) {
+      fail(
+        `${where} does not say which engine applies it. Set "appliedBy" to the engine that reads ` +
+          `its thresholds, so that something is on the hook for exercising it.`
+      );
+    }
     if (!BASES.includes(rule.basis)) fail(`${where} has basis "${rule.basis}".`);
     assertValidEvidence(rule, where);
 

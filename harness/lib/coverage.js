@@ -33,8 +33,19 @@ export function ruleCoverage(runs) {
     }
   }
 
+  // Scoped to the rules this harness can actually reach.
+  //
+  // Every scenario here drives one call: evidence in, a session decision out.
+  // A rule the plan generator or the exercise catalog applies cannot fire on
+  // that call no matter what a scenario contains, so leaving those rules in
+  // `uncovered` would report them as gaps the harness could close and it never
+  // could. Scoping is only honest if something else is on the hook for them,
+  // which is why `appliedBy` is required on every rule and why each of the
+  // other engines carries its own coverage test — a rule reassigned to an
+  // engine drops out of this list and into that one, and the fingerprint goes
+  // red when it moves.
   const active = getRuleLibrary()
-    .rules.filter((rule) => rule.status === "active")
+    .rules.filter((rule) => rule.status === "active" && rule.appliedBy === "session")
     .map((rule) => rule.ruleId);
 
   return {

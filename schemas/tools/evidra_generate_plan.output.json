@@ -15,6 +15,24 @@
     "version": { "type": "number" },
     "constraints": { "type": "object" },
     "reasoning": { "type": "array", "items": { "type": "string" } },
+    "decisionBasis": {
+      "type": "object",
+      "description": "Which library rules shaped this output, in the frame evidra_decide_session uses. `governingRule` is null and `appliedRules` empty when no rule applied, and the frame still travels: an absent field cannot be told apart from a path that never checks. Each rule carries its `basis` — internal_composite means the threshold cuts a quantity Evidra computes or matches itself, so `sources` is empty by design and the rule is not evidence-based — and its `limitations`, which state what the rule does not do. Read those before describing a plan or a substitute as having been made safe.",
+      "properties": {
+        "libraryVersion": { "type": "string" },
+        "engineVersion": { "type": "string" },
+        "policies": {
+          "type": "object",
+          "properties": {
+            "arbitration": { "type": "string" },
+            "combination": { "type": "string" }
+          }
+        },
+        "governingRule": { "type": ["object", "null"] },
+        "appliedRules": { "type": "array", "items": { "type": "object" } }
+      },
+      "required": ["libraryVersion", "engineVersion", "policies", "governingRule", "appliedRules"]
+    },
     "createdAt": { "type": "string" },
     "weeks": {
       "type": "array",
@@ -53,6 +71,6 @@
   },
   "required": [
     "id", "userId", "goalId", "name", "startDate", "endDate", "periodizationType",
-    "status", "version", "constraints", "weeks", "reasoning", "createdAt"
+    "status", "version", "constraints", "weeks", "reasoning", "decisionBasis", "createdAt"
   ]
 }

@@ -5,13 +5,9 @@ import { assertValidDecision } from "./models.js";
 import { ENGINE_VERSION } from "./version.js";
 import {
   THRESHOLDS,
-  LIBRARY_VERSION,
-  describeRule,
-  arbitrate,
   combineIntensitySteps,
-  getPolicies,
-  assertThresholdsMatch,
-  getRuleLibrary
+  buildDecisionBasis,
+  ENGINE_THRESHOLD_KEYS
 } from "../../rules/src/index.js";
 
 const EMPTY_COVERAGE = { usable: [], missing: [] };
@@ -84,31 +80,24 @@ function normalizeCoverage(signalCoverage) {
 // externally defined or one Evidra computes itself, and — for the two that are
 // externally defined — who published on it and who disputes that publication.
 //
-// The join is enforced in both directions by `assertThresholdsMatch` below: a
-// threshold the engine reads but no rule declares fails the load, and so does a
+// The join is enforced in both directions by `assertThresholdsMatch`: a
+// threshold an engine reads but no rule declares fails the load, and so does a
 // rule nobody applies. Neither side can drift into decoration.
-const RULES = THRESHOLDS;
-
-// Read at module load, so a mismatch is a startup failure rather than a wrong
-// decision discovered later. The list is the engine's side of the contract and
-// has to be maintained by hand — that is deliberate: adding a threshold here
-// without adding the rule that owns it is exactly the move this guard exists to
-// stop, and it should cost a deliberate edit in two places.
-assertThresholdsMatch(getRuleLibrary(), [
-  "readinessRest",
-  "readinessReduce",
-  "readinessAdvance",
-  "muscleFatigueMaxed",
-  "muscleFatigueHigh",
-  "muscleFatigueModerate",
-  "acwrHigh",
-  "recoveryCapMinutes",
-  "returnDurationFactor",
-  "returnSevereIdleDays",
-  "returnSevereCtlLossPct",
-  "restrictedMovementsPresent",
-  "restrictionTokenMinLength"
-]);
+//
+// This engine's side of that contract — which keys this file reads — is
+// `ENGINE_THRESHOLD_KEYS.session`, and the union of every engine's list is
+// asserted when that module loads, which importing anything from the rules
+// package does. It is still maintained by hand, and adding a threshold still
+// costs a deliberate edit in two files; the list moved out of this file only
+// because a second engine started applying rules, and no single engine can
+// assert the direction that matters most — that no rule goes unapplied.
+//
+// Narrowed to this engine's own keys rather than handed the whole map, so that
+// reading a threshold declared for the plan generator or the catalog yields
+// undefined here instead of a number from somewhere else.
+const RULES = Object.freeze(
+  Object.fromEntries(ENGINE_THRESHOLD_KEYS.session.map((key) => [key, THRESHOLDS[key]]))
+);
 
 const INTENSITY_ORDER = ["low", "moderate", "high"];
 
@@ -161,13 +150,7 @@ const TYPE_SEVERITY = { keep: 0, advance: 1, adjust: 2, substitute: 3, defer: 4 
  * not.
  */
 function emptyBasis() {
-  return {
-    libraryVersion: LIBRARY_VERSION,
-    engineVersion: ENGINE_VERSION,
-    policies: getPolicies(),
-    governingRule: null,
-    appliedRules: []
-  };
+  return buildDecisionBasis({ engineVersion: ENGINE_VERSION });
 }
 
 function lowerIntensity(intensity) {
@@ -287,8 +270,13 @@ export function decideSession({
   if (readinessKnown) {
     evidence.push({ signal: "readiness", value: readiness, recordedAt: state.date });
   } else {
+    // The same correction as the coverage limit below, for the same reason.
+    // This used to end "and confidence is held lower to match", which is a
+    // counterfactual nothing here computes: with no session in the last two
+    // weeks the figure is `low` whether the four readings arrive or not — the
+    // shortfall is the history, not the signals. Measured on 2026-08-08.
     limits.push(
-      "Readiness was not scored today, because no sleep, HRV, resting heart rate or stress reading arrived and a stand-in number would have decided this session on something nobody measured. The rules that read recovery sat this one out, everything resting on training load still applied, and confidence is held lower to match."
+      "Readiness was not scored today, because no sleep, HRV, resting heart rate or stress reading arrived and a stand-in number would have decided this session on something nobody measured. The rules that read recovery sat this one out, everything resting on training load still applied, and the confidence figure covers only what was there."
     );
   }
 
@@ -779,7 +767,26 @@ export function decideSession({
     // both ungrammatical and written in an identifier nobody outside this repo
     // has seen. `signalCoverage` keeps the machine-readable form; this sentence
     // says the same thing in words.
-    limits.push(`${listSignals(coverage.recovery.missing)} for today, so confidence is held lower than it would be with them.`);
+    //
+    // What it does not say any more is what the confidence *would have been*.
+    // It used to end "so confidence is held lower than it would be with them",
+    // which is a counterfactual this engine never computes and which is false
+    // in reachable cases: a vendor composite with all four raw signals absent
+    // scores `high`, and so does sleep + HRV + resting heart rate with stress
+    // missing — `high` is the ceiling, so nothing was held lower. It is also
+    // false at `medium` whenever the shortfall is the recent-session count
+    // rather than the signals, because supplying them changes nothing.
+    // Measured on 2026-08-08, harness scenario 35 and one probe beside it.
+    //
+    // So the sentence now states what happened — the reading did not arrive and
+    // was left out — and lets `confidence` speak for itself. Under-claiming
+    // here is the safe direction: a gap the athlete is shown but told nothing
+    // about costs them nothing, and a deduction announced that did not happen
+    // is the engine describing its own workings wrongly.
+    limits.push(
+      `${listSignals(coverage.recovery.missing)} for today. What did not arrive was left out of ` +
+        `the recovery score rather than filled in, and the confidence figure covers only what did.`
+    );
   }
   if (coverage.training.missing.length > 0) {
     limits.push(
@@ -869,23 +876,7 @@ export function decideSession({
   // between the parts of this engine that rest on literature and the parts that
   // rest on our judgement, which is not a distinction most systems expose at
   // all.
-  const arbitration = arbitrate(fired.map((entry) => entry.ruleId));
-  const readingFor = new Map(fired.map((entry) => [entry.ruleId, entry]));
-  const decisionBasis = {
-    ...emptyBasis(),
-    governingRule: arbitration.governing
-      ? describeRule(arbitration.governing.ruleId, readingFor.get(arbitration.governing.ruleId)?.measured)
-      : null,
-    appliedRules: arbitration.ordered.map((entry) => {
-      const record = readingFor.get(entry.ruleId);
-      const governing = entry.ruleId === arbitration.governing?.ruleId;
-      return {
-        ...describeRule(entry.ruleId, record?.measured, { full: false }),
-        applied: record?.applied ?? true,
-        ...(governing ? { governing: true } : {})
-      };
-    })
-  };
+  const decisionBasis = buildDecisionBasis({ engineVersion: ENGINE_VERSION, fired });
 
   const result = {
     evidence,

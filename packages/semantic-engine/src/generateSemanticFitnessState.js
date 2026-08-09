@@ -2,11 +2,34 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 import { assertValidUserContext } from "../../domain/src/models.js";
+import { PARAMETERS, assertParametersMatch, getParameter } from "../../rules/src/index.js";
+import {
+  EVIDENCE_METRIC_TYPES,
+  EVIDENCE_VENDOR_ASSESSMENT_TYPES
+} from "../../evidence/src/model.js";
+
+// Every number in this block comes from
+// `packages/rules/data/engine-parameters.json`, not from here. None of them
+// belong to a rule and none appear in any `decisionBasis`, and they change what
+// the engine decides all the same: the baselines sit underneath a readiness
+// score that three rules cut, and a staleness window decides whether a signal
+// is usable or missing at all. As literals here there was nowhere to say who
+// chose them or on what — which is the thing the rule library exists to stop.
+const PARAMETER_KEYS = [
+  "baselineHrvMs",
+  "baselineRestingHrBpm",
+  "baselineWeeklyTrainingLoad",
+  "stalenessSleepDays",
+  "stalenessAutonomicDays",
+  "stalenessRestingHrDays",
+  "stalenessVendorCompositeDays"
+];
+assertParametersMatch("packages/semantic-engine/src/generateSemanticFitnessState.js", PARAMETER_KEYS);
 
 const DEFAULT_BASELINES = {
-  hrvMs: 52,
-  restingHrBpm: 57,
-  weeklyTrainingLoadTarget: 360
+  hrvMs: PARAMETERS.baselineHrvMs,
+  restingHrBpm: PARAMETERS.baselineRestingHrBpm,
+  weeklyTrainingLoadTarget: PARAMETERS.baselineWeeklyTrainingLoad
 };
 
 // A recovery signal only counts if its latest reading is recent enough to
@@ -14,19 +37,46 @@ const DEFAULT_BASELINES = {
 // years-old HRV/sleep reading treated as current. Stale signals are dropped and
 // the remaining weights are renormalized, so the score reflects what we can
 // actually observe instead of neutral filler.
-const SIGNAL_STALENESS_DAYS = {
-  sleep_duration_hours: 3,
-  sleep_quality: 3,
-  hrv_ms: 7,
-  resting_hr_bpm: 14,
-  stress: 7,
-  // Vendor composites. Where the device maker had the sensor on the wrist, its
-  // own assessment beats anything we can re-derive — so these carry real weight
-  // rather than being logged and ignored.
-  body_battery: 2,
-  recovery_time_minutes: 2,
-  vendor_readiness: 2
-};
+//
+// Built from the parameter set rather than written here, so which signals share
+// a window is data too: sleep's three days and the vendor composites' two are
+// separate decisions, and grouping them by hand in an object literal made them
+// look like one.
+//
+// Each `appliesTo` entry is checked against the evidence model's own type
+// names, because this is the one place where moving a number into data made a
+// new mistake possible: `hrv` for `hrv_ms` would not fail any parameter check,
+// and `getFreshMetricValue` would compare an age against `undefined`, drop
+// every HRV reading, and report it as a signal nobody supplied.
+const SIGNAL_STALENESS_DAYS = buildStalenessWindows();
+
+function buildStalenessWindows() {
+  const known = new Set([...EVIDENCE_METRIC_TYPES, ...EVIDENCE_VENDOR_ASSESSMENT_TYPES]);
+  const windows = {};
+
+  for (const key of PARAMETER_KEYS) {
+    const parameter = getParameter(key);
+    if (parameter.group !== "signal_staleness") continue;
+
+    if (!Array.isArray(parameter.appliesTo) || parameter.appliesTo.length === 0) {
+      throw new Error(`${parameter.parameterId} is a staleness window that applies to nothing.`);
+    }
+    for (const type of parameter.appliesTo) {
+      if (!known.has(type)) {
+        throw new Error(
+          `${parameter.parameterId} declares a staleness window for "${type}", which is not an ` +
+            `evidence metric or vendor assessment type.`
+        );
+      }
+      if (type in windows) {
+        throw new Error(`Two staleness windows are declared for "${type}".`);
+      }
+      windows[type] = parameter.value;
+    }
+  }
+
+  return Object.freeze(windows);
+}
 
 function clamp(value, min = 0, max = 100) {
   return Math.min(max, Math.max(min, Math.round(value)));

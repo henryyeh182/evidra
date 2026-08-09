@@ -68,6 +68,7 @@ test("the fingerprint watches what decides and ignores what does not", async () 
     ruleId: "EVD-R-TEST",
     status: "active",
     category: "recovery",
+    appliedBy: "session",
     priority: 50,
     thresholds: [{ key: "someScore", operator: "<", value: 60, unit: "score" }],
     effect: { decision: "adjust", intent: "reduce_today_intensity", intensityStepsDown: 1 },
@@ -98,6 +99,10 @@ test("the fingerprint watches what decides and ignores what does not", async () 
     "a threshold value": { thresholds: [{ ...base.thresholds[0], value: 65 }] },
     "a threshold operator": { thresholds: [{ ...base.thresholds[0], operator: "<=" }] },
     "the category": { category: "injury" },
+    // Not a threshold, and inside anyway: it decides which coverage check the
+    // rule falls under, so moving it can take a rule out of the harness's
+    // reachable set without any decision changing.
+    "the engine that applies it": { appliedBy: "plan" },
     "the priority": { priority: 90 },
     "the effect": { effect: { ...base.effect, intensityStepsDown: 2 } },
     "the status": { status: "retired" }
@@ -139,7 +144,7 @@ test("a wrong pin is caught, and a scenario without one claims nothing", async (
   assert.deepEqual(partial, []);
 });
 
-test("every active rule can be re-run, verified and traced from a scenario", async () => {
+test("every session rule can be re-run, verified and traced from a scenario", async () => {
   // Stated separately from the invariants because it fails differently: an
   // uncovered rule is not a decision behaving badly, it is a decision this
   // harness has never seen. A rule added to the library needs a scenario here,

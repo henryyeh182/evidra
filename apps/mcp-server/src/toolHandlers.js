@@ -425,6 +425,10 @@ export async function previewPlanChangeTool(args = {}) {
     baseVersion: preview.baseVersion,
     summary: preview.summary,
     diff: preview.diff,
+    // What this change stands on. It describes the change, not the plan: the
+    // plan inside `patch` carries its own frame from the day it was generated,
+    // and the two answer different questions.
+    decisionBasis: preview.decisionBasis,
     patch: preview,
     note: "Keep this patch and apply it in the AI host or external storage."
   });
@@ -451,6 +455,10 @@ export async function commitPlanChangeTool(args = {}) {
     version: committed.version,
     status: committed.status,
     plan: committed,
+    // Read off the preview being committed rather than recomputed: committing
+    // applies a patch that was already decided, and a second computation here
+    // could disagree with the one the caller approved.
+    decisionBasis: args.preview.decisionBasis ?? null,
     versionHistory: buildVersionHistory(args.plan, args.preview, committed)
   });
 }

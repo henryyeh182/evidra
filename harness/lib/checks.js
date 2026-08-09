@@ -516,6 +516,36 @@ const pinnedDecision = {
 
     compare("decision.type", decision.decision.type, expected.type);
     compare("decision.intent", decision.decision.intent, expected.intent);
+    compare("confidence", decision.confidence, expected.confidence);
+
+    // Coverage and confidence, for the scenarios whose whole subject they are.
+    //
+    // DH-6 asks the general question — a signal taken away must be reported and
+    // must not make the system surer of itself — and it asks it of every
+    // scenario. What it cannot say is which signals a particular scenario is
+    // short of, or what confidence that shortfall is supposed to land on: an
+    // engine that quietly promoted a three-signal day to `high` would pass DH-6
+    // in full, because nothing was removed. So the missing-evidence scenarios
+    // name their own coverage and their own confidence, and only they do.
+    //
+    // Named group by group and list by list rather than as a whole object, so a
+    // scenario claiming `recovery.missing` is claiming that and nothing about
+    // the training half. Sorted before comparing: the order these lists come
+    // out in is the order the signals happen to be enumerated in, and no
+    // scenario should be pinning that.
+    for (const group of ["recovery", "training"]) {
+      const wantedGroup = expected.signalCoverage?.[group];
+      if (!wantedGroup) continue;
+      for (const list of ["usable", "missing"]) {
+        if (wantedGroup[list] === undefined) continue;
+        compare(
+          `signalCoverage.${group}.${list}`,
+          [...(decision.signalCoverage?.[group]?.[list] || [])].sort(),
+          [...wantedGroup[list]].sort()
+        );
+      }
+    }
+
     compare(
       "governing rule",
       decision.decisionBasis?.governingRule?.ruleId ?? null,

@@ -29,7 +29,7 @@
 npm run review:phase
 ```
 
-一次跑七條，任一條紅就 exit 1：
+一次跑十三條，任一條紅就 exit 1：
 
 | Gate | 守什麼 | 對應 |
 |---|---|---|
@@ -42,6 +42,15 @@ npm run review:phase
 | G5 | 有 parser 的來源，registry／source schema／scenario 都在 | schemas/README 自訂規則 |
 | G6 | runtime 沒有寫死的日曆日 | P5 |
 | G7 | 系統內沒有 LLM；hosted runtime 不落地健康資料（`packages/db` 例外——它屬於 Phase 2 的使用者環境） | D-LLM · D-DATA |
+| G8 | 使用者讀得到的文字裡沒有內部詞彙 | 對外敘事 |
+| G9 | 已發布版本與 main 的公開行為落差有被寫下來 | blob/main 與 release 天生不同步 |
+| G10 | user-journey 講方向，不講開工順序與技術債 | 對外敘事 |
+| G11 | 規則庫改動跑過 Decision Harness，且指紋已被承認 | 2026-08-09 加入 |
+
+G11 與其他十二條性質不同：它不比對文件與現況，它跑決策鏈本身（`runHarness` 的十項檢查
+＋ 指紋漂移）。加在這裡是因為 `npm test` 雖然已經涵蓋 harness，讀這份清單的人不會知道那件事
+發生過——而規則庫的改動最容易在宣告完成時被當成已驗證。指紋紅了不代表規則錯了，代表沒有人
+看過它決策出什麼：跑 `npm run harness` 讀決策，再 `node harness/runner.js --update-fingerprint`。
 
 再跑既有的三支（它們守的是品質不是定位）：
 

@@ -25,12 +25,14 @@
 
 import { createHash } from "node:crypto";
 
-import { getRuleLibrary } from "../../packages/rules/src/index.js";
+import { getParameterSet, getRuleLibrary } from "../../packages/rules/src/index.js";
 
 /**
  * The fields that decide things, and nothing else.
  *
  * `thresholds`, `category` and `effect` are the three that were asked for.
+ * `appliedBy` joined them when a second engine started applying rules; see the
+ * note on the field itself.
  * `priority` travels with `category` because the arbitration policy is
  * `category_then_priority`: within one category, a priority edit moves which
  * rule the decision is attributed to exactly as a category edit does across
@@ -46,6 +48,12 @@ function governingFields(rule) {
     ruleId: rule.ruleId,
     status: rule.status,
     category: rule.category,
+    // Not a threshold and not an effect, and watched anyway: `appliedBy` is what
+    // decides which coverage check a rule falls under. Moving a rule from
+    // `session` to any other engine takes it out of the decision harness's
+    // reachable set, which is a guarantee weakening with no decision changing
+    // and nothing else going red.
+    appliedBy: rule.appliedBy,
     priority: rule.priority,
     thresholds: (rule.thresholds || []).map((threshold) => ({
       key: threshold.key,
@@ -54,6 +62,26 @@ function governingFields(rule) {
       unit: threshold.unit
     })),
     effect: rule.effect ?? null
+  };
+}
+
+/**
+ * An engine parameter's governing fields.
+ *
+ * These are not rules and they do not arbitrate, so there is no category or
+ * priority to watch. What can move a decision is the value, the unit it is read
+ * in, whether it is active, and — for a staleness window — which signals it
+ * covers, because moving `hrv_ms` from the seven-day window to the two-day one
+ * changes what counts as measured without changing a single number.
+ */
+function governingParameterFields(parameter) {
+  return {
+    parameterId: parameter.parameterId,
+    key: parameter.key,
+    status: parameter.status,
+    value: parameter.value,
+    unit: parameter.unit,
+    appliesTo: parameter.appliesTo ?? null
   };
 }
 
@@ -70,11 +98,17 @@ export function fingerprintRule(rule) {
   return digest(governingFields(rule));
 }
 
+/** One parameter's digest. Exported for the same reason as `fingerprintRule`. */
+export function fingerprintParameter(parameter) {
+  return digest(governingParameterFields(parameter));
+}
+
 /**
  * @returns {{ libraryVersion: string, policies: object, rules: Record<string, string> }}
  */
 export function computeFingerprint() {
   const library = getRuleLibrary();
+  const parameterSet = getParameterSet();
   return {
     readMe: [
       "Generated. Do not hand-edit a hash.",
@@ -108,6 +142,17 @@ export function computeFingerprint() {
       [...library.rules]
         .sort((a, b) => a.ruleId.localeCompare(b.ruleId))
         .map((rule) => [rule.ruleId, digest(governingFields(rule))])
+    ),
+    // The engine parameters, watched for the same reason and needing it more.
+    // A rule's threshold at least reaches the caller in `decisionBasis`, so a
+    // silent edit is visible to anyone reading the output; none of these appear
+    // there, so a changed staleness window or baseline shows up as nothing but
+    // a different answer.
+    parameterSetVersion: parameterSet.version,
+    parameters: Object.fromEntries(
+      [...parameterSet.parameters]
+        .sort((a, b) => a.parameterId.localeCompare(b.parameterId))
+        .map((parameter) => [parameter.parameterId, digest(governingParameterFields(parameter))])
     )
   };
 }
@@ -120,14 +165,25 @@ export function computeFingerprint() {
 export function compareFingerprint(stored) {
   const current = computeFingerprint();
   const storedRules = stored.rules || {};
+  const storedParameters = stored.parameters || {};
+
+  const drifted = (currentMap, storedMap) => ({
+    added: Object.keys(currentMap).filter((id) => !(id in storedMap)),
+    removed: Object.keys(storedMap).filter((id) => !(id in currentMap)),
+    changed: Object.keys(currentMap).filter((id) => id in storedMap && storedMap[id] !== currentMap[id])
+  });
+
+  const rules = drifted(current.rules, storedRules);
+  const parameters = drifted(current.parameters, storedParameters);
 
   return {
     current,
     policiesMoved: stored.policies !== current.policies,
-    added: Object.keys(current.rules).filter((ruleId) => !(ruleId in storedRules)),
-    removed: Object.keys(storedRules).filter((ruleId) => !(ruleId in current.rules)),
-    changed: Object.keys(current.rules).filter(
-      (ruleId) => ruleId in storedRules && storedRules[ruleId] !== current.rules[ruleId]
-    )
+    // Rules and parameters are reported in one set of lists, because the
+    // question they answer is one question: did something that decides move
+    // without anybody looking? The ids say which kind it was.
+    added: [...rules.added, ...parameters.added],
+    removed: [...rules.removed, ...parameters.removed],
+    changed: [...rules.changed, ...parameters.changed]
   };
 }

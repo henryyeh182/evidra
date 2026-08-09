@@ -30,7 +30,7 @@
  *             refuses to accept a straddle declared against one.
  */
 
-import { getRule, getRuleLibrary } from "../../packages/rules/src/index.js";
+import { getRule, getRuleLibrary, THRESHOLDS } from "../../packages/rules/src/index.js";
 
 /**
  * The smallest step that is representable in each unit the library uses.
@@ -81,6 +81,28 @@ const nudgeDetraining = (field) => (state, value) => ({
     detraining: { ...state.trainingLoad?.detraining, [field]: value }
   }
 });
+
+/**
+ * The same nudge for the two arms that decide whether EVD-R-007 fires at all.
+ *
+ * `detraining.active` is the conjunction of both, computed in trainingLoad.js
+ * before `decideSession` ever sees the state — so moving one arm without
+ * recomputing it moves a number the rule does not read, and the straddle proves
+ * nothing. DH-BND caught exactly that: a scenario one day under the gate stayed
+ * quiet when nudged over it, because `active` was still false underneath.
+ *
+ * Reproducing the engine's conjunction here is duplication, and it is the same
+ * guarded duplication as the readers above: whenever the rule does fire, DH-BND
+ * compares this file's reading against what the engine recorded.
+ */
+const nudgeDetrainingGate = (field) => (state, value) => {
+  const detraining = { ...state.trainingLoad?.detraining, [field]: value };
+  detraining.active =
+    detraining.daysSinceLastSession != null &&
+    detraining.daysSinceLastSession >= THRESHOLDS.detrainingMinIdleDays &&
+    detraining.ctlLossPct >= THRESHOLDS.detrainingMinCtlLossPct;
+  return { ...state, trainingLoad: { ...state.trainingLoad, detraining } };
+};
 
 /**
  * One entry per threshold in the library, keyed `ruleId/thresholdKey`.
@@ -151,16 +173,47 @@ export const QUANTITIES = {
     nudge: (state, value) => ({ ...state, acuteChronicWorkloadRatio: value })
   },
 
-  // Both of EVD-R-007's thresholds are `severity`, and the distinction is not a
-  // technicality. What decides whether this rule fires at all is
-  // `detraining.active`, and that is computed in
-  // packages/training-load/src/trainingLoad.js from two bare constants — 14
-  // idle days and a 25% chronic-load loss — which are not in the rule library.
-  // They are therefore outside the fingerprint, carry no provenance, and are
-  // not reported in `decisionBasis`. The library's 42 and 60 only choose
-  // between one intensity step and two. DH-BND checks them for what they are;
-  // that the firing gate lives somewhere unversioned is a finding about the
-  // rule library, not something this file can fix by pretending otherwise.
+  // EVD-R-007 is the rule that made `gates` necessary, and as of 2026-08-09 it
+  // declares both kinds. `detrainingMinIdleDays` and `detrainingMinCtlLossPct`
+  // are `firing`: they are evaluated in
+  // packages/training-load/src/trainingLoad.js as `detraining.active`, and until
+  // that date they lived outside the library as EVD-P-001 and EVD-P-002 — the
+  // gate deciding whether the rule fires sat a governance tier below the rule,
+  // outside `decisionBasis`, while the 42 and 60 that only choose between one
+  // intensity step and two were the numbers a caller was shown. Both pairs are
+  // now the rule's own, and both are straddled here.
+  //
+  // Both `firing` arms move together and cannot be straddled independently: they
+  // are read off the same decayed curve, so nudging the state to sit one day
+  // under 14 also moves the percentage. The scenarios straddle them as the pair
+  // they are.
+  "EVD-R-007/detrainingMinIdleDays": {
+    gates: "firing",
+    engineField: "daysSinceLastSession",
+    read: detrainingReader("daysSinceLastSession"),
+    nudge: nudgeDetrainingGate("daysSinceLastSession")
+  },
+  "EVD-R-007/detrainingMinCtlLossPct": {
+    gates: "firing",
+    engineField: "ctlLossPct",
+    read: detrainingReader("ctlLossPct"),
+    nudge: nudgeDetrainingGate("ctlLossPct"),
+    // Unreachable, and for the same structural reason as returnSevereIdleDays
+    // one tier up: both arms are read off one decayed curve. 25% of chronic load
+    // is gone by idle day 12, and the gate does not open until day 14, so by the
+    // time the idle arm is true this one has been true for two days. It can
+    // never be the arm that decides whether EVD-R-007 fires.
+    //
+    // Measured 2026-08-09 with `computeTrainingLoad` over eight histories (3 to
+    // 90 sessions, loads 30 to 200, 1 to 3 day spacing): at idle 11 every one
+    // reads 23%, at idle 12 every one reads 25%, and at idle 14 the lowest is
+    // 27%. The algebra agrees — CTL multiplies by (1 - 1/42) a day, so after 14
+    // idle days at most 0.714 of the peak remains however large the peak was.
+    unreachable:
+      "collinear with detrainingMinIdleDays — 25% of chronic load is lost by idle day 12, two days " +
+      "before the 14-day arm of the same `&&` opens the gate, so this arm is already true whenever " +
+      "the rule can fire"
+  },
   "EVD-R-007/returnSevereIdleDays": {
     gates: "severity",
     engineField: "daysSinceLastSession",
@@ -251,8 +304,14 @@ export const QUANTITIES = {
  * than the threshold silently going unstraddled.
  */
 export function libraryThresholds() {
+  // Session rules only, for the reason DH-COV is scoped the same way: every
+  // quantity below is read out of a session decision, and a threshold the plan
+  // generator or the catalog applies has no reading in one. Listing those would
+  // report four permanent failures naming a file that could never satisfy them.
+  // The scoping is safe only because `appliedBy` is required and fingerprinted,
+  // so a rule cannot leave this set quietly.
   return getRuleLibrary()
-    .rules.filter((rule) => rule.status === "active")
+    .rules.filter((rule) => rule.status === "active" && rule.appliedBy === "session")
     .flatMap((rule) =>
       (rule.thresholds || []).map((threshold) => ({
         ruleId: rule.ruleId,

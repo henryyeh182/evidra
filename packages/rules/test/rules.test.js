@@ -99,7 +99,10 @@ test("the old evidence ladder is reproduced exactly for every shipped rule", () 
     "EVD-R-006": "observational",
     "EVD-R-007": "expert_consensus",
     "EVD-R-008": "internal_heuristic",
-    "EVD-R-009": "internal_heuristic"
+    "EVD-R-009": "internal_heuristic",
+    "EVD-R-010": "internal_heuristic",
+    "EVD-R-011": "internal_heuristic",
+    "EVD-R-012": "internal_heuristic"
   };
 
   for (const rule of library.rules) {

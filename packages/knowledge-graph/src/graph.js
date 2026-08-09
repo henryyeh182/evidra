@@ -2,6 +2,12 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 import { assertValidGraphData } from "./models.js";
+import { THRESHOLDS, ENGINE_THRESHOLD_KEYS } from "../../rules/src/index.js";
+
+// This catalog's own thresholds, narrowed to the keys it declared.
+const RULES = Object.freeze(
+  Object.fromEntries(ENGINE_THRESHOLD_KEYS.catalog.map((key) => [key, THRESHOLDS[key]]))
+);
 
 const UNIVERSAL_EQUIPMENT = new Set(["none", "bodyweight", "outdoor"]);
 
@@ -17,6 +23,11 @@ function equipmentSatisfied(required, availableSet) {
 
 function intersects(a, b) {
   return a.some((item) => b.includes(item));
+}
+
+/** Which tags two lists share. EVD-R-012 reports these, so they are kept rather than counted away. */
+function sharedTags(a, b) {
+  return a.filter((item) => b.includes(item));
 }
 
 /**
@@ -126,7 +137,7 @@ export function buildExerciseGraph(data) {
    * @param {string} exerciseId
    * @param {{ conditions?: string[], availableEquipment?: string[], avoidContraindications?: string[], preserveTrainingGoal?: boolean, limit?: number }} [options]
    */
-  function findSubstitutes(exerciseId, options = {}) {
+  function collectSubstituteCandidates(exerciseId, options = {}) {
     const original = requireExercise(exerciseId);
     const conditions = options.conditions || [];
     const availableSet = options.availableEquipment ? new Set(options.availableEquipment) : null;
@@ -172,25 +183,57 @@ export function buildExerciseGraph(data) {
     if (availableSet) {
       results = results.filter((item) => equipmentSatisfied(item.exercise.equipment, availableSet));
     }
+
+    // The contraindication filter, kept apart from the others because it is the
+    // one a rule is attributed to. What it excluded is returned rather than
+    // discarded: a substitution that quietly dropped three candidates for a
+    // named joint and one for missing equipment looks identical from outside,
+    // and only the first is a safety decision anyone has to be able to audit.
+    const excludedByContraindication = [];
     if (avoid.length > 0) {
-      results = results.filter((item) => !intersects(item.exercise.contraindications, avoid));
+      results = results.filter((item) => {
+        const matched = sharedTags(item.exercise.contraindications, avoid);
+        if (matched.length >= RULES.contraindicationTagsMatched) {
+          excludedByContraindication.push({
+            id: item.exercise.id,
+            name: item.exercise.name,
+            matchedTags: matched
+          });
+          return false;
+        }
+        return true;
+      });
     }
+
     if (options.preserveTrainingGoal) {
       results = results.filter((item) => intersects(item.exercise.trainingGoals, original.trainingGoals));
     }
 
     results.sort((a, b) => a.rank - b.rank || b.score - a.score || a.exercise.id.localeCompare(b.exercise.id));
 
-    return results.slice(0, limit).map((item) => ({
-      id: item.exercise.id,
-      name: item.exercise.name,
-      reason: item.reason,
-      equipment: item.exercise.equipment,
-      trainingGoals: item.exercise.trainingGoals,
-      // Whether this swap keeps the session doing what it was for. A caller can
-      // still choose a candidate that does not, but never without being told.
-      preservesTrainingGoal: intersects(item.exercise.trainingGoals, original.trainingGoals)
-    }));
+    return {
+      substitutes: results.slice(0, limit).map((item) => ({
+        id: item.exercise.id,
+        name: item.exercise.name,
+        reason: item.reason,
+        equipment: item.exercise.equipment,
+        trainingGoals: item.exercise.trainingGoals,
+        // Whether this swap keeps the session doing what it was for. A caller can
+        // still choose a candidate that does not, but never without being told.
+        preservesTrainingGoal: intersects(item.exercise.trainingGoals, original.trainingGoals)
+      })),
+      excludedByContraindication
+    };
+  }
+
+  /**
+   * The substitutes alone, for the callers that only want the list.
+   *
+   * Kept as the plain shape it has always had, so that adding a trace to one
+   * caller did not change the return type under every other one.
+   */
+  function findSubstitutes(exerciseId, options = {}) {
+    return collectSubstituteCandidates(exerciseId, options).substitutes;
   }
 
   /**
@@ -252,6 +295,7 @@ export function buildExerciseGraph(data) {
     getAntagonists: (id) => targets(id, "ANTAGONIST_OF"),
     neighbors: (id) => outEdges(id).map((edge) => ({ type: edge.type, exercise: nodes.get(edge.to) })),
     findSubstitutes,
+    collectSubstituteCandidates,
     searchExercises
   };
 }

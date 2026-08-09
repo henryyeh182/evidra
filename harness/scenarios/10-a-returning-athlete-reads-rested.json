@@ -34,8 +34,26 @@
     }
   },
   "rulePosition": [
-    { "rule": "EVD-R-007", "threshold": "returnSevereIdleDays", "position": "triggers" },
-    { "rule": "EVD-R-007", "threshold": "returnSevereCtlLossPct", "position": "triggers" }
+    {
+      "rule": "EVD-R-007",
+      "threshold": "detrainingMinIdleDays",
+      "position": "triggers"
+    },
+    {
+      "rule": "EVD-R-007",
+      "threshold": "detrainingMinCtlLossPct",
+      "position": "triggers"
+    },
+    {
+      "rule": "EVD-R-007",
+      "threshold": "returnSevereIdleDays",
+      "position": "triggers"
+    },
+    {
+      "rule": "EVD-R-007",
+      "threshold": "returnSevereCtlLossPct",
+      "position": "triggers"
+    }
   ],
   "evidence": {
     "profile": {

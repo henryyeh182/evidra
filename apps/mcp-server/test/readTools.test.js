@@ -197,8 +197,30 @@ test("a structured result costs its payload twice, and only where a schema is de
  * they could go while still saying what each paper argues, and the verbatim
  * abstract quotations were moved into session-rules.json's verification blocks,
  * which a reviewer reads directly and no decision frame carries.
+ *
+ * 13312 became 14336 on 2026-08-09, when EVD-R-007 took back its own trigger.
+ * The two thresholds that decide whether the rule fires had lived outside the
+ * library as EVD-P-001 and EVD-P-002, so the frame showed a caller the 42 and 60
+ * that only size the change and stayed silent about the 14 and 25 that cause it.
+ * A rule now declares four thresholds where it declared three, and each is
+ * serialized twice by the protocol.
+ *
+ * The rest of the increase is one finding that could not be left out: two of
+ * those four thresholds are inert. `returnSevereIdleDays` was already known to
+ * be — 60% of chronic load is gone by idle day 38, four days before the 42-day
+ * arm of that OR can matter — and measuring the new pair the same way found
+ * `detrainingMinCtlLossPct` is inert too, crossing at idle day 12 while the gate
+ * it shares an AND with does not open until day 14. Half of this rule's numbers
+ * never decide anything, and a caller reading a decision attributed to it should
+ * be able to see that from the decision.
+ *
+ * Trimmed first, and the ceiling moved only for what was left: the account of
+ * how the rule came to be written went into `notes`, which no frame carries, and
+ * a limitation that restated the `evidence` object sitting beside it in the same
+ * frame was cut. That took the worst case from 15102 to 13706. What remains is
+ * checkable material, which the paragraph above says not to trade away.
  */
-const FRAME_CEILING = 13312;
+const FRAME_CEILING = 14336;
 
 /**
  * The ceiling has to be tested against the worst case, not a convenient one.

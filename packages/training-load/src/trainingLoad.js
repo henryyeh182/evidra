@@ -19,6 +19,8 @@
  * no state. The resulting curve is returned so the caller can remember it.
  */
 
+import { THRESHOLDS } from "../../rules/src/index.js";
+
 const CTL_DAYS = 42;
 const ATL_DAYS = 7;
 
@@ -30,6 +32,18 @@ export const LOAD_ZONES = {
   overreaching: { maxTsb: -30, minTsb: -Infinity, label: "overreaching", note: "Overloaded; back the volume off." }
 };
 
+// Both numbers belong to EVD-R-007 and are read from the rule library, not from
+// here and — since 2026-08-09 — no longer from the parameter set either.
+//
+// They were EVD-P-001 and EVD-P-002, which put them a governance tier below the
+// rule they gate, and the split ran the wrong way round: these two decide
+// whether EVD-R-007 fires at all, while the two the rule did declare only decide
+// whether it takes one step off or two. So `decisionBasis` reported 42 and 60 —
+// which a reader could reasonably take for the trigger — and stayed silent about
+// the 14 and the 25 that actually were it. Moving them makes the rule's own
+// thresholds the ones that decide it, and costs nothing in behaviour: the values
+// are unchanged and neither the parameter set nor the library rounds them.
+//
 // Detraining is not a TSB band, and treating it as one inverted the reading.
 // TSB is a difference (CTL - ATL): across a layoff ATL collapses within about a
 // fortnight and then CTL keeps bleeding, so TSB peaks near week two and falls
@@ -46,8 +60,8 @@ export const LOAD_ZONES = {
 // so `minIdleDays` and `minCtlLossPct` land at roughly the same moment rather
 // than being tuned independently.
 const DETRAINING = {
-  minIdleDays: 14,
-  minCtlLossPct: 25
+  minIdleDays: THRESHOLDS.detrainingMinIdleDays,
+  minCtlLossPct: THRESHOLDS.detrainingMinCtlLossPct
 };
 
 function dayKey(iso) {

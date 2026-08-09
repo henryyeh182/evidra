@@ -74,13 +74,13 @@ const INSTRUCTIONS = `You gather the evidence; Evidra does the longitudinal arit
 
 \`basis: internal_composite\` — the threshold cuts a score Evidra computes from weights it chose; no study has used that score, so \`sources\` is empty by design and it is not evidence-based. \`basis: external_metric\` — the quantity is defined outside Evidra, \`sources\` cite work on it, \`contested\` names published objections; report both. Most rules are internal_composite. Say which when asked; empty \`sources\` is not missing information.
 
-\`decisionBasis\` comes from \`evidra_decide_session\` only; the other tools' numbers are not in the library, so do not claim they carry the same sourcing. Two policies, by id: arbitration (\`${POLICIES.arbitration.id}\`) — ${POLICIES.arbitration.description} Combination (\`${POLICIES.combination.id}\`) — ${POLICIES.combination.description}
+\`decisionBasis\` travels on every decision. Empty \`appliedRules\` means no rule applied, not that nothing was checked; a rule's \`limitations\` say what it does not do. Two policies, by id: arbitration (\`${POLICIES.arbitration.id}\`) — ${POLICIES.arbitration.description} Combination (\`${POLICIES.combination.id}\`) — ${POLICIES.combination.description}
 
 The intensity, duration and movements returned are the decision, not a draft to refine. Contraindications and load limits are applied here; do not re-derive them or reason past the result. What to say to the user is yours; what today's session becomes is not.
 
 Gathering evidence: use whichever source this user has — Apple Health, Google Health, Garmin, Strava, Oura, Whoop or any other — or the user's own words; two or three plain questions are a normal start. Pass it as \`evidence\`. Any single source decides something; more sources raise confidence.
 
-A signal nobody supplied comes back in \`signalCoverage\` and lowers confidence. Send what exists, not a default: a filled-in value makes that confidence figure untrue.
+A signal nobody supplied shows in \`signalCoverage\` and lowers confidence. Send what exists, not a default: a filled-in value makes that confidence figure untrue.
 
 Plans live with you: this server stores no plan, preview or history. Pass in the plan you hold, and persist what comes back.`;
 

@@ -1,0 +1,115 @@
+{
+  "id": "one-strava-activity-carries-no-load",
+  "what": "A Strava-only week where one of the three activities was entered by hand and came back without a Relative Effort. Training coverage is strict — one session short of a load figure puts the whole group in `missing` — and this is the only scenario in the set that reaches that half of `signalCoverage`. The loadless session is a legs session, so the group the decision is about is exactly the group whose fatigue is under-read.",
+  "date": "2026-08-06",
+  "scheduledSession": {
+    "id": "session_harness_34",
+    "focus": "Tempo Run",
+    "type": "run",
+    "durationMinutes": 50,
+    "intensity": "high",
+    "targetMuscleGroups": [
+      "legs"
+    ],
+    "exerciseIds": [
+      "exercise_recovery_walk"
+    ]
+  },
+  "expectedDecision": {
+    "type": "keep",
+    "intent": "proceed_as_planned",
+    "governingRule": "EVD-R-005",
+    "firedRules": [
+      "EVD-R-005"
+    ],
+    "overruledRules": [],
+    "changed": [],
+    "to": {
+      "intensity": "high",
+      "durationMinutes": 50
+    },
+    "confidence": "low",
+    "signalCoverage": {
+      "recovery": {
+        "usable": [],
+        "missing": [
+          "sleep",
+          "hrv",
+          "restingHeartRate",
+          "stress"
+        ]
+      },
+      "training": {
+        "usable": [],
+        "missing": [
+          "trainingLoad"
+        ]
+      }
+    }
+  },
+  "evidence": {
+    "profile": {
+      "userId": "user_harness",
+      "name": "Harness Athlete",
+      "timezone": "Asia/Taipei",
+      "heightCm": 178,
+      "weightKg": 74,
+      "fitnessLevel": "intermediate"
+    },
+    "goals": [
+      {
+        "id": "goal_endurance",
+        "type": "endurance",
+        "label": "Half marathon",
+        "priority": 1
+      }
+    ],
+    "constraints": {
+      "equipment": [
+        {
+          "type": "none",
+          "location": "outdoor",
+          "available": true
+        }
+      ]
+    },
+    "workouts": [
+      {
+        "id": "w_0801",
+        "type": "run",
+        "name": "Long run",
+        "startedAt": "2026-08-01T07:00:00+08:00",
+        "durationMinutes": 85,
+        "trainingLoad": 110,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      },
+      {
+        "id": "w_0803",
+        "type": "run",
+        "name": "Trail run, entered by hand",
+        "startedAt": "2026-08-03T07:00:00+08:00",
+        "durationMinutes": 70,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      },
+      {
+        "id": "w_0805",
+        "type": "run",
+        "name": "Easy run",
+        "startedAt": "2026-08-05T07:00:00+08:00",
+        "durationMinutes": 40,
+        "trainingLoad": 60,
+        "muscleGroups": [
+          "legs"
+        ],
+        "source": "strava"
+      }
+    ],
+    "healthMetrics": []
+  }
+}

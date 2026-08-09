@@ -12,6 +12,19 @@ export {
 
 export { arbitrate, combineIntensitySteps, getPolicies, describePolicies } from "./arbitrate.js";
 
+export { buildDecisionBasis } from "./basis.js";
+
+export { ENGINE_THRESHOLD_KEYS } from "./engineThresholds.js";
+
+export {
+  PARAMETERS,
+  PARAMETER_SET_VERSION,
+  getParameterSet,
+  getParameter,
+  assertParametersMatch,
+  assertValidParameterSet
+} from "./parameters.js";
+
 export {
   assertValidRuleLibrary,
   assertThresholdsMatch,

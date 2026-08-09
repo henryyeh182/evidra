@@ -54,5 +54,31 @@
  * decisions would see a field disappear with nothing in the library version to
  * explain it. No verdict moves and no rule fires differently; what a caller
  * receives does, which is the 1.2.0 standard.
+ *
+ * 1.5.0, on 2026-08-09: three more tools now carry `decisionBasis`. The plan
+ * generator, the plan change applier and the exercise catalog have always run
+ * injury filters of their own; what they lacked was a rule id, a provenance and
+ * a frame to report them in, so a caller could read a session decision's basis
+ * and find nothing at all on a plan — unable to tell "no rule applies here" from
+ * "this path never learned to say". EVD-R-010, EVD-R-011 and EVD-R-012 are those
+ * filters, and this constant now identifies the code behind all four rather than
+ * the session engine alone: it is the version of the code that applies the
+ * rules, which is what it always claimed to be and is now literally true.
+ *
+ * No verdict moves. Two sentences a caller reads do, and both moved toward the
+ * truth: a generated plan no longer reports "Active injury constraints applied"
+ * when the restrictions removed nothing (they never remove a prescribed
+ * movement — see EVD-R-010's limitations), and a substitution no longer says
+ * movements "were hard-filtered out" on calls where the filter excluded nothing.
+ * Minor rather than patch by the 1.2.0 standard, and minor rather than major
+ * because nothing a caller already reads has changed meaning.
+ *
+ * 1.6.0, also on 2026-08-09: `trainingLoad.js` reads the detraining gate from
+ * the rule library instead of the parameter set, because those two numbers were
+ * EVD-R-007's trigger and now sit on EVD-R-007. Same values, same conjunction,
+ * same verdicts — the harness's 37 scenarios move not at all. What a caller
+ * receives does move: a decision attributed to that rule now shows four
+ * thresholds where it showed three, and the two that were missing are the ones
+ * that caused it. Minor by the 1.2.0 standard.
  */
-export const ENGINE_VERSION = "1.4.0";
+export const ENGINE_VERSION = "1.6.0";

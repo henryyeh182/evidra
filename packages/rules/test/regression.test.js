@@ -192,8 +192,13 @@ test("rule regression: a blocked rule is still recorded", () => {
 // with nothing pinning it.
 test("every active rule in the library has a regression case", () => {
   const covered = new Set(CASES.map((testCase) => testCase.ruleId));
+  // Session rules only. Every case here hands `decideSession` a hand-written
+  // state, so a rule the plan generator or the catalog applies has no case that
+  // could be written in this file — it is pinned in the suite of the package
+  // that applies it. `appliedBy` is what makes that split checkable rather than
+  // a matter of remembering which rules belong where.
   const uncovered = getRuleLibrary()
-    .rules.filter((rule) => rule.status === "active")
+    .rules.filter((rule) => rule.status === "active" && rule.appliedBy === "session")
     .map((rule) => rule.ruleId)
     .filter((ruleId) => !covered.has(ruleId));
 

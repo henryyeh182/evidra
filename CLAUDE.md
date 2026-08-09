@@ -149,7 +149,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 - 對外 **6 個 tool**：`evidra_assess_fitness_state` · `evidra_decide_session` · `evidra_decide_exercise_substitution` ·
   `evidra_generate_plan` · `evidra_preview_adjust_plan` · `evidra_commit_adjust_plan`
-- **419 tests**、eval 20 golden cases，全綠
+- **428 tests**、eval 20 golden cases，全綠
 - parser 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP；
   Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 個平台。
   **前四家照真實匯出檔寫；Oura 與 WHOOP 照兩家自己的 OpenAPI 寫（2026-08-07），
@@ -323,7 +323,7 @@ title `Evidra Fitness`，用 `mcp-publisher publish` 送的（token 效期很短
 
 它帶的是 MCP 官方慣例——tool 命名與前綴、annotations 的定義、**呼叫端的失誤要回在
 result 裡而不是協定層**、structured output、transport 選擇。**這些判準不在本檔，
-十二條 gate 也一條都驗不到。** 2026-08-04 靠它一次查出：`evidra_decide_exercise_substitution`
+十三條 gate 也一條都驗不到。** 2026-08-04 靠它一次查出：`evidra_decide_exercise_substitution`
 的描述要呼叫端傳一個 schema 裡不存在的 `evidence`（同一句錯話還在 `manifest.json`
 與 `evidra/README.md`）、3 個 tool 把呼叫端可以自己修的失誤送成 JSON-RPC error、
 `evidra_generate_plan` 宣告會寫入但它是純函數、HTTP 綁全部介面卻印「local only」。
@@ -366,7 +366,13 @@ npm run review:release
 ## 動 Rule Library 的門檻／category／effect 之前
 
 **改 `packages/rules/data/session-rules.json` 裡的 `thresholds`、`category`、`priority`、
-`effect` 或 `status`，必須跑過 Decision Harness 才算數。**
+`effect`、`status` 或 `appliedBy`，必須跑過 Decision Harness 才算數。**
+
+`appliedBy`（2026-08-09 起必填）說的是哪個引擎套用這條規則，值必須是
+`ENGINE_THRESHOLD_KEYS` 宣告的四個之一（`session`／`plan`／`planChange`／`catalog`），
+且該規則宣告的門檻必須屬於同一個引擎——載入期就驗。**它會進指紋**，因為它決定這條規則歸哪個
+覆蓋檢查管：改成非 `session` 就離開 Decision Harness 的射程，落到
+`apps/mcp-server/test/ruleCoverage.test.js`，兩邊都不驗到的話沒有任何檢查替它說話。
 
 這條有機制擋，不是靠這裡寫著：`harness/rule-fingerprint.json` 對那幾個欄位各存一個 digest，
 `npm test` 在它與規則庫不一致時就紅。流程是
@@ -380,7 +386,8 @@ node harness/runner.js --update-fingerprint  # 看過了，才承認它
 
 **它跟 `regression.test.js` 的差別要講準，不要誇大**（2026-08-08 實測）：那組案例刻意坐在
 各自門檻邊上，`acwrHigh` 1.4→1.5 它**當場就紅**。指紋多出來的只有兩件事——
-一是它涵蓋 9 條規則，regression 只有 7 條（EVD-R-005 與 EVD-R-007 在那邊明列為例外）；
+一是它涵蓋全部 12 條規則，regression 只有 7 條（EVD-R-005 與 EVD-R-007 明列為例外，
+EVD-R-010／011／012 不是 session 規則、在 `apps/mcp-server/test/ruleCoverage.test.js` 驗）；
 二是 regression 的案例本身是測試，**攔住你的那個案例可以在同一個 commit 裡一起改**：
 門檻改 1.5、案例證據改 1.51，416 個測試全綠。指紋不是行為測試，紅的時候沒有一個測試在
 邀請你去改它，所以它會一直紅到有人刻意動它為止。
@@ -401,7 +408,7 @@ npm run serve:http           # HTTP transport
 
 要說某個 Phase／偏差／修正「做完了」，先走 [docs/phase-review.md](docs/phase-review.md)：
 先讀（memory → 本檔 → product-spec → 宣言 → README → plan → user-journey），
-再跑 `npm run review:phase` 的十二條 gate，最後回答機械驗不到的判斷題
+再跑 `npm run review:phase` 的十三條 gate，最後回答機械驗不到的判斷題
 （GPT-6 判準、Decision ≠ Recommendation、五條紀律…）。
 **gate 紅的不得宣告完成**——紅的是宣稱與現況的落差，不是待辦功能。
 

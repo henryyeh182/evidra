@@ -1,0 +1,200 @@
+{
+  "setId": "evidra.engine-parameters",
+  "version": "1.1.0",
+  "lastReview": "2026-08-08",
+  "reviewer": "Henry Yeh",
+  "readMe": [
+    "The numbers that change a decision without belonging to any rule.",
+    "",
+    "`session-rules.json` holds every threshold the session decision engine",
+    "applies, and each one is owned by a rule that declares what it cuts and",
+    "what it rests on. These are the other kind: constants inside the state",
+    "computation that no rule owns, that appear in no `decisionBasis`, and that",
+    "the caller therefore never sees — and that change what the engine decides",
+    "all the same. A detraining flag, a divisor under an HRV reading, and the",
+    "age at which a reading stops describing today are all of that kind.",
+    "",
+    "They lived as bare literals in three source files until 2026-08-08. Moving",
+    "them here does not make them better evidenced; it makes the absence of",
+    "evidence visible in the same shape as everywhere else. Every one of them",
+    "is `internal_composite` with no sources, and that is the honest reading,",
+    "not an oversight to be filled in later with something plausible.",
+    "",
+    "The engines read their values from this file, the same arrangement as the",
+    "rule library: editing a `value` here changes what Evidra computes. The",
+    "join is guarded in both directions by `assertParametersMatch` — a key the",
+    "engine reads that nothing here declares fails at load, and so does a",
+    "parameter nobody applies.",
+    "",
+    "Not covered here yet, and named so the gap is not mistaken for a claim of",
+    "completeness: the CTL/ATL time constants (42 and 7), the TSB bands, the",
+    "recovery-score weights, the readiness penalty coefficients, the plan phase",
+    "multipliers and the plan return ramp are all still bare literals in their",
+    "own files.",
+    "",
+    "1.1.0, on 2026-08-09: EVD-P-001 and EVD-P-002 left. The detraining pair",
+    "gated EVD-R-007 — they decided whether that rule fired at all — so holding",
+    "them here put the trigger a tier below the rule and kept it out of the",
+    "decisionBasis the rule does reach. They are now that rule's own thresholds",
+    "in session-rules.json, at the same values. Nothing here is retired for being",
+    "wrong; this one moved because it turned out to belong to a rule."
+  ],
+  "bases": [
+    "external_metric",
+    "internal_composite"
+  ],
+  "groups": [
+    {
+      "id": "detraining",
+      "label": "When a break counts as detraining",
+      "appliedBy": "packages/training-load/src/trainingLoad.js"
+    },
+    {
+      "id": "recovery_baseline",
+      "label": "The reference values raw recovery readings are scored against",
+      "appliedBy": "packages/semantic-engine/src/generateSemanticFitnessState.js"
+    },
+    {
+      "id": "signal_staleness",
+      "label": "How old a reading may be and still describe today",
+      "appliedBy": "packages/semantic-engine/src/generateSemanticFitnessState.js"
+    }
+  ],
+  "parameters": [
+    {
+      "parameterId": "EVD-P-003",
+      "key": "baselineHrvMs",
+      "status": "active",
+      "group": "recovery_baseline",
+      "title": "HRV reference used when the athlete has no baseline of their own",
+      "value": 52,
+      "unit": "ms",
+      "basis": "internal_composite",
+      "definition": "The divisor in the HRV recovery signal: signal = clamp(hrv / baseline x 100). A reading equal to the baseline scores 100.",
+      "appliedIn": "calculateRecoveryScore, and so in recovery, readiness, and every readiness threshold the rule library cuts.",
+      "sources": [],
+      "limitations": [
+        "52 has no stated origin in this repo and no citation behind it.",
+        "HRV varies by measurement method, time of day and individual by more than the differences this number is being used to detect, so a fixed divisor makes one athlete's normal night look like another's bad one. It is a fallback, and a per-athlete baseline supplied by the caller supersedes it.",
+        "It sits underneath a readiness score that rules then cut at 40, 60 and 75, so an error here moves those cut points without any of them changing."
+      ]
+    },
+    {
+      "parameterId": "EVD-P-004",
+      "key": "baselineRestingHrBpm",
+      "status": "active",
+      "group": "recovery_baseline",
+      "title": "Resting heart rate reference used when the athlete has no baseline of their own",
+      "value": 57,
+      "unit": "bpm",
+      "basis": "internal_composite",
+      "definition": "The reference in the resting-heart-rate signal: signal = clamp(100 - max(0, restingHr - baseline) x 5). At or below the baseline the signal is 100; every beat above costs 5 points.",
+      "appliedIn": "calculateRecoveryScore, and so in recovery and readiness.",
+      "sources": [],
+      "limitations": [
+        "57 has no stated origin in this repo and no citation behind it.",
+        "The penalty slope of 5 points per beat is a separate ungoverned literal in the same expression, and it decides how much this baseline matters."
+      ]
+    },
+    {
+      "parameterId": "EVD-P-005",
+      "key": "baselineWeeklyTrainingLoad",
+      "status": "active",
+      "group": "recovery_baseline",
+      "title": "Assumed weekly training load when the athlete's history is too short for their own",
+      "value": 360,
+      "unit": "training_load",
+      "basis": "internal_composite",
+      "definition": "Stands in for observed chronic weekly load while the 28-day window is too thin to supply one, and so sits in the denominator of the crude acute:chronic ratio.",
+      "appliedIn": "calculateTrainingLoad. The decision chain supersedes the crude ratio with the impulse-response one once history has converged, so this reaches a decision only on short histories — which is exactly when it is least testable.",
+      "sources": [],
+      "limitations": [
+        "360 has no stated origin in this repo and no citation behind it.",
+        "A ratio measured against an assumed target is already reported to the caller as provisional in `limits`; that sentence is the only place this number is visible from outside."
+      ]
+    },
+    {
+      "parameterId": "EVD-P-006",
+      "key": "stalenessSleepDays",
+      "status": "active",
+      "group": "signal_staleness",
+      "title": "How old a sleep reading may be",
+      "value": 3,
+      "unit": "days",
+      "appliesTo": [
+        "sleep_duration_hours",
+        "sleep_quality"
+      ],
+      "basis": "internal_composite",
+      "definition": "A reading older than this is dropped rather than used, and the signal is reported in signalCoverage.recovery.missing instead.",
+      "appliedIn": "getFreshMetricValue.",
+      "sources": [],
+      "limitations": [
+        "3 is our own choice with no citation behind it.",
+        "It decides which side of the missing/usable line a sparse wearer's night falls on, so it moves confidence and — through the recovery weights — readiness."
+      ]
+    },
+    {
+      "parameterId": "EVD-P-007",
+      "key": "stalenessAutonomicDays",
+      "status": "active",
+      "group": "signal_staleness",
+      "title": "How old an HRV or stress reading may be",
+      "value": 7,
+      "unit": "days",
+      "appliesTo": [
+        "hrv_ms",
+        "stress"
+      ],
+      "basis": "internal_composite",
+      "definition": "A reading older than this is dropped rather than used, and the signal is reported in signalCoverage.recovery.missing instead.",
+      "appliedIn": "getFreshMetricValue.",
+      "sources": [],
+      "limitations": [
+        "7 is our own choice with no citation behind it.",
+        "A week-old HRV reading is admitted at full weight (0.35) rather than discounted by age, so this is a cliff rather than a decay."
+      ]
+    },
+    {
+      "parameterId": "EVD-P-008",
+      "key": "stalenessRestingHrDays",
+      "status": "active",
+      "group": "signal_staleness",
+      "title": "How old a resting heart rate reading may be",
+      "value": 14,
+      "unit": "days",
+      "appliesTo": [
+        "resting_hr_bpm"
+      ],
+      "basis": "internal_composite",
+      "definition": "A reading older than this is dropped rather than used, and the signal is reported in signalCoverage.recovery.missing instead.",
+      "appliedIn": "getFreshMetricValue.",
+      "sources": [],
+      "limitations": [
+        "14 is our own choice with no citation behind it. It is the longest window here, on the reasoning that resting heart rate moves more slowly than the other three — reasoning, not measurement."
+      ]
+    },
+    {
+      "parameterId": "EVD-P-009",
+      "key": "stalenessVendorCompositeDays",
+      "status": "active",
+      "group": "signal_staleness",
+      "title": "How old a vendor composite score may be",
+      "value": 2,
+      "unit": "days",
+      "appliesTo": [
+        "vendor_readiness",
+        "body_battery",
+        "recovery_time_minutes"
+      ],
+      "basis": "internal_composite",
+      "definition": "A composite older than this is dropped rather than used. Shorter than the raw signals because these scores are the vendor's statement about a particular day rather than a measurement that ages.",
+      "appliedIn": "getFreshMetricValue.",
+      "sources": [],
+      "limitations": [
+        "2 is our own choice with no citation behind it.",
+        "These composites carry the heaviest weights in the recovery score (0.4, 0.3 and 0.25), so this window decides whether recovery is scored mostly by the vendor or mostly by us — and, where no raw signal is present at all, whether it is scored at all."
+      ]
+    }
+  ]
+}

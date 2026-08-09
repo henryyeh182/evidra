@@ -58,6 +58,23 @@ const layoutShims = {
         loader: "js"
       };
     });
+
+    // The engine parameters travel the same way, and must: they are read with
+    // `readFileSync` from a path that does not exist inside the archive, so a
+    // bundle built without this inlines nothing and throws at import.
+    pluginBuild.onResolve({ filter: /(^|\/)parameterSource\.js$/ }, () => ({
+      path: "evidra:engine-parameters",
+      namespace: "evidra-inline"
+    }));
+
+    pluginBuild.onLoad({ filter: /^evidra:engine-parameters$/, namespace: "evidra-inline" }, () => {
+      const json = readFileSync(join(rootDir, "packages/rules/data/engine-parameters.json"), "utf8");
+      const compact = JSON.stringify(JSON.parse(json));
+      return {
+        contents: `export const parameterSourceJson = ${JSON.stringify(compact)};`,
+        loader: "js"
+      };
+    });
   }
 };
 

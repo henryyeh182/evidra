@@ -146,7 +146,7 @@ async function main() {
     const coverageFailures = findings.filter((finding) => finding.check === "DH-COV");
     console.log(
       `\n  [${coverageFailures.length === 0 ? "PASS" : "FAIL"}] DH-COV  ` +
-        `Is every active rule in the library reachable from a scenario?`
+        `Is every rule the session engine applies reachable from a scenario?`
     );
     for (const ruleId of coverage.active) {
       const scenarioIds = coverage.covered.get(ruleId);
@@ -226,7 +226,7 @@ async function main() {
     } else {
       console.log(
         `\nAll ${CHECKS.length} checks hold across ${scenarios.length} scenarios, ` +
-          `every active rule is reachable, and no rule has moved unacknowledged.\n`
+          `every session rule is reachable, and no rule has moved unacknowledged.\n`
       );
     }
   });

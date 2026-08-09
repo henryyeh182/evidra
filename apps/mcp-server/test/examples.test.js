@@ -132,10 +132,17 @@ test("demo 4: recovery signals alone can decide upward, not only downward", asyn
 });
 
 test("demo 5: a contraindicated movement is filtered out, not ranked down", async () => {
+  // The equipment list has to leave a contraindicated candidate reachable, or
+  // this demo does not demonstrate what it says it does. It used to read
+  // ["bodyweight", "dumbbell"], which removes Front Squat for having no barbell
+  // *before* the knee filter is consulted — so the filter excluded nothing, and
+  // the sentence asserted below was printed anyway, on the strength of the
+  // caller having sent an avoid list at all. Found on 2026-08-09 when the
+  // filter started reporting what it had actually removed.
   const result = await call("evidra_decide_exercise_substitution", {
     exerciseId: "back squat",
     avoidContraindications: ["knee"],
-    availableEquipment: ["bodyweight", "dumbbell"]
+    availableEquipment: ["bodyweight", "dumbbell", "barbell", "squat_rack"]
   });
 
   assert.equal(result.decision.type, "substitute");
@@ -145,6 +152,14 @@ test("demo 5: a contraindicated movement is filtered out, not ranked down", asyn
     result.reason.some((line) => line.includes("hard-filtered")),
     "the hard filter is the claim; it has to be stated in the reason the user sees"
   );
+  // And the claim has to name a movement, because "a filter ran" and "a filter
+  // removed something" are the two states this sentence used to conflate.
+  assert.ok(
+    result.reason.some((line) => line.includes("Front Squat")),
+    "the reason must name what the filter removed, not merely say that it ran"
+  );
+  assert.equal(result.decisionBasis.governingRule.ruleId, "EVD-R-012");
+  assert.deepEqual(result.decisionBasis.governingRule.measured.excluded[0].matchedTags, ["knee"]);
   assert.ok(!result.action.to.contraindications?.includes("knee"));
 });
 

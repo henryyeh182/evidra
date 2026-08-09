@@ -646,6 +646,24 @@ export const outputSchemas = {
         },
         "minItems": 1
       },
+      "decisionBasis": {
+        "type": "object",
+        "description": "Which library rules shaped this output, in the frame evidra_decide_session uses. `governingRule` is null and `appliedRules` empty when no rule applied, and the frame still travels: an absent field cannot be told apart from a path that never checks. Each rule carries its `basis` — internal_composite means the threshold cuts a quantity Evidra computes or matches itself, so `sources` is empty by design and the rule is not evidence-based — and its `limitations`, which state what the rule does not do. Read those before describing a plan or a substitute as having been made safe.",
+        "properties": {
+          "libraryVersion": { "type": "string" },
+          "engineVersion": { "type": "string" },
+          "policies": {
+            "type": "object",
+            "properties": {
+              "arbitration": { "type": "string" },
+              "combination": { "type": "string" }
+            }
+          },
+          "governingRule": { "type": ["object", "null"] },
+          "appliedRules": { "type": "array", "items": { "type": "object" } }
+        },
+        "required": ["libraryVersion", "engineVersion", "policies", "governingRule", "appliedRules"]
+      },
       "confidence": {
         "type": "string"
       },
@@ -658,6 +676,7 @@ export const outputSchemas = {
       "decision",
       "action",
       "reason",
+      "decisionBasis",
       "confidence"
     ]
   },
@@ -700,6 +719,24 @@ export const outputSchemas = {
         "items": {
           "type": "string"
         }
+      },
+      "decisionBasis": {
+        "type": "object",
+        "description": "Which library rules shaped this output, in the frame evidra_decide_session uses. `governingRule` is null and `appliedRules` empty when no rule applied, and the frame still travels: an absent field cannot be told apart from a path that never checks. Each rule carries its `basis` — internal_composite means the threshold cuts a quantity Evidra computes or matches itself, so `sources` is empty by design and the rule is not evidence-based — and its `limitations`, which state what the rule does not do. Read those before describing a plan or a substitute as having been made safe.",
+        "properties": {
+          "libraryVersion": { "type": "string" },
+          "engineVersion": { "type": "string" },
+          "policies": {
+            "type": "object",
+            "properties": {
+              "arbitration": { "type": "string" },
+              "combination": { "type": "string" }
+            }
+          },
+          "governingRule": { "type": ["object", "null"] },
+          "appliedRules": { "type": "array", "items": { "type": "object" } }
+        },
+        "required": ["libraryVersion", "engineVersion", "policies", "governingRule", "appliedRules"]
       },
       "createdAt": {
         "type": "string"
@@ -807,6 +844,7 @@ export const outputSchemas = {
       "constraints",
       "weeks",
       "reasoning",
+      "decisionBasis",
       "createdAt"
     ]
   },
@@ -832,6 +870,24 @@ export const outputSchemas = {
       "note": {
         "type": "string"
       },
+      "decisionBasis": {
+        "type": "object",
+        "description": "Which library rules shaped this output, in the frame evidra_decide_session uses. `governingRule` is null and `appliedRules` empty when no rule applied, and the frame still travels: an absent field cannot be told apart from a path that never checks. Each rule carries its `basis` — internal_composite means the threshold cuts a quantity Evidra computes or matches itself, so `sources` is empty by design and the rule is not evidence-based — and its `limitations`, which state what the rule does not do. Read those before describing a plan or a substitute as having been made safe.",
+        "properties": {
+          "libraryVersion": { "type": "string" },
+          "engineVersion": { "type": "string" },
+          "policies": {
+            "type": "object",
+            "properties": {
+              "arbitration": { "type": "string" },
+              "combination": { "type": "string" }
+            }
+          },
+          "governingRule": { "type": ["object", "null"] },
+          "appliedRules": { "type": "array", "items": { "type": "object" } }
+        },
+        "required": ["libraryVersion", "engineVersion", "policies", "governingRule", "appliedRules"]
+      },
       "patch": {
         "type": "object"
       }
@@ -842,6 +898,7 @@ export const outputSchemas = {
       "baseVersion",
       "summary",
       "diff",
+      "decisionBasis",
       "patch"
     ]
   },
@@ -860,6 +917,24 @@ export const outputSchemas = {
       },
       "plan": {
         "type": "object"
+      },
+      "decisionBasis": {
+        "type": ["object", "null"],
+        "description": "Which library rules shaped this output, in the frame evidra_decide_session uses. `governingRule` is null and `appliedRules` empty when no rule applied, and the frame still travels: an absent field cannot be told apart from a path that never checks. Each rule carries its `basis` — internal_composite means the threshold cuts a quantity Evidra computes or matches itself, so `sources` is empty by design and the rule is not evidence-based — and its `limitations`, which state what the rule does not do. Read those before describing a plan or a substitute as having been made safe. Carried from the preview being committed rather than recomputed, and null when that preview predates the field.",
+        "properties": {
+          "libraryVersion": { "type": "string" },
+          "engineVersion": { "type": "string" },
+          "policies": {
+            "type": "object",
+            "properties": {
+              "arbitration": { "type": "string" },
+              "combination": { "type": "string" }
+            }
+          },
+          "governingRule": { "type": ["object", "null"] },
+          "appliedRules": { "type": "array", "items": { "type": "object" } }
+        },
+        "required": ["libraryVersion", "engineVersion", "policies", "governingRule", "appliedRules"]
       },
       "versionHistory": {
         "type": "array",

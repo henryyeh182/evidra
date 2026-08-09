@@ -4,6 +4,16 @@
 import { assertValidUserContext } from "../../domain/src/models.js";
 import { todayInTimezone } from "../../domain/src/dates.js";
 import { computeTrainingLoad } from "../../training-load/src/trainingLoad.js";
+import { THRESHOLDS, ENGINE_THRESHOLD_KEYS, buildDecisionBasis } from "../../rules/src/index.js";
+import { ENGINE_VERSION } from "../../decision-engine/src/version.js";
+
+// This generator's own thresholds, narrowed to the keys it declared. Same join
+// the session engine sits behind: the number lives in the rule that owns it,
+// and reading one belonging to another engine yields undefined rather than a
+// value from somewhere else.
+const RULES = Object.freeze(
+  Object.fromEntries(ENGINE_THRESHOLD_KEYS.plan.map((key) => [key, THRESHOLDS[key]]))
+);
 
 const UNIVERSAL_EQUIPMENT = new Set(["none", "bodyweight", "outdoor"]);
 
@@ -132,9 +142,24 @@ function deriveConstraints(context) {
   };
 }
 
+const HIGH_IMPACT_PATTERN = /high-impact|jump|plyo|knee/;
+
+/**
+ * The restrictions EVD-R-010 reads, listed rather than reduced to a boolean.
+ *
+ * The rule reports which strings matched, so the athlete can see that a plan was
+ * held back by the word "knee" in something they wrote. Testing each entry
+ * separately rather than the joined string is the same test — every alternative
+ * in the pattern is a single token, so nothing can match across a join.
+ */
+function highImpactRestrictions(constraints) {
+  return [...constraints.restrictions, ...constraints.avoidMovements].filter((entry) =>
+    HIGH_IMPACT_PATTERN.test(String(entry).toLowerCase())
+  );
+}
+
 function hasHighImpactRestriction(constraints) {
-  const haystack = [...constraints.restrictions, ...constraints.avoidMovements].join(" ").toLowerCase();
-  return /high-impact|jump|plyo|knee/.test(haystack);
+  return highImpactRestrictions(constraints).length >= RULES.highImpactRestrictionPresent;
 }
 
 function isEquipmentAvailable(required, availableSet) {
@@ -162,7 +187,7 @@ const identityDisplay = (id) => id;
  */
 const noCatalog = () => null;
 
-function applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor, findGoalAlternative) {
+function applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor, findGoalAlternative, trace) {
   const notes = [];
   let intensity = slot.intensity;
   let focus = slot.focus;
@@ -172,6 +197,7 @@ function applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor,
     intensity = "moderate";
     focus = focus.replace(/Tempo run/i, "Controlled Zone 2 run");
     notes.push("Downgraded high-intensity run to protect against active high-impact restriction.");
+    trace.sessionsHeldAtModerate += 1;
   }
 
   const cap = slot.longSession ? constraints.longSessionMinutes : constraints.weekdayAvailableMinutes;
@@ -220,8 +246,8 @@ function applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor,
   return { focus, intensity, cap, exerciseIds, notes };
 }
 
-function buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier, displayNameFor, findGoalAlternative) {
-  const resolved = applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor, findGoalAlternative);
+function buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier, displayNameFor, findGoalAlternative, trace) {
+  const resolved = applyConstraintsToSlot(slot, constraints, availableSet, displayNameFor, findGoalAlternative, trace);
   const targetMinutes = Math.round(slot.baseMinutes * multiplier);
   const durationMinutes = Math.max(15, Math.min(targetMinutes, resolved.cap));
   const date = addDays(weekStartDate, slot.dayOffset);
@@ -302,13 +328,18 @@ export function generateTrainingPlan(context, options = {}) {
   const { detraining } = computeTrainingLoad(context.workouts, { asOf: startDate });
   const returning = detraining.active;
 
+  // What the injury rule did, counted while it happens rather than inferred
+  // from the finished plan: a session at moderate looks the same whether it was
+  // held there by a restriction or was written that way in the template.
+  const trace = { sessionsHeldAtModerate: 0 };
+
   const weeks = [];
   for (let weekIndex = 0; weekIndex < totalWeeks; weekIndex += 1) {
     const phase = phaseForWeek(weekIndex, totalWeeks, returning);
     const multiplier = phase === "return" ? RETURN_RAMP[weekIndex] : PHASE_MULTIPLIERS[phase];
     const weekStartDate = addDays(startDate, weekIndex * 7);
     const sessions = template.slots.map((slot) =>
-      buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier, displayNameFor, findGoalAlternative)
+      buildSession(slot, constraints, availableSet, weekStartDate, phase, multiplier, displayNameFor, findGoalAlternative, trace)
     );
 
     weeks.push({
@@ -332,12 +363,44 @@ export function generateTrainingPlan(context, options = {}) {
       `Return to training: last session was ${detraining.daysSinceLastSession} days ago and chronic load is down ${detraining.ctlLossPct}% from its recent peak, so the first ${Math.min(RETURN_RAMP.length, totalWeeks - 1)} week(s) run at reduced load and hold intensity at moderate.`
     );
   }
+  // What this sentence used to say was "Active injury constraints applied",
+  // which is not what happens: an active injury's restrictions do not remove any
+  // prescribed movement from a generated plan. They reach exactly two places —
+  // the high-impact check above, and the catalog search that runs only when a
+  // slot has already lost every movement it had. Saying "applied" told a reader
+  // the plan had been made safe. See EVD-R-010's limitations.
   if (constraints.restrictions.length > 0) {
-    reasoning.push(`Active injury constraints applied: ${constraints.restrictions.join("; ")}.`);
+    const matched = highImpactRestrictions(constraints);
+    reasoning.push(
+      `Active injury restrictions on file: ${constraints.restrictions.join("; ")}. ` +
+        (trace.sessionsHeldAtModerate > 0
+          ? `${trace.sessionsHeldAtModerate} high-intensity run(s) were held at moderate on account of ${matched.join("; ")}.`
+          : `They did not change any session in this plan: they are read only to hold a high-intensity run at moderate, and to filter a replacement movement when a session has already lost all of its own. They do not remove a prescribed movement.`)
+    );
   }
   if (constraints.avoidMovements.length > 0) {
     reasoning.push(`Avoided movements: ${constraints.avoidMovements.join(", ")}.`);
   }
+
+  // The rules that shaped this plan, in the same frame a session decision
+  // carries. `fired` is empty on most calls and the frame still travels, saying
+  // that no rule applied rather than saying nothing — the distinction a caller
+  // cannot otherwise draw between "nothing was contraindicated" and "this path
+  // does not check".
+  const highImpact = highImpactRestrictions(constraints);
+  const fired =
+    trace.sessionsHeldAtModerate > 0
+      ? [
+          {
+            ruleId: "EVD-R-010",
+            measured: {
+              matchedRestrictions: highImpact,
+              highImpactRestrictionPresent: highImpact.length,
+              sessionsHeldAtModerate: trace.sessionsHeldAtModerate
+            }
+          }
+        ]
+      : [];
 
   return {
     id: options.planId || `plan_${context.user.id}_${startDate}`,
@@ -352,6 +415,7 @@ export function generateTrainingPlan(context, options = {}) {
     constraints,
     weeks,
     reasoning,
+    decisionBasis: buildDecisionBasis({ engineVersion: ENGINE_VERSION, fired }),
     createdAt: `${startDate}T00:00:00Z`
   };
 }

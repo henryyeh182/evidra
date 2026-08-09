@@ -612,6 +612,9 @@ gate(
       "apps/mcp-server/src/server.js",
       "apps/mcp-server/src/outputSchemas.js",
       "packages/rules/data/session-rules.json",
+      // 同一種東西：引擎從資料讀值，改一個數字就改行為。它不進 decisionBasis，
+      // 呼叫端看不到，所以更需要在這條裡。
+      "packages/rules/data/engine-parameters.json",
       "packages/evidence/src/model.js"
     ];
 
@@ -697,6 +700,42 @@ gate(
 );
 
 // ---------------------------------------------------------------------------
+
+// G11：規則庫的門檻／類別／效果改了，有沒有人看過它決策出什麼。
+//
+// 這條與其他十一條的性質不同：它不比對文件與現況，它跑決策鏈本身。放進來是因為
+// review:phase 是「宣告完成之前」那份清單，而規則庫的改動是最容易在宣告完成時被
+// 當成已驗證的一種——`npm test` 確實已經涵蓋 harness，但讀這份清單的人不會知道
+// 那件事發生過。這裡把它講出來，並在指紋沒被承認時擋下宣告。
+//
+// 指紋紅了不代表規則錯了，代表沒有人看過它動出什麼。流程在 CLAUDE.md：
+//   npm run harness                              # 先看決策變成什麼
+//   node harness/runner.js --update-fingerprint  # 看過了，才承認它
+gate(
+  "G11",
+  "規則庫改動跑過 Decision Harness，且指紋已被承認",
+  "門檻、類別、優先序或效果改了而沒人看過決策鏈的輸出，等於把規則庫當文件改。",
+  async () => {
+    const findings = [];
+    const { runHarness, fingerprintDrift } = await import("../harness/runner.js");
+
+    const drift = await fingerprintDrift();
+    for (const ruleId of drift.changed) findings.push(`${ruleId} 的門檻／類別／優先序／效果變了，指紋未更新`);
+    for (const ruleId of drift.added) findings.push(`${ruleId} 是新的，指紋未更新`);
+    for (const ruleId of drift.removed) findings.push(`${ruleId} 不見了，指紋未更新`);
+    if (drift.policiesMoved) findings.push("仲裁或組合政策變了，指紋未更新");
+    if (findings.length > 0) {
+      findings.push("跑 `npm run harness` 讀決策，再 `node harness/runner.js --update-fingerprint`");
+    }
+
+    const { findings: harnessFindings, errors, coverage } = await runHarness();
+    for (const error of errors) findings.push(`情境 ${error.scenario} 跑不起來：${error.message}`);
+    for (const finding of harnessFindings) findings.push(`[${finding.check}] ${finding.scenario}：${finding.failure}`);
+    for (const ruleId of coverage.uncovered) findings.push(`${ruleId} 是 session 規則但沒有情境打得到它`);
+
+    return findings;
+  }
+);
 
 const resolved = [];
 for (const result of results) {

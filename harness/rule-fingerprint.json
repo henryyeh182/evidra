@@ -16,17 +16,30 @@
     "and commit the result alongside the rule edit, so the diff shows both the",
     "threshold that changed and the acknowledgement that someone looked."
   ],
-  "libraryVersion": "1.1.0",
+  "libraryVersion": "1.4.0",
   "policies": "55406c5ae37129f8",
   "rules": {
-    "EVD-R-001": "94a8fc8c6d9e0515",
-    "EVD-R-002": "d675e59827ebc926",
-    "EVD-R-003": "a918510fe9135093",
-    "EVD-R-004": "12dce723b2377f25",
-    "EVD-R-005": "91b04dc52718a2b4",
-    "EVD-R-006": "6827cf711088f59e",
-    "EVD-R-007": "6b8f78b663bf2417",
-    "EVD-R-008": "5db6e4337dd7ca57",
-    "EVD-R-009": "6616b148336b2d82"
+    "EVD-R-001": "78d8c6f33b50d464",
+    "EVD-R-002": "a08f548618bc88d7",
+    "EVD-R-003": "bbd149ef09701016",
+    "EVD-R-004": "129ce73a98bea593",
+    "EVD-R-005": "cb81ea23b258ea29",
+    "EVD-R-006": "a4f5cd990a2da753",
+    "EVD-R-007": "99872a3d3913b459",
+    "EVD-R-008": "4c7de7f9f30e0f33",
+    "EVD-R-009": "a16ff19251f89e35",
+    "EVD-R-010": "f68305ecde4b567d",
+    "EVD-R-011": "023032e3808f9889",
+    "EVD-R-012": "f9728007675d71a1"
+  },
+  "parameterSetVersion": "1.1.0",
+  "parameters": {
+    "EVD-P-003": "93602bcbf2298864",
+    "EVD-P-004": "c5d6de817d672409",
+    "EVD-P-005": "473b7bf42d9a793b",
+    "EVD-P-006": "89b658d95fbb20b5",
+    "EVD-P-007": "ef8ec57fdb97fb47",
+    "EVD-P-008": "06c0525ad342cfcc",
+    "EVD-P-009": "55725b56ad67bc9f"
   }
 }

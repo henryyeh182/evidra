@@ -8,6 +8,8 @@ import { searchWorkouts, totalWorkingSets } from "../../../packages/knowledge-gr
 import { loadDemoUserContext } from "./demoData.js";
 import { loadKnowledgeBase, assertGrounded, toExerciseSummary, paginate } from "./knowledgeBase.js";
 import { jsonContent, errorContent } from "./content.js";
+import { buildDecisionBasis } from "../../../packages/rules/src/index.js";
+import { ENGINE_VERSION } from "../../../packages/decision-engine/src/version.js";
 
 function assertUserId(context, userId) {
   if (context.user.id !== userId) {
@@ -231,11 +233,36 @@ export async function decideExerciseSubstitutionTool(args = {}) {
 
   const conditions = args.conditions || [];
   const avoid = args.avoidContraindications || [];
-  const candidates = graph.findSubstitutes(original.id, {
-    conditions,
-    availableEquipment: args.availableEquipment,
-    avoidContraindications: avoid,
-    limit: 3
+  const { substitutes: candidates, excludedByContraindication } = graph.collectSubstituteCandidates(
+    original.id,
+    {
+      conditions,
+      availableEquipment: args.availableEquipment,
+      avoidContraindications: avoid,
+      limit: 3
+    }
+  );
+
+  // What the contraindication filter did, in the frame decide_session uses.
+  // Empty `fired` is the normal case and the frame travels anyway: a caller
+  // otherwise cannot tell a call where nothing was contraindicated from one
+  // where the filter was never consulted — and it is never consulted when the
+  // caller sends no avoid list, which is most calls.
+  const contraindicationBasis = buildDecisionBasis({
+    engineVersion: ENGINE_VERSION,
+    fired:
+      excludedByContraindication.length > 0
+        ? [
+            {
+              ruleId: "EVD-R-012",
+              measured: {
+                contraindicationTagsMatched: excludedByContraindication.length,
+                avoidRequested: avoid,
+                excluded: excludedByContraindication
+              }
+            }
+          ]
+        : []
   });
 
   const evidence = [
@@ -254,6 +281,7 @@ export async function decideExerciseSubstitutionTool(args = {}) {
       reason: [
         `No substitute satisfies both the reported conditions (${conditions.join(", ") || "none"}) and the equipment on hand; the original movement stays, at a reduced load.`
       ],
+      decisionBasis: contraindicationBasis,
       confidence: "low",
       limits: ["Too few substitute options; this one needs a coach's judgement."]
     };
@@ -276,11 +304,18 @@ export async function decideExerciseSubstitutionTool(args = {}) {
     })),
     reason: [
       chosen.reason,
-      ...(avoid.length ? [`Movements contraindicated for ${avoid.join(", ")} were hard-filtered out.`] : []),
+      ...(avoid.length
+        ? [
+            excludedByContraindication.length > 0
+              ? `Movements contraindicated for ${avoid.join(", ")} were hard-filtered out: ${excludedByContraindication.map((item) => item.name).join(", ")}.`
+              : `No candidate carried a contraindication tag matching ${avoid.join(", ")}, so that filter removed nothing.`
+          ]
+        : []),
       ...(chosen.preservesTrainingGoal
         ? [`The substitute still serves the original training goal (${original.trainingGoals.join(", ")}).`]
         : [])
     ],
+    decisionBasis: contraindicationBasis,
     confidence: original.confidence >= 0.9 ? "high" : "medium",
     // A safe swap that trains something else is still the right call when the
     // original cannot be done — but the caller has to know the session stopped

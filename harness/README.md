@@ -60,7 +60,7 @@ And three that are properties of the whole set rather than of any decision:
 
 | | question |
 |---|---|
-| DH-COV | Is every active rule in the library reachable from a scenario? |
+| DH-COV | Is every rule the session engine applies reachable from a scenario? |
 | DH-BND | Is every threshold exercised at its edge, and quiet one step short of it? |
 | DH-FP | Has any rule's threshold, category or effect moved without being acknowledged? |
 
@@ -144,12 +144,14 @@ changes it on purpose.
 
 Every check runs against `evidra_decide_session`'s chain and nothing else.
 
-`evidra_generate_plan` and `evidra_decide_exercise_substitution` do not emit
-`decisionBasis` — the server says so in its own `initialize` instructions, and
-EVD-R-009's limitations record that the plan and the catalog run their own
-injury filters by other mechanisms, carrying no rule id and passing through no
-arbitration. So there is nothing on those two surfaces for DH-4, DH-5 or the
-attribution half of DH-7 to read. Extending the decision trace to them is
+`evidra_generate_plan`, the plan change tools and
+`evidra_decide_exercise_substitution` do emit `decisionBasis` as of 2026-08-09,
+against EVD-R-010, EVD-R-011 and EVD-R-012 — but not from a chain this harness
+can drive: each needs a plan or a catalog lookup rather than a day of evidence.
+So DH-COV and DH-BND are scoped to `appliedBy === "session"`, and the rules
+outside that scope are exercised in `apps/mcp-server/test/ruleCoverage.test.js`,
+which fails in the same way if one of them ships unexercised. Bringing those
+surfaces into the harness itself is
 separate work; this harness does not cover it and does not report on it either
 way.
 
@@ -186,7 +188,9 @@ files shaped exactly like a person's health record.
     "firedRules": ["EVD-R-002"],
     "overruledRules": [],
     "changed": ["focus", "intensity"],
-    "to": { "intensity": "moderate", "durationMinutes": 60 }
+    "to": { "intensity": "moderate", "durationMinutes": 60 },
+    "confidence": "high",
+    "signalCoverage": { "recovery": { "missing": [] } }
   },
   "rulePosition": [
     { "rule": "EVD-R-002", "threshold": "readinessReduce", "position": "triggers" }
@@ -209,6 +213,20 @@ field, and the information is in what it does carry — every rule in
 `appliedRules` that is not the governing one lost arbitration. It is pinned
 separately from `firedRules` because a rule can keep firing while quietly
 changing sides, and "fired" alone would not show it.
+
+`confidence` and `signalCoverage` are pinned by the four scenarios whose subject
+they are — 32 through 35, where a signal is deliberately absent — and by nothing
+else. DH-6 asks the general question of every scenario: a signal taken away has
+to be reported and must never make the system surer of itself. What it cannot
+say is which signals *this* scenario is short of, or what confidence that
+shortfall lands on, because nothing was taken away from a scenario that was
+already thin. An engine that promoted a three-signal day to `high` would pass
+DH-6 in full.
+
+Both are named group by group and list by list, so a scenario claiming
+`recovery.missing` claims that and nothing about the training half, and the
+lists are sorted before comparing — the order they come out in is the order the
+signals happen to be enumerated in, and no scenario should be pinning that.
 
 `rulePosition` is what DH-BND reads, and is described next.
 

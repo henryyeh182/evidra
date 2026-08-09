@@ -3,6 +3,13 @@
 
 import { assertValidPlan, assertValidChangeRequest } from "./models.js";
 import { createHash } from "node:crypto";
+import { THRESHOLDS, ENGINE_THRESHOLD_KEYS, buildDecisionBasis } from "../../rules/src/index.js";
+import { ENGINE_VERSION } from "../../decision-engine/src/version.js";
+
+// This applier's own thresholds, narrowed to the keys it declared.
+const RULES = Object.freeze(
+  Object.fromEntries(ENGINE_THRESHOLD_KEYS.planChange.map((key) => [key, THRESHOLDS[key]]))
+);
 
 function clonePlan(plan) {
   return structuredClone(plan);
@@ -51,7 +58,9 @@ function displayOf(session, id) {
 
 function matchesRegion(text, bodyRegion) {
   const region = bodyRegion.toLowerCase().replace(/_/g, " ");
-  return region.split(" ").some((token) => token.length >= 3 && text.includes(token));
+  return region
+    .split(" ")
+    .some((token) => token.length >= RULES.bodyRegionTokenMinLength && text.includes(token));
 }
 
 function applyReduceAvailability(plan, changeRequest, diff) {
@@ -82,7 +91,7 @@ function applyReduceAvailability(plan, changeRequest, diff) {
   return `Reduced weekday availability to ${weekdayCap} min and re-capped ${diff.length} session(s).`;
 }
 
-function applyAddInjury(plan, changeRequest, diff) {
+function applyAddInjury(plan, changeRequest, diff, trace) {
   const restrictions = changeRequest.restrictions || [`protect ${changeRequest.bodyRegion}`];
   const avoidMovements = changeRequest.avoidMovements || [];
   plan.constraints.restrictions = [...new Set([...plan.constraints.restrictions, ...restrictions])];
@@ -105,6 +114,8 @@ function applyAddInjury(plan, changeRequest, diff) {
         });
         session.intensity = "moderate";
         session.rationale += ` Intensity lowered to protect ${changeRequest.bodyRegion}.`;
+        trace.intensityReductions += 1;
+        trace.sessionsAffected.add(session.date);
       }
 
       const currentIds = session.exerciseIds || session.exercises || [];
@@ -126,6 +137,8 @@ function applyAddInjury(plan, changeRequest, diff) {
         // The spoken list is derived, so it cannot drift from the canonical one.
         // Names are re-resolved at the tool boundary; here they track the ids.
         session.exercises = after.map((id) => displayOf(session, id));
+        for (const id of removed) trace.movementsRemoved.add(id);
+        trace.sessionsAffected.add(session.date);
       }
     }
   }
@@ -185,9 +198,34 @@ export function previewPlanChange(plan, changeRequest) {
   const resultingPlan = clonePlan(plan);
   resultingPlan.status = "modified";
   const diff = [];
-  const summary = CHANGE_APPLIERS[changeRequest.kind](resultingPlan, changeRequest, diff);
+  const trace = { sessionsAffected: new Set(), intensityReductions: 0, movementsRemoved: new Set() };
+  const summary = CHANGE_APPLIERS[changeRequest.kind](resultingPlan, changeRequest, diff, trace);
+
+  // The rule that governed the change, where one did. Only `add_injury` can
+  // fire an injury rule; a deload or an availability cut is not a safety
+  // decision and says so by carrying a frame with nothing in it.
+  //
+  // The clone inherits whatever `decisionBasis` the plan was generated with,
+  // which describes how the plan was built and not what this change did. Two
+  // different questions, so the preview answers its own at its own level and
+  // leaves the plan's alone.
+  const fired =
+    trace.sessionsAffected.size >= RULES.injuryAffectedSessionsPresent && changeRequest.kind === "add_injury"
+      ? [
+          {
+            ruleId: "EVD-R-011",
+            measured: {
+              bodyRegion: changeRequest.bodyRegion,
+              injuryAffectedSessionsPresent: trace.sessionsAffected.size,
+              intensityReductions: trace.intensityReductions,
+              movementsRemoved: [...trace.movementsRemoved]
+            }
+          }
+        ]
+      : [];
 
   return {
+    decisionBasis: buildDecisionBasis({ engineVersion: ENGINE_VERSION, fired }),
     // Deterministic: retries and separate stateless server instances return
     // the same identifier for the same input, without a process counter.
     previewId: `preview_${plan.id}_${plan.version}_${previewFingerprint(plan, changeRequest)}`,
