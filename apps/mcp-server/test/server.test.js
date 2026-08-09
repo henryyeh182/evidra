@@ -99,12 +99,12 @@ test("MCP server lists core fitness tools", async () => {
 
   const toolNames = response.result.tools.map((tool) => tool.name);
   assert.deepEqual(toolNames, [
-    "evidra_assess_fitness_state",
-    "evidra_decide_session",
-    "evidra_decide_exercise_substitution",
-    "evidra_generate_plan",
-    "evidra_preview_adjust_plan",
-    "evidra_commit_adjust_plan"
+    "assess_fitness_state",
+    "decide_session",
+    "decide_exercise_substitution",
+    "generate_plan",
+    "preview_adjust_plan",
+    "commit_adjust_plan"
   ]);
   // Every exposed tool must be a decision or the substrate one operates on.
   assert.ok(toolNames.length <= 10, `tool surface grew to ${toolNames.length}`);
@@ -133,6 +133,37 @@ test("MCP server includes release identity in the advertised toolset", async () 
       `${tool.name} does not carry the release version in tools/list`
     );
   }
+});
+
+test("advertised tools keep the v0.1.1-compatible wire shape", async () => {
+  const listed = await handleJsonRpcMessage(
+    JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} })
+  );
+
+  for (const tool of listed.result.tools) {
+    assert.equal(tool.outputSchema, undefined, `${tool.name} must not advertise outputSchema`);
+  }
+
+  const called = await handleJsonRpcMessage(
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: 3,
+      method: "tools/call",
+      params: {
+        name: "decide_exercise_substitution",
+        arguments: {
+          exerciseId: "back squat",
+          conditions: ["knee_injury"],
+          availableEquipment: ["bodyweight"],
+          avoidContraindications: ["knee"]
+        }
+      }
+    })
+  );
+
+  assert.equal(called.error, undefined);
+  assert.equal(called.result.structuredContent, undefined);
+  assert.deepEqual(Object.keys(called.result).sort(), ["content"]);
 });
 
 test("MCP server calls evidra_assess_fitness_state", async () => {

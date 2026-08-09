@@ -8,6 +8,31 @@ import {
 
 const TOOLSET_META_KEY = "io.github.henryyeh182/evidra/toolsetVersion";
 
+const publicToolNames = {
+  evidra_assess_fitness_state: "assess_fitness_state",
+  evidra_decide_session: "decide_session",
+  evidra_decide_exercise_substitution: "decide_exercise_substitution",
+  evidra_generate_plan: "generate_plan",
+  evidra_preview_adjust_plan: "preview_adjust_plan",
+  evidra_commit_adjust_plan: "commit_adjust_plan"
+};
+
+function publicizeToolNames(value) {
+  if (typeof value === "string") {
+    return Object.entries(publicToolNames).reduce(
+      (text, [canonicalName, publicName]) => text.replaceAll(canonicalName, publicName),
+      value
+    );
+  }
+  if (Array.isArray(value)) return value.map(publicizeToolNames);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, publicizeToolNames(entry)])
+    );
+  }
+  return value;
+}
+
 /**
  * The evidence object, written once.
  *
@@ -507,13 +532,17 @@ export function resolveToolName(name) {
 export function listedToolDefinitions(version) {
   return toolDefinitions
     .filter((tool) => !tool.deprecated)
-    .map(({ deprecated, ...tool }) => ({
-      ...tool,
-      _meta: {
-        ...(tool._meta || {}),
-        [TOOLSET_META_KEY]: version
-      }
-    }));
+    .map(({ deprecated, ...tool }) => {
+      const publicTool = publicizeToolNames(tool);
+      return {
+        ...publicTool,
+        name: publicToolNames[tool.name] || tool.name,
+        _meta: {
+          ...(tool._meta || {}),
+          [TOOLSET_META_KEY]: version
+        }
+      };
+    });
 }
 
 /**

@@ -6,18 +6,15 @@ import assert from "node:assert/strict";
 
 import { handleJsonRpcMessage } from "../src/server.js";
 import { assertGrounded } from "../src/knowledgeBase.js";
-import { deprecatedToolAliases, toolDefinitions } from "../src/toolDefinitions.js";
+import { deprecatedToolAliases, listedToolDefinitions, toolDefinitions } from "../src/toolDefinitions.js";
 
 let nextId = 100;
 
-test("public tool descriptions use canonical names", () => {
-  const descriptions = toolDefinitions.flatMap((tool) => [
-    tool.description,
-    ...Object.values(tool.inputSchema?.properties ?? {}).map((property) => property.description)
-  ]).filter(Boolean).join(" ");
+test("advertised tool descriptions use the public legacy names", () => {
+  const advertised = JSON.stringify(listedToolDefinitions("test"));
 
-  for (const alias of Object.keys(deprecatedToolAliases)) {
-    assert.doesNotMatch(descriptions, new RegExp(`\\b${alias}\\b`));
+  for (const canonicalName of Object.values(deprecatedToolAliases)) {
+    assert.doesNotMatch(advertised, new RegExp(`\\b${canonicalName}\\b`));
   }
 });
 

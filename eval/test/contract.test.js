@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { outputSchemas } from "../../apps/mcp-server/src/outputSchemas.js";
-import { toolDefinitions as defs, listedToolDefinitions } from "../../apps/mcp-server/src/toolDefinitions.js";
+import { resolveToolName, toolDefinitions as defs, listedToolDefinitions } from "../../apps/mcp-server/src/toolDefinitions.js";
 import { loadContract } from "../lib/contracts.js";
 import { validate } from "../lib/jsonSchema.js";
 
@@ -51,9 +51,10 @@ test("internal output schemas match their contract files without being advertise
   for (const tool of listedToolDefinitions()) {
     assert.equal(tool.outputSchema, undefined, `${tool.name} should not advertise outputSchema in tools/list`);
 
-    const contract = await loadContract(tool.name, "output");
+    const canonicalName = resolveToolName(tool.name);
+    const contract = await loadContract(canonicalName, "output");
     assert.deepEqual(
-      structural(outputSchemas[tool.name]),
+      structural(outputSchemas[canonicalName]),
       structural(contract),
       `the internal output schema for ${tool.name} has drifted from schemas/tools/${tool.name}.output.json`
     );

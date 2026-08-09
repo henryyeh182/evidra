@@ -192,11 +192,11 @@ Form 3 是核心宗旨要的那個版本，不是選配。它排在後面是因�
 
 | Tool | 產出 |
 |---|---|
-| `evidra_assess_fitness_state` | 恢復／準備度判定 |
-| `evidra_decide_session` | 今日課表 from → to |
-| `evidra_decide_exercise_substitution` | 動作替代 from → to |
-| `evidra_generate_plan` | 計畫（決策的基底） |
-| `evidra_preview_adjust_plan` / `evidra_commit_adjust_plan` | 兩階段調整 |
+| `assess_fitness_state` | 恢復／準備度判定 |
+| `decide_session` | 今日課表 from → to |
+| `decide_exercise_substitution` | 動作替代 from → to |
+| `generate_plan` | 計畫（決策的基底） |
+| `preview_adjust_plan` / `commit_adjust_plan` | 兩階段調整 |
 
 ## 現況
 
@@ -205,7 +205,7 @@ Form 3 是核心宗旨要的那個版本，不是選配。它排在後面是因�
 | 對外 tool | 6 個（`tools/list` 實測） |
 | 資料標準化 | `packages/connectors` 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP，Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 家。前四家照真實匯出檔寫，Oura／WHOOP 照兩家自己的 OpenAPI 寫、尚未對過真實回應 |
 | 確定性計算 | `semantic-engine`（readiness／分肌群疲勞）· `training-load`（ATL/CTL/TSB/ACWR）· `decision-engine`（from→to）· `planning` · `knowledge-graph`（889 節點 / 5,785 邊） |
-| 測試 | 440 tests、eval 20 golden cases 全綠 |
+| 測試 | 442 tests、eval 20 golden cases 全綠 |
 | 傳輸 | stdio ✅ · Streamable HTTP ✅ |
 | OAuth | 只做了「檢查 token claims」那一半；**簽章驗證器沒填、`serve:http` 進入點沒接線、沒有 authorization server** → 遠端連不起來 |
 | 協定版本 | `2025-06-18`；最新規格是 `2026-07-28`（stateless），升級走 dual-era |
@@ -213,11 +213,11 @@ Form 3 是核心宗旨要的那個版本，不是選配。它排在後面是因�
 
 source schema 與匯出形狀 scenario **四家齊備**（Garmin／Google Health Takeout／Apple Health／Strava）。
 
-**這個版本走到哪裡**：目前的發布是 v0.4.0（2026-08-09），v0.1.0 是第一次公開發布。決策邏輯有確定性測試與 eval 覆蓋——
-同一個版本下，同樣的證據永遠得到同樣的決策。`evidra_decide_session` 的決策另外帶
+**這個版本走到哪裡**：目前的發布是 v0.4.1（2026-08-09），v0.1.0 是第一次公開發布。決策邏輯有確定性測試與 eval 覆蓋——
+同一個版本下，同樣的證據永遠得到同樣的決策。`decide_session` 的決策另外帶
 `decisionBasis`——依據哪條規則、哪個讀數觸發、那條規則的數字哪裡來。2026-08-09 起
-`evidra_generate_plan`、`evidra_preview_adjust_plan`／`evidra_commit_adjust_plan` 與
-`evidra_decide_exercise_substitution` 也帶這個欄位，各自對應 EVD-R-010／011／012；
+`generate_plan`、`preview_adjust_plan`／`commit_adjust_plan` 與
+`decide_exercise_substitution` 也帶這個欄位，各自對應 EVD-R-010／011／012；
 沒有規則開火時欄位照樣回傳、內容為空，這樣呼叫端才分得出「沒有規則適用」與「這條路徑不檢查」。
 **那三條規則各自的 `limitations` 寫明它們不做什麼**——例如計畫產生器的傷病限制
 不會從課表移除任何動作。ATL／CTL、TSB、recovery 權重、readiness 懲罰係數、

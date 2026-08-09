@@ -3,7 +3,7 @@
   "name": "io.github.henryyeh182/evidra",
   "title": "Evidra Fitness",
   "description": "Turns the training evidence you already have into a decision about today's session.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "websiteUrl": "https://github.com/henryyeh182/evidra",
   "repository": {
     "url": "https://github.com/henryyeh182/evidra",
@@ -12,8 +12,8 @@
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/henryyeh182/evidra/releases/download/v0.4.0/evidra.mcpb",
-      "fileSha256": "487fba223da94fa46eb58e9ec09ebd705222b012b713ecf9538fc2ff8c034bbc",
+      "identifier": "https://github.com/henryyeh182/evidra/releases/download/v0.4.1/evidra.mcpb",
+      "fileSha256": "9fb01c5eb1f88fd1f5c1cee0731c35231ae4f51511ae2339c4e33f578337ea92",
       "transport": {
         "type": "stdio"
       }
