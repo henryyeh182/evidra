@@ -35,7 +35,7 @@ import { computeFingerprint, compareFingerprint } from "./lib/fingerprint.js";
 
 const FINGERPRINT_PATH = join(dirname(fileURLToPath(import.meta.url)), "rule-fingerprint.json");
 
-/** The stored fingerprint of every rule field that can move a decision. */
+/** The stored fingerprint of every rule and parameter field that can move a decision. */
 export async function readFingerprint() {
   return JSON.parse(await readFile(FINGERPRINT_PATH, "utf8"));
 }
@@ -119,8 +119,9 @@ async function main() {
     // somebody made after looking at what the rule edit did.
     const fingerprint = await writeFingerprint();
     console.log(
-      `\nRule fingerprint updated for library ${fingerprint.libraryVersion}. ` +
-        `Commit it with the rule edit.\n`
+      `\nDecision fingerprint updated for library ${fingerprint.libraryVersion}, ` +
+        `parameter set ${fingerprint.parameterSetVersion}. Commit it with the ` +
+        `rule or parameter edit.\n`
     );
     return;
   }
@@ -185,9 +186,13 @@ async function main() {
     if (drift.policiesMoved) {
       console.log(`         the arbitration or combination policy changed`);
     }
-    for (const ruleId of drift.changed) console.log(`         ${ruleId} changed`);
-    for (const ruleId of drift.added) console.log(`         ${ruleId} is new`);
-    for (const ruleId of drift.removed) console.log(`         ${ruleId} is gone`);
+    const ruleIds = (ids) => ids.filter((id) => !id.startsWith("EVD-P-"));
+    for (const ruleId of ruleIds(drift.changed)) console.log(`         ${ruleId} changed`);
+    for (const ruleId of ruleIds(drift.added)) console.log(`         ${ruleId} is new`);
+    for (const ruleId of ruleIds(drift.removed)) console.log(`         ${ruleId} is gone`);
+    for (const parameterId of drift.parameterChanged) console.log(`         ${parameterId} parameter changed`);
+    for (const parameterId of drift.parameterAdded) console.log(`         ${parameterId} parameter is new`);
+    for (const parameterId of drift.parameterRemoved) console.log(`         ${parameterId} parameter is gone`);
     if (moved.length > 0 || drift.policiesMoved) {
       console.log(
         `\n         The checks above already ran against the new rules — read the decisions\n` +

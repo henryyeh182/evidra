@@ -116,6 +116,49 @@ test("the fingerprint watches what decides and ignores what does not", async () 
   }
 });
 
+test("the parameter fingerprint watches engine inputs and ignores review prose", async () => {
+  const { fingerprintParameter } = await import("../lib/fingerprint.js");
+  const base = {
+    parameterId: "EVD-P-TEST",
+    key: "testWindowDays",
+    status: "active",
+    value: 7,
+    unit: "days",
+    appliesTo: ["packages/semantic-engine/src/generateSemanticFitnessState.js"],
+    basis: "internal_composite",
+    sources: [],
+    limitations: ["synthetic test parameter"]
+  };
+  const reference = fingerprintParameter(base);
+
+  for (const [field, value] of [
+    ["basis", "external_metric"],
+    ["sources", [{ citation: "A citation" }]],
+    ["limitations", ["A revised limitation"]]
+  ]) {
+    assert.equal(
+      fingerprintParameter({ ...base, [field]: value }),
+      reference,
+      `editing parameter ${field} must not move the decision fingerprint`
+    );
+  }
+
+  const decidingEdits = {
+    value: 14,
+    unit: "hours",
+    status: "deprecated",
+    key: "renamedWindowDays",
+    appliesTo: ["another-engine"]
+  };
+  for (const [field, value] of Object.entries(decidingEdits)) {
+    assert.notEqual(
+      fingerprintParameter({ ...base, [field]: value }),
+      reference,
+      `editing deciding parameter field ${field} must move the fingerprint`
+    );
+  }
+});
+
 test("a wrong pin is caught, and a scenario without one claims nothing", async () => {
   // A check that passes on every input it will ever see is indistinguishable
   // from a check that does not run, and DH-PIN is the one most exposed to that:

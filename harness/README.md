@@ -105,8 +105,9 @@ itself.
 
 **A change to a threshold, a category or an effect has to be run through the
 harness before it lands.** That is enforced, not requested:
-`harness/rule-fingerprint.json` holds one digest per rule over exactly those
-fields, and `npm test` fails while the library and the file disagree.
+`harness/rule-fingerprint.json` holds one digest per rule and per engine
+parameter over exactly those deciding fields, and `npm test` fails while the
+library or parameter set and the file disagree.
 
 ```bash
 npm run harness                              # read what the decisions became
@@ -117,11 +118,13 @@ Regenerating is deliberately a second edit in a second file. The point is not
 the hash — it is that the commit contains both the threshold that moved and the
 record that somebody looked at what moved with it.
 
-What the digest covers: `category`, `priority`, `thresholds`, `effect`,
-`status`, plus the two policy ids. Prose is outside it on purpose — a guard that
-went red for a corrected citation or a new limitation would be switched off
-inside a week, and `harness/test/harness.test.js` pins both edges so the
-boundary cannot drift.
+What the digest covers: rules use `category`, `priority`, `thresholds`,
+`effect`, `status`, `appliedBy`, plus the two policy ids; parameters use
+`parameterId`, `key`, `status`, `value`, `unit` and `appliesTo`. Prose, sources,
+limitations and review metadata are outside it on purpose — a guard that went
+red for a corrected citation or a new limitation would be switched off inside
+a week. The direct fingerprint tests in `harness/test/harness.test.js` pin both
+edges so the boundary cannot drift.
 
 `priority` is in there although it was not asked for, because arbitration is
 `category_then_priority`: inside one category a priority edit moves which rule
