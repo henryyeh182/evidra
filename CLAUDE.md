@@ -300,9 +300,11 @@ evidra 只有三個檔，和這裡的關係各不相同——**唯一真正重�
 **驗兩顆 bundle 要 `diff -rq` 解開比對，不是比清單**（2026-08-03 的教訓：檔名一致不等於內容
 一致，只 diff `unzip -l` 的清單曾把一次行為修正誤判成「只換 README」）。
 
-**`/releases/latest` 指向 `v0.3.7`**（2026-08-06 發布）。
-**官方 MCP registry 已上架**：`io.github.henryyeh182/evidra` v0.3.7，
-title `Evidra Fitness`，用 `mcp-publisher publish` 送的（token 效期很短，幾乎每次都要重登）。
+**`/releases/latest` 指向 `v0.4.0`**（2026-08-09 發布，sha256 `294acd57b50cad0d0…eeb8`）。
+**官方 MCP registry 上目前仍是 v0.3.7**——v0.4.0 尚未送上去，所以 `review:release` 的 R2
+會紅，那是待辦不是故障。registry 用 `mcp-publisher publish` 送
+（token 效期很短，幾乎每次都要重登；這台機器上沒裝，`brew install mcp-publisher`），
+title `Evidra Fitness`。
 **registry 拒收同版號重送**，所以連文案修正都要帶一個版號。
 **Anthropic MCPB 送審表單已提交**（附的是 v0.3.6 那顆快照；表單自陳是表達興趣，
 他們評估時看的是連結指向的最新版）。

@@ -213,7 +213,7 @@ Form 3 是核心宗旨要的那個版本，不是選配。它排在後面是因�
 
 source schema 與匯出形狀 scenario **四家齊備**（Garmin／Google Health Takeout／Apple Health／Strava）。
 
-**這個版本走到哪裡**：目前的發布是 v0.3.7，v0.1.0 是第一次公開發布。決策邏輯有確定性測試與 eval 覆蓋——
+**這個版本走到哪裡**：目前的發布是 v0.4.0（2026-08-09），v0.1.0 是第一次公開發布。決策邏輯有確定性測試與 eval 覆蓋——
 同一個版本下，同樣的證據永遠得到同樣的決策。`evidra_decide_session` 的決策另外帶
 `decisionBasis`——依據哪條規則、哪個讀數觸發、那條規則的數字哪裡來。2026-08-09 起
 `evidra_generate_plan`、`evidra_preview_adjust_plan`／`evidra_commit_adjust_plan` 與
