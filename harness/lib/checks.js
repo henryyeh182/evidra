@@ -21,7 +21,13 @@
 
 import { RULES } from "../../packages/decision-engine/src/index.js";
 import { arbitrate, getCategoryRank, getRule } from "../../packages/rules/src/index.js";
-import { runChain, withoutMetrics } from "./chain.js";
+import {
+  runChain,
+  staleMetrics,
+  withoutMetrics,
+  withoutTrainingLoad,
+  withoutVendorAssessments
+} from "./chain.js";
 
 /** The four recovery signals `signalCoverage.recovery` reports on. */
 const RECOVERY_SIGNALS = ["sleep", "hrv", "restingHeartRate", "stress"];
@@ -32,6 +38,12 @@ const METRICS_BEHIND = {
   hrv: ["hrv_ms"],
   restingHeartRate: ["resting_hr_bpm"],
   stress: ["stress"]
+};
+
+const VENDOR_ASSESSMENTS_BEHIND = {
+  vendorReadiness: ["vendor_readiness"],
+  bodyBattery: ["body_battery"],
+  recoveryTime: ["recovery_time_minutes"]
 };
 
 const CONFIDENCE_ORDER = ["low", "medium", "high"];
@@ -389,18 +401,15 @@ const noFabrication = {
       }
     }
 
-    // 4. The ablation. Take a signal away and the gap has to show up as a gap:
-    //    named in coverage, and confidence no higher than it was with the
-    //    signal present. Nothing here asserts confidence *falls* — dropping one
-    //    of four signals need not cross a band boundary — only that removing
-    //    evidence never makes the system surer of itself.
-    for (const signal of RECOVERY_SIGNALS) {
-      if (!coverage.recovery.usable.includes(signal)) continue;
-
-      const ablated = await runChain(withoutMetrics(scenario, METRICS_BEHIND[signal]));
+    // 4. Every recovery source gets an ablation. Raw signals must appear in
+    // `missing`; vendor composites are allowed to disappear without joining
+    // that raw-signal list, but must disappear from `usable` and never leave a
+    // fabricated readiness value behind.
+    const checkRecoveryAblation = async (signal, ablated) => {
       const after = ablated.decision.signalCoverage.recovery;
+      const isRaw = Boolean(METRICS_BEHIND[signal]);
 
-      if (!after.missing.includes(signal)) {
+      if (isRaw && !after.missing.includes(signal)) {
         failures.push(
           `${signal} was removed from the evidence and does not appear in ` +
             `signalCoverage.recovery.missing — the caller is never told it is gone`
@@ -418,6 +427,57 @@ const noFabrication = {
             `${ablated.decision.confidence}`
         );
       }
+
+      if (!isRaw && ablated.state.readinessScore === null) {
+        if (ablated.decision.evidence.some((item) => item.signal === "readiness")) {
+          failures.push(`${signal} was removed and readiness still appears in decision evidence`);
+        }
+        if (ablated.decision.state.readiness !== null) {
+          failures.push(`${signal} was removed and the decision state still reports readiness`);
+        }
+      }
+    };
+
+    for (const signal of RECOVERY_SIGNALS) {
+      if (!coverage.recovery.usable.includes(signal)) continue;
+      await checkRecoveryAblation(signal, await runChain(withoutMetrics(scenario, METRICS_BEHIND[signal])));
+    }
+
+    for (const signal of Object.keys(VENDOR_ASSESSMENTS_BEHIND)) {
+      if (!coverage.recovery.usable.includes(signal)) continue;
+      await checkRecoveryAblation(
+        signal,
+        await runChain(withoutVendorAssessments(scenario, VENDOR_ASSESSMENTS_BEHIND[signal]))
+      );
+    }
+
+    // 5. Training is a separate half of coverage. Remove one recent load
+    // figure while retaining the workout itself; the session must remain
+    // evidence, but its measured effort must stop being usable.
+    if (coverage.training.usable.includes("trainingLoad")) {
+      const ablated = await runChain(withoutTrainingLoad(scenario));
+      const after = ablated.decision.signalCoverage.training;
+      if (!after.missing.includes("trainingLoad")) {
+        failures.push("a recent training load was removed and training coverage did not report the gap");
+      }
+      if (after.usable.includes("trainingLoad")) {
+        failures.push("a recent training load was removed and training coverage still reports it as usable");
+      }
+      if (CONFIDENCE_ORDER.indexOf(ablated.decision.confidence) > CONFIDENCE_ORDER.indexOf(decision.confidence)) {
+        failures.push(
+          `removing trainingLoad raised confidence from ${decision.confidence} to ` +
+            `${ablated.decision.confidence}`
+        );
+      }
+    }
+
+    // 6. Freshness is part of presence. Make each usable recovery source stale
+    // rather than deleting it, so a parser that ignores staleness cannot pass
+    // the same check as one that correctly reports the signal as unread.
+    for (const signal of [...RECOVERY_SIGNALS, ...Object.keys(VENDOR_ASSESSMENTS_BEHIND)]) {
+      if (!coverage.recovery.usable.includes(signal)) continue;
+      const types = METRICS_BEHIND[signal] || VENDOR_ASSESSMENTS_BEHIND[signal];
+      await checkRecoveryAblation(signal, await runChain(staleMetrics(scenario, types)));
     }
 
     return failures;

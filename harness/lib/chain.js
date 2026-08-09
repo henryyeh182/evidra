@@ -184,6 +184,57 @@ export function withoutMetrics(scenario, metricTypes) {
   };
 }
 
+/** Remove vendor composites without changing the raw health metrics. */
+export function withoutVendorAssessments(scenario, assessmentTypes) {
+  const dropped = new Set(assessmentTypes);
+  return {
+    ...scenario,
+    id: `${scenario.id}::without(${assessmentTypes.join(",")})`,
+    evidence: {
+      ...scenario.evidence,
+      vendorAssessments: (scenario.evidence.vendorAssessments || []).filter(
+        (assessment) => !dropped.has(assessment.type)
+      )
+    }
+  };
+}
+
+/** Remove one recent load figure, leaving the workout itself as evidence. */
+export function withoutTrainingLoad(scenario) {
+  const anchor = new Date(`${scenario.date}T23:59:59Z`);
+  const workouts = (scenario.evidence.workouts || []).map((workout) => ({ ...workout }));
+  const index = workouts.findIndex((workout) => {
+    const ageDays = (anchor.getTime() - new Date(workout.startedAt).getTime()) / (24 * 60 * 60 * 1000);
+    return ageDays >= 0 && ageDays <= 7 && typeof workout.trainingLoad === "number";
+  });
+
+  if (index >= 0) delete workouts[index].trainingLoad;
+
+  return {
+    ...scenario,
+    id: `${scenario.id}::without(trainingLoad)`,
+    evidence: { ...scenario.evidence, workouts }
+  };
+}
+
+/** Make selected readings stale while preserving their shape and source. */
+export function staleMetrics(scenario, metricTypes) {
+  const stale = new Set(metricTypes);
+  return {
+    ...scenario,
+    id: `${scenario.id}::stale(${metricTypes.join(",")})`,
+    evidence: {
+      ...scenario.evidence,
+      healthMetrics: (scenario.evidence.healthMetrics || []).map((metric) =>
+        stale.has(metric.type) ? { ...metric, recordedAt: "2000-01-01T00:00:00Z" } : { ...metric }
+      ),
+      vendorAssessments: (scenario.evidence.vendorAssessments || []).map((assessment) =>
+        stale.has(assessment.type) ? { ...assessment, recordedAt: "2000-01-01T00:00:00Z" } : { ...assessment }
+      )
+    }
+  };
+}
+
 /** Load every scenario in `harness/scenarios`, in filename order. */
 export async function loadScenarios(directory = join(__dirname, "../scenarios")) {
   const { readdir } = await import("node:fs/promises");

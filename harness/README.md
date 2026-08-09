@@ -90,10 +90,14 @@ time with the evidence deep-frozen. A fabricated value and a measured one look
 identical in one decision; a value that changes between two identical calls does
 not.
 
-**DH-6** removes one recovery signal from the evidence and runs the scenario
-again. The gap has to appear in `signalCoverage.recovery.missing`, the signal
-has to stop being reported as usable, and confidence must not rise. It does not
-assert that confidence *falls* — dropping one of four signals need not cross a
+**DH-6** ablates every kind of evidence the session state reads and runs the
+scenario again. It removes raw recovery metrics, vendor composites, and one
+recent training load; it also repeats the recovery ablation with the reading
+made stale rather than deleted. Raw signals must appear in
+`signalCoverage.recovery.missing`; vendor composites must stop being usable and
+must not leave a fabricated readiness value; training load must appear in
+`signalCoverage.training.missing`. In every case confidence must not rise. It
+does not assert that confidence *falls* — removing one signal need not cross a
 band boundary — only that taking evidence away never makes the system surer of
 itself.
 
