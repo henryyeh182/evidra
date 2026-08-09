@@ -1,6 +1,6 @@
 {
   "name": "fitness-mcp",
-  "version": "0.3.7",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "Semantic Fitness Layer exposed through MCP for model-agnostic AI fitness coaching.",
