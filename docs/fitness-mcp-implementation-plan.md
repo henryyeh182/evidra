@@ -81,7 +81,7 @@ Evidra 的護城河不是 MCP server、不是資料庫、不是動作內容庫�
 |---|---|---|
 | **Evidence Model** | `packages/evidence`、source schema、6 家 parser、coverage／freshness | 補 C8/R7 的 evidence basis；驗 C6 真實 host 傳入形狀；補 C13 Oura／WHOOP 真實回應 |
 | **Rule Library** | `packages/rules` v1.4.0，**12 條規則**（9 條 session ＋ EVD-R-010／011／012 分屬 plan／planChange／catalog），含出處、限制與仲裁欄位；證據兩軸與 `verificationStatus` 皆為載入期強制，三個引用陣列（含 `contested`）一律必填；`injury` 那格由四條規則填滿。每條規則必填 `appliedBy`，門檻按引擎分組雙向驗 | 收編 C9 其餘門檻（ATL/CTL、TSB、recovery 權重、readiness 懲罰係數、phase multiplier、return ramp）；R2／R3／R5／C10 已完成 |
-| **Decision Graph** | `decide_session` 的 rule arbitration、knowledge graph 的替代／進退階不變量、planning patch validator | 把 injury、substitution、plan generation 的決策路徑接上 rule id 與 `decisionBasis`，讓多 tool 都能 trace |
+| **Decision Graph** | `decide_session` 的 rule arbitration、knowledge graph 的替代／進退階不變量、planning patch validator；v0.4.0 起四支 decision tool 都帶 `decisionBasis` | 補更強的跨工具衝突案例與 product-facing trace 範例，讓 stakeholder 看得懂 Rule Library 如何真的治理決策 |
 
 **定位句**：A deterministic exercise-science decision engine that converts evidence into explainable training decisions.
 LLM 負責理解使用者與表達結果；決策本身必須由 Evidra 的 evidence、rules、graph 算出來。
@@ -183,9 +183,24 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 ——archive 改不了，只能在這裡記一句。**v0.4.0 起內嵌的是正式的庫 1.4.0**，
 那個撞號只存在於 v0.3.7 以前的 archive 裡。
 
-**下一個最小可完成版本**：順位 2 與 4 已完成（injury 類別四條規則、四支 tool 帶 trace）；
-做完順位 3 得到 `decide_session` 以外的關鍵門檻開始被治理。**順位 3 剩下的是 ATL／CTL、
-TSB、phase multiplier、return ramp 與兩套 detraining 衝突。**
+**下一個最小可完成版本**：v0.4.0 已關閉發布落差；順位 2 與 4 已完成（injury 類別四條規則、
+四支 decision tool 帶 trace），順位 3 已處理 detraining 衝突。接下來先做 **Phase B：
+產品敘事校準**，把對外頁、README 與本 roadmap 的現況講成同一套話；之後再回到工程主線
+補 C9／R4／R7。**順位 3 剩下的是 ATL／CTL、TSB、recovery 權重、readiness 懲罰係數、
+phase multiplier 與 return ramp。**
+
+### Phase B — 產品敘事校準（2026-08-09 開工）
+
+這個 phase 不改 runtime 行為；它把 v0.4.0 已經成立的產品形狀講準，並把未來產品頁需要的
+故事骨架拆小，避免一次把 user-journey 變成行銷頁時混進工程技術債。
+
+| Story | 要完成什麼 | 完成標準 |
+|---|---|---|
+| B1 | v0.4.0 現況校準 | `user-journey.html`、README、本文件對版本、規則數、release 狀態、`decisionBasis` 覆蓋範圍說法一致 |
+| B2 | 產品頁資訊架構 | 保留「Decision ≠ Recommendation」與三種形態，補清楚「今天可用／尚未可用／為什麼尚未可用」三段，不列工程代號 |
+| B3 | 護城河示範 | 至少一段把 Rule Library、Decision Graph、Evidence Model 串成使用者能懂的例子，避免只列名詞 |
+| B4 | 商業化入口不越界 | 說明 Form 1 可用、Form 2/3 是未來路徑；不把未定的 Free／Pro／Enterprise、Rule Package、license 機制寫成已決定 |
+| B5 | 對外驗證 | `npm run review:phase`、`npm run review:release` 全綠；若只改 user-journey，至少確認 G1/G8/G10/R6 沒紅 |
 
 ### 0. Rule Library 治理（2026-08-07 review 產出）
 

@@ -1088,8 +1088,11 @@
       <strong>同一個形狀的錯，第二次被同一個機制抓到。</strong>
     </p>
     <p class="note">
-      目前帶完整出處的是 <code>decide_session</code>。其餘工具的門檻還沒進規則庫，
-      所以它們不回傳這個欄位——同上一節，<strong>已經做好與還沒做好分開講</strong>。
+      v0.4.0 起，<code>decisionBasis</code> 已經不是 <code>decide_session</code> 專用欄位。
+      會做決策的四條路徑——今天課表決策、產生計畫、預覽／提交計畫變更、動作替代——
+      都會回傳同一種 trace：哪條規則開火、哪條規則治理、它屬於哪個引擎、引用與限制在哪裡。
+      <code>assess_fitness_state</code> 不帶它，因為那支工具只回傳狀態，還沒有對課表做 from → to 的決定。
+      <strong>已經做好與還沒做好分開講</strong>，這條紀律現在也套到每一支 tool 上。
     </p>
   </section>
 
