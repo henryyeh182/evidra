@@ -13,7 +13,7 @@ It runs on your own machine, and it does not retain your evidence.
 
 ## Where this is
 
-The current release is v0.4.0. v0.1.0 was the first public release.
+The current release is v0.4.1. v0.1.0 was the first public release.
 
 The decision logic is covered by a deterministic test and evaluation suite:
 under the same version of Evidra, the same evidence produces the same decision,
@@ -78,12 +78,12 @@ language you read is your assistant's; the judgment is arithmetic.
 
 | Tool | What it returns |
 |---|---|
-| `evidra_assess_fitness_state` | Today's recovery and training state. State only — it never says what to train. |
-| `evidra_decide_session` | What today's scheduled session should become: keep it, ease it, or change it |
-| `evidra_decide_exercise_substitution` | What to do instead of a movement you cannot do today |
-| `evidra_generate_plan` | A plan, when you don't have one — the substrate decisions are made against |
-| `evidra_preview_adjust_plan` | What adjusting a plan would change, without applying it |
-| `evidra_commit_adjust_plan` | The plan a previewed adjustment produces, once you have accepted it — you keep it, Evidra does not |
+| `assess_fitness_state` | Today's recovery and training state. State only — it never says what to train. |
+| `decide_session` | What today's scheduled session should become: keep it, ease it, or change it |
+| `decide_exercise_substitution` | What to do instead of a movement you cannot do today |
+| `generate_plan` | A plan, when you don't have one — the substrate decisions are made against |
+| `preview_adjust_plan` | What adjusting a plan would change, without applying it |
+| `commit_adjust_plan` | The plan a previewed adjustment produces, once you have accepted it — you keep it, Evidra does not |
 
 ---
 
@@ -197,7 +197,7 @@ and a plain statement that our cut point is not the one in the paper.
 Body Battery, Oura Readiness and Whoop Recovery are used as they stand, never
 recomputed, and weigh more than any raw reading.
 
-v0.4.0 names that field in the tool schema, so an assistant can send a vendor
+v0.4.1 names that field in the tool schema, so an assistant can send a vendor
 score as the vendor's own figure rather than falling back to the raw signals.
 Sent that way it counts for more, and the confidence reported alongside the
 decision reflects it.
