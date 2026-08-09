@@ -62,7 +62,7 @@ Phase 2 也不是 remote 的續集。
 
 | 形態 | 是什麼 | 現況 | 對應本文件哪裡 |
 |---|---|---|---|
-| **Form 1** desktop extension（MCPB） | 跑在使用者自己的電腦上，stdio；**第一個可用形態** | ✅ v0.4.0 可裝（2026-08-09）；registry 上仍是 v0.3.7，v0.4.0 待送；MCPB 表單審查中 | 「通路與上架」順位 1／3 |
+| **Form 1** desktop extension（MCPB） | 跑在使用者自己的電腦上，stdio；**第一個可用形態** | ✅ v0.4.0 可裝（2026-08-09），registry 同版已上架；MCPB 表單審查中 | 「通路與上架」順位 1／3 |
 | **Form 2** remote MCP server | 跑在我們的機器上；**手機唯一可行的路，也是商業化形態**（計價暫定 per-MAU） | 🔴 NO-GO（現在），四個缺口 | 「remote 的四個缺口」、下一步順位 9 |
 | **Form 3** user-controlled deployment | 整組搬進使用者／機構控制的環境；**高隱私與企業形態**，唯一能保存個人縱向歷史的形態 | 🔴 一行程式都沒有 | CLAUDE.md 的 Phase 2；本文件尚無工作包 |
 
@@ -102,7 +102,7 @@ LLM 負責理解使用者與表達結果；決策本身必須由 Evidra 的 evid
 
 | 順位 | 通路 | 判定 |
 |---|---|---|
-| 1 | 官方 MCP registry | ✅ **已上架**（`io.github.henryyeh182/evidra`；registry 無審查流程，publish 即生效）。**`isLatest` 目前是 v0.3.7**——GitHub 上已是 v0.4.0，registry 待送 |
+| 1 | 官方 MCP registry | ✅ **已上架**（`io.github.henryyeh182/evidra` v0.4.0，`status: active`／`isLatest: true`，2026-08-09；registry 無審查流程，publish 即生效） |
 | 2 | PulseMCP | 🟢 隨順位 1 自動抓取，或使用者自行填表 |
 | 3 | Anthropic MCPB 表單 | ✅ **已送出，審查中**（2026-08-07，閉源） |
 | 4 | Smithery（Local MCPB） | 🟡 低優先，未做 |
@@ -248,9 +248,8 @@ sha256 `294acd57b50cad0d0…eeb8`）打包自 `c678df2`，而那就是 main 的 
 | 目標肌群沒有讀數時報「target-muscle fatigue 0」，那個 0 是加總器初始值 | 改成講「近一週沒有負荷落在這些肌群」 |
 | 沒有 `packages/decision-engine/src/version.js`，引擎版本無對應物可比 | 引擎 **1.6.0**，與庫版號、發布版號三者分開 |
 
-**唯一還沒對齊的是 registry**：GitHub 上是 v0.4.0，官方 registry 的 `isLatest` 仍是
-v0.3.7，因為 `mcp-publisher publish` 還沒送。**`review:release` 的 R2 會因此紅**——
-那是待辦，不是故障。
+**三邊已對齊**：GitHub release、`server.json` 與官方 registry 的 `isLatest` 都是 v0.4.0，
+sha256 同為 `294acd57b50cad0d0…eeb8`，`review:release` 六條全綠。
 
 **這幾段刻意不寫進 user-journey 或 README**：那是產品頁與對外敘事，build 落差屬於本文件。
 

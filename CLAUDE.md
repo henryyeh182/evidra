@@ -301,10 +301,11 @@ evidra 只有三個檔，和這裡的關係各不相同——**唯一真正重�
 一致，只 diff `unzip -l` 的清單曾把一次行為修正誤判成「只換 README」）。
 
 **`/releases/latest` 指向 `v0.4.0`**（2026-08-09 發布，sha256 `294acd57b50cad0d0…eeb8`）。
-**官方 MCP registry 上目前仍是 v0.3.7**——v0.4.0 尚未送上去，所以 `review:release` 的 R2
-會紅，那是待辦不是故障。registry 用 `mcp-publisher publish` 送
-（token 效期很短，幾乎每次都要重登；這台機器上沒裝，`brew install mcp-publisher`），
-title `Evidra Fitness`。
+**官方 MCP registry 已上架 v0.4.0**（2026-08-09，`isLatest: true`／`status: active`），
+sha256 與 release asset 一致。用 `mcp-publisher publish` 送，**要在 repo 根目錄跑**——
+它讀當前目錄的 `server.json`，在家目錄跑會回 "server.json not found"。
+token 效期很短，幾乎每次都要重登（`mcp-publisher login github`）；
+這台機器已用 `brew install mcp-publisher` 裝好。title `Evidra Fitness`。
 **registry 拒收同版號重送**，所以連文案修正都要帶一個版號。
 **Anthropic MCPB 送審表單已提交**（附的是 v0.3.6 那顆快照；表單自陳是表達興趣，
 他們評估時看的是連結指向的最新版）。

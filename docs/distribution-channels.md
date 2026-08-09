@@ -225,7 +225,7 @@ registry 這欄另寫一句 93 字元：
 
 | 通路 | 現況 |
 |---|---|
-| 官方 MCP registry | ✅ 五個版本都在（0.3.3／0.3.4／0.3.5／0.3.6／0.3.7），v0.3.7 為 `isLatest`、`status: active`，2026-08-07 01:02 上架 |
+| 官方 MCP registry | ✅ 六個版本都在（0.3.3～0.3.7 ＋ 0.4.0），**v0.4.0 為 `isLatest`、`status: active`**，2026-08-09 上架 |
 | PulseMCP | ❌ **還沒出現**。搜 evidra 只有別人的 `Evidra vitas`（AI 稽核記錄，2026-03-12）。registry 是 08-07 才發的，**每週處理，還沒到一週，屬正常**。一週後仍無再寄 `hello@pulsemcp.com` |
 | Anthropic MCPB | ⏳ **查不到，而且是設計上查不到**（見下） |
 | mcp.so | 未送 |
