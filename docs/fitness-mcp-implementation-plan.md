@@ -22,10 +22,10 @@
 
 ### 對外元件
 
-- **6 個對外決策 tool**：`evidra_assess_fitness_state`、`evidra_decide_session`、
-  `evidra_decide_exercise_substitution`、`evidra_generate_plan`、
-  `evidra_preview_adjust_plan`、`evidra_commit_adjust_plan`
-- **440 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
+- **6 個對外決策 tool**：`assess_fitness_state`、`decide_session`、
+  `decide_exercise_substitution`、`generate_plan`、
+  `preview_adjust_plan`、`commit_adjust_plan`
+- **442 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
 - **知識圖譜** 889 節點 / 5,785 邊；進退階 34 條（17 組互逆）；訓練目標五值域
 - **Rule Library**（`packages/rules` v1.4.0）：**12 條規則**，每條帶 `ruleId`／`version`／
   `category`／`priority`／`basis`／`evidence`（`studyDesign` ＋ `recommendationStrength`，
@@ -168,7 +168,7 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 | **1** | Rule schema guardrails | R5 `verificationStatus` enum／`sources` 強制帶狀態；R3 證據等級拆成「研究設計」與「建議強度」兩軸；**R5-C** `contested` 也強制帶狀態 | 這兩項是規則庫的地基。先把資料形狀鎖住，後面加傷病規則或收編 C9 數字才不會繼續累積無法稽核的欄位 | ✅ 已完成（2026-08-07，`8b15468`／`e171966`；R5-C 於 2026-08-08，庫升 v1.2.0。**當時未進 v0.3.7 bundle，已隨 v0.4.0 出貨**） |
 | **2** | Injury rules 入庫 | R2／C12：把現有 injury restriction、contraindication filter 變成有 rule id、category、priority、來源與限制的規則 | `injury` 是仲裁矩陣最高類別，但現況規則庫裡沒有 injury 規則；這是 rule coverage 最大洞 | ✅ 已完成（2026-08-09，庫 1.3.0／引擎 1.5.0）。四處全數入庫：`decide_session`＝EVD-R-009（2026-08-08）、`generatePlan`＝EVD-R-010、`adaptPlan` 的 `add_injury`＝EVD-R-011、catalog＝EVD-R-012。**入庫過程查出 `generatePlan` 的傷病限制不會移除任何動作**（實測：帶膝傷、restriction 寫明 back squat，產出的計畫仍排深蹲）——依使用者決定不改行為，改為誠實記錄在 EVD-R-010 的 `limitations` 與計畫的 `reasoning` 裡 |
 | **3** | 收編非 `decide_session` 門檻 | C9／C10：ATL/CTL、TSB、detraining、baseline fallback、staleness、phase multiplier、return ramp 的數字進治理；先處理兩套 detraining 衝突 | 這決定 R1 能不能做。沒有規則與來源，其他 tool 就算補 `decisionBasis` 也無 rule 可 trace | ✅ **已完成（2026-08-09）**：detraining trigger 回到 EVD-R-007；baseline fallback、staleness、ATL/CTL、TSB、semantic training windows、recovery 權重、readiness 懲罰、planning phase multipliers、return ramp、plan-change deload/cap 全收進 `engine-parameters.json`（參數集 1.2.0，EVD-P-003～048）。值未改、決策未動；缺來源仍誠實記成 `internal_composite`／空 `sources`／`limitations`。`assertParametersMatch` 兩向檢查，fingerprint 已更新 |
-| **4** | 擴大 decision trace | R1：視第 2–3 項結果，決定要不要把 `decisionBasis` 補到另外五個 tool | 對外已誠實縮回「只有 `evidra_decide_session` 有」，所以這是能力擴充，不是修誠信缺口 | ✅ 已完成（2026-08-09）：`generate_plan`／`preview_adjust_plan`／`commit_adjust_plan`／`decide_exercise_substitution` 四支都帶，輸出契約與 `schemas/tools/` 同步。`assess_fitness_state` 不帶——它回傳狀態不做決策，沒有規則可指 |
+| **4** | 擴大 decision trace | R1：視第 2–3 項結果，決定要不要把 `decisionBasis` 補到另外五個 tool | 對外已誠實縮回「只有 `decide_session` 有」，所以這是能力擴充，不是修誠信缺口 | ✅ 已完成（2026-08-09）：`generate_plan`／`preview_adjust_plan`／`commit_adjust_plan`／`decide_exercise_substitution` 四支都帶，輸出契約與 `schemas/tools/` 同步。`assess_fitness_state` 不帶——它回傳狀態不做決策，沒有規則可指 |
 | **5** | Evidence quality 形狀 | R7／C8：用既有 `*Basis` 類 enum 表示數字站在哪裡，不做 `quality: 0.94` 純量 | 這是 Semantic Fitness Layer 下一個真缺口，但要避開發明權重去影響 confidence | ✅ 已完成（2026-08-09）：health metric 增 `basis` enum，`describeEvidence` 回 `signalBases`，`assertValidEvidence` 拒收 numeric `quality`／`confidence` |
 | **6** | Source maturity | C13：拿 Oura／WHOOP 去識別化真實回應驗 parser；Google Health API v4 決定是否升格正式 connector；C6 對照 AI host／第三方 MCP server 傳入形狀 | 六家 parser 已有，下一步不是再加家數，是確認真實流程裡進來的形狀不會偏 | Oura／WHOOP 需要真實回應；Google API 需使用者決定是否升格 |
 | **7** | 小但硬的技術債 | C1 `maxSampleGapSeconds = 30` 出處或改成 caller 提供；C2 移除 `trainingLoad ?? 分鐘數` 編造負荷 | 這些不擋上架，但會直接影響「不編造」承諾 | 可開工 |
@@ -229,7 +229,7 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 | §3.7 Rule Package | 兩個存在理由都已被否決（`tier` 屬 A6 未定、自動更新牴觸已發布的 `PRIVACY.md`）。**類比本身也要拆**：病毒碼更新失敗是 fail-closed，訓練規則更新失敗是 fail-open |
 | §4「Confidence: High，幾乎不需質疑」 | 與整個庫的設計相反——每個引用強制填 `doesNotSupport`，理由是「in every case so far there is one」。repo 裡就住著反例：EVD-R-006 引 Gabbett，同時載入 Impellizzeri 的反對 |
 | §4 Exercise Science Board | **那個 board 不存在。** 維持 `reviewer` 實名。宣稱一個不存在的審查機構，跟宣稱一個撐不住的證據等級是同一類錯 |
-| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 440 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
+| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 442 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
 | §5 四個新 tool | 逐個理由見 history §4.6.5。**補一條**：§5 自己的表格就顯示五列缺口**全在既有 tool 的輸出欄位裡**，沒有一列是「少一個口」 |
 
 #### 0.2 版號規則（2026-08-07 起照這個走）

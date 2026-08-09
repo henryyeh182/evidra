@@ -417,8 +417,8 @@ Anthropic 再自行把「highly useful」的挑去 verified review，那一關 r
 |---|---|---|
 | 讀寫要分開 | 同時吃安全與不安全 HTTP 方法的單一 tool 直接退；`api_request` 加 `method` 參數是點名的反例 | ✅ 沒有萬用 tool |
 | 自由查詢型 tool 要指名 API | 只適用讓呼叫端自組 endpoint／query／body 的 tool | ✅ 不適用，沒有這種 tool |
-| annotations | 「Every tool must include a `title` and the applicable hint」；**read-only 可以免逐次確認，destructive 一定會提示** | ✅ 六個都有 `title` 與 hint。`evidra_commit_adjust_plan` 見下方風險 |
-| tool 名稱 ≤ 64 字元 | — | ✅ 最長 `evidra_decide_exercise_substitution`＝28 |
+| annotations | 「Every tool must include a `title` and the applicable hint」；**read-only 可以免逐次確認，destructive 一定會提示** | ✅ 六個都有 `title` 與 hint。`commit_adjust_plan` 見下方風險 |
+| tool 名稱 ≤ 64 字元 | — | ✅ 最長 `decide_exercise_substitution`＝28 |
 | 描述要窄且準確 | 「The description must match the tool's actual behavior」 | ✅ P0 修的正是這條 |
 | 功能品質 | 「Every tool must return a successful response when called with valid parameters」；籠統錯誤（Internal Server Error／無細節的 Bad Request）退件；要驗證輸入並回可行動的錯誤 | ✅ P1 修的正是這條 |
 | 不碰對話資料 | 不得查 Claude 的 memory／chat history／對話摘要／使用者檔案 | ✅ 沒有 |
@@ -438,8 +438,8 @@ Anthropic 再自行把「highly useful」的挑去 verified review，那一關 r
 
 被列為退件的五種寫法裡，與我們有關的是「Interfere with Claude calling other tools」與
 「Tell Claude to behave in ways unrelated to the tool's function, attempt to override system
-instructions」。而 `evidra_decide_session` 的描述寫著「**Do NOT re-derive or override the intensity,
-duration or movements it returns**」，`evidra_decide_exercise_substitution` 寫著「**do NOT override or
+instructions」。而 `decide_session` 的描述寫著「**Do NOT re-derive or override the intensity,
+duration or movements it returns**」，`decide_exercise_substitution` 寫著「**do NOT override or
 reason past the result**」「**Do NOT use this to browse exercises**」，P2 加的 server
 `instructions` 也有「do not re-derive them or reason past the result」。
 
@@ -448,9 +448,9 @@ reason past the result**」「**Do NOT use this to browse exercises**」，P2 �
 **低風險的改法是改成陳述句**——「Injury contraindications and load limits are applied
 server-side; the values returned are the decision」——同樣的意思，不用命令句。
 
-### ⚠️ 風險二：`evidra_commit_adjust_plan` 既不是 read-only 也不是 destructive
+### ⚠️ 風險二：`commit_adjust_plan` 既不是 read-only 也不是 destructive
 
-那頁把 hint 講成二分（read-only 或 destructive），而 `evidra_commit_adjust_plan` 兩者都不是：
+那頁把 hint 講成二分（read-only 或 destructive），而 `commit_adjust_plan` 兩者都不是：
 它什麼都不存，但**不可以在使用者沒看過 preview 的情況下被呼叫**，所以刻意留
 `readOnlyHint: false` ＋ `destructiveHint: false` 來換取 host 的確認提示。
 若審查按二分法讀，可能被要求選一邊。**要不要改成 `destructiveHint: true` 是判斷題**：
@@ -489,12 +489,12 @@ npx -y @modelcontextprotocol/inspector --cli node apps/mcp-server/src/stdio.js -
 
 | tool | result frame | `structuredContent` |
 |---|---|---|
-| `evidra_assess_fitness_state` | 4,580 bytes | ✅ |
-| `evidra_decide_session` | 約 4,400 bytes | ✅ |
-| `evidra_decide_exercise_substitution` | 2,564 bytes | ✅ |
-| `evidra_generate_plan`（2 週） | 9,296 bytes | ✅ |
-| `evidra_preview_adjust_plan` | **12,576 bytes** | ✅ |
-| `evidra_commit_adjust_plan` | **10,120 bytes** | ✅ |
+| `assess_fitness_state` | 4,580 bytes | ✅ |
+| `decide_session` | 約 4,400 bytes | ✅ |
+| `decide_exercise_substitution` | 2,564 bytes | ✅ |
+| `generate_plan`（2 週） | 9,296 bytes | ✅ |
+| `preview_adjust_plan` | **12,576 bytes** | ✅ |
+| `commit_adjust_plan` | **10,120 bytes** | ✅ |
 
 這是**外部客戶端**驗到的，不是自家測試——`outputSchema` 與 `structuredContent` 在真的 MCP
 客戶端上成立。
@@ -502,10 +502,10 @@ npx -y @modelcontextprotocol/inspector --cli node apps/mcp-server/src/stdio.js -
 ### 這次實測查出來的兩件事（都還沒修）
 
 **1. 兩個 plan tool 的回應超過自訂的 8KB 上限，而且會隨計畫長度成長。**
-`evidra_preview_adjust_plan` 回的 `patch` 裡含整份 `resultingPlan`，加上 `diff` 與 `summary`，
+`preview_adjust_plan` 回的 `patch` 裡含整份 `resultingPlan`，加上 `diff` 與 `summary`，
 再被「text ＋ structured 各一份」乘二——2 週計畫就 12.5KB，12 週會更大。
 checklist 有一條「Keep responses reasonably sized for the task」。
-本機測試只對 `evidra_decide_session` 斷言 8KB，沒有蓋到這兩個。
+本機測試只對 `decide_session` 斷言 8KB，沒有蓋到這兩個。
 
 **2. 呼叫端填的 `source` 不會出現在 provenance 裡——已修（2026-08-04）。**
 input schema 寫著 `source`「Where the reading came from, e.g. garmin | strava | apple_health」，

@@ -36,8 +36,15 @@ Six tools, all of which either return a decision or transform caller-held plan
 state. The server does not retain plans or previews. See the [Design
 Manifesto](design-manifesto.md) for why the surface is this small.
 
+Two name spaces, deliberately: the names below are the **public** ones — what
+`tools/list` advertises and what a client calls. Internally the canonical names
+keep the `evidra_` prefix, and the public names route to them through aliases,
+so `schemas/tools/evidra_*.json`, `outputSchemas.js`, the eval golden set and
+the Decision Harness all still speak the canonical form. A call that arrives
+under either name resolves to the same handler.
+
 `evidence` is the required argument on every decision tool except
-`evidra_decide_exercise_substitution`, which reads no recovery or load signal and
+`decide_exercise_substitution`, which reads no recovery or load signal and
 decides from the movement plus the constraints the caller states; `userId` is an
 optional label the server echoes back and never computes on. A call that
 arrives without evidence gets a tool result carrying `isError` and an
@@ -67,7 +74,7 @@ The local demo seed is reachable only by asking for it outright and is absent
 from the public schemas: it is another person's numbers and must never reach a
 real caller's answer by way of a silent fallback.
 
-### `evidra_assess_fitness_state` — read-only
+### `assess_fitness_state` — read-only
 
 Recovery, readiness, and fatigue verdicts, plus training load (ATL/CTL/TSB),
 personal baselines, and which signals were usable.
@@ -80,7 +87,7 @@ personal baselines, and which signals were usable.
 }
 ```
 
-### `evidra_decide_session` — read-only, the core primitive
+### `decide_session` — read-only, the core primitive
 
 Takes today's **scheduled** session and today's evidence, and returns what the
 session should become. Without a scheduled session there is nothing to decide,
@@ -144,7 +151,7 @@ Returns the five-layer decision:
 ```
 
 `decisionBasis` is abridged above; the arrays come back populated. It is
-required on every `evidra_decide_session` result and returned by that tool
+required on every `decide_session` result and returned by that tool
 alone — the other five tools' numbers are not in the rule library yet, so they
 do not carry it. Two rules fire on this evidence, readiness and acute load; the
 arbitration policy attributes the decision to the one with the higher priority
@@ -171,7 +178,7 @@ that never reports one loses nothing.
 `decision.type` is one of `keep` · `adjust` · `substitute` · `defer` ·
 `advance`. A `keep` is still a decision and still carries its evidence.
 
-### `evidra_decide_exercise_substitution` — read-only
+### `decide_exercise_substitution` — read-only
 
 One movement in, its replacement out, with the joint filter applied
 server-side.
@@ -180,15 +187,15 @@ server-side.
 { "exerciseId": "exercise_back_squat", "conditions": ["knee_injury"], "avoidContraindications": ["knee"] }
 ```
 
-### `evidra_generate_plan` — read-only
+### `generate_plan` — read-only
 
 Builds the periodized plan that later decisions act on. Read-only because there
 is nothing here for it to write to: the plan is returned and the caller decides
-whether to keep it. `evidra_commit_adjust_plan` is the one tool that declares itself not
+whether to keep it. `commit_adjust_plan` is the one tool that declares itself not
 read-only, and not because it stores anything either — it must not be called
 without the user having seen and accepted the preview.
 
-### `evidra_preview_adjust_plan` / `evidra_commit_adjust_plan` — stateless two-phase transform
+### `preview_adjust_plan` / `commit_adjust_plan` — stateless two-phase transform
 
 Both tools receive caller-held state. `preview` returns a deterministic patch
 containing the diff, base version, and resulting plan. `commit` receives the

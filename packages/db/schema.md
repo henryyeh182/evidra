@@ -10,7 +10,7 @@ tables may exist there. Their only lawful home is an environment the user contro
 where storage, retention, and deletion are the user's own decisions.
 
 Phase 1 hosted stays stateless: the caller holds the plan and passes it in with every
-request (`get_plan` / `evidra_preview_adjust_plan` / `evidra_commit_adjust_plan` already work this way).
+request (`get_plan` / `preview_adjust_plan` / `commit_adjust_plan` already work this way).
 
 The schema intentionally models the core semantic pipeline before adding an ORM:
 

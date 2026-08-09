@@ -150,7 +150,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 - 對外 **6 個 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` ·
   `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
   （**v0.4.1 起拿掉 `evidra_` 前綴**，改回 v0.1.1 那組名字——見發布章節）
-- **440 tests**、eval 20 golden cases，全綠
+- **442 tests**、eval 20 golden cases，全綠
 - parser 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP；
   Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 個平台。
   **前四家照真實匯出檔寫；Oura 與 WHOOP 照兩家自己的 OpenAPI 寫（2026-08-07），
@@ -324,6 +324,28 @@ Configure 畫面讀的是 `name` 不是 `display_name`，不改的話那一頁�
 **工具名在 v0.4.1 拿掉了 `evidra_` 前綴**（2026-08-09 使用者定，理由是 Claude Desktop 的
 工具探索相容性，見上方 release notes）。這推翻了本檔原本「工具名一律不動」那句——
 **改工具名不是零成本**：v0.3.7／v0.4.0 裝過的人升上來看到的是另一組名字。
+
+**公開名 ≠ canonical 名。** v0.4.1 只換掉 `tools/list` 廣告出去的那組名字，**內部 canonical
+仍是 `evidra_*`**，公開名透過 alias 路由過去，兩種名字送進來都解析到同一個 handler。
+所以改文件時**逐份判斷，不要機械掃掉所有 `evidra_`**：
+
+| 要改成公開名 | 保留 canonical |
+|---|---|
+| 對使用者說「Claude 會看到哪些 tools」 | `schemas/tools/evidra_*.json` |
+| installation／release／registry／extension surface | `outputSchemas.js`、`toolHandlers.js` |
+| examples 裡教使用者或 reviewer 看公開工具名 | eval golden／scenario runner／tests 呼叫 canonical 或 alias routing 的地方 |
+| `docs/user-journey.html` 裡展示 release version／sha／published artifact | history 文件中描述當時版本事實的 `evidra_*` |
+
+**事故歸因的正式說法**（2026-08-09 使用者定，取代「rename fix」那種講法）：
+
+> v0.4.1 was not just a rename fix. It restored the public MCP wire shape that
+> Claude Desktop had successfully used in v0.1.1: legacy public tool names, no
+> advertised `outputSchema`, and content-only tool results. Internally, Evidra
+> still keeps `evidra_*` as canonical tool names and routes the public names
+> through aliases.
+
+核心不是「前綴本身一定害 Claude 壞掉」，而是**公開 tool surface 從 v0.1.1 的工作形狀漂移了**，
+前綴是這個漂移的一部分。
 
 **v0.1.0 起的每一版都刻意保留不覆蓋**（已照舊 checksum 驗過的人不會對不上）。
 每次發布後照規矩驗過：下載回來重算 sha256 相符，且與本地打包的那顆 `diff -rq` 逐檔相同。

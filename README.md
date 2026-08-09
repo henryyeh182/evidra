@@ -291,7 +291,7 @@ GUI 啟動的 app 拿到的 PATH 很精簡，設定檔裡**不能寫裸的 `node
 ## 指令
 
 ```bash
-npm test                    # 440 tests
+npm test                    # 442 tests
 npm run eval                # golden set 計分（tool 輸出契約）
 npm run harness             # Decision Harness（決策鏈本身；改規則或引擎之後必跑）
 npm run review:phase        # 階段完成審查（宣告「做完了」之前必跑）

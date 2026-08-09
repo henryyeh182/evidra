@@ -133,7 +133,7 @@ Phase 1 的界線明文禁止「把 raw Evidence 寫入 database、file、object
 因此：
 
 - **Phase 1 hosted 永遠無狀態。** 計畫與決策紀錄由呼叫端持有並隨每次呼叫傳入
-  （`get_plan`／`evidra_preview_adjust_plan`／`evidra_commit_adjust_plan` 現況已是如此）。
+  （`get_plan`／`preview_adjust_plan`／`commit_adjust_plan` 現況已是如此）。
 - **Phase 2 才有持久層。** 這是「計畫是決策的基底」第一次有地方落腳。
 - Phase 2 有持久層不代表使用者或企業環境不需要自己的存取控制、加密、保留與刪除政策。
 
@@ -196,7 +196,7 @@ Phase 2 有地方放，但表還沒建。
 
 | 項目 | 現況 |
 |---|---|
-| 對外 tool | 6 個：`evidra_assess_fitness_state`／`evidra_decide_session`／`evidra_decide_exercise_substitution`／`evidra_generate_plan`／`evidra_preview_adjust_plan`／`evidra_commit_adjust_plan` |
+| 對外 tool | 6 個：`assess_fitness_state`／`decide_session`／`decide_exercise_substitution`／`generate_plan`／`preview_adjust_plan`／`commit_adjust_plan` |
 | 資料標準化 | `packages/connectors` 實作 3 家（Apple Health／Garmin／Strava），schema registry 涵蓋 6 家 |
 | 確定性計算 | `semantic-engine`（readiness／分肌群疲勞）· `training-load`（ATL/CTL/TSB/ACWR）· `decision-engine`（from→to）· `planning` · `knowledge-graph`（889 節點） |
 | 測試 | 248 tests、eval 20 golden cases 全綠 |

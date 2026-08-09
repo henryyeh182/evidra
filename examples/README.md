@@ -186,14 +186,14 @@ Oura 不算訓練負荷。**所以我們也不算**——不會拿時長乘強�
 | [`evidence-whoop-flat.json`](evidence-whoop-flat.json) | HRV／靜息心率／睡眠 ＋ WHOOP Recovery 12%，前一天一場硬跑——**恢復訊號全面見底** |
 | [`scheduled-session.json`](scheduled-session.json) | 今天排定的課表——**沒有這個就沒有決策，只有建議** |
 
-`scheduled-session.json` 值得單獨講一句。沒有它，`evidra_decide_session` 不會編一個課表出來，
+`scheduled-session.json` 值得單獨講一句。沒有它，`decide_session` 不會編一個課表出來，
 而是回 `intent: no_scheduled_session`、`action.from` 與 `action.to` 都是 `null`，並附上這句：
 
 > Nothing is scheduled today, so there is no prior state to change.
 > **This is a recommendation question, not a decision.**
 
 **決策是對既有狀態的變更，前提是知道原本要做什麼。** 引擎自己講得出這條界線在哪，
-而不是假裝跨過去了——問「今天練什麼」該用 `evidra_generate_plan`。
+而不是假裝跨過去了——問「今天練什麼」該用 `generate_plan`。
 
 `vendorAssessments` 是獨立於 `healthMetrics` 的欄位。Body Battery、Oura Readiness、
 WHOOP Recovery 都放這裡；放錯到 `healthMetrics` 會被拒絕並告訴你正確欄位。
