@@ -149,18 +149,16 @@ changes it on purpose.
 
 ## Scope
 
-Every check runs against `evidra_decide_session`'s chain and nothing else.
+The checks in this README run against `evidra_decide_session`'s chain and
+nothing else.
 
-`evidra_generate_plan`, the plan change tools and
-`evidra_decide_exercise_substitution` do emit `decisionBasis` as of 2026-08-09,
-against EVD-R-010, EVD-R-011 and EVD-R-012 — but not from a chain this harness
-can drive: each needs a plan or a catalog lookup rather than a day of evidence.
-So DH-COV and DH-BND are scoped to `appliedBy === "session"`, and the rules
-outside that scope are exercised in `apps/mcp-server/test/ruleCoverage.test.js`,
-which fails in the same way if one of them ships unexercised. Bringing those
-surfaces into the harness itself is
-separate work; this harness does not cover it and does not report on it either
-way.
+`evidra_generate_plan` and the plan change tools do emit `decisionBasis` as of
+2026-08-09, but they need a plan rather than a day of evidence and remain
+outside this session harness. `evidra_decide_exercise_substitution` now has its
+own catalog harness: run `npm run harness:substitution`. It checks the safe
+replacement, hard-filtered candidate, no-safe-substitute, determinism and
+unknown-movement paths for EVD-R-012. The remaining plan surfaces are still
+exercised in `apps/mcp-server/test/ruleCoverage.test.js`.
 
 ## Scenarios
 

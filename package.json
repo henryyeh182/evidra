@@ -17,6 +17,7 @@
     "simulate:oura": "node scripts/simulate-oura-scenarios.js",
     "simulate:whoop": "node scripts/simulate-whoop-scenarios.js",
     "replay:host-handoff": "node scripts/replay-host-handoff.js",
+    "harness:substitution": "node harness/substitution-runner.js",
     "import:apple-health": "node scripts/import-apple-health.js",
     "import:google-health-api": "node scripts/import-google-health-api.js",
     "build:bundle": "node scripts/build-bundle.js",
