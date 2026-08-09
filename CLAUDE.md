@@ -147,8 +147,9 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 
 ## 現況（2026-08-01 查證）
 
-- 對外 **6 個 tool**：`evidra_assess_fitness_state` · `evidra_decide_session` · `evidra_decide_exercise_substitution` ·
-  `evidra_generate_plan` · `evidra_preview_adjust_plan` · `evidra_commit_adjust_plan`
+- 對外 **6 個 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` ·
+  `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
+  （**v0.4.1 起拿掉 `evidra_` 前綴**，改回 v0.1.1 那組名字——見發布章節）
 - **440 tests**、eval 20 golden cases，全綠
 - parser 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP；
   Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 個平台。
@@ -300,11 +301,13 @@ evidra 只有三個檔，和這裡的關係各不相同——**唯一真正重�
 **驗兩顆 bundle 要 `diff -rq` 解開比對，不是比清單**（2026-08-03 的教訓：檔名一致不等於內容
 一致，只 diff `unzip -l` 的清單曾把一次行為修正誤判成「只換 README」）。
 
-**`/releases/latest` 指向 `v0.4.0`**（2026-08-09 發布，sha256 `294acd57b50cad0d0…eeb8`）。
-**官方 MCP registry 已上架 v0.4.0**（2026-08-09，`isLatest: true`／`status: active`），
+**`/releases/latest` 指向 `v0.4.1`**（2026-08-09 發布，sha256 `011e4ef84bf6219cc…4e4c`）。
+**官方 MCP registry 已上架 v0.4.1**（2026-08-09，`isLatest: true`／`status: active`），
 sha256 與 release asset 一致。用 `mcp-publisher publish` 送，**要在 repo 根目錄跑**——
 它讀當前目錄的 `server.json`，在家目錄跑會回 "server.json not found"。
-token 效期很短，幾乎每次都要重登（`mcp-publisher login github`）；
+token 效期很短，幾乎每次都要重登（`mcp-publisher login github`）——**那是 device code
+互動流程**（印出 `github.com/login/device` 與一組代碼後阻塞等待），要背景跑並把代碼貼給使用者，
+不能當一般指令等它自己結束；
 這台機器已用 `brew install mcp-publisher` 裝好。title `Evidra Fitness`。
 **registry 拒收同版號重送**，所以連文案修正都要帶一個版號。
 **Anthropic MCPB 送審表單已提交**（附的是 v0.3.6 那顆快照；表單自陳是表達興趣，
@@ -312,9 +315,15 @@ token 效期很短，幾乎每次都要重登（`mcp-publisher login github`）�
 
 **顯示名稱是 `Evidra Fitness`，識別碼仍是 `evidra`**——registry 上另有
 `io.github.vitas/evidra`（DevOps flight recorder，早五個月），命名空間讓識別碼不會撞，
-但**目錄清單上人看到的那個字會撞**，所以只改顯示名稱那三處
-（`server.json` 的 `title`、`manifest.json` 的 `display_name`、`server.js` 的 `serverInfo.title`）。
-**repo 名、registry 識別碼、`evidra_*` 工具名一律不動**——那三樣才是改名真正的成本。
+但**目錄清單上人看到的那個字會撞**，所以改的是顯示名稱那四處：
+`server.json` 的 `title`、`manifest.json` 的 `display_name` 與 **`name`**、`server.js` 的 `serverInfo.title`。
+**`manifest.json` 的 `name` 是 v0.4.1 才跟著改的**（2026-08-09 使用者定）——Claude Desktop 的
+Configure 畫面讀的是 `name` 不是 `display_name`，不改的話那一頁還印著 `fitness-mcp`。
+**repo 名與 registry 識別碼一律不動。**
+
+**工具名在 v0.4.1 拿掉了 `evidra_` 前綴**（2026-08-09 使用者定，理由是 Claude Desktop 的
+工具探索相容性，見上方 release notes）。這推翻了本檔原本「工具名一律不動」那句——
+**改工具名不是零成本**：v0.3.7／v0.4.0 裝過的人升上來看到的是另一組名字。
 
 **v0.1.0 起的每一版都刻意保留不覆蓋**（已照舊 checksum 驗過的人不會對不上）。
 每次發布後照規矩驗過：下載回來重算 sha256 相符，且與本地打包的那顆 `diff -rq` 逐檔相同。
