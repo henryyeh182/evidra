@@ -136,6 +136,33 @@ MCP `2026-07-28` 的 stateless HTTP 對 remote scaling 有幫助，但它解決�
 
 完成標準：換對話視窗／換 host 後，仍能針對同一人的連續狀態回答；任何數字都能追到來源、時間窗與規則版本。
 
+#### P2 未完成項：Decision Trace Registry 全面接入
+
+目前 `decisionId` 已接在 `decide_session`，並可透過 `explain_decision` 讀取
+Decision → Rule → Evidence → Source → Version trace。其餘會產生決策或決策基礎的
+工具尚未全部註冊到 trace registry，不能宣稱所有 Pacevera decision 都可由
+`decisionId` 回查。
+
+待完成工具與工作：
+
+- `decide_exercise_substitution`：產生 `decisionId`，保存原動作、替代動作、觸發的
+  contraindication rule、被排除的候選與 evidence provenance。
+- `generate_plan`：產生 `decisionId`，保存 plan snapshot、適用的 planning rule、
+  goal／constraint evidence 與 engine／rule-library version。
+- `preview_adjust_plan`：產生 `decisionId`，保存 change request、base plan version、
+  preview patch、仲裁／限制理由與 trace。
+- `commit_adjust_plan`：沿用 preview 的 trace，不重新計算；保存 committed plan version
+  與 preview／decision 的關聯。
+- 統一所有 decision record 的 schema、TTL／持久化 adapter、caller ownership 與
+  `explain_decision` 的錯誤語意；不可讓不同工具各自產生不同格式的 trace。
+- 為每個工具補 contract、golden case、version-change regression，以及「同一個
+  `decisionId` 可回查完整當下版本」的測試。
+
+完成條件：所有對外 decision tool 都回傳 `decisionId`；`explain_decision` 能對每一種
+decision type 回傳完整 trace；trace 保存的是決策當下的 evidence／rule／source／version
+snapshot，而不是依目前 rule library 重新推導。Hosted mode 仍維持 bounded／stateless
+邊界；durable registry 只在 user-controlled private engine 啟用。
+
 ### P3 — 受控 mobile access
 
 目標：讓手機可用，但不犧牲 P0 的資料邊界。
