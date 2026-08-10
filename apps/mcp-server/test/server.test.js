@@ -159,6 +159,42 @@ test("a decision can be explained using its returned decisionId", async () => {
   assert.ok(explanation.trace.decisionBasis);
 });
 
+test("every decision tool registers one canonical trace and commit preserves preview lineage", async () => {
+  const substitution = await callNewTool("decide_exercise_substitution", {
+    userId: "u-trace",
+    exerciseId: "back squat",
+    avoidContraindications: ["knee"]
+  });
+  const generated = await callNewTool("generate_plan", {
+    userId: "u-trace",
+    startDate: "2026-08-10",
+    weeks: 1,
+    evidence: COVERAGE_EVIDENCE
+  });
+  const preview = await callNewTool("preview_adjust_plan", {
+    plan: generated,
+    changeRequest: { kind: "deload_week", weekIndex: 0 }
+  });
+  const committed = await callNewTool("commit_adjust_plan", {
+    plan: generated,
+    preview: preview.patch
+  });
+
+  for (const result of [substitution, generated, preview]) {
+    assert.match(result.decisionId, /^dec_[0-9a-f]{24}$/);
+    const explanation = await callNewTool("explain_decision", { decisionId: result.decisionId });
+    assert.ok(explanation.trace.rules);
+    assert.ok(explanation.trace.versions.engine);
+    assert.ok(explanation.trace.snapshots);
+  }
+
+  assert.equal(committed.decisionId, preview.decisionId);
+  assert.equal(committed.previewDecisionId, preview.decisionId);
+  const committedTrace = await callNewTool("explain_decision", { decisionId: committed.decisionId });
+  assert.equal(committedTrace.trace.commitment.committedPlanVersion, committed.version);
+  assert.equal(committedTrace.trace.commitment.previewId, preview.previewId);
+});
+
 test("MCP server includes release identity in the advertised toolset", async () => {
   const init = await handleJsonRpcMessage(
     JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} })

@@ -136,12 +136,11 @@ MCP `2026-07-28` 的 stateless HTTP 對 remote scaling 有幫助，但它解決�
 
 完成標準：換對話視窗／換 host 後，仍能針對同一人的連續狀態回答；任何數字都能追到來源、時間窗與規則版本。
 
-#### P2 未完成項：Decision Trace Registry 全面接入
+#### P2：Decision Trace Registry 全面接入（已完成）
 
-目前 `decisionId` 已接在 `decide_session`，並可透過 `explain_decision` 讀取
-Decision → Rule → Evidence → Source → Version trace。其餘會產生決策或決策基礎的
-工具尚未全部註冊到 trace registry，不能宣稱所有 Pacevera decision 都可由
-`decisionId` 回查。
+所有對外 decision tool 現已回傳 `decisionId`，並透過同一個 registry writer 由
+`explain_decision` 讀取統一的 Decision → Rule → Evidence → Source → Version trace。
+以下工作已完成：
 
 待完成工具與工作：
 
@@ -158,10 +157,10 @@ Decision → Rule → Evidence → Source → Version trace。其餘會產生決
 - 為每個工具補 contract、golden case、version-change regression，以及「同一個
   `decisionId` 可回查完整當下版本」的測試。
 
-完成條件：所有對外 decision tool 都回傳 `decisionId`；`explain_decision` 能對每一種
-decision type 回傳完整 trace；trace 保存的是決策當下的 evidence／rule／source／version
-snapshot，而不是依目前 rule library 重新推導。Hosted mode 仍維持 bounded／stateless
-邊界；durable registry 只在 user-controlled private engine 啟用。
+完成條件已達成：`explain_decision` 能對每一種 decision type 回傳當下保存的
+evidence／rule／source／version snapshot，而不是依目前 rule library 重新推導。
+Hosted mode 仍維持 bounded／stateless 邊界；durable registry adapter 只在
+user-controlled private engine 啟用。
 
 ### P3 — 受控 mobile access
 

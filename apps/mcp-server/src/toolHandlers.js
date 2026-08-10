@@ -37,6 +37,7 @@ import {
 import {
   explainDecision,
   recordDecision,
+  attachDecisionCommit,
   submitOutcome
 } from "./decisionRecords.js";
 
@@ -402,7 +403,7 @@ export async function generateTrainingPlanTool(args = {}) {
   const resolved = await resolveContext(args);
   if (!resolved) return evidenceRequired("evidra_generate_plan");
   if (resolved.invalid) return invalidEvidence("evidra_generate_plan", resolved.invalid);
-  const { context } = resolved;
+  const { context, provenance } = resolved;
   const { displayNameFor } = await exerciseNaming();
   const findGoalAlternative = await goalAlternativeLookup();
 
@@ -413,7 +414,24 @@ export async function generateTrainingPlanTool(args = {}) {
     displayNameFor,
     findGoalAlternative
   });
-  return jsonContent(plan);
+  const planDecision = recordDecision({
+    tool: "generate_plan",
+    userId: context.user.id,
+    decision: { type: "plan_generated", intent: "build_training_plan" },
+    action: { type: "create_plan", planId: plan.id, version: plan.version },
+    reason: plan.reasoning,
+    evidence: [
+      { signal: "goal", value: context.goals, source: "provided" },
+      { signal: "constraints", value: plan.constraints, source: "provided" },
+      { signal: "training_history", value: context.workouts, source: "provided" }
+    ],
+    decisionBasis: plan.decisionBasis ?? null,
+    provenance,
+    versions: { plan: plan.version },
+    planSnapshot: structuredClone(plan),
+    ...plan
+  }, { userId: context.user.id, evidenceSource: provenance.evidenceSource });
+  return jsonContent({ decisionId: planDecision.decisionId, ...plan });
 }
 
 export async function getTrainingPlanTool(args = {}) {
@@ -487,7 +505,25 @@ export async function previewPlanChangeTool(args = {}) {
     return planStateProblem("evidra_preview_adjust_plan", "plan_change_refused", error.message);
   }
 
+  const previewDecision = recordDecision({
+    tool: "preview_adjust_plan",
+    userId: args.plan.userId ?? null,
+    decision: { type: "plan_change_preview", intent: preview.changeRequest.kind },
+    action: { type: "preview_plan_change", planId: preview.planId, baseVersion: preview.baseVersion },
+    reason: [preview.summary],
+    evidence: [
+      { signal: "change_request", value: preview.changeRequest, source: "caller" },
+      { signal: "base_plan", value: { planId: preview.planId, version: preview.baseVersion }, source: "caller" }
+    ],
+    decisionBasis: preview.decisionBasis,
+    provenance: { evidenceSource: "caller", previewId: preview.previewId },
+    versions: { basePlan: preview.baseVersion },
+    planSnapshot: structuredClone(preview.resultingPlan),
+    previewSnapshot: structuredClone(preview)
+  }, { userId: args.plan.userId ?? null, evidenceSource: "caller" });
+
   return jsonContent({
+    decisionId: previewDecision.decisionId,
     previewId: preview.previewId,
     planId: preview.planId,
     baseVersion: preview.baseVersion,
@@ -497,7 +533,7 @@ export async function previewPlanChangeTool(args = {}) {
     // plan inside `patch` carries its own frame from the day it was generated,
     // and the two answer different questions.
     decisionBasis: preview.decisionBasis,
-    patch: preview,
+    patch: { ...preview, decisionId: previewDecision.decisionId },
     note: "Keep this patch and apply it in the AI host or external storage."
   });
 }
@@ -520,7 +556,43 @@ export async function commitPlanChangeTool(args = {}) {
 
   const versionHistory = buildVersionHistory(args.plan, args.preview, committed);
   const plan = { ...committed, versionHistory };
+  const previewDecisionId = args.preview.decisionId;
+  let decisionId = previewDecisionId;
+  if (decisionId) {
+    const attached = attachDecisionCommit(decisionId, {
+      previewId: args.preview.previewId,
+      committedPlanId: plan.id,
+      committedPlanVersion: plan.version,
+      baseVersion: args.preview.baseVersion,
+      committedPlanSnapshot: structuredClone(plan)
+    });
+    if (!attached) {
+      return errorContent({
+        error: "decision_trace_not_found",
+        tool: "evidra_commit_adjust_plan",
+        decisionId,
+        problem: "The preview trace expired or belongs to another server instance, so the commit cannot preserve its lineage.",
+        callerAction: "Request a fresh preview and commit that patch without modifying it."
+      });
+    }
+  } else {
+    // Backward-compatible handling for previews produced before trace
+    // registration existed. New callers always take the branch above.
+    decisionId = recordDecision({
+      tool: "commit_adjust_plan",
+      userId: plan.userId ?? null,
+      decision: { type: "plan_change_commit", intent: "commit_preview" },
+      action: { type: "commit_plan_change", planId: plan.id, version: plan.version },
+      evidence: [{ signal: "preview", value: args.preview, source: "caller" }],
+      decisionBasis: args.preview.decisionBasis ?? null,
+      provenance: { evidenceSource: "caller", previewId: args.preview.previewId },
+      versions: { basePlan: args.preview.baseVersion, committedPlan: plan.version },
+      planSnapshot: structuredClone(plan)
+    }, { userId: plan.userId ?? null, evidenceSource: "caller" }).decisionId;
+  }
   return jsonContent({
+    decisionId,
+    previewDecisionId: previewDecisionId ?? null,
     planId: plan.id,
     version: plan.version,
     status: plan.status,

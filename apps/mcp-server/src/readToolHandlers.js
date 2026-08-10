@@ -10,6 +10,7 @@ import { loadKnowledgeBase, assertGrounded, toExerciseSummary, paginate } from "
 import { jsonContent, errorContent } from "./content.js";
 import { buildDecisionBasis } from "../../../packages/rules/src/index.js";
 import { ENGINE_VERSION } from "../../../packages/decision-engine/src/version.js";
+import { recordDecision } from "./decisionRecords.js";
 
 function assertUserId(context, userId) {
   if (context.user.id !== userId) {
@@ -285,7 +286,14 @@ export async function decideExerciseSubstitutionTool(args = {}) {
       confidence: "low",
       limits: ["Too few substitute options; this one needs a coach's judgement."]
     };
-    return jsonContent(assertGrounded(payload, graph));
+    const grounded = assertGrounded(payload, graph);
+    return jsonContent(recordDecision({
+      tool: "decide_exercise_substitution",
+      userId: args.userId ?? null,
+      ...grounded,
+      planId: args.planId ?? null,
+      snapshot: { original: grounded.action.from, alternatives: grounded.alternatives ?? [] }
+    }, { userId: args.userId ?? null, evidenceSource: "knowledge_graph" }));
   }
 
   const chosen = candidates[0];
@@ -327,5 +335,12 @@ export async function decideExerciseSubstitutionTool(args = {}) {
         ]
   };
 
-  return jsonContent(assertGrounded(payload, graph));
+  const grounded = assertGrounded(payload, graph);
+  return jsonContent(recordDecision({
+    tool: "decide_exercise_substitution",
+    userId: args.userId ?? null,
+    ...grounded,
+    planId: args.planId ?? null,
+    snapshot: { original: grounded.action.from, alternatives: grounded.alternatives ?? [] }
+  }, { userId: args.userId ?? null, evidenceSource: "knowledge_graph" }));
 }
