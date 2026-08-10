@@ -1,0 +1,18 @@
+{
+  "id": 900000001,
+  "name": "Synthetic morning run",
+  "type": "Run",
+  "sport_type": "Run",
+  "start_date": "2026-07-23T06:45:00+08:00",
+  "start_date_local": "2026-07-23T06:45:00+08:00",
+  "moving_time": 2460,
+  "elapsed_time": 2520,
+  "distance": 7200,
+  "total_elevation_gain": 42,
+  "average_speed": 2.93,
+  "average_heartrate": 142,
+  "max_heartrate": 176,
+  "suffer_score": 68,
+  "perceived_exertion": null,
+  "kudos_count": 3
+}

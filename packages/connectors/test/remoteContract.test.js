@@ -20,12 +20,13 @@ const evidenceSchema = JSON.parse(
 const sourceSchemas = {
   oura: JSON.parse(await readFile(new URL("../../../schemas/sources/oura.api.json", import.meta.url), "utf8")),
   whoop: JSON.parse(await readFile(new URL("../../../schemas/sources/whoop.api.json", import.meta.url), "utf8")),
-  garmin: JSON.parse(await readFile(new URL("../../../schemas/sources/garmin.export.json", import.meta.url), "utf8"))
+  garmin: JSON.parse(await readFile(new URL("../../../schemas/sources/garmin.export.json", import.meta.url), "utf8")),
+  strava: JSON.parse(await readFile(new URL("../../../schemas/sources/strava.api.json", import.meta.url), "utf8"))
 };
 const oura = JSON.parse(await readFile(new URL("../../../data/fixtures/contracts/oura-api-v2.synthetic.json", import.meta.url), "utf8"));
 const whoop = JSON.parse(await readFile(new URL("../../../data/fixtures/contracts/whoop-api-v2.synthetic.json", import.meta.url), "utf8"));
 const garmin = JSON.parse(await readFile(new URL("../../../data/fixtures/garmin/export-sample.json", import.meta.url), "utf8"));
-const stravaActivity = JSON.parse(await readFile(new URL("../../../data/fixtures/strava/activity-run.json", import.meta.url), "utf8"));
+const stravaActivity = JSON.parse(await readFile(new URL("../../../data/fixtures/contracts/strava-api.synthetic.json", import.meta.url), "utf8"));
 
 function assertEvidenceContract(evidence, label) {
   const result = validate(evidence, evidenceSchema);
@@ -36,6 +37,12 @@ function assertEvidenceContract(evidence, label) {
     assert.equal(typeof item.unit, "string", `${label}: unit missing for ${item.type}`);
     assert.equal(typeof item.recordedAt, "string", `${label}: timestamp missing for ${item.type}`);
     assert.equal(item.confidence, undefined, `${label}: numeric confidence must not be smuggled into evidence`);
+    assert.equal(Number.isNaN(Date.parse(item.recordedAt)), false, `${label}: invalid timestamp`);
+  }
+  for (const workout of evidence.workouts || []) {
+    assert.equal(typeof workout.source, "string", `${label}: workout source label missing`);
+    assert.equal(Number.isNaN(Date.parse(workout.startedAt)), false, `${label}: invalid workout timestamp`);
+    assert.equal(workout.confidence, undefined, `${label}: workout confidence must not be smuggled into evidence`);
   }
 }
 
@@ -66,6 +73,7 @@ test("synthetic WHOOP API response shape validates and preserves missingness", (
 
 test("real-export Garmin shape and Strava API shape keep their source labels and missing values", () => {
   assert.equal(validate(garmin, sourceSchemas.garmin).valid, true);
+  assert.equal(validate(stravaActivity, sourceSchemas.strava).valid, true);
   const garminEvidence = buildGarminEvidence(garmin, { asOf: "2026-07-26", sinceDays: 30 });
   assertEvidenceContract(garminEvidence, "garmin");
   const strava = normalizeStravaActivity(stravaActivity);
@@ -82,4 +90,26 @@ test("real-export Garmin shape and Strava API shape keep their source labels and
   });
   assert.equal(sparse.rpe, null, "without an exertion field, RPE remains missing");
   assert.equal(sparse.trainingLoad, null, "without an exertion field, training load remains missing");
+});
+
+test("the four contract families preserve units and missingness without inventing confidence", () => {
+  const fixtures = [
+    ["oura", buildOuraEvidence(oura)],
+    ["whoop", buildWhoopEvidence(whoop)],
+    ["garmin", buildGarminEvidence(garmin, { asOf: "2026-07-26", sinceDays: 30 })],
+    ["strava", { healthMetrics: [], vendorAssessments: [], workouts: [normalizeStravaActivity(stravaActivity)] }]
+  ];
+
+  for (const [label, evidence] of fixtures) {
+    assertEvidenceContract(evidence, label);
+    for (const metric of [...(evidence.healthMetrics || []), ...(evidence.vendorAssessments || [])]) {
+      assert.equal(typeof metric.unit, "string", `${label}: unit is required at the normalized boundary`);
+      assert.ok(metric.source, `${label}: source provenance is required at the normalized boundary`);
+    }
+  }
+
+  const noRecovery = buildWhoopEvidence({ recovery: [{ ...whoop.recovery[0], score_state: "PENDING_SCORE" }] });
+  assert.equal(noRecovery.healthMetrics.length, 0, "unscored WHOOP recovery must remain missing");
+  const noStravaLoad = normalizeStravaActivity({ ...stravaActivity, suffer_score: null, average_heartrate: null, max_heartrate: null });
+  assert.equal(noStravaLoad.trainingLoad, null, "Strava without effort evidence must remain unmeasured");
 });

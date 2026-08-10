@@ -39,6 +39,18 @@ const APPROVED_DECISION_TOOLS = [
   "evidra_commit_adjust_plan"
 ];
 
+// These are bounded support interfaces from the decision-trace slice. They
+// are not a second recommendation surface: coverage reports what arrived,
+// explain_decision reads the caller-visible trace while it is available, and
+// submit_outcome returns a caller-persisted event. Keep them explicit so G2
+// does not silently turn into "any tool is fine" while still reviewing the
+// actual public surface.
+const APPROVED_SUPPORT_TOOLS = [
+  "get_evidence_coverage",
+  "explain_decision",
+  "submit_outcome"
+];
+
 /**
  * 承諾 A（決策自我解釋）逐 tool 的最低欄位。
  * 決策型的三個要能回答「憑什麼、有多確定、缺什麼、換掉了什麼」；
@@ -175,7 +187,7 @@ gate(
 
 gate(
   "G2",
-  "對外 tool 全部是決策或決策基底",
+  "對外 tool 全部是決策、決策基底或 bounded support",
   "原則 5 與 D-TOOL。R2 已經發生過一次（早期蓋出檢索層），這條是它的常設圍欄。",
   async () => {
     const findings = [];
@@ -192,13 +204,18 @@ gate(
       findings.push(`對外 tool ${exposed.length} 個，超過 ≤10 上限`);
     }
     for (const name of exposed) {
-      if (!APPROVED_DECISION_TOOLS.includes(name)) {
+      if (!APPROVED_DECISION_TOOLS.includes(name) && !APPROVED_SUPPORT_TOOLS.includes(name)) {
         findings.push(`${name} 未登錄在白名單——先過 GPT-6 判準（docs/phase-review.md）再加進 scripts/review-phase.js`);
       }
     }
     for (const name of APPROVED_DECISION_TOOLS) {
       if (!exposed.includes(name)) {
         findings.push(`白名單的 ${name} 已不在對外清單——若是刻意下架，白名單要一起改`);
+      }
+    }
+    for (const name of APPROVED_SUPPORT_TOOLS) {
+      if (!exposed.includes(name)) {
+        findings.push(`support tool ${name} 已不在對外清單——若是刻意下架，白名單要一起改`);
       }
     }
 
@@ -236,7 +253,8 @@ gate(
     for (const [name, block] of blocks) {
       const description = block.match(/description:\s*([\s\S]*?)\n\s{4}inputSchema/)?.[1] || "";
 
-      if (!/Use this for|Use this after/.test(description)) {
+      const isSupportTool = APPROVED_SUPPORT_TOOLS.includes(name);
+      if (!isSupportTool && !/Use this for|Use this after/.test(description)) {
         findings.push(`${name} 的描述沒有觸發語句（Use this for …）——host 無從得知使用者會怎麼問`);
       }
 
@@ -247,7 +265,7 @@ gate(
       // was what put a parameter that does not exist into a public tool
       // description. Everything else must still say where the evidence comes
       // from.
-      const needsEvidence = !["evidra_preview_adjust_plan", "evidra_commit_adjust_plan", "evidra_decide_exercise_substitution"].includes(
+      const needsEvidence = !isSupportTool && !["evidra_preview_adjust_plan", "evidra_commit_adjust_plan", "evidra_decide_exercise_substitution"].includes(
         name
       );
       if (needsEvidence && !/`evidence`/.test(description)) {

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/sources/strava.api",
+  "title": "Strava DetailedActivity API subset (raw)",
+  "description": "The subset of Strava's DetailedActivity response read by the API dialect normalizer. Field names are Strava's, not the canonical evidence vocabulary. This contract is based on Strava's public API reference (https://developers.strava.com/docs/reference/); it is separate from the CSV/FIT bulk export contract in strava.export.json. The checked-in contract fixture is synthetic and does not represent a live athlete response.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "integer", "description": "Strava activity id." },
+    "name": { "type": "string" },
+    "type": { "type": "string", "description": "Strava activity type, for example Run or Ride." },
+    "sport_type": { "type": "string" },
+    "start_date": { "type": "string", "description": "ISO 8601 activity start timestamp." },
+    "start_date_local": { "type": "string" },
+    "moving_time": { "type": "integer", "description": "Moving time in seconds." },
+    "elapsed_time": { "type": "integer", "description": "Elapsed time in seconds." },
+    "distance": { "type": "number", "description": "Distance in meters." },
+    "total_elevation_gain": { "type": "number", "description": "Elevation gain in meters." },
+    "average_speed": { "type": "number", "description": "Average speed in meters per second." },
+    "average_heartrate": { "type": ["number", "null"], "description": "Average heart rate in beats per minute." },
+    "max_heartrate": { "type": ["number", "null"], "description": "Maximum heart rate in beats per minute." },
+    "suffer_score": { "type": ["integer", "null"], "description": "Strava's Relative Effort score." },
+    "perceived_exertion": { "type": ["number", "null"], "description": "Athlete-reported exertion when present." },
+    "kudos_count": { "type": "integer" }
+  },
+  "required": ["id", "type", "start_date", "moving_time"]
+}
