@@ -337,7 +337,7 @@
     </p>
     <p class="docpurpose">
       這份文件講的是<b>這個產品是什麼、往哪裡走</b>——給 stakeholder 看的方向。
-      三種形態、五層決策、證據語彙與出處治理，是同一個方向的四個切面。
+      三種部署形態、五層決策、證據語彙與出處治理，是同一個方向的四個切面。
     </p>
 
     <div class="docrole">
@@ -452,17 +452,47 @@
   </section>
 
   <section class="spine">
+    <p class="section-label">Who It Serves</p>
+    <h2>先服務不想再交出健康歷史的人</h2>
+    <p class="lede">
+      Pacevera 的第一個 beachhead 不是泛用健身大眾，而是已經在使用 AI、手上有 Apple Health、
+      Garmin 或相近穿戴資料，卻不願再把資料搬進另一個平台的 serious athlete。
+      他們最先要解決的不是「再看一個 dashboard」，而是<strong>今天原本的課表要不要照做</strong>。
+    </p>
+    <div class="contrast">
+      <div class="card strong">
+        <h3>First user</h3>
+        <p class="quote">「我今天該照課表做嗎？如果不該，具體改成什麼？」</p>
+        <dl>
+          <dt>已有</dt><dd>AI host、穿戴資料、固定訓練習慣</dd>
+          <dt>在意</dt><dd>新鮮證據、可解釋的 from → to、資料留在自己的邊界</dd>
+          <dt>首次成功</dt><dd>10 分鐘內完成一次可追溯的課表調整</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>Not the promise</h3>
+        <p class="quote dim">Pacevera 不是健康資料 dashboard，也不是另一個 AI coach。</p>
+        <dl>
+          <dt>不做</dt><dd>不取代使用者已經在用的 AI</dd>
+          <dt>不承諾</dt><dd>不把 hosted remote 說成「Evidence 不離開你的電腦」</dd>
+          <dt>長期方向</dt><dd>把同一顆引擎帶進教練、隊伍與企業私有環境</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="spine">
     <p class="section-label">Three Forms</p>
     <h2>同一顆引擎，三種形態</h2>
     <p class="lede">
       底下的決策鏈在三種形態裡是<strong>同一份實作</strong>，差別只在它跑在誰的機器上、
       證據怎麼進來、誰付錢。<strong>這不是三個階段，是三種使用者處境</strong>——
-      remote 上線不會取代 desktop extension，Phase 2 也不是 remote 的續集。
+      remote 上線不會取代 desktop extension，user-controlled private deployment 也不是 remote 的續集。
     </p>
 
     <div class="forms">
       <div class="form now">
-        <div class="stage">Form 1 — 第一個可用形態</div>
+        <div class="stage">Form 1 · <code>local-desktop</code> — 第一個可用形態</div>
         <h4>Desktop extension（MCPB）</h4>
         <div class="who">跑在使用者自己的電腦上 · v0.4.2</div>
         <p>
@@ -477,7 +507,7 @@
       </div>
 
       <div class="form">
-        <div class="stage">Form 2 — 商業化形態</div>
+        <div class="stage">Form 2 · <code>hosted-remote</code> — 商業化形態</div>
         <h4>Remote MCP server</h4>
         <div class="who">跑在我們的機器上 · 手機唯一可行的路</div>
         <p>
@@ -492,7 +522,7 @@
       </div>
 
       <div class="form">
-        <div class="stage">Form 3 — 高隱私／企業形態</div>
+        <div class="stage">Form 3 · <code>user-controlled-private</code> — 高隱私／企業形態</div>
         <h4>User-controlled deployment</h4>
         <div class="who">跑在使用者或機構自己控制的環境</div>
         <p>
@@ -1202,9 +1232,11 @@
       <code>docs/fitness-mcp-implementation-plan.md</code>，不重複寫在這裡；
       兩份衝突時，以那份的現況表為準。
       <br>
-      對照日期 2026-08-09，對照對象是實際程式碼與規則庫（v1.4.0，12 條規則）。
+      對照日期 2026-08-10，對照對象是實際程式碼與規則庫（v1.4.0，12 條規則）。
       可複製的 demo prompts 與 sample evidence 在 <code>examples/README.md</code>，
       每一則的輸出都由測試釘住。
+      產品策略與下一階段的取捨見 <code>docs/pacevera-product-strategy.md</code>；
+      本頁是未來 pacevera.com 網站的敘事原型，不是工程 roadmap。
     </p>
   </section>
 
