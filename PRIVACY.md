@@ -1,18 +1,18 @@
-# Privacy Policy — Evidra
+# Privacy Policy — Pacevera
 
 **Effective date:** 2026-08-06
-**Applies to:** the Evidra Fitness desktop extension, an MCP server that runs locally on your own computer.
+**Applies to:** the Pacevera Fitness desktop extension, an MCP server that runs locally on your own computer.
 
 ## Summary
 
-Evidra is a calculator, not a data service. It receives the health-related evidence
+Pacevera is a calculator, not a data service. It receives the health-related evidence
 your AI assistant passes into a tool call, computes a training decision from it, returns
 the result, and does not retain it. Running as a desktop extension, it does all of this
 on your own machine.
 
-## What Evidra receives
+## What Pacevera receives
 
-Evidra never goes and gets your data. It only ever sees what the calling AI assistant
+Pacevera never goes and gets your data. It only ever sees what the calling AI assistant
 puts into a tool call, which may include:
 
 - Recovery signals for the current day — sleep, heart rate variability, resting heart
@@ -24,7 +24,7 @@ puts into a tool call, which may include:
 We call these inputs *evidence*. Your assistant supplies it once per question, and only
 the part a given decision needs.
 
-## How Evidra processes it
+## How Pacevera processes it
 
 We process only the minimum health-related evidence submitted by the caller, solely to
 compute the requested fitness decision. We do not retain, sell, use for training, or use
@@ -36,7 +36,7 @@ What we do not do is keep it.
 ### Legal basis
 
 The legal basis for processing is performance of the requested computation initiated by
-the user. Evidra processes evidence only when you ask your AI assistant a question that
+the user. Pacevera processes evidence only when you ask your AI assistant a question that
 requires a decision, and only for that computation.
 
 Where the evidence you submit concerns your health, we rely on your explicit consent,
@@ -44,20 +44,20 @@ given by choosing to submit it for that computation. You can withdraw it at any 
 not submitting further evidence, or by removing the extension. Because nothing is
 retained, withdrawal leaves nothing behind for us to erase.
 
-## What Evidra does not do
+## What Pacevera does not do
 
 The extension ships one compiled JavaScript file, built from our source. It is minified,
 so it is not pleasant reading — but the two claims below survive that: minification does
 not rename the standard-library modules a file imports, so which capabilities the server
 has can still be read straight off the shipped file.
 
-- **Evidra itself performs no outbound network requests.** Its code makes no outgoing
+- **Pacevera itself performs no outbound network requests.** Its code makes no outgoing
   HTTP, fetch, socket, or DNS calls, and it transmits your evidence nowhere. The compiled
   file imports no networking module of any kind — searching it for `node:http`,
   `node:net`, `node:dgram` or `fetch(` returns nothing. A separate HTTP transport exists
   in our source repository, kept for the possible hosted deployment described below; it
   is not compiled into the extension and does not travel in it.
-- **Evidra itself does not persist your evidence.** It writes nothing but its protocol
+- **Pacevera itself does not persist your evidence.** It writes nothing but its protocol
   responses. There is no database, no cache, no log file, and no history. The compiled
   file contains no call that writes to disk — no `writeFile`, no `appendFile`, no
   `createWriteStream`, no `mkdir` — and it opens only three kinds of file, all of which
@@ -68,12 +68,12 @@ has can still be read straight off the shipped file.
   anywhere.
 - **No third-party code.** The extension has zero runtime dependencies and runs on the
   Node.js standard library alone. No analytics, no telemetry, no crash reporting, no SDKs.
-- **No model calls.** Decisions are deterministic arithmetic and explicit rules. Evidra
+- **No model calls.** Decisions are deterministic arithmetic and explicit rules. Pacevera
   calls no AI model of its own and sends your evidence to no model provider.
-- **No accounts.** Evidra has no sign-up, no login, and no user identifier. We do not know
+- **No accounts.** Pacevera has no sign-up, no login, and no user identifier. We do not know
   who you are.
 
-These statements describe Evidra's own behaviour. They are not statements about the
+These statements describe Pacevera's own behaviour. They are not statements about the
 computer it runs on, the AI assistant that calls it, or the operating system and Node.js
 runtime underneath it, none of which are under our control.
 
@@ -81,16 +81,16 @@ Evidence exists only in memory for the duration of a single tool call.
 
 ## Data retention
 
-Evidra does not retain your evidence. Nothing is written to durable storage, so there is
+Pacevera does not retain your evidence. Nothing is written to durable storage, so there is
 nothing for us to keep, delete, or export on request.
 
-Because Evidra does not retain personal information, requests to access, correct, or
+Because Pacevera does not retain personal information, requests to access, correct, or
 delete stored data generally do not apply. If you believe we hold something about you,
 write to the address below and we will tell you what we have, which we expect to be
 nothing.
 
 Your AI assistant is a separate matter: the conversation containing your evidence and
-Evidra's results lives in that assistant's history under its own privacy policy, not ours.
+Pacevera's results lives in that assistant's history under its own privacy policy, not ours.
 If you want that removed, remove it there.
 
 ## Sharing
@@ -100,11 +100,11 @@ advertising, no data brokers, no model training, and no transfer to any third pa
 
 ## Children
 
-Evidra is not directed at children under 13 and we knowingly collect nothing from anyone.
+Pacevera is not directed at children under 13 and we knowingly collect nothing from anyone.
 
 ## Not medical advice
 
-Evidra computes training decisions from athletic evidence. It is intended for general
+Pacevera computes training decisions from athletic evidence. It is intended for general
 fitness and training purposes only. It is not a medical device and does not diagnose,
 treat, or provide medical advice. Talk to a qualified professional about symptoms,
 injuries, or medical conditions.
@@ -113,7 +113,7 @@ injuries, or medical conditions.
 
 This policy covers the desktop extension, which runs on your machine. Should we later offer
 a hosted or remote version, it will carry its own published policy describing that
-deployment before you can use it. The commitment in *How Evidra processes it* above is the
+deployment before you can use it. The commitment in *How Pacevera processes it* above is the
 floor for any version we ship: minimum evidence, computed and discarded, never retained,
 sold, or used for training.
 

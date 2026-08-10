@@ -1,9 +1,9 @@
-# Evidra — Fitness Decision Engine
+# Pacevera — Fitness Decision Engine
 
-**Your AI assistant is the coach's brain and voice. Evidra is the exercise science
+**Your AI assistant is the coach's brain and voice. Pacevera is the exercise science
 and safety engine behind it.**
 
-Evidra is an MCP server. It turns the evidence you already have into a training
+Pacevera is an MCP server. It turns the evidence you already have into a training
 decision — not advice invented from nothing, but a change to the session already on
 your calendar, with the evidence and the rule behind it.
 
@@ -13,18 +13,18 @@ It runs on your own machine, and it does not retain your evidence.
 
 ## Where this is
 
-The current release is v0.4.1. v0.1.0 was the first public release.
+The current release is v0.4.2. v0.1.0 was the first public release.
 
 The decision logic is covered by a deterministic test and evaluation suite:
-under the same version of Evidra, the same evidence produces the same decision,
+under the same version of Pacevera, the same evidence produces the same decision,
 and every decision cites the evidence and the rule behind it. It has not yet
 been validated over extended real-world training blocks.
 
-**You supply the evidence.** Evidra does not connect to Apple Health, Garmin,
+**You supply the evidence.** Pacevera does not connect to Apple Health, Garmin,
 Strava, or any other service on your behalf, and it is not waiting for you to
 link an account. It reads what you or your assistant hand it in the call —
 which can be as ordinary as saying what you trained yesterday and how you
-slept. If you already have exported data from those services, Evidra can
+slept. If you already have exported data from those services, Pacevera can
 evaluate that as input as well.
 
 Signals you do not supply are reported in `signalCoverage` and lower the
@@ -64,11 +64,11 @@ action depending on your equipment, your schedule, and your injuries.
 
 | Stage | Where | What happens |
 |---|---|---|
-| 1 | Evidra | Normalize evidence from any source into one shape |
-| 2 | Evidra | Deterministic computation — `acwr = atl / ctl` is a division, not a prediction |
+| 1 | Pacevera | Normalize evidence from any source into one shape |
+| 2 | Pacevera | Deterministic computation — `acwr = atl / ctl` is a division, not a prediction |
 | 3 | Your AI assistant | Turn the structured result into plain language |
 
-**Evidra calls no model to produce a decision.** Under the same version of Evidra,
+**Pacevera calls no model to produce a decision.** Under the same version of Pacevera,
 identical inputs produce an identical decision, and every number is traceable. The
 language you read is your assistant's; the judgment is arithmetic.
 
@@ -83,7 +83,7 @@ language you read is your assistant's; the judgment is arithmetic.
 | `decide_exercise_substitution` | What to do instead of a movement you cannot do today |
 | `generate_plan` | A plan, when you don't have one — the substrate decisions are made against |
 | `preview_adjust_plan` | What adjusting a plan would change, without applying it |
-| `commit_adjust_plan` | The plan a previewed adjustment produces, once you have accepted it — you keep it, Evidra does not |
+| `commit_adjust_plan` | The plan a previewed adjustment produces, once you have accepted it — you keep it, Pacevera does not |
 
 ---
 
@@ -118,29 +118,29 @@ instead, and `training.missing` is how you find out.
 
 ## Privacy Policy
 
-Evidra runs locally and does not retain your evidence.
+Pacevera runs locally and does not retain your evidence.
 
 > We process only the minimum health-related evidence submitted by the caller, solely to
 > compute the requested fitness decision. We do not retain, sell, use for training, or use
 > it for unrelated purposes.
 
-As a desktop extension, this is checkable against the compiled server it ships: **Evidra itself
+As a desktop extension, this is checkable against the compiled server it ships: **Pacevera itself
 performs no outbound network requests, does not persist your evidence, and has no
 runtime dependencies, telemetry, model calls, or accounts.** Evidence exists in memory for the
 duration of one tool call.
 
 Full policy: [PRIVACY.md](PRIVACY.md)
 
-Evidra is not a medical device and does not provide medical advice. It is intended for
+Pacevera is not a medical device and does not provide medical advice. It is intended for
 general fitness and training purposes only.
 
 ---
 
 ## Install
 
-Evidra ships as a Claude Desktop extension (`.mcpb`).
+Pacevera ships as a Claude Desktop extension (`.mcpb`).
 
-1. Download the latest `evidra.mcpb` from [Releases](../../releases)
+1. Download the latest `pacevera.mcpb` from [Releases](../../releases)
 2. Check it against the published checksum (optional, and worth doing — see below)
 3. Open **Claude Desktop → Settings → Extensions**
 4. Install the `.mcpb` file
@@ -151,7 +151,7 @@ Evidra ships as a Claude Desktop extension (`.mcpb`).
 ### Verifying what you downloaded
 
 ```
-shasum -a 256 evidra.mcpb
+shasum -a 256 pacevera.mcpb
 ```
 
 Compare it with the checksum printed in that release's notes, on the same page
@@ -207,7 +207,7 @@ decision reflects it.
 > Here's my Oura data. Today is an easy session but I feel great — can I push?
 
 Decisions are not only downward — this one comes back `advance`. Oura reports no
-training load, so Evidra computes none rather than inventing a number.
+training load, so Pacevera computes none rather than inventing a number.
 
 The Oura and Whoop readers are the two youngest here. They were written against
 those vendors' own published API specifications and have not yet been checked
@@ -256,5 +256,5 @@ Privacy requests, or anything you would rather not post publicly: **evidramcp@ic
 
 ## License
 
-Proprietary — see [LICENSE](LICENSE). You may install and run Evidra for your own use.
+Proprietary — see [LICENSE](LICENSE). You may install and run Pacevera for your own use.
 Copying, modifying, and redistributing it are not permitted.
