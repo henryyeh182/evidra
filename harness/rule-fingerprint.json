@@ -2,10 +2,11 @@
   "readMe": [
     "Generated. Do not hand-edit a hash.",
     "",
-    "One digest per rule over the fields that can move a decision: category,",
-    "priority, thresholds, effect, status. Prose is deliberately outside — a",
-    "retitled rule or a corrected citation must not turn this red, or it gets",
-    "turned off.",
+    "One digest per rule and engine parameter over the fields that can move a",
+    "decision. Rules cover category, priority, thresholds, effect, status and",
+    "appliedBy; parameters cover key, value, unit, status and appliesTo. Prose",
+    "and review metadata are deliberately outside — a corrected citation must",
+    "not turn this red, or it gets turned off.",
     "",
     "When a test points here, the file is not the problem. Run `npm run harness`",
     "and read what the decisions became; the answer may be that nothing moved,",
@@ -13,8 +14,9 @@
     "",
     "    node harness/runner.js --update-fingerprint",
     "",
-    "and commit the result alongside the rule edit, so the diff shows both the",
-    "threshold that changed and the acknowledgement that someone looked."
+    "and commit the result alongside the rule or parameter edit, so the diff",
+    "shows both the deciding input that changed and the acknowledgement that",
+    "someone looked."
   ],
   "libraryVersion": "1.4.0",
   "policies": "55406c5ae37129f8",

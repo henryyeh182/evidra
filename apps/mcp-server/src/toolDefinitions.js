@@ -152,7 +152,9 @@ export const toolDefinitions = [
           description: "Date in YYYY-MM-DD format. Defaults to today in the user's timezone, resolved by the server."
         }
       },
-      required: ["evidence"]
+      // Evidence is optional when the authenticated athlete already has a
+      // durable record. The server loads that record by OAuth subject/userId.
+      required: []
     }
   },
   {
@@ -249,7 +251,7 @@ export const toolDefinitions = [
         plan: { type: "object", description: "Optional caller-held plan metadata; the server does not look up plans." },
         availableMinutes: { type: "number", description: "Override today's available time, e.g. when the user says they are busy." }
       },
-      required: ["evidence"]
+      required: []
     }
   },
   {
@@ -435,7 +437,7 @@ export const toolDefinitions = [
         weeks: { type: "number", description: "Number of weeks to plan. Defaults to 4." },
         startDate: { type: "string", description: "Plan start date in YYYY-MM-DD format (ideally a Monday). Defaults to today in the user's timezone." }
       },
-      required: ["evidence"]
+      required: []
     }
   },
   {

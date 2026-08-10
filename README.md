@@ -128,11 +128,14 @@ authorization server、公開部署與 hosted 版隱私政策。
 > 完整政策：https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md
 
 The shipped Pacevera desktop bundle runs locally on your own machine and does
-not retain your evidence.
+not retain your evidence. The repository can also run as a remote MCP server:
+anonymous calls are stateless, while authenticated calls (or local calls with
+an explicit `userId`) keep the minimum normalized athlete record needed for
+continuity across AI hosts and conversations.
 
 We process only the minimum health-related evidence submitted by the caller, solely to
-compute the requested fitness decision. We do not retain, sell, use for training, or use
-it for unrelated purposes.
+compute the requested fitness decision and maintain that athlete's continuity record. We
+do not sell, use for training, or use it for unrelated purposes.
 
 The desktop bundle never fetches your data — it only sees what the calling AI
 assistant passes into a tool call. As a desktop extension, this is checkable
@@ -144,16 +147,23 @@ the desktop bundle and is covered by the deployment contract instead:
   or DNS calls, and it transmits your evidence nowhere.
 - **Pacevera itself does not persist your evidence.** No database, no cache, no log file,
   no history.
+- **The HTTP/JWKS continuity service persists only identified athlete records when
+  continuity is enabled.** Records
+  are JSON files under `EVIDRA_STATE_DIR` (default `data/private/athletes`), with restrictive
+  file permissions; anonymous calls are not written.
 - **No runtime dependencies.** Node.js standard library only — no analytics, telemetry, or SDKs.
 - **No model calls.** Decisions are deterministic arithmetic and explicit rules.
-- **No accounts.** No sign-up, no login, no user identifier.
+- **No vendor accounts.** Evidra does not sign into Apple Health, Garmin, Strava, Oura or
+  Whoop; a remote deployment may use OAuth to identify the athlete.
 
 These statements describe the shipped desktop bundle's behaviour, not the
 computer it runs on, the AI assistant that calls it, the repository's HTTP
 transport, or the operating system and Node.js runtime underneath it.
 
-Evidence exists in memory for the duration of a single tool call. Nothing is written to
-durable storage, so there is nothing for us to keep, delete, or export on request.
+When continuity is enabled, the normalized record is written durably so another MCP host
+can continue from the same history. Operators must provide an account-level deletion and
+export path for a hosted deployment; the local record directory can be removed by its
+owner.
 
 Pacevera is not a medical device and does not provide medical advice. It is intended for
 general fitness and training purposes only.

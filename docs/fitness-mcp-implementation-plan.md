@@ -295,8 +295,8 @@ sha256 同為 `294acd57b50cad0d0…eeb8`，`review:release` 六條全綠。
 | # | 項目 | 位置 |
 |---|---|---|
 | C1 | `maxSampleGapSeconds = 30` 沒有出處 | `packages/connectors/src/timeInZone.js:106` |
-| C2 | `trainingLoad ?? 分鐘數` 仍在編造負荷值 | `packages/evidence/src/model.js:155` |
-| C6 | 我們的 parser 是照**匯出檔**寫的，沒對照過真實流程裡「Claude 從別家 MCP server 拿到的證據」形狀 | `packages/connectors/src/providers/*/normalize.js` |
+| ~~C2~~ | ✅ **已關閉（2026-08-09）**：缺少 `trainingLoad` 的 workout 保留為 `null`，不再用 duration 填入偽造負荷；`signalCoverage.training` 因此仍能報告 training load 缺口。已有 model test 與各來源 parser test 釘住此行為 | `packages/evidence/src/model.js`、`packages/evidence/test/model.test.js` |
+| C6 | 🟡 **部分關閉（2026-08-09）**：已用真實 Claude Desktop replay 驗證 host → Evidra 的 canonical evidence tool-call contract（正常 payload、缺 evidence、欄位拼錯、日期／時區錯誤都各有測試）；尚未取得「別家 MCP server → host → Evidra」的 source handoff payload，因此不能宣稱跨 connector handoff 已驗證 | `apps/mcp-server/test/readTools.test.js`；source adapter 仍見 `packages/connectors/src/providers/*/normalize.js` |
 | ~~C8~~ | ✅ **已關閉（2026-08-09，R7）**：Evidence Quality 不做不可稽核純量；health metric 用 `basis` enum，workout 仍用既有 `loadSources`／`rpeBasis` | `packages/evidence/src/model.js`、`schemas/evidence/fitness-evidence.json` |
 | ~~C9~~ | ✅ **已關閉（2026-08-09，parameter set 1.2.0）**：`DEFAULT_BASELINES`、staleness、ATL/CTL 時間常數（42／7）、TSB 分帶（5／−10／−30）、semantic training windows、recovery 權重、readiness 懲罰係數、plan phase multiplier、return ramp、plan-change deload/cap 全收進 `engine-parameters.json`（EVD-P-003～048）。各自帶 `basis`／`sources`／`limitations`，由 `assertParametersMatch` 兩向檢查、進 `rule-fingerprint.json`。**收編不等於有出處**——搬過去只是讓「沒有出處」變成資料裡的欄位。**原本 EVD-P-001／002 已於 C10 移進 EVD-R-007** | `packages/rules/data/engine-parameters.json`、`packages/training-load/src/trainingLoad.js`、`packages/semantic-engine/src/generateSemanticFitnessState.js`、`packages/planning/src/generatePlan.js`、`packages/planning/src/adaptPlan.js` |
 | ~~C10~~ | ✅ **已解（2026-08-09）**：14 天／25% 從 `engine-parameters.json` 的 EVD-P-001／002 移進 EVD-R-007，成為那條規則自己的門檻。分工不再與直覺相反——觸發它的兩個數字現在跟決定降幾級的兩個數字在同一條規則裡，`decisionBasis` 回傳的門檻就是觸發它的門檻。值一個都沒改，harness 37 情境 10 項檢查全過。**但這條留著不刪，因為它查出的東西比原本記的多**：42 天是死的（第 38 天就由另一臂成立）之外，**25% 也是死的**——閒置第 12 天就跨過 25%，而 `&&` 的另一臂要第 14 天才成立，所以 `idle >= 14` 一為真，`loss >= 25` 必然早已為真。2026-08-09 用 `computeTrainingLoad` 量八組訓練史（3～90 堂課、負荷 30～200、間隔 1～3 天）：閒置 11 天一律 23%、12 天一律 25%、14 天最低 27%；代數同意——`(41/42)^14 = 0.714`。**EVD-R-007 四個門檻有兩個永遠不決定任何事**，兩個都保留、都在自己的 limitations 講明，DH-BND 各掛一條書面豁免，每次跑會印 | `packages/rules/data/session-rules.json`、`harness/lib/quantities.js` |
@@ -304,7 +304,15 @@ sha256 同為 `294acd57b50cad0d0…eeb8`，`review:release` 六條全綠。
 | ~~C12~~ | ✅ **已關閉（2026-08-09，R2）**：`decide_session`＝EVD-R-009、`generatePlan`＝EVD-R-010、`adaptPlan`＝EVD-R-011、catalog＝EVD-R-012，四處傷病／contraindication 決策都已入庫並帶 trace | 見 §0 的 R2 |
 | C13 | **Oura／WHOOP 的 parser 沒對過真實回應。** 欄位路徑與單位來自兩家自己的 OpenAPI（權威），但**沒有任何一份真實 API 回應驗證過**——spec 說得對不等於實際回傳長那樣（真實資料裡的哨兵值、空陣列、部分欄位缺漏，前四家都是在真檔案上才發現的）。這是 C6 的加強版：C6 是「照匯出檔寫、沒對過真實流程」，這裡連匯出檔都沒有 | `packages/connectors/src/providers/oura`、`.../whoop` |
 
-### 5. 來源覆蓋（Phase 5 剩餘）
+### 5. 來源覆蓋（Phase D：Evidence Source 成熟度）
+
+Phase D 已開工，但不以「connector 數量」作為完成條件。完成條件是：
+
+1. Oura／WHOOP 各至少一份去識別化真實 API response fixture，通過 raw source schema、parser、canonical evidence schema 與關鍵缺漏／哨兵案例。
+2. Google Health API v4 明確裁決為正式 connector 或維持實驗性 importer；若升格，才新增正式 source schema、registry、scenario 與 connector 測試。
+3. Host contract 的驗證與 source handoff 的驗證分開記錄。現有 Claude Desktop replay 已證明 canonical evidence 可由 host 傳入並得到可修正的錯誤回應；尚未證明別家 MCP connector 的原始回應會以同一形狀交給 host。
+
+這三項都可以在 remote 之前完成。remote 只增加 OAuth、公開 HTTPS 與 hosted end-to-end 授權路徑，不是本 Phase 的前置條件。
 
 **六個平台都有 parser 了**（2026-08-07 補上 Oura 與 WHOOP）。**剩下的不是家數，是成熟度**：
 Oura／WHOOP 照兩家自己的 OpenAPI 寫，尚未對過任何真實回應——見技術債 C13，

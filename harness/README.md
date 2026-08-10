@@ -90,10 +90,14 @@ time with the evidence deep-frozen. A fabricated value and a measured one look
 identical in one decision; a value that changes between two identical calls does
 not.
 
-**DH-6** removes one recovery signal from the evidence and runs the scenario
-again. The gap has to appear in `signalCoverage.recovery.missing`, the signal
-has to stop being reported as usable, and confidence must not rise. It does not
-assert that confidence *falls* — dropping one of four signals need not cross a
+**DH-6** ablates every kind of evidence the session state reads and runs the
+scenario again. It removes raw recovery metrics, vendor composites, and one
+recent training load; it also repeats the recovery ablation with the reading
+made stale rather than deleted. Raw signals must appear in
+`signalCoverage.recovery.missing`; vendor composites must stop being usable and
+must not leave a fabricated readiness value; training load must appear in
+`signalCoverage.training.missing`. In every case confidence must not rise. It
+does not assert that confidence *falls* — removing one signal need not cross a
 band boundary — only that taking evidence away never makes the system surer of
 itself.
 
@@ -101,8 +105,9 @@ itself.
 
 **A change to a threshold, a category or an effect has to be run through the
 harness before it lands.** That is enforced, not requested:
-`harness/rule-fingerprint.json` holds one digest per rule over exactly those
-fields, and `npm test` fails while the library and the file disagree.
+`harness/rule-fingerprint.json` holds one digest per rule and per engine
+parameter over exactly those deciding fields, and `npm test` fails while the
+library or parameter set and the file disagree.
 
 ```bash
 npm run harness                              # read what the decisions became
@@ -113,11 +118,13 @@ Regenerating is deliberately a second edit in a second file. The point is not
 the hash — it is that the commit contains both the threshold that moved and the
 record that somebody looked at what moved with it.
 
-What the digest covers: `category`, `priority`, `thresholds`, `effect`,
-`status`, plus the two policy ids. Prose is outside it on purpose — a guard that
-went red for a corrected citation or a new limitation would be switched off
-inside a week, and `harness/test/harness.test.js` pins both edges so the
-boundary cannot drift.
+What the digest covers: rules use `category`, `priority`, `thresholds`,
+`effect`, `status`, `appliedBy`, plus the two policy ids; parameters use
+`parameterId`, `key`, `status`, `value`, `unit` and `appliesTo`. Prose, sources,
+limitations and review metadata are outside it on purpose — a guard that went
+red for a corrected citation or a new limitation would be switched off inside
+a week. The direct fingerprint tests in `harness/test/harness.test.js` pin both
+edges so the boundary cannot drift.
 
 `priority` is in there although it was not asked for, because arbitration is
 `category_then_priority`: inside one category a priority edit moves which rule
@@ -142,7 +149,8 @@ changes it on purpose.
 
 ## Scope
 
-Every check runs against `evidra_decide_session`'s chain and nothing else.
+The checks in this README run against `evidra_decide_session`'s chain and
+nothing else.
 
 `evidra_generate_plan`, the plan change tools and
 `evidra_decide_exercise_substitution` do emit `decisionBasis` as of 2026-08-09,
@@ -168,6 +176,12 @@ boundary a host uses. The scenarios assert deterministic replay, complete
 boundaries, stale preview refusal, tamper refusal, version history lineage and
 the sparse-evidence case where the planner must not invent precise readiness or
 training-load claims.
+
+`evidra_decide_exercise_substitution` also has its own catalog harness: run
+`npm run harness:substitution`. It checks the safe replacement, hard-filtered
+candidate, no-safe-substitute, determinism and unknown-movement paths for
+EVD-R-012. The remaining plan surfaces are still exercised in
+`apps/mcp-server/test/ruleCoverage.test.js`.
 
 ## Scenarios
 

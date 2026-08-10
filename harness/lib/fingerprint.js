@@ -104,7 +104,7 @@ export function fingerprintParameter(parameter) {
 }
 
 /**
- * @returns {{ libraryVersion: string, policies: object, rules: Record<string, string> }}
+ * @returns {{ libraryVersion: string, parameterSetVersion: string, policies: string, rules: Record<string, string>, parameters: Record<string, string> }}
  */
 export function computeFingerprint() {
   const library = getRuleLibrary();
@@ -113,10 +113,11 @@ export function computeFingerprint() {
     readMe: [
       "Generated. Do not hand-edit a hash.",
       "",
-      "One digest per rule over the fields that can move a decision: category,",
-      "priority, thresholds, effect, status. Prose is deliberately outside — a",
-      "retitled rule or a corrected citation must not turn this red, or it gets",
-      "turned off.",
+      "One digest per rule and engine parameter over the fields that can move a",
+      "decision. Rules cover category, priority, thresholds, effect, status and",
+      "appliedBy; parameters cover key, value, unit, status and appliesTo. Prose",
+      "and review metadata are deliberately outside — a corrected citation must",
+      "not turn this red, or it gets turned off.",
       "",
       "When a test points here, the file is not the problem. Run `npm run harness`",
       "and read what the decisions became; the answer may be that nothing moved,",
@@ -124,8 +125,9 @@ export function computeFingerprint() {
       "",
       "    node harness/runner.js --update-fingerprint",
       "",
-      "and commit the result alongside the rule edit, so the diff shows both the",
-      "threshold that changed and the acknowledgement that someone looked."
+      "and commit the result alongside the rule or parameter edit, so the diff",
+      "shows both the deciding input that changed and the acknowledgement that",
+      "someone looked."
     ],
     // Recorded, not hashed into the rules: a version bump is the correct
     // accompaniment to a threshold edit, so it must not be what makes the
@@ -160,7 +162,7 @@ export function computeFingerprint() {
 /**
  * Compare the library against a stored fingerprint.
  *
- * @returns {{ changed: string[], added: string[], removed: string[], policiesMoved: boolean }}
+ * @returns {{ changed: string[], added: string[], removed: string[], parameterChanged: string[], parameterAdded: string[], parameterRemoved: string[], policiesMoved: boolean }}
  */
 export function compareFingerprint(stored) {
   const current = computeFingerprint();
@@ -184,6 +186,9 @@ export function compareFingerprint(stored) {
     // without anybody looking? The ids say which kind it was.
     added: [...rules.added, ...parameters.added],
     removed: [...rules.removed, ...parameters.removed],
-    changed: [...rules.changed, ...parameters.changed]
+    changed: [...rules.changed, ...parameters.changed],
+    parameterAdded: parameters.added,
+    parameterRemoved: parameters.removed,
+    parameterChanged: parameters.changed
   };
 }

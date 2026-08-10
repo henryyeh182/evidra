@@ -237,7 +237,5 @@
       "description": "Override today's available time, e.g. when the user says they are busy."
     }
   },
-  "required": [
-    "evidence"
-  ]
+  "required": []
 }

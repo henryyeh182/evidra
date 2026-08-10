@@ -22,6 +22,7 @@ an unrecognised request falls back to the newest.
 |---|---|
 | `PORT` | Listen port (default `8787`) |
 | `MCP_TOKEN` | Local-development-only shared bearer token; accepted from the `Authorization` header |
+| `EVIDRA_STATE_DIR` | Durable athlete records directory (default `data/private/athletes`) |
 | `MCP_ALLOWED_ORIGINS` | Comma-separated browser origins. Requests without an `Origin` (native apps, curl) always pass |
 | `MCP_PUBLIC_URL` | Hosted resource URI, including `/mcp`; enables HTTPS/OAuth configuration |
 | `MCP_TLS_KEY_PATH` / `MCP_TLS_CERT_PATH` | Hosted HTTPS key and certificate paths |
@@ -39,8 +40,12 @@ Endpoints: `POST /mcp` (JSON-RPC), `GET /mcp` (server stream), `GET /health`.
 
 ## Tools
 
-Six tools, all of which either return a decision or transform caller-held plan
-state. The server does not retain plans or previews. See the [Design
+The six public decision tools remain model-agnostic. Evidence continuity is
+server-side: when a request has an authenticated OAuth subject (`sub`) or an
+explicit `userId`, new evidence is merged into that athlete's durable record.
+Later calls from another MCP host or conversation can omit `evidence` and the
+server loads the same record. Anonymous calls remain stateless. Plans and
+previews are still caller-owned. See the [Design
 Manifesto](design-manifesto.md) for why the surface is this small.
 
 Two name spaces, deliberately: the names below are the **public** ones — what
@@ -50,7 +55,9 @@ so `schemas/tools/evidra_*.json`, `outputSchemas.js`, the eval golden set and
 the Decision Harness all still speak the canonical form. A call that arrives
 under either name resolves to the same handler.
 
-`evidence` is the required argument on every decision tool except
+`evidence` is accepted on every decision tool and is optional when a durable
+athlete record is available. It remains required in practice for a first call
+without an identity. The exception is
 `decide_exercise_substitution`, which reads no recovery or load signal and
 decides from the movement plus the constraints the caller states; `userId` is an
 optional label the server echoes back and never computes on. A call that
@@ -212,10 +219,12 @@ history, and persistence; this server retains neither plan nor preview.
 
 ## Evidence
 
-Decision tools take an `evidence` object rather than reading any store — the AI
-layer holds the user's authorization and passes it in, and this server keeps
-nothing. Every response carries `provenance` naming whether real evidence or
-the local demo seed was used.
+Decision tools take an `evidence` object for new activity and read the durable
+athlete record only for the authenticated identity making the request. The AI
+layer still holds vendor authorization and passes normalized evidence in; this
+server does not fetch Apple Health, Garmin, Strava, Oura or Whoop. Every
+response carries `provenance` naming whether provided evidence or the shared
+record was used.
 
 Sources are normalized into one vocabulary by
 [`packages/evidence/src/schemaRegistry.js`](../packages/evidence/src/schemaRegistry.js).

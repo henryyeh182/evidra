@@ -429,7 +429,7 @@ test("the demo seed cannot reach a real caller's answer by falling back", async 
 
   const publicSchema = toolDefinitions.find((tool) => tool.name === "evidra_assess_fitness_state").inputSchema;
   assert.equal(publicSchema.properties.useDemoSeed, undefined);
-  assert.deepEqual(publicSchema.required, ["evidence"]);
+  assert.deepEqual(publicSchema.required, []);
 });
 
 test("a refusal carries the way out, and says it is not an answer to read aloud", async () => {

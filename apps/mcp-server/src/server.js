@@ -73,7 +73,7 @@ const { version: SERVER_VERSION } = JSON.parse(
  */
 const INSTRUCTIONS = `Pacevera turns this user's training evidence into a decision about today's session: keep, ease, substitute, or defer it. Call it when the user asks what to train, whether today's session still fits, or what to do instead of a movement they cannot do — "my knee hurts, what instead of squats" is a call, not a question to answer yourself.
 
-The intensity, duration and movements returned are the decision, not a draft. Contraindications and load limits are applied here; do not re-derive them or reason past the result. What to say to the user is yours; what it becomes is not.
+The intensity, duration and movements returned are the decision, not a draft. Contraindications and load limits are applied here; do not re-derive or override them, or reason past the result. What to say to the user is yours; what it becomes is not.
 
 Evidence: use whichever source this user has — Apple Health, Garmin, Strava, Oura, Whoop, any other — or the user's own words; two or three plain questions are a normal start. Pass it as \`evidence\`. Any single source decides something. A signal nobody supplied shows in \`signalCoverage\` and lowers confidence: send what exists, not a default, which makes it untrue.
 
@@ -81,13 +81,13 @@ Evidence: use whichever source this user has — Apple Health, Garmin, Strava, O
 
 \`basis: internal_composite\` (most rules) — the threshold cuts a score Pacevera computes from weights it chose; no study used that score, so empty \`sources\` is by design, not missing information, and it is not evidence-based. \`basis: external_metric\` — defined outside Pacevera; \`sources\` cite work on it, \`contested\` names published objections; report both.
 
-Plans live with you: this server stores no plan, preview or history. Pass in the plan you hold; persist what comes back.`;
+Continuity: OAuth \`sub\` or \`userId\` merges evidence into a durable athlete record; later calls may omit \`evidence\`. Anonymous calls are stateless.`;
 
 // Newest first: index 0 is what we offer when the client asks for something
 // we do not recognise.
 const SUPPORTED_PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 
-export async function handleJsonRpcMessage(rawMessage) {
+export async function handleJsonRpcMessage(rawMessage, requestContext = {}) {
   const parsed = parseJsonRpcMessage(rawMessage);
   if (!parsed.ok) {
     return parsed.error;
@@ -162,7 +162,14 @@ export async function handleJsonRpcMessage(rawMessage) {
         return jsonRpcError(id, -32602, `Unknown tool: ${params.name}`);
       }
 
-      const result = await handler(params.arguments || {});
+      const argumentsWithIdentity = { ...(params.arguments || {}) };
+      if (requestContext.identity && !argumentsWithIdentity.__mcpIdentity) {
+        Object.defineProperty(argumentsWithIdentity, "__mcpIdentity", {
+          value: requestContext.identity,
+          enumerable: false
+        });
+      }
+      const result = await handler(argumentsWithIdentity);
 
       // The deprecated tools declare no output schema, so they send no structured
       // result: it would be an object outside any contract, and the payload would

@@ -25,6 +25,7 @@ import {
   EVIDENCE_VENDOR_ASSESSMENT_TYPES
 } from "../../../packages/evidence/src/index.js";
 import { isCalendarDay, todayInTimezone } from "../../../packages/domain/src/dates.js";
+import { loadAthleteContext, mergeAthleteEvidence } from "./stateStore.js";
 import {
   searchExercisesTool,
   getExerciseTool,
@@ -64,8 +65,9 @@ const EVIDENCE_REQUIREMENTS = {
  * Resolve the context a call should reason over.
  *
  * The architecture has the AI layer hold the user's authorization and pass
- * evidence in as tool arguments, so `evidence` is the only production input and
- * nothing is persisted. Returns null when there is nothing to reason over; the
+ * evidence in as tool arguments. Identified callers may also rely on the
+ * server's durable athlete record, while anonymous requests stay stateless.
+ * Returns null when there is nothing to reason over; the
  * caller turns that into an answer rather than an exception, because "you have
  * not sent me anything yet" is a state of the conversation, not a fault.
  *
@@ -79,11 +81,12 @@ const EVIDENCE_REQUIREMENTS = {
  * a UTC instant and never a literal frozen into this file.
  */
 async function resolveContext(args) {
+  const identity = args.__mcpIdentity || args.userId || null;
   if (args.evidence) {
     let context;
     let defaultDate;
     try {
-      context = evidenceToUserContext(args.evidence, { userId: args.userId });
+      context = evidenceToUserContext(args.evidence, { userId: identity || args.userId });
       // Resolving the day belongs inside the guard: `profile.timezone` is a
       // caller-supplied string, and an unreadable zone ("Taipei", "GMT+8"
       // instead of "Asia/Taipei") threw from here as a bare JSON-RPC error —
@@ -98,11 +101,31 @@ async function resolveContext(args) {
       // had, a caller can fix its payload and try again in the same turn.
       return { invalid: error.message };
     }
+    const persisted = identity ? await mergeAthleteEvidence(identity, context) : null;
     return {
-      context,
+      context: persisted || context,
       defaultDate,
-      provenance: { evidenceSource: "provided", ...describeEvidence(args.evidence) }
+      provenance: {
+        evidenceSource: "provided",
+        ...(persisted ? { continuity: { identity, storage: "server_durable_record" } } : {}),
+        ...describeEvidence(args.evidence)
+      }
     };
+  }
+
+  if (identity) {
+    const context = await loadAthleteContext(identity);
+    if (context) {
+      return {
+        context,
+        defaultDate: todayInTimezone(context.user.timezone),
+        provenance: {
+          evidenceSource: "server_durable_record",
+          continuity: { identity, storage: "server_durable_record" },
+          note: "Evidence was loaded from the athlete record shared across MCP hosts and conversations."
+        }
+      };
+    }
   }
 
   if (!args.useDemoSeed) {
