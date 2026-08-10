@@ -151,9 +151,23 @@ can drive: each needs a plan or a catalog lookup rather than a day of evidence.
 So DH-COV and DH-BND are scoped to `appliedBy === "session"`, and the rules
 outside that scope are exercised in `apps/mcp-server/test/ruleCoverage.test.js`,
 which fails in the same way if one of them ships unexercised. Bringing those
-surfaces into the harness itself is
-separate work; this harness does not cover it and does not report on it either
-way.
+surfaces into the harness itself is separate work for `evidra_generate_plan`
+and the plan change tools; exercise substitution still sits outside it.
+
+## Plan Decision Harness
+
+`npm run harness:plan` covers the plan decision surface:
+
+- `evidra_generate_plan`
+- `evidra_preview_adjust_plan`
+- `evidra_commit_adjust_plan`
+
+It calls the real MCP tools over JSON-RPC, so it watches the same stateless
+boundary a host uses. The scenarios assert deterministic replay, complete
+`decisionBasis` frames, EVD-R-011 injury previews, preview/commit version
+boundaries, stale preview refusal, tamper refusal, version history lineage and
+the sparse-evidence case where the planner must not invent precise readiness or
+training-load claims.
 
 ## Scenarios
 
