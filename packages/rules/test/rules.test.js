@@ -121,8 +121,8 @@ test("the old evidence ladder is reproduced exactly for every shipped rule", () 
     "EVD-R-003": "internal_heuristic",
     "EVD-R-004": "internal_heuristic",
     "EVD-R-005": "internal_heuristic",
-    "EVD-R-006": "observational",
-    "EVD-R-007": "expert_consensus",
+    "EVD-R-006": "systematic_review",
+    "EVD-R-007": "systematic_review",
     "EVD-R-008": "internal_heuristic",
     "EVD-R-009": "internal_heuristic",
     "EVD-R-010": "internal_heuristic",
@@ -297,13 +297,13 @@ test("a confirmed citation may still quote the figures it verified", () => {
   assert.match(gabbett.supports, /0\.8-1\.3/, "a verified citation keeps the numbers it verified");
 });
 
-test("the unchecked citation says so rather than saying nothing", () => {
+test("the checked-at-abstract citation says so rather than overstating certainty", () => {
   const rule = getRule("EVD-R-002");
 
-  assert.equal(rule.supportingLiterature[0].verificationStatus, "unverified");
+  assert.equal(rule.supportingLiterature[0].verificationStatus, "abstract_verified_full_text_not_read");
   assert.ok(
-    rule.limitations.some((line) => line.includes("unverified")),
-    "an unverified citation must be visible in limitations, not only in a field a reader may not know to check"
+    rule.limitations.some((line) => line.includes("full text was not read")),
+    "an abstract-only citation must be visible in limitations, not only in a field a reader may not know to check"
   );
 });
 
@@ -406,9 +406,9 @@ test("the compact rule form keeps basis and evidence level", () => {
   const compact = describeRule("EVD-R-006", { value: 2.1 }, { full: false });
 
   assert.equal(compact.basis, "external_metric");
-  assert.equal(compact.evidenceLevel, "observational");
+  assert.equal(compact.evidenceLevel, "systematic_review");
   assert.deepEqual(compact.evidence, {
-    studyDesign: "observational",
+    studyDesign: "systematic_review",
     recommendationStrength: "supports_direction_only"
   });
   assert.ok(compact.contestedCount > 0, "the compact form still says objections exist");

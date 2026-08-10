@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
-import { loadBaseRulePackage } from "./packageBoundary.js";
+import { loadBaseRulePackage, loadRulePackage } from "./packageBoundary.js";
 
 /**
  * The rule library as text, kept behind one module so the build can replace it.
@@ -12,7 +12,9 @@ import { loadBaseRulePackage } from "./packageBoundary.js";
  * `scripts/build-bundle.js`), which is why no `session-rules.json` travels
  * inside the `.mcpb`.
  */
-const packageData = loadBaseRulePackage();
+const packageData = process.env.EVIDRA_RULE_PACKAGE_DIR
+  ? loadRulePackage(process.env.EVIDRA_RULE_PACKAGE_DIR)
+  : loadBaseRulePackage();
 export const librarySourceJson = packageData.ruleFiles.get("rules/session-rules.json").rules
   ? JSON.stringify(packageData.ruleFiles.get("rules/session-rules.json"))
   : "";

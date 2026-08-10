@@ -1,0 +1,19 @@
+{
+  "packet_id": "EP-002",
+  "claim": "Resistance-training progression and frequency should be interpreted in the context of training status, goals, and physical capacity; the literature does not establish Pacevera's per-muscle fatigue score or cut point.",
+  "population": "Healthy adults covered by the ACSM position stand.",
+  "intervention_or_exposure": "Progressive resistance-training program design, exercise sequencing, loading, and frequency.",
+  "outcome": "Training adaptation and quality of exercise intensity.",
+  "limitations": [
+    "The position stand supports contextual progression and recovery-aware programming, not the 65 fatigue threshold or Pacevera's decay model.",
+    "It does not establish that the library's 0-100 score measures local muscle recovery or that a specific muscle group needs a fixed interval."
+  ],
+  "source_type": "position_statement",
+  "pmid_or_doi": "PMID 11828249; DOI 10.1097/00005768-200202000-00027",
+  "retrieved_at": "2026-08-10",
+  "applicable_rule_ids": ["EVD-R-004"],
+  "reviewer": "Henry Yeh",
+  "verification_status": "abstract_verified_full_text_not_read",
+  "supports": "The abstract recommends progression, exercise sequencing, and frequency ranges interpreted according to the athlete's goal, physical capacity, and training status.",
+  "does_not_support": "The 65 threshold, the per-muscle-group fatigue construct, or the decay constants used by Pacevera."
+}

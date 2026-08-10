@@ -1,6 +1,6 @@
 {
   "packageId": "base_rules",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "schemaVersion": "1.0.0",
   "status": "released",
   "tier": "base",
@@ -19,7 +19,22 @@
     { "id": "EVD-R-011", "path": "rules/session-rules.json" },
     { "id": "EVD-R-012", "path": "rules/session-rules.json" }
   ],
-  "contentFiles": ["rules/engine-parameters.json", "rules/session-rules.json"],
-  "contentChecksum": "sha256:6a7fe7a02cd44cd74f7fe08ac794c4342ec428f91a4d7ae57c20b64f67f20366",
-  "reviewRecord": "R0 package boundary; no rule semantics changed"
+  "evidencePackets": [
+    "evidence/EP-001.json",
+    "evidence/EP-002.json",
+    "evidence/EP-003.json",
+    "evidence/EP-004.json",
+    "evidence/EP-005.json"
+  ],
+  "contentFiles": [
+    "rules/engine-parameters.json",
+    "rules/session-rules.json",
+    "evidence/EP-001.json",
+    "evidence/EP-002.json",
+    "evidence/EP-003.json",
+    "evidence/EP-004.json",
+    "evidence/EP-005.json"
+  ],
+  "contentChecksum": "sha256:b6b3247b81d1ae62bd664f376e11d2881063d69203ed2d974c8673dfaf4ff250",
+  "reviewRecord": "reviews/RR-2026-0002.md"
 }

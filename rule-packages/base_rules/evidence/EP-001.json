@@ -1,0 +1,19 @@
+{
+  "packet_id": "EP-001",
+  "claim": "HRV-guided endurance training can justify adapting the day's training rather than following a fixed prescription, while effects on performance and VO2peak remain small or non-significant.",
+  "population": "Endurance-training participants in 8 studies and 9 interventions (198 participants).",
+  "intervention_or_exposure": "Training adapted from wearable heart-rate-variability measurements versus predefined training.",
+  "outcome": "Submaximal physiological parameters, endurance performance, and VO2peak.",
+  "limitations": [
+    "The review supports the direction of adapting training, not a numeric readiness threshold.",
+    "The studies used varied HRV approaches and small samples; the result does not validate Pacevera's composite readiness score or any consumer device's measurement equivalence."
+  ],
+  "source_type": "meta_analysis",
+  "pmid_or_doi": "PMID 34489178; DOI 10.1016/j.jsams.2021.04.012",
+  "retrieved_at": "2026-08-10",
+  "applicable_rule_ids": ["EVD-R-002"],
+  "reviewer": "Henry Yeh",
+  "verification_status": "abstract_verified_full_text_not_read",
+  "supports": "The abstract reports a systematic review and meta-analysis in which most HRV-guided interventions used fewer moderate- or high-intensity sessions and improved submaximal physiological parameters relative to predefined training.",
+  "does_not_support": "The 60 readiness cut point, any threshold on Pacevera's readiness composite, or a claim that HRV guidance reliably improves performance or VO2peak."
+}

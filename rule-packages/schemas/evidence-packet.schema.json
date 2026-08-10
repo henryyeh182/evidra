@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pacevera.dev/schemas/evidence-packet.schema.json",
+  "title": "Pacevera evidence packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["packet_id", "claim", "population", "intervention_or_exposure", "outcome", "limitations", "source_type", "pmid_or_doi", "retrieved_at", "applicable_rule_ids", "reviewer", "verification_status"],
+  "properties": {
+    "packet_id": { "type": "string", "pattern": "^EP-[0-9]{3}$" },
+    "claim": { "type": "string", "minLength": 1 },
+    "population": { "type": "string", "minLength": 1 },
+    "intervention_or_exposure": { "type": "string", "minLength": 1 },
+    "outcome": { "type": "string", "minLength": 1 },
+    "limitations": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "source_type": { "enum": ["systematic_review", "meta_analysis", "position_statement"] },
+    "pmid_or_doi": { "type": "string", "minLength": 1 },
+    "retrieved_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "applicable_rule_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^EVD-R-[0-9]{3}$" } },
+    "reviewer": { "type": "string", "minLength": 1 },
+    "verification_status": { "enum": ["primary_full_text_verified", "abstract_verified_full_text_not_read", "abstract_verified_full_text_paywalled"] },
+    "supports": { "type": "string", "minLength": 1 },
+    "does_not_support": { "type": "string", "minLength": 1 }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "packet_id": "EP-004",
+  "claim": "Training cessation is associated with reductions in athlete VO2max, with larger effects after longer cessation; returning training should therefore be conservative, but the review does not supply Pacevera's return thresholds.",
+  "population": "Trained individuals in 21 studies included by the systematic review and meta-analysis.",
+  "intervention_or_exposure": "Short- and long-term cessation of training.",
+  "outcome": "Change in VO2max after detraining.",
+  "limitations": [
+    "The outcome is VO2max, not chronic training load or Pacevera's modeled fitness state.",
+    "Heterogeneity and subgroup limits mean the review does not establish 14, 25, 42, 60, or 0.6 as cut points or return prescriptions."
+  ],
+  "source_type": "meta_analysis",
+  "pmid_or_doi": "PMID 36017396; DOI 10.1155/2022/2130993",
+  "retrieved_at": "2026-08-10",
+  "applicable_rule_ids": ["EVD-R-007"],
+  "reviewer": "Henry Yeh",
+  "verification_status": "primary_full_text_verified",
+  "supports": "The full text reports a systematic review following Cochrane guidance: 21 studies showed significant VO2max decreases after both short- and long-term cessation, with a larger effect after long-term cessation, while cautioning about heterogeneity and applicability.",
+  "does_not_support": "Any Pacevera threshold, a chronic-load-to-VO2max equivalence, or a fixed return-to-training volume factor."
+}

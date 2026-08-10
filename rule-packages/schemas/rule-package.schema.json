@@ -20,11 +20,12 @@
       }
     },
     "rules": {
-      "type": "array",
+      "type": "array", "uniqueItems": true,
       "items": { "type": "object", "additionalProperties": false, "required": ["id", "path"], "properties": { "id": { "type": "string", "pattern": "^EVD-R-[0-9]{3}$" }, "path": { "type": "string" } } }
     },
-    "contentFiles": { "type": "array", "items": { "type": "string" } },
+    "evidencePackets": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "pattern": "^evidence/EP-[0-9]{3}\\.json$" } },
+    "contentFiles": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$" } },
     "contentChecksum": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "reviewRecord": { "type": "string" }
+    "reviewRecord": { "type": "string", "pattern": "^reviews/RR-[0-9]{4}-[0-9]{4}\\.md$" }
   }
 }

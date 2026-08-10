@@ -25,7 +25,7 @@
 - **6 個對外決策 tool**：`assess_fitness_state`、`decide_session`、
   `decide_exercise_substitution`、`generate_plan`、
   `preview_adjust_plan`、`commit_adjust_plan`
-- **470 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
+- **487 個可執行 tests** 全綠（dependency-free，Node 20+；另有 5 個 localhost HTTP integration tests 受 sandbox 權限限制）；**eval 20 golden cases**，5 個 gate 全綠
 - **知識圖譜** 889 節點 / 5,785 邊；進退階 34 條（17 組互逆）；訓練目標五值域
 - **Rule Library**（`packages/rules` v1.4.0）：**12 條規則**，每條帶 `ruleId`／`version`／
   `category`／`priority`／`basis`／`evidence`（`studyDesign` ＋ `recommendationStrength`，
@@ -176,6 +176,18 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 | **9** | Remote path | A1 authorization server 選型 → OAuth 三缺口 → HTTPS 公開部署 → privacy policy 改寫 → remote 上架清單 | 目前 remote 是 NO-GO（現在）。一旦 A8/A1 決定推進，這條才變成主線 | 暫不開工 |
 | **10** | Protocol dual-era | Phase 9：`2026-07-28` stateless dual-era | 不急；唯一前置影響是 authorization server 選型要支援 CIMD | 暫不開工 |
 
+**R0/R1/R2 closeout（2026-08-10）**：`base_rules` package boundary、本機更新流程與首批 evidence uplift 已完成。Manifest 由
+`rule-packages/schemas/rule-package.schema.json` 驗證，`reviewRecord` 是 package-local 的
+`reviews/RR-YYYY-NNNN.md` 路徑；空的 domain package 是 `draft`、零規則、零 content files、
+zero checksum。Runtime 已由 package 載入 rule library，package／runtime／MCP trace／Decision
+Harness contract tests 已加入。R1 的 `scripts/rule-package.js` 支援 directory／tar／`.mcpb`
+匯入、validate、dry-run、immutable install、active pointer 與 rollback；安裝要求成功的
+Decision Harness verification 與明確 `--confirm`，不使用隱含 `latest`。`review:phase` G0–G11 全綠；G1 明確隔離 sandbox 下 5 個
+localhost HTTP 測試，G7 明確排除既有 local athlete state store 的合法持久化路徑。R2 在
+`base_rules@1.1.0` 加入 5 個 formal-schema evidence packets；R-006／R-007 只提升為
+systematic-review directional metadata，所有 Pacevera thresholds 與 decision contract 維持不變。
+下一個工程工作是 R3 regression gate，不再重做 R0/R1/R2。
+
 **版號基準（2026-08-08 使用者定）**：順位 1 完成的這份規則庫就是 **Rule Library v1.0.0
 正式版**，從 1.0 起算。引擎另有自己的版號（`packages/decision-engine/src/version.js`，
 同樣從 1.0.0 起），與產品版號 `server.json` 脫鉤；兩個都隨每個決策回傳
@@ -229,7 +241,7 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 | §3.7 Rule Package | 兩個存在理由都已被否決（`tier` 屬 A6 未定、自動更新牴觸已發布的 `PRIVACY.md`）。**類比本身也要拆**：病毒碼更新失敗是 fail-closed，訓練規則更新失敗是 fail-open |
 | §4「Confidence: High，幾乎不需質疑」 | 與整個庫的設計相反——每個引用強制填 `doesNotSupport`，理由是「in every case so far there is one」。repo 裡就住著反例：EVD-R-006 引 Gabbett，同時載入 Impellizzeri 的反對 |
 | §4 Exercise Science Board | **那個 board 不存在。** 維持 `reviewer` 實名。宣稱一個不存在的審查機構，跟宣稱一個撐不住的證據等級是同一類錯 |
-| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 470 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
+| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 487 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
 | §5 四個新 tool | 逐個理由見 history §4.6.5。**補一條**：§5 自己的表格就顯示五列缺口**全在既有 tool 的輸出欄位裡**，沒有一列是「少一個口」 |
 
 #### 0.2 版號規則（2026-08-07 起照這個走）

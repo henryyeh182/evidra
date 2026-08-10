@@ -1,7 +1,7 @@
 {
   "libraryId": "evidra.session-rules",
-  "version": "1.4.0",
-  "lastReview": "2026-08-09",
+  "version": "1.5.0",
+  "lastReview": "2026-08-10",
   "reviewer": "Henry Yeh",
   "reviewPolicy": {
     "maxAgeDays": 180,
@@ -280,6 +280,15 @@
       "effect": { "decision": "defer", "intent": "swap_to_recovery", "intensityStepsDown": null },
       "sources": [],
       "contested": [],
+      "supportingLiterature": [
+        {
+          "citation": "Gong M, Sun M, Sun Y, Jin L, Li S. Effects of Acute Sleep Deprivation on Sporting Performance in Athletes: A Comprehensive Systematic Review and Meta-Analysis.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11246080/",
+          "supports": "Acute sleep deprivation can impair athletic performance across several domains, supporting caution when recovery evidence is poor.",
+          "doesNotSupport": "The readiness score, its threshold, or a deterministic effect size for this rule.",
+          "verificationStatus": "primary_full_text_verified"
+        }
+      ],
       "limitations": [
         "40 and 30 are our own choices. They have not been calibrated against any outcome data, and calibrating them against simulated physiological values is prohibited (that would be fitting the engine to invented people).",
         "The recovery score falls back to a neutral 50 when no fresh recovery signal is present, so a total absence of evidence cannot trigger this rule. That is deliberate, and it is reported through signalCoverage."
@@ -289,7 +298,7 @@
 
     {
       "ruleId": "EVD-R-002",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "status": "active",
       "title": "Low readiness pulls intensity down one step",
       "category": "recovery",
@@ -304,20 +313,25 @@
       "contested": [],
       "supportingLiterature": [
         {
-          "citation": "Javaloyes A, Sarabia JM, Lamberts RP, Moya-Ramon M, et al. Training prescription guided by heart rate variability vs. predefined training: systematic review and meta-analysis, 2019-2021.",
-          "url": "https://www.mdpi.com/2076-3417/10/23/8532",
-          "supports": "Varying daily prescription from a daily recovery measurement, rather than following a fixed plan, has been tested in randomised trials: small-to-medium benefit on submaximal parameters, and lower dispersion of outcomes.",
-          "doesNotSupport": "Any numeric cut point, and specifically not 60 on Evidra's readiness score. These trials used HRV-derived indices, not this composite.",
-          "verificationStatus": "unverified",
+          "citation": "Düking P, Zinner C, Trabelsi K, Reed JL, Holmberg HC, Kunz P, Sperlich B. Monitoring and adapting endurance training on the basis of heart rate variability monitored by wearable technologies: a systematic review with meta-analysis.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/34489178/",
+          "supports": "HRV-guided endurance interventions can support adapting training relative to a predefined plan, especially for submaximal physiological parameters.",
+          "doesNotSupport": "The 60 cut point, any threshold on Evidra's readiness composite, or a reliable improvement in performance or VO2peak.",
+          "verificationStatus": "abstract_verified_full_text_not_read",
+          "verification": {
+            "checkedOn": "2026-08-10",
+            "against": "PubMed record 34489178 and its published abstract.",
+            "outcome": "The bibliographic record and abstract scope were confirmed; the full text was not read."
+          },
           "whyItIsHereAnyway": "It supports the direction of the rule (adjust today from today's recovery reading) while explicitly not supporting its number. Recording that split is the point of this field."
         }
       ],
       "limitations": [
         "60 is our own choice.",
-        "The supporting citation is unverified: the 2026-08-07 provenance review checked EVD-R-004, EVD-R-006 and EVD-R-007 and never reached this one, so nobody here has confirmed the bibliographic record or that the paraphrase above matches what the paper says. Read the `supports` line as a claim about the paper that is itself unchecked.",
+        "The supporting citation was checked against the PubMed record and abstract on 2026-08-10; the full text was not read. Read it as directional evidence for adapting training, not as support for this rule's composite score or threshold.",
         "This rule is skipped when the scheduled session is already low intensity, and when the caller states no intensity at all — in the second case the blocked rule is reported in `limits` rather than silently dropped."
       ],
-      "notes": "supportingLiterature is deliberately a different field from sources. sources means 'this publication supports this threshold'. Nothing supports this threshold. The unverified status here was surfaced by making verificationStatus mandatory rather than by anyone noticing: while the field was optional this entry looked no different from a checked one, which is the whole argument for the enum."
+      "notes": "supportingLiterature is deliberately a different field from sources. sources means 'this publication supports this threshold'. Nothing supports this threshold. The prior unverified citation was replaced on 2026-08-10 with a PubMed-checked HRV systematic review; its full text remains unread, so the rule stays an internal composite with directional literature only."
     },
 
     {
@@ -350,7 +364,7 @@
 
     {
       "ruleId": "EVD-R-004",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "status": "active",
       "title": "High fatigue in the target muscle group rules out hard work on it",
       "category": "recovery",
@@ -380,6 +394,7 @@
       ],
       "limitations": [
         "65 is our own choice.",
+        "The ACSM position stand is formalized as EP-002 for directional context only; it does not define this per-muscle score, its decay model, or the value 65.",
         "Only the abstract of the supporting citation has been read (verificationStatus: abstract_verified_full_text_not_read). It must not be described as fully verified until someone reads the position stand itself.",
         "The abstract's frequency guidance is per week and per athlete, not per muscle group. This rule's per-muscle-group granularity is finer than anything the citation establishes, and that gap is ours, not the literature's."
       ],
@@ -407,14 +422,14 @@
 
     {
       "ruleId": "EVD-R-006",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "status": "active",
       "title": "An acute load spike pulls intensity down one step",
       "category": "recovery",
       "appliedBy": "session",
       "priority": 78,
       "basis": "external_metric",
-      "evidence": { "studyDesign": "observational", "recommendationStrength": "supports_direction_only" },
+      "evidence": { "studyDesign": "systematic_review", "recommendationStrength": "supports_direction_only" },
       "measuredQuantity": {
         "name": "acute:chronic workload ratio",
         "computedBy": "packages/semantic-engine/src/generateSemanticFitnessState.js:calculateTrainingLoad",
@@ -464,6 +479,15 @@
           }
         }
       ],
+      "supportingLiterature": [
+        {
+          "citation": "Griffin A, Kenny IC, Comyns TM, Lyons M. The Association Between the Acute:Chronic Workload Ratio and Injury and its Application in Team Sports: A Systematic Review.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/31691167/",
+          "supports": "ACWR can be considered as one component of multifaceted workload monitoring, while the most appropriate periods and variables depend on sport context.",
+          "doesNotSupport": "The 1.4 threshold, causal injury prediction, or a universal safe range.",
+          "verificationStatus": "abstract_verified_full_text_not_read"
+        }
+      ],
       "limitations": [
         "1.4 matches neither published figure: it sits between the band ceiling (1.3) and the spike definition (1.5). It is our choice, not the literature's.",
         "When observed chronic load falls below weeklyTrainingLoadTarget the denominator becomes that target, so the ratio compares acute load against a goal rather than against this athlete's own chronic load. Reported as chronicBasis: baseline_floor.",
@@ -475,14 +499,14 @@
 
     {
       "ruleId": "EVD-R-007",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "status": "active",
       "title": "The first session back after a break is scaled down",
       "category": "recovery",
       "appliedBy": "session",
       "priority": 85,
       "basis": "external_metric",
-      "evidence": { "studyDesign": "narrative_review", "recommendationStrength": "supports_direction_only" },
+      "evidence": { "studyDesign": "systematic_review", "recommendationStrength": "supports_direction_only" },
       "measuredQuantity": {
         "name": "days since last session, and percentage loss of chronic training load from its recent peak",
         "computedBy": "packages/training-load/src/trainingLoad.js",
@@ -523,15 +547,24 @@
         }
       ],
       "contested": [],
+      "supportingLiterature": [
+        {
+          "citation": "Zheng J, Pan T, Jiang Y, Shen Y. Effects of Short- and Long-Term Detraining on Maximal Oxygen Uptake in Athletes: A Systematic Review and Meta-Analysis.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/36017396/",
+          "supports": "Training cessation is associated with reductions in athlete VO2max, with a larger effect after longer cessation; the result supports a conservative return direction.",
+          "doesNotSupport": "The chronic-load proxy, any Pacevera threshold, or a fixed return-volume factor.",
+          "verificationStatus": "primary_full_text_verified"
+        }
+      ],
       "limitations": [
         "14, 25, 42, 60 and 0.6 are all our own choices. The sources support the direction only; neither abstract contains a single number, so there is nothing in them for these cut points to be near or far from.",
         "14 and 25 are one event seen from two directions, not two independent tests: with a 42-day CTL time constant, twelve idle days already costs about 25% of CTL, so both arms land at roughly the same moment by construction.",
         "returnSevereIdleDays is unreachable. CTL decays on a fixed time constant, so the fraction lost is independent of how much fitness there was: 60% is crossed on idle day 38 for every athlete (measured 2026-08-09 over six histories, 12-90 sessions, loads 30-120, identical in all six; ln(0.4)/ln(41/42) = 38.0). That arm of the OR never decides anything, and 42 could be any number above 38 without moving a decision. DH-BND carries a written exemption and prints it on every run.",
         "The detraining literature measures VO2max. Our trigger measures modelled chronic training load — a proxy for training done, not for fitness retained.",
         "0.6 sits inside the common 'half to two-thirds of prior volume' return guidance, which is practitioner convention rather than a trial result.",
-        "Both sources are narrative reviews read at abstract level only; the evidence and verificationStatus fields on this rule say so."
+        "The two Mujika sources are narrative reviews read at abstract level only. EP-004 is a separate systematic review and meta-analysis with primary full-text verification; it supports the direction only and does not validate any Pacevera threshold."
       ],
-      "notes": "This rule exists because no recovery signal can see it. An athlete two months off reads rested: readiness high, muscle fatigue near zero, and ACWR at 0 — the safest possible value to EVD-R-006. Every other guard passes. Lost fitness therefore needs its own trigger rather than being inferred from recovery. Provenance re-reviewed 2026-08-07: this rule previously claimed \"roughly 4-7% VO2max within 2-3 weeks, substantially more beyond 4 weeks\" and an evidenceLevel of systematic_review. Neither survived the check — the percentages are in neither abstract, the full texts are paywalled, and both papers are narrative reviews by two authors with no systematic search method described. Both claims were corrected downward. At the time this rule recorded that the library's vocabulary had no narrative_review level and that expert_consensus was the nearest honest rung, noting that adding one was a schema change rather than something to fake with the levels available. That schema change has since been made: studyDesign is narrative_review, which is what these two papers are, and the derived evidenceLevel still collapses to expert_consensus for callers reading the old field. Retracting a claim is the expected outcome of a provenance review, not a failure of one. On 2026-08-09 this rule took back its own trigger: detrainingMinIdleDays and detrainingMinCtlLossPct had lived outside the library as EVD-P-001 and EVD-P-002, so the two thresholds deciding whether the rule fires were not among the thresholds it reported \u2014 a caller reading decisionBasis saw 42 and 60 and could reasonably have taken those for the trigger. Values unchanged, no decision moved; what moved is which file owns them. This paragraph sits in notes rather than limitations because notes stay out of the decision frame, and the frame should carry what a reader needs to check the rule, not how it came to be written."
+      "notes": "This rule exists because no recovery signal can see it. An athlete two months off reads rested: readiness high, muscle fatigue near zero, and ACWR at 0 — the safest possible value to EVD-R-006. Every other guard passes. Lost fitness therefore needs its own trigger rather than being inferred from recovery. Provenance re-reviewed 2026-08-07: this rule previously claimed \"roughly 4-7% VO2max within 2-3 weeks, substantially more beyond 4 weeks\" and an evidenceLevel of systematic_review. Neither survived the check — the percentages are in neither Mujika abstract, the full texts are paywalled, and those two papers are narrative reviews by two authors with no systematic search method described. The claims were corrected downward. EP-004 now adds a separate systematic review and meta-analysis with verified full text, so the rule's current studyDesign records the strongest applicable packet while its recommendationStrength remains directional only; it still does not validate the thresholds. On 2026-08-09 this rule took back its own trigger: detrainingMinIdleDays and detrainingMinCtlLossPct had lived outside the library as EVD-P-001 and EVD-P-002, so the two thresholds deciding whether the rule fires were not among the thresholds it reported \u2014 a caller reading decisionBasis saw 42 and 60 and could reasonably have taken those for the trigger. Values unchanged, no decision moved; what moved is which file owns them. This paragraph sits in notes rather than limitations because notes stay out of the decision frame, and the frame should carry what a reader needs to check the rule, not how it came to be written."
     },
 
     {

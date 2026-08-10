@@ -33,9 +33,13 @@
     "smoke:release-install": "node scripts/smoke-release-install.js",
     "review:phase": "node scripts/review-phase.js",
     "review:release": "node scripts/review-release.js",
-    "test:rules": "node --test \"packages/rules/test/*.test.js\""
-    ,"validate:rule-packages": "node scripts/validate-rule-packages.js"
-    ,"test:governance": "node --test packages/governance/test/*.test.js"
+    "test:rules": "node --test \"packages/rules/test/*.test.js\"",
+    "validate:rule-packages": "node scripts/validate-rule-packages.js",
+    "package:validate": "node scripts/rule-package.js validate",
+    "package:dry-run": "node scripts/rule-package.js dry-run",
+    "package:install": "node scripts/rule-package.js install",
+    "package:rollback": "node scripts/rule-package.js rollback",
+    "test:governance": "node --test packages/governance/test/*.test.js"
   },
   "engines": {
     "node": ">=20"

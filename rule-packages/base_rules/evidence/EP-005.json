@@ -1,0 +1,19 @@
+{
+  "packet_id": "EP-005",
+  "claim": "Acute sleep deprivation can impair several sports-performance domains, supporting caution when recovery evidence is poor without defining a numeric readiness threshold.",
+  "population": "Athletes represented in 27 studies included by the systematic review and meta-analysis.",
+  "intervention_or_exposure": "Whole-night or partial acute sleep deprivation.",
+  "outcome": "Overall sporting performance and domain-specific performance after sleep loss.",
+  "limitations": [
+    "The review concerns acute sleep deprivation experiments, not ordinary variation in one night's self-reported sleep duration.",
+    "It does not validate Pacevera's readiness composite, the 40 or 60 thresholds, or a rule that every low sleep reading requires the same adjustment."
+  ],
+  "source_type": "meta_analysis",
+  "pmid_or_doi": "PMID 39006249; DOI 10.2147/NSS.S467531",
+  "retrieved_at": "2026-08-10",
+  "applicable_rule_ids": ["EVD-R-001", "EVD-R-002"],
+  "reviewer": "Henry Yeh",
+  "verification_status": "primary_full_text_verified",
+  "supports": "The open full text reports a systematic review and meta-analysis of 27 studies and concludes that acute sleep deprivation impairs overall athletic performance, with effects varying by performance domain and testing time.",
+  "does_not_support": "The readiness-score formula, a cut point, or a deterministic one-step or two-step response to a sleep value."
+}

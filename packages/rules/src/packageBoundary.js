@@ -1,9 +1,11 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../rule-packages");
+const MANIFEST_SCHEMA = JSON.parse(readFileSync(join(ROOT, "schemas/rule-package.schema.json"), "utf8"));
+const EVIDENCE_PACKET_SCHEMA = JSON.parse(readFileSync(join(ROOT, "schemas/evidence-packet.schema.json"), "utf8"));
 const SEMVER = /^(\d+)\.(\d+)\.(\d+)$/;
 const RULE_ID = /^EVD-R-\d{3}$/;
 const TIERS = new Set(["base", "domain"]);
@@ -11,6 +13,45 @@ const STATUSES = new Set(["draft", "released", "deprecated"]);
 
 function fail(message) {
   throw new Error(`Rule package invariant violated: ${message}`);
+}
+
+function schemaType(value) {
+  if (value === null) return "null";
+  if (Array.isArray(value)) return "array";
+  return typeof value;
+}
+
+// The repository intentionally has no runtime dependency on a JSON Schema
+// package. This small validator implements the vocabulary used by the package
+// manifest schema, so the schema file is executable rather than documentary.
+function validateSchema(value, schema, path = "$") {
+  if (schema.type && ![].concat(schema.type).includes(schemaType(value))) {
+    fail(`${path} must be ${[].concat(schema.type).join(" or ")}.`);
+  }
+  if (schema.enum && !schema.enum.some((candidate) => Object.is(candidate, value))) {
+    fail(`${path} must be one of ${schema.enum.join(", ")}.`);
+  }
+  if (schema.pattern && (typeof value !== "string" || !new RegExp(schema.pattern).test(value))) {
+    fail(`${path} does not match the manifest schema pattern.`);
+  }
+  if (schema.minLength !== undefined && value.length < schema.minLength) fail(`${path} is too short.`);
+  if (schema.minItems !== undefined && value.length < schema.minItems) fail(`${path} must contain at least ${schema.minItems} item(s).`);
+  if (schema.uniqueItems) {
+    const serialized = value.map((item) => JSON.stringify(item));
+    if (new Set(serialized).size !== serialized.length) fail(`${path} must contain unique items.`);
+  }
+  if (schema.required) {
+    for (const key of schema.required) if (!Object.prototype.hasOwnProperty.call(value, key)) fail(`${path}.${key} is required by the manifest schema.`);
+  }
+  if (schema.properties) {
+    if (schema.additionalProperties === false) {
+      for (const key of Object.keys(value)) if (!Object.prototype.hasOwnProperty.call(schema.properties, key)) fail(`${path}.${key} is not allowed by the manifest schema.`);
+    }
+    for (const [key, child] of Object.entries(schema.properties)) {
+      if (Object.prototype.hasOwnProperty.call(value, key)) validateSchema(value[key], child, `${path}.${key}`);
+    }
+  }
+  if (schema.items) value.forEach((item, index) => validateSchema(item, schema.items, `${path}[${index}]`));
 }
 
 function version(value, where) {
@@ -46,11 +87,12 @@ function checksum(files) {
   return `sha256:${hash.digest("hex")}`;
 }
 
-export function validateRulePackage(packageDir, { engineVersion = null } = {}) {
+export function validateRulePackage(packageDir, { engineVersion = null, expectedPackageId = null } = {}) {
   const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
-  const expectedPackageId = packageDir.split(sep).at(-1);
+  validateSchema(manifest, MANIFEST_SCHEMA);
+  const directoryPackageId = expectedPackageId || packageDir.split(sep).at(-1);
   if (!/^[a-z][a-z0-9_]*$/.test(manifest.packageId || "")) fail("packageId is invalid.");
-  if (manifest.packageId !== expectedPackageId) fail(`packageId "${manifest.packageId}" does not match directory "${expectedPackageId}".`);
+  if (manifest.packageId !== directoryPackageId) fail(`packageId "${manifest.packageId}" does not match directory "${directoryPackageId}".`);
   version(manifest.version, "version");
   version(manifest.schemaVersion, "schemaVersion");
   if (!STATUSES.has(manifest.status)) fail(`status "${manifest.status}" is invalid.`);
@@ -64,6 +106,10 @@ export function validateRulePackage(packageDir, { engineVersion = null } = {}) {
 
   const entries = manifest.rules || [];
   if (manifest.status === "released" && entries.length === 0) fail("a released package must declare rules.");
+  if (manifest.status === "released" && (!manifest.reviewRecord || !existsSync(join(packageDir, manifest.reviewRecord)))) {
+    fail("a released package must point to an existing reviewRecord.");
+  }
+  if (manifest.status === "released" && manifest.contentFiles.length === 0) fail("a released package must declare contentFiles.");
   const ids = new Set();
   for (const entry of entries) {
     if (!RULE_ID.test(entry.id || "")) fail(`rule id "${entry.id}" is invalid.`);
@@ -72,9 +118,22 @@ export function validateRulePackage(packageDir, { engineVersion = null } = {}) {
     if (!manifest.contentFiles?.includes(entry.path)) fail(`rule ${entry.id} references an unlisted file.`);
   }
 
+  for (const packetPath of manifest.evidencePackets || []) {
+    if (!manifest.contentFiles.includes(packetPath)) fail(`evidence packet "${packetPath}" is not listed as a content file.`);
+    const packetFile = packageFiles(packageDir, { contentFiles: [packetPath] })[0];
+    let packet;
+    try { packet = JSON.parse(packetFile.bytes.toString("utf8")); }
+    catch { fail(`evidence packet "${packetPath}" is invalid JSON.`); }
+    validateSchema(packet, EVIDENCE_PACKET_SCHEMA, packetPath);
+    for (const ruleId of packet.applicable_rule_ids) {
+      if (!ids.has(ruleId)) fail(`evidence packet "${packetPath}" references unknown rule "${ruleId}".`);
+    }
+  }
+
   const files = packageFiles(packageDir, manifest);
   const declaredChecksum = manifest.contentChecksum;
   if (!/^sha256:[0-9a-f]{64}$/.test(declaredChecksum || "")) fail("contentChecksum is not sha256:<64 hex chars>.");
+  if (!files.length && declaredChecksum !== "sha256:" + "0".repeat(64)) fail("an empty draft package must use the zero contentChecksum.");
   if (files.length && checksum(files) !== declaredChecksum) fail(`contentChecksum mismatch (expected ${checksum(files)}).`);
 
   const ruleFiles = new Map();
@@ -96,8 +155,12 @@ export function validateRulePackage(packageDir, { engineVersion = null } = {}) {
   return Object.freeze({ packageDir, manifest, files, ruleFiles });
 }
 
+export function loadRulePackage(packageDir, options = {}) {
+  return validateRulePackage(packageDir, options);
+}
+
 export function loadBaseRulePackage(options = {}) {
-  return validateRulePackage(join(ROOT, "base_rules"), options);
+  return loadRulePackage(join(ROOT, "base_rules"), options);
 }
 
 export function packageContentChecksum(packageDir) {

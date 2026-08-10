@@ -1,0 +1,19 @@
+{
+  "packet_id": "EP-003",
+  "claim": "ACWR has been studied as an association between recent workload and injury, but methodological variation means it should be used as one input in a broader monitoring system rather than as an injury predictor or universal cut point.",
+  "population": "Team-sport athletes represented in 22 studies included by the systematic review.",
+  "intervention_or_exposure": "Rolling-average and exponentially weighted acute:chronic workload ratio calculations.",
+  "outcome": "Association between ACWR and non-contact injury occurrence, plus suitability of calculation methods.",
+  "limitations": [
+    "The review reports heterogeneity in sports, load variables, time periods, and calculation methods; it does not establish Pacevera's 1.4 threshold.",
+    "The review supports using ACWR as part of multifactorial monitoring, not causal injury prediction or a universal safe zone."
+  ],
+  "source_type": "systematic_review",
+  "pmid_or_doi": "PMID 31691167; DOI 10.1007/s40279-019-01218-2",
+  "retrieved_at": "2026-08-10",
+  "applicable_rule_ids": ["EVD-R-006"],
+  "reviewer": "Henry Yeh",
+  "verification_status": "abstract_verified_full_text_not_read",
+  "supports": "The abstract describes ACWR as acute workload relative to prepared chronic workload and concludes it can be a valuable tool within a larger multifaceted monitoring system, while noting that the best periods and variables depend on sport context.",
+  "does_not_support": "The 1.4 threshold, a causal injury effect, a universal 0.8-1.3 safe range, or the claim that the Pacevera denominator is equivalent to the study models."
+}

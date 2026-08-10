@@ -18,9 +18,10 @@
 - 目前 registry 仍是 process-local、bounded／TTL store；這代表 P2 的 trace
   契約已完成，但 durable adapter、user-controlled private engine 與跨重啟持久化
   仍屬後續工作，不能因此宣稱已完成 P1 或 private data plane。
-- 因此，下一個工程待完成項目不是再次接入 Decision Trace，而是
-  **R0 — Rule Package boundary**：把現有 Rule Library 封裝成可驗證、可相容性檢查、
-  可 rollback 的 `base_rules` package，並保留 `running_rules`、`strength_rules` 的邊界。
+- 因此，本次已完成的工程項目不是再次接入 Decision Trace，而是
+  **R0 — Rule Package boundary**：把現有 Rule Library 封裝成可驗證、可相容性檢查的
+  `base_rules` package，並保留 `running_rules`、`strength_rules` 的邊界。下一步是 R1
+  的本機更新／審核流程；rollback 屬 R1，尚未完成。
 
 ## 一句話定位
 
@@ -430,32 +431,24 @@ Triggered rules ──→ conflicts ──→ Priority Matrix arbitration
 
 ### 交付順序與完成標準
 
-1. **R0 — package boundary（下一個待完成項目）**：建立 `base_rules` manifest／schema，預留 `running_rules`、`strength_rules`，將現有 Rule Library 對應到 package；完成 package 與 Engine 的版本／相容性檢查。
-2. **R1 — update and review**：完成 archive／`.mcpb` 匯入、dry-run、checksum、active pointer、rollback，以及第一筆完整 `RR-...` 審核紀錄。
-3. **R2 — evidence uplift**：完成首批 5–10 個 evidence packets，至少讓一批現有 Rule 從 `expert_consensus` 升級，並把限制與適用族群寫入 rule explanation。
+1. ~~**R0 — package boundary**~~：✅ **已完成（2026-08-10）**。建立 `base_rules` manifest／schema，預留 `running_rules`、`strength_rules`，將現有 Rule Library 對應到 package；正式 schema validator 會檢查 manifest identity、semver、tier、Rule ID、content files、checksum 與 review record；runtime 從 package 載入，package-to-runtime／Decision Harness／decision trace contract tests 全部通過。空的 domain package 明確維持 `draft`、零規則、零 content files 與 zero checksum。G1 的 5 個 localhost HTTP 測試 sandbox 例外已隔離；G7 的 local athlete state store 已明確列為既有本機持久層，不再誤報為 LLM 或 outbound data sink。
+2. ~~**R1 — update and review**~~：✅ **已完成（2026-08-10）**。本機 package manager 支援目錄、tar／tar.gz 與 `.mcpb` 匯入；`validate`、`dry-run`、明確 `--confirm` install、immutable version 目錄、active pointer 與 rollback 已完成。dry-run 會在候選 package 子程序跑 37 個 Decision Harness scenarios，呈現決策／action／decisionBasis／governing rule／confidence diff；Harness、checksum 或 compatibility 失敗時不會切換 pointer。
+3. ~~**R2 — evidence uplift**~~：✅ **已完成（2026-08-10）**。`base_rules@1.1.0` 新增 5 個正式 schema 驗證的 evidence packets，涵蓋 HRV 導引訓練、阻力訓練進階、ACWR、detraining 與急性睡眠不足；R-006／R-007 的 study design 提升為 systematic review 方向性證據。沒有把文獻誤掛到 Pacevera 的 readiness、fatigue、ACWR 1.4 或 detraining cut points；R-001／R-002 維持 internal composite。
 4. **R3 — regression gate**：固定 golden／boundary schema，將更新前 Harness 與 Graph diff 納入 release gate；把已完成的 100–500 筆 Decision Corpus 分成 replay corpus 而非假裝成 ground truth。
 5. **R4 — graph viewer**：提供本機 Decision Graph viewer，能定位一次決策為何觸發、為何被壓過、最後如何形成 from→to。
 
-這組 R0–R4 完成後，才把 Rule Package 當成可獨立發布的產品資產。下一步才是考慮 signed package、遠端 registry、分批 rollout 與自動更新；在此之前，手動匯入加上可 rollback 的本機流程已足以支撐 Free tier 的 `base_rules` 與 Pro／Enterprise 未來的 domain package 邊界。
+這組 R0–R4 完成後，才把 Rule Package 當成可獨立發布的產品資產。R0、R1、R2 現在已完成；下一步是 R3 regression gate。signed package、遠端 registry、分批 rollout 與自動更新仍不開工；目前的本機匯入、Harness gate 與 rollback 足以支撐 Free tier 的 `base_rules` 與 Pro／Enterprise 未來的 domain package 邊界。
 
 ## 下一個新對話的實作任務
 
-新對話直接實作 **R0 — Rule Package boundary**，範圍固定如下：
+下一個對話直接實作 **R3 — regression gate**，範圍固定如下：
 
-1. 在 repository 建立 `rule-packages/base_rules/`、`rule-packages/running_rules/`、
-   `rule-packages/strength_rules/` 與 `rule-packages/schemas/` 的最小目錄及 README／manifest。
-2. 將現有 `packages/rules/data` 的 rule 對應到 `base_rules`，但先保持 runtime 行為不變；
-   Engine 不應再硬編碼資料路徑。
-3. 建立 manifest／schema validation，至少檢查 package identity、semver、Rule ID 唯一性、
-   engine compatibility、tier、引用檔案與 content checksum。
-4. 補 package-to-runtime／Decision Harness contract tests，證明既有 decision output、
-   `decisionBasis`、`decisionId` 與 `explain_decision` 行為沒有回歸。
-5. 不在此任務實作 archive install、active pointer、rollback、evidence uplift 或 remote
-   registry；那些是 R1–R3，避免擴大本次變更面。
+1. 固定 golden／boundary schema，保存 R2 前後的 Decision Graph 結構化 diff。
+2. 將 Harness 與 replay corpus 接到 package release gate。
+3. golden verdict 改變時要求 review record 的 before／after 與核准理由。
+4. 不在此任務實作 signed package、remote registry、自動更新或新的 connector。
 
-完成條件：`base_rules` 有可驗證 manifest，現有測試與 release review gates 全綠，且能在
-不改變既有決策結果的前提下由 package 載入 Rule Library。完成後再開 R1，實作 dry-run、
-checksum、active pointer 與 rollback。
+完成條件：R2 packet 與 review record 已入 package；R-006／R-007 僅升級證據設計 metadata；package dry-run、Decision Harness 與既有 regression cases 沒有未審核的行為漂移。
 
 ## 技術依據
 
