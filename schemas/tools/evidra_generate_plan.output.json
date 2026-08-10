@@ -4,6 +4,7 @@
   "title": "evidra_generate_plan output (TrainingPlan)",
   "type": "object",
   "properties": {
+    "decisionId": { "type": "string" },
     "id": { "type": "string" },
     "userId": { "type": "string" },
     "goalId": { "type": "string" },
@@ -70,7 +71,7 @@
     }
   },
   "required": [
-    "id", "userId", "goalId", "name", "startDate", "endDate", "periodizationType",
+    "decisionId", "id", "userId", "goalId", "name", "startDate", "endDate", "periodizationType",
     "status", "version", "constraints", "weeks", "reasoning", "decisionBasis", "createdAt"
   ]
 }

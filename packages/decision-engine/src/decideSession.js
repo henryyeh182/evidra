@@ -75,7 +75,7 @@ function normalizeCoverage(signalCoverage) {
 // That is the whole point of the indirection. A number living in this file is a
 // number with no stated origin: a reader has to take "readinessRest: 40" on
 // trust, and nothing stops the next edit from adding a forty-first. In
-// `packages/rules/data/session-rules.json` the same value cannot exist without
+// `rule-packages/base_rules/rules/session-rules.json` the same value cannot exist without
 // declaring which rule owns it, what quantity it cuts, whether that quantity is
 // externally defined or one Evidra computes itself, and — for the two that are
 // externally defined — who published on it and who disputes that publication.

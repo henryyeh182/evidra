@@ -4,6 +4,8 @@
   "title": "evidra_commit_adjust_plan output",
   "type": "object",
   "properties": {
+    "decisionId": { "type": "string" },
+    "previewDecisionId": { "type": ["string", "null"] },
     "planId": { "type": "string" },
     "version": { "type": "number" },
     "status": { "type": "string" },
@@ -48,5 +50,5 @@
       }
     }
   },
-  "required": ["planId", "version", "status", "plan", "versionHistory"]
+  "required": ["decisionId", "planId", "version", "status", "plan", "versionHistory"]
 }

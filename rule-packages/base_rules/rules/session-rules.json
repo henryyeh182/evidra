@@ -1,0 +1,739 @@
+{
+  "libraryId": "evidra.session-rules",
+  "version": "1.4.0",
+  "lastReview": "2026-08-09",
+  "reviewer": "Henry Yeh",
+  "reviewPolicy": {
+    "maxAgeDays": 180,
+    "basis": "Rule provenance and threshold ownership must be reread at least every 180 days. The interval is a governance cadence, not a physiology claim."
+  },
+
+  "readMe": [
+    "Every threshold the session decision engine applies lives here, with the",
+    "provenance of that threshold attached to it. The engine reads its numbers",
+    "from this file: editing a `value` here changes what the engine decides.",
+    "This file is data, not documentation of data.",
+    "",
+    "The field that matters most is `basis`. It answers a question that a",
+    "citation list cannot: is this threshold a cut point on a quantity the",
+    "outside world defines, or a cut point on a score Evidra computes itself?",
+    "",
+    "  external_metric    The quantity is defined outside Evidra (an",
+    "                     acute:chronic ratio, days since the last session).",
+    "                     Literature can speak to it, so `sources` is required",
+    "                     and `contested` records published disagreement.",
+    "",
+    "  internal_composite The quantity is a score Evidra invents by weighting",
+    "                     signals together. No published study has ever used",
+    "                     this score, so no publication can support a cut point",
+    "                     on it. `sources` MUST be empty and `evidence` MUST be",
+    "                     none/internal_heuristic. This is enforced by",
+    "                     assertValidRuleLibrary, not by convention.",
+    "",
+    "That invariant exists because the tempting failure here is to attach a",
+    "real paper to an invented number and call the rule evidence-based. A",
+    "reviewer who checks the citation would find it does not mention the score",
+    "the threshold sits on. An empty `sources` on an internal_composite rule is",
+    "the honest state, not an unfinished one.",
+    "",
+    "Two values is one short. EVD-R-009's threshold is neither a cut point on an",
+    "externally defined quantity nor a cut point on a score we weighted together:",
+    "it is definitional, a count of the movements the athlete's own restrictions",
+    "name, triggered by any at all. `internal_composite` is the nearest value and",
+    "it is imprecise, so that rule's limitations say so in as many words. The gap",
+    "is recorded rather than closed because the same thing happened once before —",
+    "EVD-R-007 carried a note that the evidence vocabulary had no rung for a",
+    "narrative review, and `narrative_review` was added later, once the shape of",
+    "what was missing was clear from a rule rather than guessed at in advance. A",
+    "third `basis` value is a change to every contract that enumerates the two.",
+    "",
+    "`evidence` asks two questions that used to be one. The old `evidenceLevel`",
+    "ladder mixed study design (systematic_review, rct, observational) with",
+    "institutional endorsement (guideline, position_stand, expert_consensus), so",
+    "a rule could inherit the weight of a published recommendation with no field",
+    "showing how its own evidence had been graded. GRADE keeps these apart, and",
+    "so does this:",
+    "",
+    "  studyDesign            What kind of study supports THIS RULE'S THRESHOLD.",
+    "                         `none` is the honest value when no study does, and",
+    "                         it is what most rules here carry. `narrative_review`",
+    "                         exists because EVD-R-007 needed it and the single",
+    "                         ladder had no rung for it.",
+    "",
+    "  recommendationStrength How far that study reaches toward our number.",
+    "                         supports_threshold means a study establishes the",
+    "                         cut point itself; supports_direction_only means it",
+    "                         establishes that the rule should exist and points",
+    "                         which way, and explicitly not the value;",
+    "                         internal_heuristic means the number is ours alone.",
+    "",
+    "No rule in this library is supports_threshold today. Every citation's",
+    "`doesNotSupport` names the number as the thing it fails to establish, so",
+    "that value is reachable and currently unused. It sitting empty is a fact",
+    "about the library, and it is now a fact a field states rather than one",
+    "buried in prose.",
+    "",
+    "`evidenceLevel` is no longer declared here. It is derived from the two axes",
+    "at load time (deriveEvidenceLevel) and still returned to callers, so the",
+    "split does not break contracts that read it. The one lossy step is",
+    "narrative_review, which collapses to expert_consensus because the old",
+    "vocabulary has nowhere else to put it. Declaring the field on a rule is a",
+    "load error: a stored copy is free to disagree with the axes it summarises.",
+    "",
+    "Every citation also carries `verificationStatus`, which says how far anyone",
+    "here has actually read it. A citation is a claim about a document, and that",
+    "claim is checkable independently of whether the document supports our",
+    "threshold. It is required on every entry in `sources` and",
+    "`supportingLiterature`, and checked against this vocabulary — an optional",
+    "field made an unchecked citation and a scrupulous one look identical.",
+    "The vocabulary, strongest first:",
+    "",
+    "  primary_full_text_verified          The quoted figures were read in the",
+    "                                      primary text at the URL given.",
+    "  abstract_verified_full_text_not_read",
+    "                                      Bibliographic record and quoted",
+    "                                      phrases confirmed against the",
+    "                                      published abstract. The body is",
+    "                                      obtainable but nobody has read it.",
+    "  abstract_verified_full_text_paywalled",
+    "                                      As above, and the body is behind a",
+    "                                      paywall, so the gap will not close by",
+    "                                      someone simply getting round to it.",
+    "  numbers_from_secondary_sources      Figures came from summaries of the",
+    "                                      paper, not the paper. Treat as",
+    "                                      unconfirmed.",
+    "  citation_not_read_in_full           Legacy of the above two; do not use",
+    "                                      for new entries.",
+    "  unverified                          Nobody here has checked this citation",
+    "                                      against any record at all. Weaker than",
+    "                                      citation_not_read_in_full, which still",
+    "                                      implies something was read.",
+    "",
+    "A status may only move up when someone reads further, and moves down the",
+    "moment a check fails. Rules whose provenance was corrected downward record",
+    "the correction in `notes` rather than quietly dropping the old claim.",
+    "",
+    "`contested` entries carry it too, as of 2026-08-08. They were exempt before",
+    "that, and the exemption was recorded here as a known gap on the reasoning",
+    "that an objection is not a claim we are making. It is still a claim about",
+    "what a named paper argues, and it is read as one. Closing the exemption",
+    "found both of EVD-R-006's objections overstated against the record: see that",
+    "rule's notes and the verification block on each entry.",
+    "",
+    "`version` is this library's own number and nothing else's. It is not the",
+    "version of the packaged extension (server.json) and not the version of the",
+    "code that applies these rules (ENGINE_VERSION). Those three move for three",
+    "different reasons, and a caller comparing two decisions needs to see which",
+    "one moved: this number and the engine's both travel out on every decision,",
+    "in decisionBasis. What each part means here:",
+    "",
+    "  major  The shape changed. A field was added, removed, or given a new",
+    "         meaning, so a reader of the old shape has to change. Splitting",
+    "         evidenceLevel into two axes was one of these.",
+    "  minor  The library decides differently or stands on different provenance:",
+    "         a threshold value moved, a rule was added or retired, a citation",
+    "         was corrected or regraded. The shape is untouched.",
+    "  patch  Wording that no decision rests on.",
+    "",
+    "1.0.0 is the first version issued under this rule, on 2026-08-08. Numbers",
+    "before it were assigned without one and carry no meaning; in particular the",
+    "released v0.3.7 extension has a library reading 1.0.0 whose content predates",
+    "the 2026-08-07 provenance review. That archive cannot be edited, so the",
+    "collision is recorded here and in the implementation plan instead.",
+    "",
+    "1.1.0, later the same day, adds EVD-R-009 and fills the `injury` category,",
+    "which had been the top rank of the arbitration matrix standing empty while",
+    "the filter it should have governed ran on every call. A rule was added and",
+    "nothing else moved, which is a minor by the rule above.",
+    "",
+    "1.2.0, on 2026-08-08, makes verificationStatus mandatory on `contested` as",
+    "well, so every entry in all three citation arrays now declares how far it",
+    "was read, and regrades the two citations that closing the exemption caught.",
+    "",
+    "It was first issued as 2.0.0, which was wrong twice over. Wrong on the rule:",
+    "the major clause reads \"A field was added, removed, or given a new meaning,",
+    "SO A READER OF THE OLD SHAPE HAS TO CHANGE\" — the second half is the test,",
+    "not a gloss on the first. This change is additive, nothing a caller reads",
+    "disappears, and no reader has to change; regrading a citation is named in",
+    "the minor clause in as many words. Wrong on who decides: the grade is the",
+    "reviewer's call and was taken without asking, then written up as though it",
+    "had been derived from the clause rather than chosen. A major on this number",
+    "reaches every caller through decisionBasis and tells them to go and check",
+    "their parsing, so getting it wrong upward is not the safe direction.",
+    "",
+    "1.3.0, on 2026-08-09, adds EVD-R-010, EVD-R-011 and EVD-R-012 — the injury",
+    "filters the plan generator, the plan change applier and the exercise catalog",
+    "have always run, which until now had no id, no stated provenance and no",
+    "place in arbitration — and adds the `appliedBy` field naming which engine",
+    "applies each rule.",
+    "",
+    "The field is the interesting part of the grade, because it is required and",
+    "new, and the major clause names field additions first. It is still a minor,",
+    "by the second half of that clause: nothing a caller reads changed.",
+    "`appliedBy` is not emitted in decisionBasis and no contract mentions it. Who",
+    "does have to change is whoever hand-writes a rule in this file — the loader",
+    "refuses a rule without it — and that is a different population from the one",
+    "this number versions. Recorded here rather than settled in the clause,",
+    "because it is the first time the two came apart.",
+    "",
+    "Why `appliedBy` had to exist rather than being left to prose: the decision",
+    "harness can only reach rules the session engine applies, so its coverage and",
+    "boundary checks are scoped to those, and a scoping like that is honest only",
+    "if something is on the hook for the rest. The field makes \"which check is",
+    "obliged to exercise this rule\" a fact the code reads rather than something",
+    "somebody remembers, and moving it turns the rule fingerprint red.",
+    "",
+    "1.4.0, also on 2026-08-09: EVD-R-007 takes back its own trigger.",
+    "detrainingMinIdleDays (14) and detrainingMinCtlLossPct (25) had lived in",
+    "engine-parameters.json as EVD-P-001 and EVD-P-002 — a governance tier below",
+    "the rule they gate — so the two numbers deciding whether the rule fires were",
+    "not among the four it reported, while the 42 and 60 that only choose between",
+    "one intensity step and two were what a caller saw. Values unchanged, no",
+    "decision moved; what moved is which file owns them. Minor: a rule gained",
+    "thresholds and no caller has to change.",
+    "",
+    "Measuring the pair on the way in found the second inert threshold in this",
+    "rule. returnSevereIdleDays was already known to be unreachable (60% lost",
+    "arrives on idle day 38, before the 42-day arm of that OR can matter);",
+    "detrainingMinCtlLossPct turns out to be the same shape, crossing on idle day",
+    "12 while the AND it belongs to does not open until day 14. Two of this",
+    "rule's four thresholds therefore never decide anything. Both are kept, both",
+    "say so in their own limitations, and both carry a DH-BND exemption that",
+    "prints on every harness run. Deleting them would tidy the rule and lose the",
+    "record that they were measured."
+  ],
+
+  "studyDesigns": [
+    "guideline",
+    "position_stand",
+    "systematic_review",
+    "rct",
+    "observational",
+    "narrative_review",
+    "expert_consensus",
+    "none"
+  ],
+
+  "recommendationStrengths": ["supports_threshold", "supports_direction_only", "internal_heuristic"],
+
+  "verificationStatuses": [
+    "primary_full_text_verified",
+    "abstract_verified_full_text_not_read",
+    "abstract_verified_full_text_paywalled",
+    "numbers_from_secondary_sources",
+    "citation_not_read_in_full",
+    "unverified"
+  ],
+
+  "evidenceLevels": [
+    "guideline",
+    "position_stand",
+    "systematic_review",
+    "rct",
+    "observational",
+    "expert_consensus",
+    "internal_heuristic"
+  ],
+
+  "categories": [
+    { "id": "injury", "rank": 1, "description": "Active injury or contraindication." },
+    { "id": "illness", "rank": 2, "description": "Acute illness." },
+    { "id": "recovery", "rank": 3, "description": "Recovery state, accumulated load and lost fitness." },
+    { "id": "training_goal", "rank": 4, "description": "Progression toward the athlete's stated goal." },
+    { "id": "preference", "rank": 5, "description": "Athlete preference and stated constraints." }
+  ],
+
+  "arbitrationPolicy": {
+    "id": "category_then_priority",
+    "description": "Which rule the decision is attributed to. Rules sort by category rank ascending, then priority descending, then ruleId. The first is the governing rule.",
+    "note": "The full ordering is implemented ahead of the rules that will need it, so that adding the first injury or illness rule does not also require inventing the ordering under time pressure. Which categories are currently populated is not restated here: it is derivable by counting `category` across `rules`, and an earlier version of this note asserted a count that a later rule made false. Prose in this file states design intent; the data states the facts."
+  },
+
+  "combinationPolicy": {
+    "id": "most_restrictive_wins",
+    "description": "How the effects of several triggered rules combine. Intensity reductions do not sum; the largest single reduction applies. Duration caps apply independently and the lowest cap wins.",
+    "note": "Arbitration and combination are separate policies on purpose. The governing rule explains the decision; it does not necessarily set the size of the change."
+  },
+
+  "rules": [
+    {
+      "ruleId": "EVD-R-001",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "Very low readiness replaces the session with recovery",
+      "category": "recovery",
+      "appliedBy": "session",
+      "priority": 90,
+      "basis": "internal_composite",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
+      "measuredQuantity": {
+        "name": "readiness score",
+        "range": "0-100",
+        "computedBy": "packages/semantic-engine/src/generateSemanticFitnessState.js:calculateReadinessScore",
+        "definition": "A recovery score (itself a weighted blend of sleep 0.35, HRV 0.35, resting heart rate 0.20, stress 0.10, with vendor composites weighted above raw signals) minus a workload penalty of (ACWR - 1.2) x 22 and a fatigue penalty of maxMuscleFatigue x 0.22.",
+        "whyNoSourceIsPossible": "Every weight in that expression was chosen by us. No study has measured outcomes against this score, so no study can support a cut point on it."
+      },
+      "thresholds": [
+        { "key": "readinessRest", "operator": "<", "value": 40, "unit": "readiness_score" },
+        { "key": "recoveryCapMinutes", "operator": "<=", "value": 30, "unit": "minutes" }
+      ],
+      "effect": { "decision": "defer", "intent": "swap_to_recovery", "intensityStepsDown": null },
+      "sources": [],
+      "contested": [],
+      "limitations": [
+        "40 and 30 are our own choices. They have not been calibrated against any outcome data, and calibrating them against simulated physiological values is prohibited (that would be fitting the engine to invented people).",
+        "The recovery score falls back to a neutral 50 when no fresh recovery signal is present, so a total absence of evidence cannot trigger this rule. That is deliberate, and it is reported through signalCoverage."
+      ],
+      "notes": "The severity here is the reason the effect is a swap rather than a step down: one notch off a hard session still prescribes training load on a day the evidence says to take none."
+    },
+
+    {
+      "ruleId": "EVD-R-002",
+      "version": "1.0.1",
+      "status": "active",
+      "title": "Low readiness pulls intensity down one step",
+      "category": "recovery",
+      "appliedBy": "session",
+      "priority": 70,
+      "basis": "internal_composite",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
+      "measuredQuantity": { "sameAs": "EVD-R-001" },
+      "thresholds": [{ "key": "readinessReduce", "operator": "<", "value": 60, "unit": "readiness_score" }],
+      "effect": { "decision": "adjust", "intent": "reduce_today_intensity", "intensityStepsDown": 1 },
+      "sources": [],
+      "contested": [],
+      "supportingLiterature": [
+        {
+          "citation": "Javaloyes A, Sarabia JM, Lamberts RP, Moya-Ramon M, et al. Training prescription guided by heart rate variability vs. predefined training: systematic review and meta-analysis, 2019-2021.",
+          "url": "https://www.mdpi.com/2076-3417/10/23/8532",
+          "supports": "Varying daily prescription from a daily recovery measurement, rather than following a fixed plan, has been tested in randomised trials: small-to-medium benefit on submaximal parameters, and lower dispersion of outcomes.",
+          "doesNotSupport": "Any numeric cut point, and specifically not 60 on Evidra's readiness score. These trials used HRV-derived indices, not this composite.",
+          "verificationStatus": "unverified",
+          "whyItIsHereAnyway": "It supports the direction of the rule (adjust today from today's recovery reading) while explicitly not supporting its number. Recording that split is the point of this field."
+        }
+      ],
+      "limitations": [
+        "60 is our own choice.",
+        "The supporting citation is unverified: the 2026-08-07 provenance review checked EVD-R-004, EVD-R-006 and EVD-R-007 and never reached this one, so nobody here has confirmed the bibliographic record or that the paraphrase above matches what the paper says. Read the `supports` line as a claim about the paper that is itself unchecked.",
+        "This rule is skipped when the scheduled session is already low intensity, and when the caller states no intensity at all — in the second case the blocked rule is reported in `limits` rather than silently dropped."
+      ],
+      "notes": "supportingLiterature is deliberately a different field from sources. sources means 'this publication supports this threshold'. Nothing supports this threshold. The unverified status here was surfaced by making verificationStatus mandatory rather than by anyone noticing: while the field was optional this entry looked no different from a checked one, which is the whole argument for the enum."
+    },
+
+    {
+      "ruleId": "EVD-R-003",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "A maxed-out muscle group takes no further stimulus today",
+      "category": "recovery",
+      "appliedBy": "session",
+      "priority": 80,
+      "basis": "internal_composite",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
+      "measuredQuantity": {
+        "name": "per-muscle-group fatigue",
+        "range": "0-100",
+        "computedBy": "packages/semantic-engine/src/generateSemanticFitnessState.js:calculateMuscleFatigue",
+        "definition": "Sum over recent sessions of trainingLoad x decay, where decay = max(0.15, 1 - ageDays/5), attributed to the muscle groups the session targeted, clamped to 0-100.",
+        "whyNoSourceIsPossible": "The decay curve, its floor, and the 0-100 clamp are ours. The resulting number is not a physiological measurement and no publication reports outcomes against it."
+      },
+      "thresholds": [{ "key": "muscleFatigueMaxed", "operator": ">=", "value": 90, "unit": "fatigue_score" }],
+      "effect": { "decision": "adjust", "intent": "reduce_today_intensity", "intensityStepsDown": 2 },
+      "sources": [],
+      "contested": [],
+      "limitations": [
+        "90 is our own choice, and so are the decay constants that produce the number it is compared against.",
+        "A session carrying no training load contributes nothing to this sum. That is reported through signalCoverage.training.missing and is the only way a caller learns the fatigue figure is built on partial evidence."
+      ],
+      "notes": "Two steps rather than one: at the ceiling, a single notch still leaves the session loading the same tissue."
+    },
+
+    {
+      "ruleId": "EVD-R-004",
+      "version": "1.0.1",
+      "status": "active",
+      "title": "High fatigue in the target muscle group rules out hard work on it",
+      "category": "recovery",
+      "appliedBy": "session",
+      "priority": 75,
+      "basis": "internal_composite",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
+      "measuredQuantity": { "sameAs": "EVD-R-003" },
+      "thresholds": [{ "key": "muscleFatigueHigh", "operator": ">=", "value": 65, "unit": "fatigue_score" }],
+      "effect": { "decision": "adjust", "intent": "reduce_today_intensity", "intensityStepsDown": 1 },
+      "sources": [],
+      "contested": [],
+      "supportingLiterature": [
+        {
+          "citation": "American College of Sports Medicine. Position Stand: Progression Models in Resistance Training for Healthy Adults. Med Sci Sports Exerc. 2009;41(3):687-708.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19204579/",
+          "supports": "That resistance training is prescribed at a per-week frequency that rises with training status, verbatim: \"2-3 d x wk(-1) for novice training, 3-4 d x wk(-1) for intermediate training, and 4-5 d x wk(-1) for advanced training\"; and that sessions are sequenced by muscle group, verbatim: \"large before small muscle group exercises\". A frequency ceiling of this kind presupposes that a loaded muscle group needs recovery before it is loaded hard again, which is the direction of this rule.",
+          "doesNotSupport": "The value 65, the decay model that produces the score it is compared against, and the claim that recovery is tracked per muscle group rather than globally. The abstract prescribes whole-session weekly frequency, not a per-muscle-group recovery interval; our earlier wording asserted the latter and has been withdrawn.",
+          "verificationStatus": "abstract_verified_full_text_not_read",
+          "verification": {
+            "checkedOn": "2026-08-07",
+            "against": "PubMed record 19204579. Title, journal, year, volume, issue and pages confirmed; the two quoted phrases are in the published abstract.",
+            "outcome": "The bibliographic record and both quotations are confirmed against the abstract. The full 22-page position stand was not read, so anything it says beyond the abstract remains unchecked."
+          },
+          "whyItIsHereAnyway": "It supports the existence of a recovery interval between hard sessions for the same tissue. It says nothing about our number."
+        }
+      ],
+      "limitations": [
+        "65 is our own choice.",
+        "Only the abstract of the supporting citation has been read (verificationStatus: abstract_verified_full_text_not_read). It must not be described as fully verified until someone reads the position stand itself.",
+        "The abstract's frequency guidance is per week and per athlete, not per muscle group. This rule's per-muscle-group granularity is finer than anything the citation establishes, and that gap is ours, not the literature's."
+      ],
+      "notes": "Provenance re-reviewed 2026-08-07: the previous `supports` line claimed the position stand established per-muscle-group rather than global progression management. That is not in the abstract and was withdrawn rather than left standing on a citation nobody had opened."
+    },
+
+    {
+      "ruleId": "EVD-R-005",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "Moderate fatigue is reported but changes nothing",
+      "category": "recovery",
+      "appliedBy": "session",
+      "priority": 20,
+      "basis": "internal_composite",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
+      "measuredQuantity": { "sameAs": "EVD-R-003" },
+      "thresholds": [{ "key": "muscleFatigueModerate", "operator": ">=", "value": 45, "unit": "fatigue_score" }],
+      "effect": { "decision": "keep", "intent": null, "intensityStepsDown": 0 },
+      "sources": [],
+      "contested": [],
+      "limitations": ["45 is our own choice."],
+      "notes": "An advisory rule. It is in the library rather than inline because a rule that deliberately changes nothing is still a rule the athlete is entitled to see, and because it also gates the progression rule EVD-R-008."
+    },
+
+    {
+      "ruleId": "EVD-R-006",
+      "version": "1.0.1",
+      "status": "active",
+      "title": "An acute load spike pulls intensity down one step",
+      "category": "recovery",
+      "appliedBy": "session",
+      "priority": 78,
+      "basis": "external_metric",
+      "evidence": { "studyDesign": "observational", "recommendationStrength": "supports_direction_only" },
+      "measuredQuantity": {
+        "name": "acute:chronic workload ratio",
+        "computedBy": "packages/semantic-engine/src/generateSemanticFitnessState.js:calculateTrainingLoad",
+        "definition": "Sum of training load over the last 7 days, divided by max(sum over the last 28 days / 4, weeklyTrainingLoadTarget).",
+        "matchesPublishedDefinition": "partially"
+      },
+      "thresholds": [{ "key": "acwrHigh", "operator": ">", "value": 1.4, "unit": "ratio" }],
+      "effect": { "decision": "adjust", "intent": "reduce_today_intensity", "intensityStepsDown": 1 },
+      "sources": [
+        {
+          "citation": "Gabbett TJ. The training-injury prevention paradox: should athletes be training smarter and harder? Br J Sports Med. 2016;50(5):273-280.",
+          "doi": "10.1136/bjsports-2015-095788",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4789704/",
+          "supports": "That acute (1 week) to chronic (rolling 4-week) load ratio is associated with injury risk. Verbatim from the paper: a ratio \"within the range of 0.8-1.3 could be considered the training 'sweet spot'\"; ratios \">=1.5 represent the 'danger zone'\"; and at >=1.5 \"the risk of injury was 2-4 times greater in the subsequent 7 days\".",
+          "doesNotSupport": "The value 1.4.",
+          "verificationStatus": "primary_full_text_verified",
+          "verification": {
+            "checkedOn": "2026-08-07",
+            "against": "Open-access full text at PMC4789704, confirmed by its own record to be Br J Sports Med 2016;50(5):273-280, doi 10.1136/bjsports-2015-095788.",
+            "outcome": "The 0.8-1.3 band and the 1.5 spike are present in the primary text as the quotations above. They were previously carried from secondary summaries; that caveat is retired."
+          }
+        }
+      ],
+      "contested": [
+        {
+          "citation": "Impellizzeri FM, Tenan MS, Kempton T, Novak A, Coutts AJ. Acute:Chronic Workload Ratio: Conceptual Issues and Fundamental Pitfalls. Int J Sports Physiol Perform. 2020;15(6):907-913.",
+          "doi": "10.1123/ijspp.2019-0864",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/32502973/",
+          "objection": "That no study has estimated a causal effect, so managing training by this ratio to change injury rates is a conjecture; and that the ratio is an inaccurate metric which adds statistical artefacts.",
+          "verificationStatus": "abstract_verified_full_text_not_read",
+          "verification": {
+            "checkedOn": "2026-08-08",
+            "against": "PubMed record 32502973. Authors, title, journal, year, volume, issue and pages confirmed. The objection paraphrases three phrases in the published abstract, verbatim: \"There is no evidence supporting the use of ACWR in training-load-management systems or for training recommendations aimed at reducing injury risk\"; \"failing to normalize the numerator by the denominator even when uncoupled\"; and \"it adds noise and creates statistical artifacts\". The quotations are held here rather than in `objection` because the full rule description travels in every decision frame and is serialised twice in it; the ceiling that budget sits under is asserted in readTools.test.js.",
+            "outcome": "The bibliographic record and all three quotations are confirmed against the abstract; the full text was not read. One earlier clause was withdrawn: this objection asserted that ACWR \"adds no predictive value over acute load alone\", which the abstract does not claim and which nothing here traced to this paper. Volume, issue, pages and DOI were missing from the citation and have been added."
+          }
+        },
+        {
+          "citation": "Lolli L, Batterham AM, Hawkins R, et al. Mathematical coupling causes spurious correlation within the conventional acute-to-chronic workload ratio calculations. Br J Sports Med. 2019;53(15):921-922.",
+          "doi": "10.1136/bjsports-2017-098110",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/29101104/",
+          "objection": "That the acute period is part of the chronic period it is divided by, so the two correlate spuriously whether or not any physiological relationship exists.",
+          "verificationStatus": "unverified",
+          "verification": {
+            "checkedOn": "2026-08-08",
+            "against": "PubMed record 29101104. Authors, title, journal, year, volume, issue, pages and DOI confirmed. Publication type is Editorial; the record carries no abstract.",
+            "outcome": "The bibliographic record is confirmed and the title states the objection. Nothing beyond the title is confirmed, because the editorial was not read and has no abstract to read instead. `unverified` rather than citation_not_read_in_full: the latter is marked legacy in this file's vocabulary and not for new entries, and no status here fits an item whose record was checked but whose only readable surface is its title. Read it as the weakest available value, not as nobody having looked. Two earlier clauses were withdrawn: this objection asserted \"inflated odds ratios\" and that \"the published 'sweet spot' figure is argued to be an artefact\", neither of which is traceable to this reference. The citation previously read \"Lolli L, Batterham AM, Hawkins R, et al. Br J Sports Med, 2017-2019\" with no title, which put an online-first year and an issue year in one range and resolved to no single record."
+          }
+        }
+      ],
+      "limitations": [
+        "1.4 matches neither published figure: it sits between the band ceiling (1.3) and the spike definition (1.5). It is our choice, not the literature's.",
+        "When observed chronic load falls below weeklyTrainingLoadTarget the denominator becomes that target, so the ratio compares acute load against a goal rather than against this athlete's own chronic load. Reported as chronicBasis: baseline_floor.",
+        "weeklyTrainingLoadTarget (360) is itself unsourced, so the baseline_floor state inherits an unsourced denominator.",
+        "Given the objections above, read this as a ramp-rate guard, not injury prediction. That is why the effect is one step down and not a stop."
+      ],
+      "notes": "The only rule here whose quantity is externally defined and externally studied, and therefore the only one carrying a contested list. Citing Gabbett without citing Impellizzeri would misrepresent the state of the field, so both travel together. On verification (2026-08-07): the earlier publisher PDF was not machine-readable, so the figures had been taken from secondary summaries; the open-access deposit at PMC4789704 is readable and both figures are confirmed verbatim in the primary text. The contested entries were checked on 2026-08-08, when verificationStatus became mandatory on them too, and neither survived the check as written. Both had been described in this file as taken from the papers' published abstracts. The Impellizzeri abstract does not contain the third of the three claims attributed to it. The Lolli item has no abstract at all — it is an editorial — so its two specific claims could not have come from one, and its citation carried no title and did not resolve to a single record. Both were corrected downward and the withdrawn wording is recorded in each entry's verification block rather than dropped. This is the second time in this library that an unread reference had been given a claim it does not make; the first was EVD-R-007, and the pattern is the same one the verificationStatus enum exists to expose. Sessions carrying no training load are excluded from both sums."
+    },
+
+    {
+      "ruleId": "EVD-R-007",
+      "version": "1.0.1",
+      "status": "active",
+      "title": "The first session back after a break is scaled down",
+      "category": "recovery",
+      "appliedBy": "session",
+      "priority": 85,
+      "basis": "external_metric",
+      "evidence": { "studyDesign": "narrative_review", "recommendationStrength": "supports_direction_only" },
+      "measuredQuantity": {
+        "name": "days since last session, and percentage loss of chronic training load from its recent peak",
+        "computedBy": "packages/training-load/src/trainingLoad.js",
+        "definition": "Two tiers. The rule fires at all only when BOTH detrainingMinIdleDays and detrainingMinCtlLossPct hold \u2014 idle days counted from the last session, CTL loss measured against this athlete's own recent peak. Once it has fired, returnSevereIdleDays OR returnSevereCtlLossPct decides whether intensity comes down one step or two. The first pair is evaluated in trainingLoad.js as `detraining.active`, the second in decideSession.js; both now live here, so the thresholds a caller reads in decisionBasis include the ones that triggered the rule and not only the ones that sized it."
+      },
+      "thresholds": [
+        { "key": "detrainingMinIdleDays", "operator": ">=", "value": 14, "unit": "days" },
+        { "key": "detrainingMinCtlLossPct", "operator": ">=", "value": 25, "unit": "percent" },
+        { "key": "returnSevereIdleDays", "operator": ">=", "value": 42, "unit": "days" },
+        { "key": "returnSevereCtlLossPct", "operator": ">=", "value": 60, "unit": "percent" },
+        { "key": "returnDurationFactor", "operator": "x", "value": 0.6, "unit": "fraction_of_planned_duration" }
+      ],
+      "effect": { "decision": "adjust", "intent": "ease_back_after_break", "intensityStepsDown": "1, or 2 when either severe threshold is met", "durationCap": "max(15, planned x 0.6) minutes" },
+      "sources": [
+        {
+          "citation": "Mujika I, Padilla S. Detraining: loss of training-induced physiological and performance adaptations. Part I: short term insufficient training stimulus. Sports Med. 2000;30(2):79-87.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10966148/",
+          "supports": "That a break under 4 weeks already costs aerobic capacity. Verbatim: \"a rapid decline in maximal oxygen uptake (VO2max) and blood volume\", and \"Ventilatory efficiency and endurance performance are also impaired.\"",
+          "doesNotSupport": "Any percentage, any number of days, and the values 42, 60 and 0.6. The abstract gives no figures at all; \"rapid\" is the whole of its quantification.",
+          "verificationStatus": "abstract_verified_full_text_paywalled",
+          "verification": {
+            "checkedOn": "2026-08-07",
+            "against": "PubMed record 10966148. Title, journal, year, volume, issue and pages confirmed; both quotations are in the published abstract. Full text is behind the publisher paywall and was not obtained.",
+            "outcome": "Direction confirmed, magnitude not. The figure \"roughly 4-7% VO2max within 2-3 weeks\" that this source previously carried is not in the abstract of either part and could not be traced to the primary text; it has been removed rather than restated."
+          }
+        },
+        {
+          "citation": "Mujika I, Padilla S. Detraining: loss of training-induced physiological and performance adaptations. Part II: long term insufficient training stimulus. Sports Med. 2000;30(3):145-154.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10999420/",
+          "supports": "That the loss keeps growing past 4 weeks and recent gains go first. Verbatim: \"declines markedly but remains above control values during long term detraining, whereas recently acquired VO2max gains are completely lost.\" That scaling is why this rule has a severe tier.",
+          "doesNotSupport": "Any percentage or cut point. \"Markedly\" is the strongest quantitative word in the abstract.",
+          "verificationStatus": "abstract_verified_full_text_paywalled",
+          "verification": {
+            "checkedOn": "2026-08-07",
+            "against": "PubMed record 10999420. Title, journal, year, volume, issue and pages confirmed; the quotation is in the published abstract. Full text is behind the publisher paywall and was not obtained.",
+            "outcome": "The monotonic direction is confirmed from the primary abstract. Nothing numeric is."
+          }
+        }
+      ],
+      "contested": [],
+      "limitations": [
+        "14, 25, 42, 60 and 0.6 are all our own choices. The sources support the direction only; neither abstract contains a single number, so there is nothing in them for these cut points to be near or far from.",
+        "14 and 25 are one event seen from two directions, not two independent tests: with a 42-day CTL time constant, twelve idle days already costs about 25% of CTL, so both arms land at roughly the same moment by construction.",
+        "returnSevereIdleDays is unreachable. CTL decays on a fixed time constant, so the fraction lost is independent of how much fitness there was: 60% is crossed on idle day 38 for every athlete (measured 2026-08-09 over six histories, 12-90 sessions, loads 30-120, identical in all six; ln(0.4)/ln(41/42) = 38.0). That arm of the OR never decides anything, and 42 could be any number above 38 without moving a decision. DH-BND carries a written exemption and prints it on every run.",
+        "The detraining literature measures VO2max. Our trigger measures modelled chronic training load — a proxy for training done, not for fitness retained.",
+        "0.6 sits inside the common 'half to two-thirds of prior volume' return guidance, which is practitioner convention rather than a trial result.",
+        "Both sources are narrative reviews read at abstract level only; the evidence and verificationStatus fields on this rule say so."
+      ],
+      "notes": "This rule exists because no recovery signal can see it. An athlete two months off reads rested: readiness high, muscle fatigue near zero, and ACWR at 0 — the safest possible value to EVD-R-006. Every other guard passes. Lost fitness therefore needs its own trigger rather than being inferred from recovery. Provenance re-reviewed 2026-08-07: this rule previously claimed \"roughly 4-7% VO2max within 2-3 weeks, substantially more beyond 4 weeks\" and an evidenceLevel of systematic_review. Neither survived the check — the percentages are in neither abstract, the full texts are paywalled, and both papers are narrative reviews by two authors with no systematic search method described. Both claims were corrected downward. At the time this rule recorded that the library's vocabulary had no narrative_review level and that expert_consensus was the nearest honest rung, noting that adding one was a schema change rather than something to fake with the levels available. That schema change has since been made: studyDesign is narrative_review, which is what these two papers are, and the derived evidenceLevel still collapses to expert_consensus for callers reading the old field. Retracting a claim is the expected outcome of a provenance review, not a failure of one. On 2026-08-09 this rule took back its own trigger: detrainingMinIdleDays and detrainingMinCtlLossPct had lived outside the library as EVD-P-001 and EVD-P-002, so the two thresholds deciding whether the rule fires were not among the thresholds it reported \u2014 a caller reading decisionBasis saw 42 and 60 and could reasonably have taken those for the trigger. Values unchanged, no decision moved; what moved is which file owns them. This paragraph sits in notes rather than limitations because notes stay out of the decision frame, and the frame should carry what a reader needs to check the rule, not how it came to be written."
+    },
+
+    {
+      "ruleId": "EVD-R-008",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "High readiness with a fresh target muscle group allows a step up",
+      "category": "training_goal",
+      "appliedBy": "session",
+      "priority": 40,
+      "basis": "internal_composite",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
+      "measuredQuantity": { "sameAs": "EVD-R-001" },
+      "thresholds": [
+        { "key": "readinessAdvance", "operator": ">=", "value": 85, "unit": "readiness_score" },
+        { "key": "muscleFatigueModerate", "operator": "<", "value": 45, "unit": "fatigue_score" }
+      ],
+      "effect": { "decision": "advance", "intent": "progress_when_fresh", "intensityStepsDown": -1 },
+      "sources": [],
+      "contested": [],
+      "limitations": [
+        "85 and 45 are our own choices.",
+        "A detrained athlete reads fresh on both quantities. This rule must therefore never fire while EVD-R-007 is active, and that exclusion is part of the rule, not an implementation detail."
+      ],
+      "notes": "It is what made the arbitration policy observable at all: when it and a recovery rule both trigger, category rank decides which rule the decision is attributed to. It was the library's only rule outside the recovery category until EVD-R-009 arrived above it."
+    },
+
+    {
+      "ruleId": "EVD-R-009",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "An active restriction removes the movements it names",
+      "category": "injury",
+      "appliedBy": "session",
+      "priority": 95,
+      "basis": "internal_composite",
+      "evidence": { "studyDesign": "none", "recommendationStrength": "internal_heuristic" },
+      "measuredQuantity": {
+        "name": "movements in today's session matched by an active restriction",
+        "range": "0 upward",
+        "computedBy": "packages/decision-engine/src/decideSession.js:movementsMatchingRestrictions",
+        "definition": "The caller supplies restrictions in state.avoid, drawn from active injuries and stated avoid preferences. Each is lowercased, a leading \"avoid \" is dropped, and the remainder split on whitespace and hyphens. A movement matches when its spoken name contains any resulting token longer than restrictionTokenMinLength characters. The quantity is how many of the session's movements match — counted over the scheduled session and, when the athlete proposes an alternative, over that too.",
+        "whyNoSourceIsPossible": "The restrictions are this athlete's own and the count is produced by a string matcher we wrote. No publication has studied outcomes against \"how many scheduled movements have a spoken name containing a token from a restriction string\", because that quantity exists nowhere but inside Evidra."
+      },
+      "thresholds": [
+        { "key": "restrictedMovementsPresent", "operator": ">=", "value": 1, "unit": "movements" },
+        { "key": "restrictionTokenMinLength", "operator": ">", "value": 3, "unit": "characters" }
+      ],
+      "effect": {
+        "decision": "substitute",
+        "intent": "remove_contraindicated_movements",
+        "intensityStepsDown": 0
+      },
+      "sources": [],
+      "contested": [],
+      "limitations": [
+        "1 is not a calibrated cut point; it means any at all, and no larger number of matched movements is treated differently. The rule is definitional — the athlete said not to do this — rather than empirical, and the `basis` vocabulary has no value for that. `internal_composite` is the nearest and it is imprecise: this quantity is a count from a matcher, not a score built by weighting signals. See the readMe.",
+        "restrictionTokenMinLength is our own choice and it is load-bearing in a way that is easy to miss. Tokens of three characters or fewer never match, so \"hip\", \"arm\", \"leg\", \"rib\" and \"toe\" cannot match on their own: \"avoid hip\" and \"avoid arm day\" match nothing whatsoever, and the athlete is told only that the session was unchanged. It cuts the other way too — \"avoid hip work\" matches on \"work\", which appears in movements that have nothing to do with hips. The value was chosen to stop short tokens matching inside unrelated words and has been tuned against no corpus of how athletes actually phrase a restriction.",
+        "Matching is on the movement's spoken name, never on its id, because an id's slug carries anatomy words that are not claims about the movement — matched against ids, \"avoid heavy lower body\" struck exercise_lower_body_mobility, the movement the recovery swap depends on being safe. A caller that injects no catalog gets identityDisplay, where the spoken name is the id, and that failure mode returns.",
+        "Substring matching carries no notion of negation or of body side, so \"avoid left knee loading\" restricts every movement whose name contains \"knee\" or \"loading\", both legs included. Removing too much is the right direction for a safety filter and it is still an error, visible to the athlete as movements disappearing for no reason they can see.",
+        "Nothing validates the restrictions themselves. A restriction that was mistyped, or one the caller never sent, produces no match and no warning: this rule sees only what arrives in state.avoid, and there is no signalCoverage group that would report its absence.",
+        "Applied by decide_session only, which `appliedBy` now states rather than leaving to this sentence. The plan generator, the plan change applier and the exercise catalog run their own injury filters by other mechanisms, and each is declared separately — EVD-R-010, EVD-R-011 and EVD-R-012. They are four rules rather than one because they match differently, and writing them as one would assert a consistency that does not exist."
+      ],
+      "notes": "The filter this rule describes has run on every call since the engine was written; what it did not have was an id, a stated provenance, or a place in the arbitration matrix. That matrix put `injury` at rank 1 from the start and the rank stood empty, so the one guarantee that outranks everything else was also the one the decision could not be attributed to: a session stripped of a contraindicated movement reported a recovery rule as governing, or no rule at all. Being rank 1 means this rule governs whenever it fires — but only the attribution. How large the change is stays with the combination policy, and this rule demands no intensity step of its own: it removes movements, and whatever else fired that day still sets the intensity."
+    },
+    {
+      "ruleId": "EVD-R-010",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "A high-impact restriction holds a planned run at moderate",
+      "category": "injury",
+      "appliedBy": "plan",
+      "priority": 92,
+      "basis": "internal_composite",
+      "evidence": {
+        "studyDesign": "none",
+        "recommendationStrength": "internal_heuristic"
+      },
+      "measuredQuantity": {
+        "name": "active restrictions matching the high-impact pattern",
+        "range": "0 upward",
+        "computedBy": "packages/planning/src/generatePlan.js:hasHighImpactRestriction",
+        "definition": "The restrictions of every active injury and every avoid preference are joined into one lowercased string and tested against the fixed pattern /high-impact|jump|plyo|knee/. The quantity is how many of those strings match it.",
+        "whyNoSourceIsPossible": "The pattern is a list of four words we chose. No publication has studied outcomes against \"how many of an athlete's restriction strings contain one of four substrings\", because that quantity exists nowhere but inside Evidra."
+      },
+      "thresholds": [
+        {
+          "key": "highImpactRestrictionPresent",
+          "operator": ">=",
+          "value": 1,
+          "unit": "restrictions"
+        }
+      ],
+      "effect": {
+        "decision": "adjust",
+        "intent": "protect_high_impact_restriction",
+        "intensityStepsDown": 1
+      },
+      "sources": [],
+      "contested": [],
+      "limitations": [
+        "This rule changes intensity and removes nothing. In generatePlan an active injury's restrictions do not filter the movements a session prescribes at all: the per-exercise filter reads constraints.avoidMovements, which is built from preferences of category `avoid`, while injury restrictions land in the separate constraints.restrictions. A plan generated for an athlete whose active injury names \"back squat\" still prescribes the back squat. Measured on 2026-08-09 against packages/planning/src/generatePlan.js and confirmed through the tool path, where packages/evidence/src/model.js maps constraints.injuries to context.injuries and never merges them into the avoid preferences.",
+        "The pattern is four literals. A restriction phrased \"no impact work\", \"patellar tendon\" or \"avoid running downhill\" matches none of them and the plan is generated as though nothing were wrong. It over-matches in the other direction too: \"knee\" appears in \"knee raise\", a core movement.",
+        "The effect reaches only slots of type `run` that are already at high intensity. A high-intensity lower-body strength slot in the same plan is untouched by this rule, and a jump-heavy conditioning slot would be too.",
+        "Nothing here reads how severe the injury is. `severity` arrives in the evidence, is carried into the user context, and no rule consults it.",
+        "The other place constraints.restrictions is used is not this rule: when every prescribed movement in a slot has already been filtered out for some other reason, they are passed to the catalog as excludeContraindications while it looks for a replacement. That path is EVD-R-012."
+      ],
+      "notes": "One step down rather than a swap, because the restriction here is inferred from a word in a string rather than stated against a movement: the pattern says this athlete has something going on that high-impact running would aggravate, which is grounds for taking the intensity off a run and not grounds for deleting their training week. What it is emphatically not grounds for is the impression that the plan has been made safe — see the first limitation, which is the reason this rule is written down rather than left implicit."
+    },
+    {
+      "ruleId": "EVD-R-011",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "A newly reported injury lowers intensity and removes movements across the plan",
+      "category": "injury",
+      "appliedBy": "planChange",
+      "priority": 93,
+      "basis": "internal_composite",
+      "evidence": {
+        "studyDesign": "none",
+        "recommendationStrength": "internal_heuristic"
+      },
+      "measuredQuantity": {
+        "name": "planned sessions touched by an add_injury change request",
+        "range": "0 upward",
+        "computedBy": "packages/planning/src/adaptPlan.js:applyAddInjury",
+        "definition": "For a change request of kind `add_injury`, every session in the plan is tested twice. Its intensity comes down a step if it is high and either its type is `run` or the named body region matches /knee|ankle|hip|leg|foot/. Its movements are dropped if the normalized exercise id contains a normalized entry of the request's avoidMovements, or — when the region guard is on — if the id contains any token of the region at least bodyRegionTokenMinLength characters long. The quantity is how many sessions either test changed.",
+        "whyNoSourceIsPossible": "The region list, the token length and the choice to guard runs are ours. What is counted is how many entries of a plan our own matcher rewrote, which no publication has measured anything against."
+      },
+      "thresholds": [
+        {
+          "key": "bodyRegionTokenMinLength",
+          "operator": ">=",
+          "value": 3,
+          "unit": "characters"
+        },
+        {
+          "key": "injuryAffectedSessionsPresent",
+          "operator": ">=",
+          "value": 1,
+          "unit": "sessions"
+        }
+      ],
+      "effect": {
+        "decision": "substitute",
+        "intent": "apply_injury_constraints_to_plan",
+        "intensityStepsDown": 1
+      },
+      "sources": [],
+      "contested": [],
+      "limitations": [
+        "It fires only on an explicit `add_injury` change request. Injuries already recorded in the plan's own constraints are never re-applied, so a plan carrying a restriction from the day it was generated is not swept by this rule — and by EVD-R-010's first limitation it was not swept when it was generated either.",
+        "bodyRegionTokenMinLength is 3 here and EVD-R-009 requires more than 3 on a different quantity. The two matchers therefore disagree on exactly the tokens that matter most: \"hip\" and \"leg\" can guard a plan change and cannot restrict a single session. Neither number has been tuned against any corpus, and this rule states the disagreement rather than resolving it.",
+        "The avoidMovements half has no minimum length at all: an entry of \"a\" removes every movement whose id contains the letter, which is all of them, leaving the fallback squat. Nothing validates the request.",
+        "The region guard is a fixed list of five words. A shoulder, elbow, wrist, back or rib injury turns it off entirely, so those injuries reach only the run-type intensity check and whatever avoidMovements the caller thought to send.",
+        "Intensity comes down exactly one step, to moderate, for every affected session and for every severity. A plan-wide change of this size is applied on the strength of a body region string and nothing else."
+      ],
+      "notes": "This is the only injury mechanism in Evidra that both removes movements and lowers intensity, which is why it sits above EVD-R-010 and below EVD-R-012 in priority: within the injury category the order runs from the rules that eliminate the contraindicated movement outright down to the ones that only make it easier. The ordering has never been exercised — no two of EVD-R-010, 011 and 012 can fire on the same call, because each belongs to a different tool. It is written down so that the first time they can, the answer is not invented then."
+    },
+    {
+      "ruleId": "EVD-R-012",
+      "version": "1.0.0",
+      "status": "active",
+      "title": "A movement carrying a named contraindication is not offered as a substitute",
+      "category": "injury",
+      "appliedBy": "catalog",
+      "priority": 94,
+      "basis": "internal_composite",
+      "evidence": {
+        "studyDesign": "none",
+        "recommendationStrength": "internal_heuristic"
+      },
+      "measuredQuantity": {
+        "name": "candidate movements excluded for a matching contraindication tag",
+        "range": "0 upward",
+        "computedBy": "packages/knowledge-graph/src/graph.js:collectSubstituteCandidates",
+        "definition": "Every candidate substitute carries a `contraindications` array of catalog tags. The caller's avoid list is intersected with it, and a candidate is dropped when at least contraindicationTagsMatched tags are common to both. The quantity is how many candidates were dropped that way.",
+        "whyNoSourceIsPossible": "The tags are a vocabulary we authored for this catalog and the count is of candidates our own traversal assembled. No publication has used either."
+      },
+      "thresholds": [
+        {
+          "key": "contraindicationTagsMatched",
+          "operator": ">=",
+          "value": 1,
+          "unit": "tags"
+        }
+      ],
+      "effect": {
+        "decision": "substitute",
+        "intent": "exclude_contraindicated_candidates",
+        "intensityStepsDown": 0
+      },
+      "sources": [],
+      "contested": [],
+      "limitations": [
+        "Matching is tag equality, not text matching. The caller must send a tag this catalog actually uses; \"my knee hurts\" is not one, and it excludes nothing while looking exactly like a filter that ran. This is the opposite failure mode to EVD-R-009, which matches too loosely on free text, and the two live one call apart.",
+        "It filters candidates, never the movement the athlete asked about. A movement whose every substitute is contraindicated comes back as `keep` with the original still named — correctly, since there is nothing safe to offer, and the caller has to read `reason` to learn why.",
+        "A candidate carrying no `contraindications` tags is indistinguishable from one that has been reviewed and found safe. The catalog does not record which of the two it is.",
+        "The same filter runs in searchExercises as excludeContraindications, where it is a search facet rather than a decision and emits no decisionBasis. When the plan generator reaches it while looking for a replacement movement, it records the excluded candidates under this rule in the generated plan's decisionBasis.",
+        "1 tag means any at all; no larger overlap is treated differently."
+      ],
+      "notes": "Written as its own rule rather than folded into EVD-R-009 because the two answer different questions: EVD-R-009 asks whether a movement the athlete already has on the calendar is one they said not to do, and this one asks whether a movement the catalog is about to propose is known to be bad for a joint they named. The first is about this athlete's words, the second about the catalog's tags, and the failure modes point in opposite directions."
+    }
+  ]
+}

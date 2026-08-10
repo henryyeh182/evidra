@@ -24,6 +24,7 @@ import {
   checkTokenClaims,
   wwwAuthenticate,
   bearerFromHeaders,
+  hasBearerTokenQuery,
   createJwksVerifier
 } from "./oauth.js";
 import { requestLogRecord } from "./privacy.js";
@@ -167,12 +168,26 @@ function createTransportServer(nodeCreateServer, options = {}) {
       return;
     }
 
+    if (hasBearerTokenQuery(url)) {
+      const description = "Access tokens must be sent in the Authorization header, never in the query string.";
+      if (oauth) {
+        const metadataUrl = new URL(RESOURCE_METADATA_PATH, oauth.resource).href;
+        sendJson(res, 400, { error: "invalid_request", error_description: description }, {
+          ...cors,
+          "www-authenticate": wwwAuthenticate({ resourceMetadataUrl: metadataUrl, error: "invalid_request", description })
+        });
+      } else {
+        sendJson(res, 400, { error: "invalid_request", error_description: description }, cors);
+      }
+      return;
+    }
+
     if (oauth) {
       const metadataUrl = new URL(RESOURCE_METADATA_PATH, oauth.resource).href;
-      const deny = (status, error, description) => {
+      const deny = (status, error, description, scope) => {
         sendJson(res, status, { error, error_description: description }, {
           ...cors,
-          "www-authenticate": wwwAuthenticate({ resourceMetadataUrl: metadataUrl, error, description })
+          "www-authenticate": wwwAuthenticate({ resourceMetadataUrl: metadataUrl, error, description, scope })
         });
       };
 
@@ -197,7 +212,9 @@ function createTransportServer(nodeCreateServer, options = {}) {
 
       const verdict = checkTokenClaims(claims, oauth);
       if (!verdict.ok) {
-        deny(verdict.status, verdict.error, verdict.description);
+        deny(verdict.status, verdict.error, verdict.description, verdict.error === "insufficient_scope"
+          ? oauth.requiredScopes.join(" ")
+          : undefined);
         return;
       }
       // OAuth `sub` is the cross-provider identity boundary. ChatGPT, Claude

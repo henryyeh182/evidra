@@ -1,0 +1,101 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Pacevera Fitness Decision API",
+    "version": "v1",
+    "description": "Stateless REST contract skeleton. Evidence and caller-held plans are transient request input, not hosted resources."
+  },
+  "servers": [{ "url": "https://api.pacevera.com" }],
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/v1/fitness-state/assess": {
+      "post": {
+        "operationId": "assessFitnessState",
+        "x-mcp-tool": "assess_fitness_state",
+        "requestBody": { "$ref": "#/components/requestBodies/EvidenceRequest" },
+        "responses": { "200": { "$ref": "#/components/responses/FitnessState" }, "401": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } }
+      }
+    },
+    "/v1/session-decisions": {
+      "post": {
+        "operationId": "decideSession",
+        "x-mcp-tool": "decide_session",
+        "requestBody": { "$ref": "#/components/requestBodies/SessionDecisionRequest" },
+        "responses": { "200": { "$ref": "#/components/responses/SessionDecision" }, "401": { "$ref": "#/components/responses/Problem" }, "409": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } }
+      }
+    },
+    "/v1/exercise-substitutions/decide": {
+      "post": {
+        "operationId": "decideExerciseSubstitution",
+        "x-mcp-tool": "decide_exercise_substitution",
+        "requestBody": { "$ref": "#/components/requestBodies/JsonRequest" },
+        "responses": { "200": { "$ref": "#/components/responses/Decision" }, "401": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } }
+      }
+    },
+    "/v1/plans": {
+      "post": {
+        "operationId": "generatePlan",
+        "x-mcp-tool": "generate_plan",
+        "requestBody": { "$ref": "#/components/requestBodies/JsonRequest" },
+        "responses": { "200": { "$ref": "#/components/responses/Plan" }, "401": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } }
+      }
+    },
+    "/v1/plans/{planId}/previews": {
+      "post": {
+        "operationId": "previewPlanAdjustment",
+        "x-mcp-tool": "preview_adjust_plan",
+        "parameters": [{ "$ref": "#/components/parameters/PlanId" }],
+        "requestBody": { "$ref": "#/components/requestBodies/PlanChangeRequest" },
+        "responses": { "200": { "$ref": "#/components/responses/PlanPreview" }, "401": { "$ref": "#/components/responses/Problem" }, "409": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } }
+      }
+    },
+    "/v1/plans/{planId}/commits": {
+      "post": {
+        "operationId": "commitPlanAdjustment",
+        "x-mcp-tool": "commit_adjust_plan",
+        "parameters": [{ "$ref": "#/components/parameters/PlanId" }, { "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": { "$ref": "#/components/requestBodies/PlanCommitRequest" },
+        "responses": { "200": { "$ref": "#/components/responses/Plan" }, "401": { "$ref": "#/components/responses/Problem" }, "409": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT", "description": "OAuth access token; header only. Validate issuer, audience/resource, expiry, not-before, signature, and scope." }
+    },
+    "parameters": {
+      "PlanId": { "name": "planId", "in": "path", "required": true, "schema": { "type": "string" } },
+      "IdempotencyKey": { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string", "minLength": 1, "maxLength": 255 } }
+    },
+    "requestBodies": {
+      "JsonRequest": { "required": true, "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
+      "EvidenceRequest": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EvidenceRequest" } } } },
+      "SessionDecisionRequest": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SessionDecisionRequest" } } } },
+      "PlanChangeRequest": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlanChangeRequest" } } } },
+      "PlanCommitRequest": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlanCommitRequest" } } } }
+    },
+    "responses": {
+      "FitnessState": { "description": "Computed state; caller keeps any record.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FitnessState" } } } },
+      "Decision": { "description": "Decision/Action/Reason result.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Decision" } } } },
+      "SessionDecision": { "description": "Scheduled-session decision.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SessionDecision" } } } },
+      "Plan": { "description": "Caller-held plan snapshot.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Plan" } } } },
+      "PlanPreview": { "description": "Caller-held plan preview and patch.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlanPreview" } } } },
+      "Problem": { "description": "No Evidence or credentials are echoed.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+    },
+    "schemas": {
+      "EvidenceRequest": { "type": "object", "required": ["evidence"], "properties": { "evidence": { "type": "object", "description": "The Fitness Evidence Model in schemas/evidence/fitness-evidence.json; transient input only." }, "userId": { "type": "string", "description": "Optional caller label, not authentication identity." }, "date": { "type": "string", "format": "date" } } },
+      "SessionDecisionRequest": { "allOf": [{ "$ref": "#/components/schemas/EvidenceRequest" }, { "type": "object", "properties": { "scheduledSession": { "type": "object" }, "proposedSession": { "type": ["object", "null"] }, "plan": { "type": ["object", "null"] }, "availableMinutes": { "type": "number" } } }] },
+      "PlanChangeRequest": { "type": "object", "required": ["plan", "changeRequest"], "properties": { "plan": { "type": "object", "description": "Current caller-held plan snapshot." }, "changeRequest": { "type": "object" }, "baseVersion": { "type": "string" } } },
+      "PlanCommitRequest": { "type": "object", "required": ["plan", "preview"], "properties": { "plan": { "type": "object" }, "preview": { "type": "object" }, "baseVersion": { "type": "string" } } },
+      "DecisionBasis": { "type": "object", "description": "Engine/rule-library trace; it does not contain raw Evidence.", "additionalProperties": true },
+      "Decision": { "type": "object", "required": ["decision", "action", "reason", "confidence", "limits"], "properties": { "decision": { "type": "string" }, "action": { "type": "object" }, "reason": { "type": "array", "items": { "type": "string" } }, "confidence": { "type": "string", "enum": ["low", "medium", "high"] }, "signalCoverage": { "type": "object" }, "limits": { "type": "array", "items": { "type": "string" } }, "decisionBasis": { "$ref": "#/components/schemas/DecisionBasis" } } },
+      "SessionDecision": { "allOf": [{ "$ref": "#/components/schemas/Decision" }, { "type": "object", "properties": { "decisionId": { "type": "string" }, "planId": { "type": ["string", "null"] } } }] },
+      "FitnessState": { "type": "object", "required": ["confidence", "signalCoverage", "provenance"], "properties": { "confidence": { "type": "string" }, "signalCoverage": { "type": "object" }, "provenance": { "type": "object" } } },
+      "Plan": { "type": "object", "required": ["planId"], "properties": { "planId": { "type": "string" }, "version": { "type": "string" }, "decisionBasis": { "$ref": "#/components/schemas/DecisionBasis" } } },
+      "PlanPreview": { "type": "object", "required": ["previewId", "planId", "baseVersion", "diff"], "properties": { "previewId": { "type": "string" }, "planId": { "type": "string" }, "baseVersion": { "type": "string" }, "diff": { "type": "array" }, "decisionBasis": { "$ref": "#/components/schemas/DecisionBasis" } } },
+      "ProblemDetails": { "type": "object", "required": ["type", "title", "status", "code", "detail", "requestId"], "properties": { "type": { "type": "string", "format": "uri-reference" }, "title": { "type": "string" }, "status": { "type": "integer" }, "code": { "type": "string" }, "detail": { "type": "string" }, "requestId": { "type": "string" }, "fieldErrors": { "type": "array", "items": { "type": "object" } } }, "additionalProperties": false }
+    }
+  },
+  "x-privacy": { "evidenceStorage": "none", "logs": ["route", "method", "status", "duration", "bounded request size"], "forbiddenLogs": ["request body", "tool arguments", "Evidence", "health values", "tokens", "JWT claims", "stable user identifiers"] },
+  "x-sdk-bindings": ["typescript", "python", "swift", "kotlin"]
+}

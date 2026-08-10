@@ -35,7 +35,7 @@ npm run review:phase
 |---|---|---|
 | G0 | 五份 repo 內的真相文件都在（memory 不是 repo 檔案，由步驟 0 人工把關） | — |
 | G1 | 文件寫的數字＝工具跑出來的數字 | 已漂移過兩次 |
-| G2 | 對外 tool ≤10 且全在決策白名單 | 原則 5 · D-TOOL · R2 |
+| G2 | 對外 tool ≤10 且全在決策或 bounded-support 白名單 | 原則 5 · D-TOOL · R2 |
 | G2b | 每個對外 tool 說得出使用者會怎麼問，並說明證據從哪來 | 分發面——host 在一堆 connector 裡挑，靠的就是描述 |
 | G3 | 每個 tool 的輸出契約帶得動自我解釋 | 承諾 A |
 | G4 | 五種決策型別在引擎／契約／user-journey 三處一致 | Decision ≠ Recommendation |
@@ -58,7 +58,9 @@ G11 與其他十二條性質不同：它不比對文件與現況，它跑決策�
 npm test && npm run eval && npm run audit:graph
 ```
 
-**新增對外 tool 時**：白名單在 `scripts/review-phase.js` 的 `APPROVED_DECISION_TOOLS`。
+**新增對外決策 tool 時**：白名單在 `scripts/review-phase.js` 的 `APPROVED_DECISION_TOOLS`；
+`get_evidence_coverage`、`explain_decision`、`submit_outcome` 是已明確界定的 bounded support
+白名單，不是 recommendation surface。其他新 tool 仍須先過 GPT-6 判準。
 改它之前先過下面的 GPT-6 判準——白名單是刻意要人動手改的，不是自動同步的。
 
 ## 步驟 2 — 判斷題（機械驗不到的那半）

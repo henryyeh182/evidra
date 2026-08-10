@@ -225,6 +225,7 @@ export const outputSchemas = {
   evidra_decide_session: {
     "type": "object",
     "properties": {
+      "decisionId": { "type": "string" },
       "userId": {
         "type": "string"
       },
@@ -543,6 +544,7 @@ export const outputSchemas = {
       }
     },
     "required": [
+      "decisionId",
       "evidence",
       "state",
       "decision",
@@ -558,6 +560,7 @@ export const outputSchemas = {
   evidra_decide_exercise_substitution: {
     "type": "object",
     "properties": {
+      "decisionId": { "type": "string" },
       "evidence": {
         "type": "array"
       },
@@ -672,6 +675,7 @@ export const outputSchemas = {
       }
     },
     "required": [
+      "decisionId",
       "evidence",
       "decision",
       "action",
@@ -684,6 +688,7 @@ export const outputSchemas = {
   evidra_generate_plan: {
     "type": "object",
     "properties": {
+      "decisionId": { "type": "string" },
       "id": {
         "type": "string"
       },
@@ -832,6 +837,7 @@ export const outputSchemas = {
       }
     },
     "required": [
+      "decisionId",
       "id",
       "userId",
       "goalId",
@@ -852,6 +858,7 @@ export const outputSchemas = {
   evidra_preview_adjust_plan: {
     "type": "object",
     "properties": {
+      "decisionId": { "type": "string" },
       "previewId": {
         "type": "string"
       },
@@ -893,6 +900,7 @@ export const outputSchemas = {
       }
     },
     "required": [
+      "decisionId",
       "previewId",
       "planId",
       "baseVersion",
@@ -906,6 +914,8 @@ export const outputSchemas = {
   evidra_commit_adjust_plan: {
     "type": "object",
     "properties": {
+      "decisionId": { "type": "string" },
+      "previewDecisionId": { "type": ["string", "null"] },
       "planId": {
         "type": "string"
       },
@@ -978,6 +988,7 @@ export const outputSchemas = {
       }
     },
     "required": [
+      "decisionId",
       "planId",
       "version",
       "status",

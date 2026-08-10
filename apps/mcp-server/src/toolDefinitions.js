@@ -187,7 +187,7 @@ export const toolDefinitions = [
     description: "Score the supplied evidence for signal coverage and quality, and list exactly what is missing. This tool never invents a reading or treats an unstated quality value as measured.",
     inputSchema: {
       type: "object",
-      properties: { evidence: EVIDENCE_INPUT, userId: { type: "string", description: "User identifier." } },
+      properties: { evidence: { type: "object", description: "Caller-supplied normalized fitness evidence." }, userId: { type: "string", description: "User identifier." } },
       required: ["evidence"]
     }
   },

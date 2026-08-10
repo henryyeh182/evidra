@@ -10,7 +10,7 @@
  *
  *   1. Every module under `apps/` and `packages/` is bundled and minified into
  *      one ESM file, so the archive carries no module tree to read off.
- *   2. `packages/rules/data/session-rules.json` is inlined as a string, so no
+ *   2. `rule-packages/base_rules/rules/session-rules.json` is inlined as a string, so no
  *      file by that name travels inside the bundle at all.
  *
  * What this does NOT claim: minification is not encryption. It raises the cost
@@ -49,7 +49,7 @@ const layoutShims = {
     }));
 
     pluginBuild.onLoad({ filter: /^evidra:rule-library$/, namespace: "evidra-inline" }, () => {
-      const json = readFileSync(join(rootDir, "packages/rules/data/session-rules.json"), "utf8");
+      const json = readFileSync(join(rootDir, "rule-packages/base_rules/rules/session-rules.json"), "utf8");
       // Parsed and re-stringified so a malformed library fails the build here
       // rather than at the installed server's first decision.
       const compact = JSON.stringify(JSON.parse(json));
@@ -68,7 +68,7 @@ const layoutShims = {
     }));
 
     pluginBuild.onLoad({ filter: /^evidra:engine-parameters$/, namespace: "evidra-inline" }, () => {
-      const json = readFileSync(join(rootDir, "packages/rules/data/engine-parameters.json"), "utf8");
+      const json = readFileSync(join(rootDir, "rule-packages/base_rules/rules/engine-parameters.json"), "utf8");
       const compact = JSON.stringify(JSON.parse(json));
       return {
         contents: `export const parameterSourceJson = ${JSON.stringify(compact)};`,

@@ -6,6 +6,22 @@
 > 與 implementation plan 轉成產品決策稿。它不取代工程 roadmap；它回答的是：先服務誰、
 > 先解哪個問題、什麼叫做隱私承諾成立，以及 pacevera.com 應該如何把產品講清楚。
 
+## 審查更新（2026-08-10）
+
+本次以目前 repository 實作與測試結果校正文案，而不是只沿用原先 roadmap 的假設：
+
+- Decision Trace Registry 已全面接入四個原先列為待完成的工具：
+  `decide_exercise_substitution`、`generate_plan`、`preview_adjust_plan`、
+  `commit_adjust_plan`。它們共用同一個 `decisionRecords` writer，均回傳
+  `decisionId`／`decisionBasis`，並由 `explain_decision` 回查統一的
+  Decision → Rule → Evidence → Source → Version trace。
+- 目前 registry 仍是 process-local、bounded／TTL store；這代表 P2 的 trace
+  契約已完成，但 durable adapter、user-controlled private engine 與跨重啟持久化
+  仍屬後續工作，不能因此宣稱已完成 P1 或 private data plane。
+- 因此，下一個工程待完成項目不是再次接入 Decision Trace，而是
+  **R0 — Rule Package boundary**：把現有 Rule Library 封裝成可驗證、可相容性檢查、
+  可 rollback 的 `base_rules` package，並保留 `running_rules`、`strength_rules` 的邊界。
+
 ## 一句話定位
 
 **Pacevera 讓你用自己熟悉的 AI，根據你持續累積的身體證據，做出今天可執行、可解釋的訓練決策；原始 Evidence 保留在你控制的裝置或環境裡。**
@@ -136,13 +152,30 @@ MCP `2026-07-28` 的 stateless HTTP 對 remote scaling 有幫助，但它解決�
 
 完成標準：換對話視窗／換 host 後，仍能針對同一人的連續狀態回答；任何數字都能追到來源、時間窗與規則版本。
 
-### P3 — 受控 mobile access
+#### P2：Decision Trace Registry 全面接入（已完成契約與目前實作）
+
+所有對外 decision tool 現已回傳 `decisionId`，並透過同一個 registry writer 由
+`explain_decision` 讀取統一的 Decision → Rule → Evidence → Source → Version trace。
+四個 decision tool 都已完成接入，且已有 contract／rule-coverage／golden case 與
+commit 關聯測試。`commit_adjust_plan` 沿用 preview trace，不重新計算；沒有 governing
+rule 時也保存空的 rule 節點，明確表示「已評估但沒有規則觸發」。
+
+目前保留的邊界：registry 預設為 process-local、最多 256 筆、TTL 15 分鐘；hosted
+mode 仍維持 bounded／stateless。durable registry adapter、跨重啟保存、user ownership
+與本機刪除／匯出體驗，應在 P1 local private engine 中實作，不能把目前記憶體 registry
+誤寫成完整的 private history。
+
+### P3 — 受控 mobile access（本機安全垂直切片已完成；production 仍 blocked）
 
 目標：讓手機可用，但不犧牲 P0 的資料邊界。
 
 - 先做 device pairing、短期 access token、明確「目前連到哪台裝置」與一鍵撤銷。
+- 本 repository 已完成 process-local authorization-server adapter：一次性
+  pairing code、audience-bound JWT、scope／expiry、refresh rotation、device
+  unlink、access-token revocation 與 replay／log-redaction 測試。這是可測試的
+  private-development slice，不是 hosted authorization service。
 - 評估官方／標準化 tunnel 能否被所有目標 host 使用；不能就先把 mobile path 定位為 private VPC 或 hosted remote。
-- 若開 hosted remote，先完成 authorization server、JWKS／issuer／audience／scope、HTTPS、payload redaction、DPA 與新的 privacy policy。
+- 若開 hosted remote，仍須完成 production authorization server、JWKS／issuer／audience／scope、HTTPS、payload redaction、DPA 與新的 privacy policy。
 - hosted remote 只接最小化 Evidence；不直接連 Apple／Google／Garmin，也不持有 provider refresh token。
 - 用產品 UI 清楚標示：`Private local`、`Private deployment`、`Hosted transient`。
 
@@ -152,10 +185,28 @@ MCP `2026-07-28` 的 stateless HTTP 對 remote scaling 有幫助，但它解決�
 
 目標：從個人隱私價值延伸到醫療／隊伍／企業的資料治理價值。
 
+P4 的第一個工程切片是 **G0 — Governance contract**：先固定「誰能看哪位
+athlete 的哪一層資料」與「稽核事件能記錄什麼」，再接入 SSO、VPC／on-prem
+部署與 durable audit store。G0 不接受 caller 自己傳入的 tenant 作為信任來源，
+也不把 raw Evidence 放入團隊輸出或 audit metadata。
+
 - tenant／athlete isolation、角色權限、教練只看必要摘要、不預設看 raw payload。
 - 私有 VPC／on-prem deployment、SSO、audit log、retention／deletion policy、資料區域選擇。
 - 團隊層級只輸出 readiness／availability／decision summary，保留 athlete 的細節控制權。
 - 提供 exportable decision trace，方便教練與醫療合作方審閱，但不變成醫療診斷系統。
+
+G0 的角色與資料面契約：`athlete` 只能讀自己的 self scope；`coach`、`clinician`
+與 `team_admin` 只能讀 verified principal 所列的 athlete scope，且團隊工具預設
+只產生 readiness／availability／decision summary；`auditor` 只讀 trace／audit，
+不讀 raw Evidence。每個 principal 必須帶 `tenant_id`、`sub`、`roles`，跨 tenant
+或 scope 外的請求 fail closed。
+
+G0 完成標準：policy contract tests 覆蓋 self／assigned athlete／cross-tenant／
+role denial；team summary 不含 raw payload；audit event 固定記錄 tenant、actor、
+action、resource、outcome，並對 token、claims、Evidence 與 health metrics 做
+redaction。G0 完成後，G1 才把 verified principal 接到 MCP request context 與
+SQLite／Postgres repository 的 row-level scope；G2 再做 SSO／SCIM、retention、
+deletion 與部署控制面。
 
 完成標準：一個隊伍能在自己的環境管理多位運動員，且任一角色的可見範圍都能被測試與稽核。
 
@@ -379,13 +430,32 @@ Triggered rules ──→ conflicts ──→ Priority Matrix arbitration
 
 ### 交付順序與完成標準
 
-1. **R0 — package boundary**：建立 `base_rules` manifest／schema，預留 `running_rules`、`strength_rules`，將現有 Rule Library 對應到 package；完成 package 與 Engine 的版本／相容性檢查。
+1. **R0 — package boundary（下一個待完成項目）**：建立 `base_rules` manifest／schema，預留 `running_rules`、`strength_rules`，將現有 Rule Library 對應到 package；完成 package 與 Engine 的版本／相容性檢查。
 2. **R1 — update and review**：完成 archive／`.mcpb` 匯入、dry-run、checksum、active pointer、rollback，以及第一筆完整 `RR-...` 審核紀錄。
 3. **R2 — evidence uplift**：完成首批 5–10 個 evidence packets，至少讓一批現有 Rule 從 `expert_consensus` 升級，並把限制與適用族群寫入 rule explanation。
 4. **R3 — regression gate**：固定 golden／boundary schema，將更新前 Harness 與 Graph diff 納入 release gate；把已完成的 100–500 筆 Decision Corpus 分成 replay corpus 而非假裝成 ground truth。
 5. **R4 — graph viewer**：提供本機 Decision Graph viewer，能定位一次決策為何觸發、為何被壓過、最後如何形成 from→to。
 
 這組 R0–R4 完成後，才把 Rule Package 當成可獨立發布的產品資產。下一步才是考慮 signed package、遠端 registry、分批 rollout 與自動更新；在此之前，手動匯入加上可 rollback 的本機流程已足以支撐 Free tier 的 `base_rules` 與 Pro／Enterprise 未來的 domain package 邊界。
+
+## 下一個新對話的實作任務
+
+新對話直接實作 **R0 — Rule Package boundary**，範圍固定如下：
+
+1. 在 repository 建立 `rule-packages/base_rules/`、`rule-packages/running_rules/`、
+   `rule-packages/strength_rules/` 與 `rule-packages/schemas/` 的最小目錄及 README／manifest。
+2. 將現有 `packages/rules/data` 的 rule 對應到 `base_rules`，但先保持 runtime 行為不變；
+   Engine 不應再硬編碼資料路徑。
+3. 建立 manifest／schema validation，至少檢查 package identity、semver、Rule ID 唯一性、
+   engine compatibility、tier、引用檔案與 content checksum。
+4. 補 package-to-runtime／Decision Harness contract tests，證明既有 decision output、
+   `decisionBasis`、`decisionId` 與 `explain_decision` 行為沒有回歸。
+5. 不在此任務實作 archive install、active pointer、rollback、evidence uplift 或 remote
+   registry；那些是 R1–R3，避免擴大本次變更面。
+
+完成條件：`base_rules` 有可驗證 manifest，現有測試與 release review gates 全綠，且能在
+不改變既有決策結果的前提下由 package 載入 Rule Library。完成後再開 R1，實作 dry-run、
+checksum、active pointer 與 rollback。
 
 ## 技術依據
 

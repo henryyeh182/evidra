@@ -219,10 +219,10 @@ Form 3 是核心宗旨要的那個版本，不是選配。它排在後面是因�
 
 | 項目 | 現況 |
 |---|---|
-| 對外 tool | 6 個（`tools/list` 實測） |
+| 對外 tool | 9 個：6 個決策 tool ＋ 3 個 bounded trace/coverage/outcome support tool（`tools/list` 實測） |
 | 資料標準化 | `packages/connectors` 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP，Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 家。前四家照真實匯出檔寫，Oura／WHOOP 照兩家自己的 OpenAPI 寫、尚未對過真實回應 |
 | 確定性計算 | `semantic-engine`（readiness／分肌群疲勞）· `training-load`（ATL/CTL/TSB/ACWR）· `decision-engine`（from→to）· `planning` · `knowledge-graph`（889 節點 / 5,785 邊） |
-| 測試 | 453 tests、eval 20 golden cases 全綠 |
+| 測試 | 470 tests、eval 20 golden cases 全綠 |
 | 傳輸 | stdio ✅ · Streamable HTTP ✅ |
 | OAuth | resource-server、JWKS/JWT signature、issuer/audience/expiry/scope checks 與 HTTPS config skeleton 已有；**沒有真正 authorization server、公開部署與 hosted privacy policy** → 仍不可宣稱 production |
 | 協定版本 | `2025-06-18`；最新規格是 `2026-07-28`（stateless），升級走 dual-era |
@@ -236,6 +236,7 @@ source schema 與匯出形狀 scenario **四家齊備**（Garmin／Google Health
 `generate_plan`、`preview_adjust_plan`／`commit_adjust_plan` 與
 `decide_exercise_substitution` 也帶這個欄位，各自對應 EVD-R-010／011／012；
 沒有規則開火時欄位照樣回傳、內容為空，這樣呼叫端才分得出「沒有規則適用」與「這條路徑不檢查」。
+v0.4.2 的 `pacevera.mcpb` SHA-256 是 `cd5a05403f958c3533794b1c6258d24fe413dcbe6a911439d4b714316e8f87eb`，也列在 release notes。
 **那三條規則各自的 `limitations` 寫明它們不做什麼**——例如計畫產生器的傷病限制
 不會從課表移除任何動作。ATL／CTL、TSB、recovery 權重、readiness 懲罰係數、
 phase multiplier 與 return ramp 也已收進 `engine-parameters.json`；值未改，缺來源的狀態改成資料可稽核。
@@ -308,7 +309,7 @@ GUI 啟動的 app 拿到的 PATH 很精簡，設定檔裡**不能寫裸的 `node
 ## 指令
 
 ```bash
-npm test                    # 453 tests
+npm test                    # 470 tests
 npm run eval                # golden set 計分（tool 輸出契約）
 npm run harness             # Decision Harness（決策鏈本身；改規則或引擎之後必跑）
 npm run review:phase        # 階段完成審查（宣告「做完了」之前必跑）

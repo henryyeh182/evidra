@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pacevera.dev/schemas/rule-package.schema.json",
+  "title": "Pacevera rule package manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["packageId", "version", "schemaVersion", "status", "tier", "engineCompatibility", "rules", "contentFiles", "contentChecksum"],
+  "properties": {
+    "packageId": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "schemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "status": { "enum": ["draft", "released", "deprecated"] },
+    "tier": { "enum": ["base", "domain"] },
+    "engineCompatibility": {
+      "type": "object", "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "max": { "type": "string", "pattern": "^<2\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": false, "required": ["id", "path"], "properties": { "id": { "type": "string", "pattern": "^EVD-R-[0-9]{3}$" }, "path": { "type": "string" } } }
+    },
+    "contentFiles": { "type": "array", "items": { "type": "string" } },
+    "contentChecksum": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "reviewRecord": { "type": "string" }
+  }
+}

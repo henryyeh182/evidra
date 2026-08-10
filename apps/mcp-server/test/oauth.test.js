@@ -11,6 +11,7 @@ import {
   checkTokenClaims,
   wwwAuthenticate,
   bearerFromHeaders,
+  hasBearerTokenQuery,
   verifyJwtSignature,
   createJwksVerifier
 } from "../src/oauth.js";
@@ -73,6 +74,7 @@ test("expiry and not-before are honoured, with a little clock leeway", () => {
   // Inside the leeway window a barely-expired token still passes; clocks drift.
   assert.equal(checkTokenClaims(claims({ exp: NOW - 5 }), { resource: RESOURCE, now: NOW }).ok, true);
   assert.equal(checkTokenClaims(claims({ nbf: NOW + 600 }), { resource: RESOURCE, now: NOW }).ok, false);
+  assert.equal(checkTokenClaims(claims({ nbf: "not-a-number" }), { resource: RESOURCE, now: NOW }).ok, false);
 });
 
 test("an unknown issuer is not ours to interpret", () => {
@@ -98,6 +100,17 @@ test("missing scope is 403, not 401 — re-authorizing would not help", () => {
   assert.match(verdict.description, /fitness\.decide/);
 });
 
+test("scope must use OAuth's space-delimited string form", () => {
+  const verdict = checkTokenClaims(claims({ scope: ["fitness.decide"] }), {
+    resource: RESOURCE,
+    requiredScopes: ["fitness.decide"],
+    now: NOW
+  });
+  assert.equal(verdict.ok, false);
+  assert.equal(verdict.status, 401);
+  assert.equal(verdict.error, "invalid_token");
+});
+
 test("WWW-Authenticate carries the metadata URL a first-time client needs", () => {
   const header = wwwAuthenticate({
     resourceMetadataUrl: "https://evidra.example/.well-known/oauth-protected-resource",
@@ -109,11 +122,24 @@ test("WWW-Authenticate carries the metadata URL a first-time client needs", () =
   assert.match(header, /error="invalid_token"/);
 });
 
+test("WWW-Authenticate can tell a client which scope is required", () => {
+  const header = wwwAuthenticate({
+    resourceMetadataUrl: "https://evidra.example/.well-known/oauth-protected-resource",
+    error: "insufficient_scope",
+    description: "Missing scope: fitness.decide",
+    scope: "fitness.decide"
+  });
+  assert.match(header, /scope="fitness\.decide"/);
+});
+
 test("tokens are read from the header only — a query string is not a place for a secret", () => {
   assert.equal(bearerFromHeaders({ authorization: "Bearer abc" }), "abc");
   assert.equal(bearerFromHeaders({ authorization: "Basic abc" }), null);
   assert.equal(bearerFromHeaders({ authorization: "Bearer " }), null);
   assert.equal(bearerFromHeaders({}), null);
+  assert.equal(hasBearerTokenQuery("https://evidra.example/mcp?access_token=abc"), true);
+  assert.equal(hasBearerTokenQuery("https://evidra.example/mcp?token=abc"), true);
+  assert.equal(hasBearerTokenQuery("https://evidra.example/mcp?date=2026-08-10"), false);
 });
 
 test("claims can be read without being trusted", () => {

@@ -249,6 +249,9 @@ export function checkTokenClaims(claims, config) {
   if (claims.exp + leeway < now) {
     return { ok: false, status: 401, error: "invalid_token", description: "Token has expired." };
   }
+  if (claims.nbf !== undefined && !Number.isFinite(claims.nbf)) {
+    return { ok: false, status: 401, error: "invalid_token", description: "Token has no valid not-before time." };
+  }
   if (typeof claims.nbf === "number" && claims.nbf - leeway > now) {
     return { ok: false, status: 401, error: "invalid_token", description: "Token is not valid yet." };
   }
@@ -281,7 +284,10 @@ export function checkTokenClaims(claims, config) {
   }
 
   if (config.requiredScopes?.length) {
-    const granted = String(claims.scope || "").split(/\s+/).filter(Boolean);
+    if (claims.scope !== undefined && typeof claims.scope !== "string") {
+      return { ok: false, status: 401, error: "invalid_token", description: "Token scope has an invalid format." };
+    }
+    const granted = (claims.scope || "").split(/\s+/).filter(Boolean);
     const missing = config.requiredScopes.filter((scope) => !granted.includes(scope));
     if (missing.length > 0) {
       // 403, not 401: the caller is who they say they are, they just are not
@@ -305,12 +311,27 @@ export function checkTokenClaims(claims, config) {
  * The `resource_metadata` parameter is the whole point — it is how a client
  * that has never seen this server discovers where to authorize.
  */
-export function wwwAuthenticate({ resourceMetadataUrl, error, description }) {
+export function wwwAuthenticate({ resourceMetadataUrl, error, description, scope }) {
   const quote = (value) => String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/[\r\n]/g, " ");
   const parts = [`Bearer resource_metadata="${quote(resourceMetadataUrl)}"`];
   if (error) parts.push(`error="${quote(error)}"`);
   if (description) parts.push(`error_description="${quote(description)}"`);
+  if (scope) parts.push(`scope="${quote(scope)}"`);
   return parts.join(", ");
+}
+
+/**
+ * Access tokens belong in the Authorization header. Reject the conventional
+ * token parameter names explicitly so a caller cannot accidentally make a
+ * proxy, browser, or tracing system record a credential in a URL.
+ */
+export function hasBearerTokenQuery(url) {
+  const parsed = url instanceof URL ? url : new URL(String(url), "http://localhost");
+  const tokenKeys = new Set(["access_token", "authorization", "bearer", "id_token", "refresh_token", "token"]);
+  for (const key of parsed.searchParams.keys()) {
+    if (tokenKeys.has(key.toLowerCase())) return true;
+  }
+  return false;
 }
 
 /**

@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"fitness-mcp/tools/submit_outcome.input","title":"submit_outcome input","type":"object","properties":{"caseId":{"type":"string"},"outcome":{"type":"object"}},"required":["caseId","outcome"]}

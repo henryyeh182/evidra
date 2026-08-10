@@ -76,6 +76,9 @@ test("the local remote integration rejects forged, expired, wrong-audience and u
       });
       assert.equal(response.status, item.status, item.name);
       assert.equal((await response.text()).includes(item.value), false, `${item.name} token leaked in response`);
+      if (item.name === "missing scope") {
+        assert.match(response.headers.get("www-authenticate"), /scope="fitness\.decide"/);
+      }
     }
   });
 });
@@ -87,7 +90,8 @@ test("a valid token can carry synthetic evidence through the stateless remote en
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 6, method: "ping" })
     });
-    assert.equal(queryOnly.status, 401, "query-string tokens must never authenticate");
+    assert.equal(queryOnly.status, 400, "query-string tokens must never authenticate");
+    assert.match(await queryOnly.text(), /Authorization header/);
 
     const accessToken = token();
     const response = await fetch(`${base}/mcp`, {

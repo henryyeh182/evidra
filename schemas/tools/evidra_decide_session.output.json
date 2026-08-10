@@ -4,6 +4,9 @@
   "title": "evidra_decide_session output (five-layer decision)",
   "type": "object",
   "properties": {
+    "decisionId": {
+      "type": "string"
+    },
     "userId": {
       "type": "string"
     },
@@ -350,6 +353,7 @@
     }
   },
   "required": [
+    "decisionId",
     "evidence",
     "state",
     "decision",
