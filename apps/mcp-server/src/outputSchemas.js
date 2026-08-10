@@ -225,6 +225,7 @@ export const outputSchemas = {
   evidra_decide_session: {
     "type": "object",
     "properties": {
+      "decisionId": { "type": "string" },
       "userId": {
         "type": "string"
       },
@@ -543,6 +544,7 @@ export const outputSchemas = {
       }
     },
     "required": [
+      "decisionId",
       "evidence",
       "state",
       "decision",

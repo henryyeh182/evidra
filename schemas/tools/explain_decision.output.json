@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"fitness-mcp/tools/explain_decision.output","title":"explain_decision output","type":"object","properties":{"decisionId":{"type":"string"},"createdAt":{"type":"number"},"userId":{"type":["string","null"]},"evidenceSource":{"type":"string"},"trace":{"type":"object"}},"required":["decisionId","createdAt","trace"]}

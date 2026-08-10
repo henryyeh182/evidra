@@ -100,6 +100,9 @@ test("MCP server lists core fitness tools", async () => {
   const toolNames = response.result.tools.map((tool) => tool.name);
   assert.deepEqual(toolNames, [
     "assess_fitness_state",
+    "get_evidence_coverage",
+    "explain_decision",
+    "submit_outcome",
     "decide_session",
     "decide_exercise_substitution",
     "generate_plan",
@@ -114,6 +117,46 @@ test("MCP server lists core fitness tools", async () => {
                          "recommend_workout", "get_training_context"]) {
     assert.ok(!toolNames.includes(retired), `${retired} should no longer be advertised`);
   }
+});
+
+const COVERAGE_EVIDENCE = {
+  healthMetrics: [
+    { type: "sleep_duration_hours", value: 7, recordedAt: "2026-08-10T07:00:00Z", source: "manual", basis: "user_reported" }
+  ],
+  workouts: [
+    { startedAt: "2026-08-09T10:00:00Z", durationMinutes: 30, type: "run", trainingLoad: 25, muscleGroups: ["legs"] }
+  ]
+};
+
+async function callNewTool(name, arguments_) {
+  const response = await handleJsonRpcMessage(JSON.stringify({
+    jsonrpc: "2.0", id: Math.random(), method: "tools/call", params: { name, arguments: arguments_ }
+  }));
+  return JSON.parse(response.result.content[0].text);
+}
+
+test("new coverage and outcome tools return explicit, bounded contracts", async () => {
+  const coverage = await callNewTool("get_evidence_coverage", { userId: "u1", evidence: COVERAGE_EVIDENCE });
+  assert.equal(coverage.coverageScore, 33);
+  assert.equal(coverage.quality, "high");
+  assert.ok(coverage.missing.includes("hrv_ms"));
+
+  const first = await callNewTool("submit_outcome", { caseId: "case_1", outcome: { status: "completed" } });
+  const second = await callNewTool("submit_outcome", { caseId: "case_1", outcome: { status: "skipped" } });
+  assert.equal(first.persistence, "process_local");
+  assert.equal(second.totalForCase, 2);
+});
+
+test("a decision can be explained using its returned decisionId", async () => {
+  const result = await callNewTool("decide_session", {
+    userId: "u1",
+    evidence: COVERAGE_EVIDENCE,
+    scheduledSession: { focus: "easy run", type: "run", durationMinutes: 30, intensity: "moderate" }
+  });
+  assert.match(result.decisionId, /^dec_/);
+  const explanation = await callNewTool("explain_decision", { decisionId: result.decisionId });
+  assert.equal(explanation.decisionId, result.decisionId);
+  assert.ok(explanation.trace.decisionBasis);
 });
 
 test("MCP server includes release identity in the advertised toolset", async () => {
