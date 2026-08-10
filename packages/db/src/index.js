@@ -11,6 +11,8 @@ export {
   mapWorkoutToRow,
   mapHealthMetricToRow,
   mapSemanticStateToRow,
+  mapPlanToRow,
+  mapPlannedWorkoutToRow,
   mapUserContextToRows
 } from "./mappers.js";
-export { FitnessRepository } from "./repository.js";
+export { FitnessRepository, SQLiteFitnessRepository } from "./repository.js";

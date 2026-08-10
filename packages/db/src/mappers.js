@@ -111,6 +111,46 @@ export function mapSemanticStateToRow(state) {
   };
 }
 
+export function mapPlanToRow(plan) {
+  return {
+    id: plan.id,
+    user_id: plan.userId,
+    goal_id: plan.goalId || null,
+    name: plan.name,
+    start_date: plan.startDate,
+    end_date: plan.endDate,
+    periodization_type: plan.periodizationType || null,
+    status: plan.status || "planned",
+    version: plan.version || 1,
+    constraints: plan.constraints || {},
+    reasoning: plan.reasoning || [],
+    decision_basis: plan.decisionBasis || null,
+    created_at: plan.createdAt || null
+  };
+}
+
+export function mapPlannedWorkoutToRow(plan, week, workout) {
+  return {
+    id: workout.id,
+    plan_id: plan.id,
+    user_id: plan.userId,
+    week_index: week.weekIndex,
+    phase: week.phase || "base",
+    week_start_date: week.startDate,
+    load_multiplier: week.loadMultiplier ?? 1,
+    day_of_week: workout.dayOfWeek,
+    workout_date: workout.date,
+    focus: workout.focus,
+    type: workout.type,
+    duration_minutes: workout.durationMinutes,
+    intensity: workout.intensity,
+    target_muscle_groups: workout.targetMuscleGroups || [],
+    exercise_ids: workout.exerciseIds || workout.exercises || [],
+    exercises: workout.exercises || workout.exerciseIds || [],
+    rationale: workout.rationale || ""
+  };
+}
+
 export function mapUserContextToRows(context) {
   const userId = context.user.id;
 

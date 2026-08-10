@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://pacevera.com/schemas/privacy/deployment-mode-contract.schema.json",
+  "title": "Pacevera privacy deployment contract",
+  "type": "object",
+  "required": ["contractVersion", "modes"],
+  "properties": {
+    "contractVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "modes": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "dataFlow", "storage", "tokens", "logging", "deletion"],
+        "properties": {
+          "id": { "enum": ["local-desktop", "user-controlled-private", "hosted-remote"] },
+          "status": { "enum": ["available", "planned", "no-go"] },
+          "dataFlow": { "type": "object", "required": ["input", "processing", "output", "providerAccess"], "additionalProperties": false, "properties": {
+            "input": { "type": "string" },
+            "processing": { "type": "string" },
+            "output": { "type": "string" },
+            "providerAccess": { "enum": ["none", "user-controlled-only", "forbidden"] }
+          }},
+          "storage": { "type": "object", "required": ["durableByPacevera", "allowedLocations", "retentionOwner", "deletionOwner"], "additionalProperties": false, "properties": {
+            "durableByPacevera": { "type": "boolean" },
+            "allowedLocations": { "type": "array", "items": { "type": "string" } },
+            "retentionOwner": { "type": "string" },
+            "deletionOwner": { "type": "string" }
+          }},
+          "tokens": { "type": "object", "required": ["accepted", "storedByPacevera", "providerRefreshTokensAccepted", "revocationOwner"], "additionalProperties": false, "properties": {
+            "accepted": { "type": "array", "items": { "type": "string" } },
+            "storedByPacevera": { "type": "boolean" },
+            "providerRefreshTokensAccepted": { "type": "boolean" },
+            "revocationOwner": { "type": "string" }
+          }},
+          "logging": { "type": "object", "required": ["allowed", "forbidden", "safeOperationalMetadata"], "additionalProperties": false, "properties": {
+            "allowed": { "type": "array", "items": { "type": "string" } },
+            "forbidden": { "type": "array", "items": { "type": "string" } },
+            "safeOperationalMetadata": { "type": "array", "items": { "type": "string" } }
+          }},
+          "deletion": { "type": "object", "required": ["paceveraAction", "userAction", "limitation"], "additionalProperties": false, "properties": {
+            "paceveraAction": { "type": "string" },
+            "userAction": { "type": "string" },
+            "limitation": { "type": "string" }
+          }}
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

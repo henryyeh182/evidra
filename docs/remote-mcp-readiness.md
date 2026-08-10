@@ -2,6 +2,10 @@
 
 Status: security and contract skeleton only. This is not a production deployment.
 
+The canonical three-mode privacy contract is [`privacy-deployment-contract.md`](privacy-deployment-contract.md).
+This file records remote readiness only; it must not be read as a hosted privacy
+policy or as evidence that `hosted-remote` is production-ready.
+
 ## Evidence contract audit
 
 | Source | Evidence used in this repository | Shape status | Remaining gap |
@@ -26,13 +30,13 @@ Implemented locally:
 - issuer, audience, expiry, not-before and scope checks; missing scope is `403 insufficient_scope`.
 - bearer tokens are accepted from the `Authorization` header only; query-string tokens are rejected.
 - HTTPS construction and environment validation require TLS files, public HTTPS resource URI, authorization-server URL, issuer and HTTPS JWKS URL.
-- hosted mode does not receive provider OAuth refresh tokens and does not persist raw evidence; the HTTP handler is request/response only.
+- hosted mode does not receive provider OAuth refresh tokens and does not persist raw evidence; the HTTP handler is request/response only. When a logger is injected, it receives only route/method/status/duration/size metadata.
 
 Not implemented here:
 
 - authorization-server registration, login, consent, token issuance, client metadata, key rotation operations or billing;
 - a public hostname, certificate, cloud account, deployment credentials or real authorization-server integration;
-- production privacy-policy changes for hosted identifiers and retention because the hosted commercial/authorization design is not finalized.
+- production privacy-policy changes for hosted identifiers and retention because the hosted commercial/authorization design is not finalized; see the canonical contract for the no-go boundary.
 
 The authorization server is an explicit external boundary. No provider or cloud service
 has been selected or purchased in this change. Local stdio/MCPB remains unchanged.

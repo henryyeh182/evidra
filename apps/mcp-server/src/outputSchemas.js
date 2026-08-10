@@ -984,5 +984,41 @@ export const outputSchemas = {
       "plan",
       "versionHistory"
     ]
+  },
+  get_evidence_coverage: {
+    type: "object",
+    properties: {
+      userId: { type: ["string", "null"] },
+      coverageScore: { type: "number" },
+      quality: { type: "string", enum: ["low", "medium", "high"] },
+      qualityWarnings: { type: "array", items: { type: "string" } },
+      coverage: { type: "object" },
+      sources: { type: "array", items: { type: "string" } },
+      missing: { type: "array", items: { type: "string" } },
+      provenance: { type: "object" }
+    },
+    required: ["coverageScore", "quality", "qualityWarnings", "coverage", "sources", "missing"]
+  },
+  explain_decision: {
+    type: "object",
+    properties: {
+      decisionId: { type: "string" },
+      createdAt: { type: "number" },
+      userId: { type: ["string", "null"] },
+      evidenceSource: { type: "string" },
+      trace: { type: "object" }
+    },
+    required: ["decisionId", "createdAt", "trace"]
+  },
+  submit_outcome: {
+    type: "object",
+    properties: {
+      caseId: { type: "string" },
+      event: { type: "object" },
+      totalForCase: { type: "number" },
+      persistence: { type: "string", enum: ["process_local"] },
+      note: { type: "string" }
+    },
+    required: ["caseId", "event", "totalForCase", "persistence"]
   }
 };

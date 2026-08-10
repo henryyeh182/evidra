@@ -44,11 +44,13 @@ Some fields are intentionally `JSONB` for now:
 
 These fields can be normalized later if query patterns demand it.
 
-## Future Migrations
+## Plan persistence
 
-- **Add plan and planned workout tables.** A decision is a change to an existing plan
-  (`from → to`), so the plan is the substrate every decision is made against. Until
-  these tables exist, Phase 2 has a place to keep it but nothing built to keep it in.
+Migration `0003_plan_persistence.sql` adds `plans` and `planned_workouts`. The
+SQLite adapter uses the equivalent SQLite schema in `schema/sqlite.sql`; both
+represent the plan as the parent record and each scheduled session as a child
+record so a local engine can resolve “what was scheduled today” without asking a
+host to resend the plan.
 - Add exercise prescription tables.
 - Add audit logs and consent records.
 

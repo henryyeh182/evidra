@@ -179,6 +179,31 @@ export const toolDefinitions = [
     }
   },
   {
+    name: "get_evidence_coverage",
+    title: "Get Evidence Coverage",
+    annotations: { title: "Get Evidence Coverage", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+    description: "Score the supplied evidence for signal coverage and quality, and list exactly what is missing. This tool never invents a reading or treats an unstated quality value as measured.",
+    inputSchema: {
+      type: "object",
+      properties: { evidence: EVIDENCE_INPUT, userId: { type: "string", description: "User identifier." } },
+      required: ["evidence"]
+    }
+  },
+  {
+    name: "explain_decision",
+    title: "Explain Decision",
+    annotations: { title: "Explain Decision", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+    description: "Return the process-local Decision → Rule → Evidence → Source → Version trace for a decision previously returned by this server.",
+    inputSchema: { type: "object", properties: { decisionId: { type: "string", description: "The decisionId returned by a decision tool." } }, required: ["decisionId"] }
+  },
+  {
+    name: "submit_outcome",
+    title: "Submit Outcome",
+    annotations: { title: "Submit Outcome", readOnlyHint: false, idempotentHint: false, openWorldHint: false },
+    description: "Normalize an observed result for a prior case. The MVP returns an event and keeps a bounded process-local count; persist the event in the caller or private engine for durable Outcome DB storage.",
+    inputSchema: { type: "object", properties: { caseId: { type: "string" }, outcome: { type: "object" } }, required: ["caseId", "outcome"] }
+  },
+  {
     name: "evidra_decide_session",
     title: "Decide Today's Session",
     annotations: {

@@ -229,6 +229,164 @@ MCP `2026-07-28` 的 stateless HTTP 對 remote scaling 有幫助，但它解決�
 
 這條順序可以同時保住三件事：第一個使用者很快得到價值、核心隱私論點是真實可驗證的、而 Pacevera 的長期價值累積在「連續 Evidence → 可追溯 Decision」而不是任何單一 AI 平台的政策裡。
 
+## Rule Package 化與 Governance（Phase 1 補強）
+
+Rule Library 不是一包會隨產品版本一起任意變動的常數；它是會影響使用者決策的可審核產品資產。未來更新可以分別發生在三個層次：
+
+| 層次 | 目前版本來源 | 允許改動 | 變更時必須重跑 |
+|---|---|---|---|
+| Decision Engine | `ENGINE_VERSION` | 條件評估、仲裁順序、效果合併、輸出契約 | 全部 regression／golden cases |
+| Rule Package | `LIBRARY_VERSION` + package manifest | Rule、threshold、priority、evidence provenance | package validation、Decision Harness、golden cases |
+| Distribution bundle | `.mcpb` manifest／artifact checksum | MCP server、文件、打包內容 | install smoke test、package-to-runtime check |
+
+這三個版本必須在每次 `decide_session` 輸出中同時可見。更新 Rule Package 不應要求重新安裝 Decision Engine；更新 Engine 也不應偷偷替使用者換掉已核准的 Rule Package。
+
+### 目前狀態與缺口
+
+已具備的基礎：
+
+- `packages/rules` 已將 rule data、parameter set、arbitration、decision basis 分開；目前可視為 Rule Library 的第一個實作。
+- Rule 有 category／priority／evidence metadata，Decision 可回溯 governing rule 與仲裁理由。
+- `ENGINE_VERSION`、`LIBRARY_VERSION`、package／MCPB 版本已是不同概念；Decision Harness 與 `review:phase` 的 G11 已能攔截未審核的決策漂移。
+
+仍需補強的部分：
+
+- 把現有 `packages/rules/data` 明確搬進 `base_rules` 套件邊界，並停止由 Engine 直接假設資料路徑。
+- 建立 package manifest、checksum、相容性檢查與本機安裝／匯入流程。
+- 把人工 Rule Review 變成有 request、review、decision、release record 的可追溯流程；單人審核也不能省略紀錄。
+- 建立固定的 Decision Case corpus 與 Decision Graph debug viewer，讓每次 rule／engine 更新都有同一套驗證入口。
+- 對 Phase 1 內部 Rule 建立 evidence packet，逐步把 `expert_consensus` 升級到有文獻支持的 evidence level；不得因為有文獻就擴大文獻原本沒有支持的結論。
+
+### 目標資料結構
+
+第一階段先以本機 git 版控與檔案匯入，不導入資料庫或線上 marketplace。資料夾邊界先切好，未實作的 package 也保留 manifest 與空的 README：
+
+```text
+rule-packages/
+  base_rules/
+    package.json
+    rules/
+    evidence/
+    regression/
+    CHANGELOG.md
+  running_rules/
+    package.json       # future: same contract, no rules required yet
+    README.md
+  strength_rules/
+    package.json       # future: same contract, no rules required yet
+    README.md
+  schemas/
+    rule-package.schema.json
+    evidence-packet.schema.json
+  reviews/
+    RR-YYYY-NNNN.md
+```
+
+各 Rule Package 的最小 manifest 應包含：
+
+```json
+{
+  "packageId": "base_rules",
+  "version": "1.0.0",
+  "schemaVersion": "1.0.0",
+  "status": "released",
+  "tier": "base",
+  "engineCompatibility": { "min": "1.6.0", "max": "<2.0.0" },
+  "rules": [{ "id": "EVD-R-001", "path": "rules/EVD-R-001.json" }],
+  "evidencePackets": ["evidence/EP-001.json"],
+  "regressionCases": "regression/cases.json",
+  "contentChecksum": "sha256:...",
+  "reviewRecord": "reviews/RR-2026-0001.md"
+}
+```
+
+`running_rules` 負責訓練量／負荷／週期性等「訓練如何安排」的規則；`strength_rules` 負責強度、阻力訓練或進退階的規則。`base_rules` 只放跨場景的安全邊界、資料不足時的退化、基本決策型別與仲裁契約。任何新 rule 都必須先回答「為什麼不屬於另一個 package」，避免把所有邏輯重新堆回 base。
+
+Package 依賴只允許單向：`base_rules` 不依賴其他 domain package；domain package 可以引用 base 的 schema／capability，但不能覆寫 base 的 safety rule。若兩個 package 同時觸發，仍由 Decision Engine 的 Priority Matrix 仲裁，不由 package 載入順序決定結果。
+
+### Rule Package 更新機制（Phase 1）
+
+初期採可重現的手動／半自動匯入：
+
+1. 使用者取得新版 package archive 或新版 `.mcpb`，先在本機保留原檔與 checksum。
+2. `package validate` 檢查 manifest schema、packageId／version、Rule ID 唯一性、Engine compatibility、evidence reference、tier 與檔案 checksum。
+3. `package install --dry-run` 以目前 active package 與新版跑 regression cases，顯示 verdict、confidence、governing rule、Decision Graph 的差異。
+4. 使用者確認後，以 immutable version 目錄安裝；active pointer 一次只指向一個已核准版本，舊版保留以便 rollback。
+5. 安裝後跑 MCPB smoke test 與一次完整 Harness；任何失敗都不得切換 active pointer。
+
+最小可用介面可以先是 CLI 或本機 MCP admin tool，不需要自動更新服務。UI／CLI 必須明確顯示：目前 active package、候選 package、來源、checksum、review status、相容的 Engine version，以及 rollback 目標。`latest` 不可作為執行時的隱含依賴。
+
+### Rule Review 人工審核流程
+
+每個新增、刪除、threshold／priority／evidence_level 變更都建立一筆 `RR-YYYY-NNNN` review record，並以以下狀態流轉：
+
+```text
+draft → evidence-check → regression-check → human-review → approved
+                                                   ↘ rejected
+approved → released → superseded / withdrawn
+```
+
+Review record 至少記錄：
+
+- proposer、reviewer、日期、變更理由與影響的 Rule ID／package；
+- rule 的 intended decision、適用與不適用情境、輸入訊號、缺失訊號時的退化行為；
+- evidence packet、文獻識別碼、支持的 claim、不能由文獻推出的 claim；
+- category、priority、與其他規則衝突時的預期仲裁；
+- before／after Decision Case 數量、golden diff、confidence／coverage 變化；
+- reviewer 的核准／退回理由、release version、checksum 與 rollback version。
+
+目前 reviewer 可以只有產品負責人自己，但流程仍需「提出者欄位、審核者欄位、核准日期、核准理由」四者齊全。對涉及 Injury 或其他高風險限制的 rule，未來應要求第二位 reviewer；在此之前標記 `single_reviewer: true`，不可把單人審核寫成獨立專家驗證。
+
+### Evidence 升級計畫
+
+Phase 1 不一次追求完整文獻庫，而是挑 5–10 個會實際改變決策的 claims，建立 evidence packet。優先從 PubMed 的 systematic review／meta-analysis、ACSM position stand／consensus statement、ISSN position stand／review 選取；每筆 packet 只核准文獻真正支持的範圍。
+
+建議首批涵蓋：睡眠與恢復、訓練負荷與過度訓練風險、阻力訓練進退階、耐力訓練強度分配、傷後回訓的保守邊界，以及 HRV／恢復訊號的限制。每個主題先選一篇最高相關的 review 或 position stand，再視 claim 的不確定性補第二篇；不要用單篇研究替整個 domain 背書。
+
+Evidence level 採可解釋的梯度：`expert_consensus` → `narrative_review` → `systematic_review` → `meta_analysis`，另加 `position_statement` 作為來源型別，不把它假裝成研究設計。Rule 的 evidence level 只描述「這條 claim 的來源品質」，不直接等同於個人化決策的 confidence；後者仍要受 evidence freshness、coverage、個體適用性與衝突規則影響。
+
+每個 evidence packet 的固定欄位：`claim`、`population`、`intervention_or_exposure`、`outcome`、`limitations`、`source_type`、`pmid_or_doi`、`retrieved_at`、`applicable_rule_ids`、`reviewer`。引用 PubMed／ACSM／ISSN 時保存識別碼與查閱日期，讓未來可以重新核對，而不是只在 Rule description 留一個裸 URL。
+
+### Regression Test 與 Decision Case Corpus
+
+Decision Corpus 分成三層，全部存在本機：
+
+| 層 | 內容 | 更新規則 |
+|---|---|---|
+| Golden cases | 5–10 個最重要、預期答案固定的 known-correct cases | 只有經人工 review 才能改答案 |
+| Boundary cases | 缺資料、門檻邊界、同類別 tie、跨 package conflict、傷病限制 | 每次新增 Rule 必須至少新增或確認一個 |
+| Replay corpus | 個人訓練資料抽象化／去識別後的 100–500 筆案例 | 可發現分布漂移，不直接當 ground truth |
+
+每個 case 固定輸入 snapshot、原定 session、期待的 decision type／from→to、不可違反的 limits、最低 reason／coverage 要求，以及允許變動與禁止變動的欄位。Regression 不只比對最終 `keep／adjust／substitute／defer／advance`，也比對 governing Rule、仲裁理由、confidence 區間、rule／engine／package version；文字措辭則用結構化欄位比對，避免不必要的 prose 變更阻塞 release。
+
+Rule 或 Engine 更新前的 gate：schema validation → package validator → golden／boundary cases → replay corpus → Decision Graph diff → MCPB install smoke test → human review。Golden verdict 改變時預設 fail；若變更是刻意的，必須在 review record 附上 before／after、理由與新的已核准答案，不能只更新 fingerprint 讓測試變綠。
+
+### Decision Graph 內部工具
+
+Decision Graph 是 debug／審核工具，不是對外健康 dashboard。每次 decision 產生一個可序列化 graph：
+
+```text
+Evidence / State
+      ↓
+Signal coverage + derived metrics
+      ↓
+Triggered rules ──→ conflicts ──→ Priority Matrix arbitration
+                                      ↓
+                              Decision / Action / Limits
+```
+
+每個 node 帶 `id`、`type`、`value`、`source`、`ruleId`、`packageVersion`；每條 edge 帶 `reason` 或 `suppressedBy`。內部 viewer 至少支援依 `decisionId` 載入、展開／收合節點、只看觸發規則、顯示被壓過的規則、比較兩個 package／engine 版本，以及匯出 JSON／SVG。初期可以是本機靜態 HTML，直接讀 Decision Graph artifact，不引入遠端 telemetry，也不把 raw Evidence 送出本機。
+
+### 交付順序與完成標準
+
+1. **R0 — package boundary**：建立 `base_rules` manifest／schema，預留 `running_rules`、`strength_rules`，將現有 Rule Library 對應到 package；完成 package 與 Engine 的版本／相容性檢查。
+2. **R1 — update and review**：完成 archive／`.mcpb` 匯入、dry-run、checksum、active pointer、rollback，以及第一筆完整 `RR-...` 審核紀錄。
+3. **R2 — evidence uplift**：完成首批 5–10 個 evidence packets，至少讓一批現有 Rule 從 `expert_consensus` 升級，並把限制與適用族群寫入 rule explanation。
+4. **R3 — regression gate**：固定 golden／boundary schema，將更新前 Harness 與 Graph diff 納入 release gate；把已完成的 100–500 筆 Decision Corpus 分成 replay corpus 而非假裝成 ground truth。
+5. **R4 — graph viewer**：提供本機 Decision Graph viewer，能定位一次決策為何觸發、為何被壓過、最後如何形成 from→to。
+
+這組 R0–R4 完成後，才把 Rule Package 當成可獨立發布的產品資產。下一步才是考慮 signed package、遠端 registry、分批 rollout 與自動更新；在此之前，手動匯入加上可 rollback 的本機流程已足以支撐 Free tier 的 `base_rules` 與 Pro／Enterprise 未來的 domain package 邊界。
+
 ## 技術依據
 
 - [MCP 2026-07-28 release candidate／stateless protocol 說明](https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/)

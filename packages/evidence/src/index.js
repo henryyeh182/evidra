@@ -15,3 +15,4 @@ export {
   describeSourceCoverage,
   sourcesProviding
 } from "./schemaRegistry.js";
+export { getEvidenceCoverage } from "./coverage.js";

@@ -117,23 +117,28 @@ authorization server、公開部署與 hosted 版隱私政策。
 分肌群疲勞是 `trainingLoad × decay`，**不乘 RPE**——廠商算好的負荷本身已含強度，
 `training-load` 算 ATL／CTL／ACWR 用的也是同一個數字。RPE 仍當證據收，但不參與計算。
 
-## Privacy Policy
+## Privacy Policy — local desktop bundle
 
 > 這一節是**對外的**，隨 `.mcpb` bundle 出去給審閱者與使用者讀，所以是英文。
 > 底下的〈隱私邊界〉是給我們自己看的判準，兩者不要合併。
+> This section applies only to the shipped `local-desktop` stdio bundle. It is
+> not a policy for the repository's HTTP/JWKS readiness scaffold or a future
+> hosted service. See the [three-mode privacy deployment contract](docs/privacy-deployment-contract.md).
+>
 > 完整政策：https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md
 
-Pacevera runs locally on your own machine and does not retain your evidence.
+The shipped Pacevera desktop bundle runs locally on your own machine and does
+not retain your evidence.
 
 We process only the minimum health-related evidence submitted by the caller, solely to
 compute the requested fitness decision. We do not retain, sell, use for training, or use
 it for unrelated purposes.
 
-Pacevera never fetches your data — it only sees what the calling AI assistant passes into a
-tool call: recovery signals for today, recent training load, the session you had scheduled,
-and context you state yourself. As a desktop extension, this is checkable against the one
-compiled server file it ships — minifying does not hide which standard-library modules a
-file imports:
+The desktop bundle never fetches your data — it only sees what the calling AI
+assistant passes into a tool call. As a desktop extension, this is checkable
+against the one compiled server file it ships. The repository also contains a
+separate HTTP/JWKS implementation for local readiness; that code is not part of
+the desktop bundle and is covered by the deployment contract instead:
 
 - **Pacevera itself performs no outbound network requests.** No outbound HTTP, fetch, socket,
   or DNS calls, and it transmits your evidence nowhere.
@@ -143,8 +148,9 @@ file imports:
 - **No model calls.** Decisions are deterministic arithmetic and explicit rules.
 - **No accounts.** No sign-up, no login, no user identifier.
 
-These statements describe Pacevera's own behaviour, not the computer it runs on, the AI
-assistant that calls it, or the operating system and Node.js runtime underneath it.
+These statements describe the shipped desktop bundle's behaviour, not the
+computer it runs on, the AI assistant that calls it, the repository's HTTP
+transport, or the operating system and Node.js runtime underneath it.
 
 Evidence exists in memory for the duration of a single tool call. Nothing is written to
 durable storage, so there is nothing for us to keep, delete, or export on request.

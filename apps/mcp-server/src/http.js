@@ -26,6 +26,7 @@ import {
   bearerFromHeaders,
   createJwksVerifier
 } from "./oauth.js";
+import { requestLogRecord } from "./privacy.js";
 
 const RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
 
@@ -96,6 +97,7 @@ function createTransportServer(nodeCreateServer, options = {}) {
   const endpoint = options.endpoint || "/mcp";
   const allowedOrigins = options.allowedOrigins || [];
   const requireToken = options.token || null;
+  const logger = typeof options.logger === "function" ? options.logger : null;
 
   /**
    * OAuth 2.1 resource-server configuration. Present means every request needs
@@ -105,6 +107,13 @@ function createTransportServer(nodeCreateServer, options = {}) {
   const oauth = buildOauth(options);
 
   const server = nodeCreateServer(options.tls, async (req, res) => {
+    const requestStartedAt = Date.now();
+    if (logger) {
+      res.once("finish", () => logger(requestLogRecord(req, {
+        status: res.statusCode,
+        durationMs: Date.now() - requestStartedAt
+      })));
+    }
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
 
     const requestOrigin = req.headers.origin;

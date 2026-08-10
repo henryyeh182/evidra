@@ -13,6 +13,7 @@ import {
 } from "./toolDefinitions.js";
 import { parseJsonRpcMessage, jsonRpcError, jsonRpcResult } from "./jsonRpc.js";
 import { toolHandlers } from "./toolHandlers.js";
+import { findProviderTokenField } from "./providerBoundary.js";
 import { describePolicies } from "../../../packages/rules/src/index.js";
 
 /**
@@ -144,6 +145,15 @@ export async function handleJsonRpcMessage(rawMessage) {
     }
 
     if (method === "tools/call") {
+      const providerTokenPath = findProviderTokenField(params.arguments || {});
+      if (providerTokenPath) {
+        return jsonRpcError(
+          id,
+          -32602,
+          "Provider tokens are not accepted by the hosted MCP boundary.",
+          { field: providerTokenPath.join(".") }
+        );
+      }
       const toolName = resolveToolName(params.name);
       const tool = getToolDefinition(toolName);
       const handler = toolHandlers[toolName];

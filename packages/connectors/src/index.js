@@ -2,6 +2,7 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 export { assertRawProviderEvent, CONNECTOR_PROVIDERS } from "./models.js";
+export { LocalConnectorAdapter, FixtureConnectorAdapter } from "./local.js";
 export { computeTimeInZone, assertValidHeartRateZones } from "./timeInZone.js";
 export {
   normalizedWorkoutToWorkout,

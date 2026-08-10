@@ -20,6 +20,7 @@ import {
 import {
   evidenceToUserContext,
   describeEvidence,
+  getEvidenceCoverage,
   EVIDENCE_METRIC_TYPES,
   EVIDENCE_VENDOR_ASSESSMENT_TYPES
 } from "../../../packages/evidence/src/index.js";
@@ -33,6 +34,11 @@ import {
   getTrainingHistoryTool,
   decideExerciseSubstitutionTool
 } from "./readToolHandlers.js";
+import {
+  explainDecision,
+  recordDecision,
+  submitOutcome
+} from "./decisionRecords.js";
 
 /**
  * What a caller has to send before any of this can compute anything.
@@ -235,6 +241,55 @@ export async function getSemanticFitnessState(args = {}) {
     },
     baselines,
     provenance
+  });
+}
+
+export async function getEvidenceCoverageTool(args = {}) {
+  if (!args.evidence) return evidenceRequired("get_evidence_coverage");
+  try {
+    evidenceToUserContext(args.evidence, { userId: args.userId });
+  } catch (error) {
+    return invalidEvidence("get_evidence_coverage", error.message);
+  }
+  return jsonContent({
+    userId: args.userId || null,
+    ...getEvidenceCoverage(args.evidence),
+    provenance: { evidenceSource: "provided", ...describeEvidence(args.evidence) }
+  });
+}
+
+export async function explainDecisionTool(args = {}) {
+  if (typeof args.decisionId !== "string" || args.decisionId.length === 0) {
+    return errorContent({
+      error: "decision_id_required",
+      tool: "explain_decision",
+      problem: "Pass the decisionId returned by a decision tool."
+    });
+  }
+  const record = explainDecision(args.decisionId);
+  if (!record) {
+    return errorContent({
+      error: "decision_not_found",
+      tool: "explain_decision",
+      decisionId: args.decisionId,
+      problem: "The process-local trace has expired or was created by another server instance.",
+      callerAction: "Use the decision record held by the caller, or request a new decision."
+    });
+  }
+  return jsonContent(record);
+}
+
+export async function submitOutcomeTool(args = {}) {
+  if (typeof args.caseId !== "string" || args.caseId.length === 0) {
+    return errorContent({ error: "case_id_required", tool: "submit_outcome", problem: "caseId is required." });
+  }
+  if (!args.outcome || typeof args.outcome !== "object" || Array.isArray(args.outcome)) {
+    return errorContent({ error: "outcome_required", tool: "submit_outcome", problem: "outcome must be an object." });
+  }
+  return jsonContent({
+    caseId: args.caseId,
+    ...submitOutcome(args.caseId, args.outcome),
+    note: "Process-local MVP only. Persist the returned event in the caller or private engine Outcome DB."
   });
 }
 
@@ -480,6 +535,9 @@ export async function commitPlanChangeTool(args = {}) {
 
 export const toolHandlers = {
   evidra_assess_fitness_state: getSemanticFitnessState,
+  get_evidence_coverage: getEvidenceCoverageTool,
+  explain_decision: explainDecisionTool,
+  submit_outcome: submitOutcomeTool,
   recommend_workout: recommendTodayWorkout,
   evidra_decide_session: decideSessionTool,
   evidra_decide_exercise_substitution: decideExerciseSubstitutionTool,
@@ -568,7 +626,7 @@ export async function decideSessionTool(args = {}) {
     rpeBasisCounts: provenance.rpeBasis
   });
 
-  return jsonContent({
+  return jsonContent(recordDecision({
     userId: context.user.id,
     date,
     planId,
@@ -578,5 +636,5 @@ export async function decideSessionTool(args = {}) {
       scheduledSessionSource: args.scheduledSession ? "provided" : "missing",
       proposedSessionSource: args.proposedSession ? "provided" : "none"
     }
-  });
+  }, { userId: context.user.id, evidenceSource: provenance.evidenceSource }));
 }

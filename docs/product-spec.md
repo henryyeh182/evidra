@@ -60,7 +60,18 @@ Claude / ChatGPT
 我們的程式不呼叫模型來產生決策。決策必須是確定性的、可重現的。
 但模型是前提不是選配：聽懂問題、湊齊證據、選工具、講人話全在 host 那邊。
 
-## 5. 兩種部署
+## 5. Deployment modes and implementation phases
+
+P0 defines three user-visible deployment modes in the canonical
+[privacy deployment contract](privacy-deployment-contract.md):
+`local-desktop`, `user-controlled-private`, and `hosted-remote`. The Phase 1 /
+Phase 2 headings below are implementation milestones, not additional privacy
+modes. They must not collapse the three modes into one generic "local" or
+"hosted" promise.
+
+The machine-readable contract is [`schemas/privacy/deployment-modes.json`](../schemas/privacy/deployment-modes.json).
+
+### Phase 1 / `hosted-remote`: Hosted decision service
 
 ### Phase 1：Hosted decision service
 
@@ -88,7 +99,7 @@ hosted MCP 的界線：
 - 不把 Evidence 用於訓練、廣告、profiling 或無關的二次目的
 - request 完成後不保留 Evidence；log、trace、error telemetry 遮蔽 payload、token 與健康欄位
 
-### Phase 2：User-controlled private engine
+### Phase 2 / `user-controlled-private`: User-controlled private engine
 
 `packages/evidence`、`packages/semantic-engine` 與 decision engine 全部在
 user-controlled environment 執行，hosted service 不接觸 raw health Evidence。

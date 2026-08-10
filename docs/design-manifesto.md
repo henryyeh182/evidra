@@ -127,7 +127,12 @@ Reason 必須綁回 Evidence，不是事後編的說法。
 
 > 用詞：內部討論 input 一律稱 **Evidence** 不稱 Data。
 
-## 兩種部署，一條界線
+## 三種 deployment mode，一條界線
+
+The canonical data-flow, storage, token, logging, and deletion contract is
+[privacy-deployment-contract.md](privacy-deployment-contract.md). The summaries
+below are principles; the contract and machine-readable manifest are the
+acceptance criteria.
 
 ### Phase 1：Hosted decision service
 

@@ -1,0 +1,33 @@
+{
+  "$schema": "./deployment-mode-contract.schema.json",
+  "contractVersion": "1.0",
+  "modes": [
+    {
+      "id": "local-desktop",
+      "status": "available",
+      "dataFlow": { "input": "AI host to stdio JSON-RPC", "processing": "Pacevera process memory for one call", "output": "Decision result to the AI host", "providerAccess": "none" },
+      "storage": { "durableByPacevera": false, "allowedLocations": ["process-memory"], "retentionOwner": "none for Pacevera; host/OS is outside scope", "deletionOwner": "user for host/OS copies" },
+      "tokens": { "accepted": [], "storedByPacevera": false, "providerRefreshTokensAccepted": false, "revocationOwner": "not applicable" },
+      "logging": { "allowed": ["startup/configuration status"], "forbidden": ["tool arguments", "request bodies", "Evidence", "health values", "bearer tokens", "JWT claims", "stable user identifiers"], "safeOperationalMetadata": [] },
+      "deletion": { "paceveraAction": "release call memory; no durable record exists", "userAction": "delete host conversations, exports, and OS backups as needed", "limitation": "Pacevera cannot delete copies held by the host or OS" }
+    },
+    {
+      "id": "user-controlled-private",
+      "status": "planned",
+      "dataFlow": { "input": "user-controlled connector or gateway to private MCP", "processing": "user device, private network, or VPC", "output": "minimum Decision result to the AI host", "providerAccess": "user-controlled-only" },
+      "storage": { "durableByPacevera": false, "allowedLocations": ["user-controlled database", "user-controlled files", "user-controlled secret store"], "retentionOwner": "user or organisation operator", "deletionOwner": "user or organisation operator" },
+      "tokens": { "accepted": ["provider tokens at the user-controlled connector boundary"], "storedByPacevera": false, "providerRefreshTokensAccepted": false, "revocationOwner": "user or provider" },
+      "logging": { "allowed": ["operator-defined operational metadata"], "forbidden": ["raw Evidence", "tool arguments", "request bodies", "provider tokens", "JWTs", "health values", "stable user identifiers"], "safeOperationalMetadata": ["route", "method", "status", "duration", "bounded request size"] },
+      "deletion": { "paceveraAction": "none for data that never crosses the boundary", "userAction": "delete local databases, files, backups, secrets, and logs", "limitation": "Pacevera cannot operate the user's retention or backups" }
+    },
+    {
+      "id": "hosted-remote",
+      "status": "no-go",
+      "dataFlow": { "input": "authenticated client or gateway to hosted HTTPS MCP", "processing": "Pacevera request memory for one decision", "output": "Decision/Action/Reason to caller", "providerAccess": "forbidden" },
+      "storage": { "durableByPacevera": false, "allowedLocations": ["request memory only"], "retentionOwner": "Pacevera application until response/error; infrastructure policy must be disclosed", "deletionOwner": "Pacevera application and separately documented infrastructure operators" },
+      "tokens": { "accepted": ["OAuth bearer access token in Authorization header"], "storedByPacevera": false, "providerRefreshTokensAccepted": false, "revocationOwner": "external authorization server" },
+      "logging": { "allowed": ["route", "method", "status", "duration", "bounded request size"], "forbidden": ["request bodies", "tool arguments", "Evidence", "health values", "Authorization headers", "tokens", "JWT claims", "stable user identifiers"], "safeOperationalMetadata": ["route", "method", "status", "duration", "bounded request size"] },
+      "deletion": { "paceveraAction": "release transient request memory; no Evidence deletion endpoint", "userAction": "delete host copies and authorization-server account/token records", "limitation": "production requires verified infrastructure log/trace/queue/object-store retention controls" }
+    }
+  ]
+}

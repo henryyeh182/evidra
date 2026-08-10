@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
-import { createPublicKey, verify as verifySignature, RSA_PKCS1_PSS_PADDING } from "node:crypto";
+import { constants, createPublicKey, verify as verifySignature } from "node:crypto";
 
 /**
  * OAuth 2.1 Resource Server — our half of the authorization chain.
@@ -82,7 +82,12 @@ function parseJwt(token) {
     const header = JSON.parse(base64UrlDecode(parts[0]));
     const claims = JSON.parse(base64UrlDecode(parts[1]));
     if (!header || typeof header !== "object" || !claims || typeof claims !== "object") return null;
-    return { header, claims, signingInput: `${parts[0]}.${parts[1]}`, signature: base64UrlBuffer(parts[2]) };
+    const signature = base64UrlBuffer(parts[2]);
+    // Base64url's final character may contain padding bits. Re-encoding makes
+    // those bits canonical, so a token with a changed-but-equivalent suffix
+    // cannot pass the signature verifier or confuse audit logs.
+    if (signature.toString("base64url") !== parts[2]) return null;
+    return { header, claims, signingInput: `${parts[0]}.${parts[1]}`, signature };
   } catch {
     return null;
   }
@@ -153,7 +158,7 @@ export function verifyJwtSignature(token, config = {}) {
     algorithm = { PS256: "sha256", PS384: "sha384", PS512: "sha512" }[parsed.header.alg];
     options = {
       key,
-      padding: RSA_PKCS1_PSS_PADDING,
+      padding: constants.RSA_PKCS1_PSS_PADDING,
       saltLength: { PS256: 32, PS384: 48, PS512: 64 }[parsed.header.alg]
     };
   } else if (parsed.header.alg === "EdDSA") {
