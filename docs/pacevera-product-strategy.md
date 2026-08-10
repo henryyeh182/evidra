@@ -434,21 +434,21 @@ Triggered rules ──→ conflicts ──→ Priority Matrix arbitration
 1. ~~**R0 — package boundary**~~：✅ **已完成（2026-08-10）**。建立 `base_rules` manifest／schema，預留 `running_rules`、`strength_rules`，將現有 Rule Library 對應到 package；正式 schema validator 會檢查 manifest identity、semver、tier、Rule ID、content files、checksum 與 review record；runtime 從 package 載入，package-to-runtime／Decision Harness／decision trace contract tests 全部通過。空的 domain package 明確維持 `draft`、零規則、零 content files 與 zero checksum。G1 的 5 個 localhost HTTP 測試 sandbox 例外已隔離；G7 的 local athlete state store 已明確列為既有本機持久層，不再誤報為 LLM 或 outbound data sink。
 2. ~~**R1 — update and review**~~：✅ **已完成（2026-08-10）**。本機 package manager 支援目錄、tar／tar.gz 與 `.mcpb` 匯入；`validate`、`dry-run`、明確 `--confirm` install、immutable version 目錄、active pointer 與 rollback 已完成。dry-run 會在候選 package 子程序跑 37 個 Decision Harness scenarios，呈現決策／action／decisionBasis／governing rule／confidence diff；Harness、checksum 或 compatibility 失敗時不會切換 pointer。
 3. ~~**R2 — evidence uplift**~~：✅ **已完成（2026-08-10）**。`base_rules@1.1.0` 新增 5 個正式 schema 驗證的 evidence packets，涵蓋 HRV 導引訓練、阻力訓練進階、ACWR、detraining 與急性睡眠不足；R-006／R-007 的 study design 提升為 systematic review 方向性證據。沒有把文獻誤掛到 Pacevera 的 readiness、fatigue、ACWR 1.4 或 detraining cut points；R-001／R-002 維持 internal composite。
-4. **R3 — regression gate**：固定 golden／boundary schema，將更新前 Harness 與 Graph diff 納入 release gate；把已完成的 100–500 筆 Decision Corpus 分成 replay corpus 而非假裝成 ground truth。
+4. ~~**R3 — regression gate**~~：✅ **已完成（2026-08-10）**。新增 `harness/regression-baseline.json` 與正式 schema，固定 37 個 Harness golden／boundary cases；release dry-run 會比較 baseline、active package、candidate package 的 structured decision surface 與 Decision Graph，任何 verdict、action、confidence、governing rule、coverage、limit 或 graph edge 漂移都會 fail。這份 corpus 明確標記為 `behavioral_regression_baseline`，不冒充醫學 ground truth。
 5. **R4 — graph viewer**：提供本機 Decision Graph viewer，能定位一次決策為何觸發、為何被壓過、最後如何形成 from→to。
 
-這組 R0–R4 完成後，才把 Rule Package 當成可獨立發布的產品資產。R0、R1、R2 現在已完成；下一步是 R3 regression gate。signed package、遠端 registry、分批 rollout 與自動更新仍不開工；目前的本機匯入、Harness gate 與 rollback 足以支撐 Free tier 的 `base_rules` 與 Pro／Enterprise 未來的 domain package 邊界。
+這組 R0–R4 完成後，才把 Rule Package 當成可獨立發布的產品資產。R0–R3 現在已完成；下一步是 R4 graph viewer。signed package、遠端 registry、分批 rollout 與自動更新仍不開工；目前的本機匯入、Harness gate、regression gate 與 rollback 足以支撐 Free tier 的 `base_rules` 與 Pro／Enterprise 未來的 domain package 邊界。
 
 ## 下一個新對話的實作任務
 
-下一個對話直接實作 **R3 — regression gate**，範圍固定如下：
+下一個對話直接實作 **R4 — graph viewer**，範圍固定如下：
 
-1. 固定 golden／boundary schema，保存 R2 前後的 Decision Graph 結構化 diff。
-2. 將 Harness 與 replay corpus 接到 package release gate。
-3. golden verdict 改變時要求 review record 的 before／after 與核准理由。
+1. 提供本機 Decision Graph artifact viewer。
+2. 支援依 `decisionId` 載入、展開／收合、只看觸發規則與顯示 suppressed rules。
+3. 支援比較兩個 package／engine regression artifacts。
 4. 不在此任務實作 signed package、remote registry、自動更新或新的 connector。
 
-完成條件：R2 packet 與 review record 已入 package；R-006／R-007 僅升級證據設計 metadata；package dry-run、Decision Harness 與既有 regression cases 沒有未審核的行為漂移。
+完成條件：R3 baseline schema 通過驗證；current／candidate package 都通過 37 cases 的 structured decision 與 graph diff；任何 intentional verdict change 都必須附 review record 的 before／after 與新核准答案。
 
 ## 技術依據
 

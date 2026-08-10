@@ -10,9 +10,11 @@ import { tmpdir } from "node:os";
 import { ENGINE_VERSION } from "../packages/decision-engine/src/version.js";
 import { loadBaseRulePackage } from "../packages/rules/src/packageBoundary.js";
 import { commitInstall, rollbackPackage, validateCandidate } from "../packages/rules/src/packageManager.js";
+import { compareRegression, validateRegressionBaseline } from "../harness/lib/regression.js";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const defaultStore = join(root, "data", "private", "rule-package-store");
+const regressionBaselinePath = join(root, "harness", "regression-baseline.json");
 
 function usage() {
   console.error(`Usage:
@@ -97,11 +99,33 @@ async function dryRun(sourceDir) {
   const current = loadBaseRulePackage({ engineVersion: ENGINE_VERSION });
   const before = runHarness();
   const after = runHarness(sourceDir);
+  const baseline = await validateRegressionBaseline(JSON.parse(await readFile(regressionBaselinePath, "utf8")));
+  const currentRegression = compareRegression(baseline, before.regression);
+  const candidateRegression = compareRegression(baseline, after.regression);
+  const regressionFailed = [currentRegression, candidateRegression].some((item) =>
+    item.added.length || item.removed.length || item.decisionDiffs.length || item.graphDiffs.length
+  );
   return {
-    verdict: "pass",
+    verdict: regressionFailed ? "fail" : "pass",
     candidate,
     current: { packageId: current.manifest.packageId, version: current.manifest.version, contentChecksum: current.manifest.contentChecksum },
-    harness: { scenarios: after.scenarios, findings: after.findings.length, errors: after.errors.length, decisionDiffs: diff(before, after) }
+    harness: {
+      scenarios: after.scenarios,
+      findings: after.findings.length,
+      errors: after.errors.length,
+      decisionDiffs: diff(before, after),
+      regression: {
+        baseline: "harness/regression-baseline.json",
+        current: {
+          decisionDiffs: currentRegression.decisionDiffs.map(({ id }) => id),
+          graphDiffs: currentRegression.graphDiffs.map(({ id }) => id)
+        },
+        candidate: {
+          decisionDiffs: candidateRegression.decisionDiffs.map(({ id }) => id),
+          graphDiffs: candidateRegression.graphDiffs.map(({ id }) => id)
+        }
+      }
+    }
   };
 }
 

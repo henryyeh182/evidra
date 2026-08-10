@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pacevera Decision Graph Viewer</title>
+  <style>
+    :root { color-scheme: light dark; --bg: #101318; --surface: #171b22; --surface-2: #202630; --text: #eef2f7; --muted: #aab4c2; --line: #3a4554; --accent: #78c7ff; --good: #79e2aa; --warn: #ffd479; --bad: #ff8f9c; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    header { padding: 20px 24px 14px; border-bottom: 1px solid var(--line); }
+    h1 { margin: 0 0 5px; font-size: 20px; letter-spacing: .01em; }
+    header p { margin: 0; color: var(--muted); }
+    main { display: grid; grid-template-columns: 280px minmax(500px, 1fr) 320px; min-height: calc(100vh - 86px); }
+    aside, section { padding: 18px; }
+    aside { background: var(--surface); border-right: 1px solid var(--line); }
+    .details { border-left: 1px solid var(--line); background: var(--surface); overflow: auto; }
+    label, legend { color: var(--muted); font-size: 12px; }
+    input[type=file], select, button { width: 100%; margin-top: 6px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--text); font: inherit; }
+    button { cursor: pointer; text-align: left; }
+    button:hover, select:hover, input[type=file]:hover { border-color: var(--accent); }
+    fieldset { border: 0; padding: 0; margin: 18px 0 0; }
+    fieldset label { display: block; margin: 9px 0; color: var(--text); }
+    input[type=checkbox] { accent-color: var(--accent); margin-right: 7px; }
+    .status { margin-top: 16px; color: var(--muted); }
+    .status strong { color: var(--good); }
+    .graph-wrap { min-width: 0; overflow: auto; background: #0d1015; }
+    svg { display: block; min-width: 760px; width: 100%; height: 680px; }
+    .lane { fill: #131820; stroke: var(--line); }
+    .lane-title { fill: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .edge { fill: none; stroke: #667487; stroke-width: 1.5; marker-end: url(#arrow); opacity: .72; }
+    .edge.overruled { stroke: var(--warn); stroke-dasharray: 5 4; }
+    .node { cursor: pointer; stroke-width: 1.5; }
+    .node.evidence { fill: #173249; stroke: #55aee8; }
+    .node.rule { fill: #263526; stroke: #7bc88e; }
+    .node.rule.overruled { fill: #3b3020; stroke: var(--warn); }
+    .node.decision { fill: #3b2741; stroke: #db93ef; }
+    .node.action { fill: #23383d; stroke: #71d1c9; }
+    .node.changed { stroke: var(--bad); stroke-width: 3; }
+    .node-label { fill: var(--text); font-size: 12px; pointer-events: none; }
+    .node-sub { fill: var(--muted); font-size: 10px; pointer-events: none; }
+    .empty { display: grid; place-items: center; height: 680px; color: var(--muted); text-align: center; padding: 40px; }
+    h2 { font-size: 15px; margin: 0 0 12px; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .diff { color: var(--bad); }
+    .quiet { color: var(--muted); }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 50%; background: currentColor; }
+    .legend .e { color: #55aee8; } .legend .r { color: #7bc88e; } .legend .d { color: #db93ef; } .legend .a { color: #71d1c9; }
+    @media (max-width: 1000px) { main { grid-template-columns: 230px minmax(500px, 1fr); } .details { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); min-height: 220px; } }
+    @media (max-width: 700px) { main { display: block; } aside, .details { border: 0; border-bottom: 1px solid var(--line); } svg { height: 600px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pacevera Decision Graph</h1>
+    <p>Offline inspection of one behavioral regression case. Evidence stays in the selected local file.</p>
+  </header>
+  <main>
+    <aside>
+      <label for="primary">Primary artifact</label>
+      <input id="primary" type="file" accept="application/json,.json">
+      <label for="comparison" style="display:block;margin-top:12px">Comparison artifact (optional)</label>
+      <input id="comparison" type="file" accept="application/json,.json">
+      <fieldset>
+        <label for="caseSelect">Decision case</label>
+        <select id="caseSelect" disabled><option>Load an artifact</option></select>
+      </fieldset>
+      <fieldset>
+        <legend>View</legend>
+        <label><input id="rulesOnly" type="checkbox">Show triggered rules only</label>
+        <label><input id="suppressed" type="checkbox" checked>Show overruled rules</label>
+        <label><input id="diffOnly" type="checkbox">Highlight changed nodes</label>
+      </fieldset>
+      <div class="legend"><span class="e">Evidence</span><span class="r">Rule</span><span class="d">Decision</span><span class="a">Action</span></div>
+      <div id="status" class="status">Choose the R3 baseline JSON to begin.</div>
+    </aside>
+    <section class="graph-wrap">
+      <div id="empty" class="empty">Load <code>harness/regression-baseline.json</code><br>or another regression artifact.</div>
+      <svg id="graph" viewBox="0 0 1000 680" role="img" aria-label="Decision graph" hidden>
+        <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#667487"></path></marker></defs>
+        <rect class="lane" x="16" y="34" width="270" height="620" rx="8"></rect>
+        <rect class="lane" x="300" y="34" width="340" height="620" rx="8"></rect>
+        <rect class="lane" x="654" y="34" width="330" height="620" rx="8"></rect>
+        <text class="lane-title" x="32" y="58">Evidence</text>
+        <text class="lane-title" x="316" y="58">Rules and arbitration</text>
+        <text class="lane-title" x="670" y="58">Decision and action</text>
+        <g id="edges"></g><g id="nodes"></g>
+      </svg>
+    </section>
+    <section class="details">
+      <h2>Selected node</h2>
+      <div id="detail" class="quiet">Click a node to inspect its structured value.</div>
+      <h2 style="margin-top:24px">Case comparison</h2>
+      <div id="compare" class="quiet">No comparison artifact loaded.</div>
+    </section>
+  </main>
+  <script>
+    const state = { primary: null, comparison: null, selected: null };
+    const $ = (id) => document.getElementById(id);
+    const esc = (value) => String(value).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    const readArtifact = (file, target) => {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try { state[target] = JSON.parse(reader.result); renderCases(); }
+        catch (error) { $("status").innerHTML = `<span class="diff">Invalid JSON: ${esc(error.message)}</span>`; }
+      };
+      reader.readAsText(file);
+    };
+    $("primary").addEventListener("change", (event) => readArtifact(event.target.files[0], "primary"));
+    $("comparison").addEventListener("change", (event) => readArtifact(event.target.files[0], "comparison"));
+    $("caseSelect").addEventListener("change", render);
+    ["rulesOnly", "suppressed", "diffOnly"].forEach((id) => $(id).addEventListener("change", render));
+    const cases = (artifact) => artifact?.cases || [];
+    const findCase = (artifact, id) => cases(artifact).find((item) => item.id === id);
+    function renderCases() {
+      if (!state.primary) return;
+      const select = $("caseSelect");
+      const old = select.value;
+      select.innerHTML = cases(state.primary).map((item) => `<option value="${esc(item.id)}">${esc(item.id)}</option>`).join("");
+      select.disabled = false;
+      select.value = findCase(state.primary, old) ? old : cases(state.primary)[0]?.id || "";
+      $("status").innerHTML = `<strong>${cases(state.primary).length} cases loaded</strong>` + (state.comparison ? ` · comparison loaded` : "");
+      render();
+    }
+    function layoutNodes(graph, showSuppressed, rulesOnly) {
+      const visible = graph.nodes.filter((item) => {
+        if (item.type === "rule" && !showSuppressed && item.value.governing === false) return false;
+        if (rulesOnly && item.type === "rule" && item.value.applied !== true) return false;
+        return true;
+      });
+      const groups = { evidence: [], rule: [], decision: [], action: [] };
+      visible.forEach((item) => (groups[item.type] || groups.decision).push(item));
+      const positions = new Map();
+      Object.entries(groups).forEach(([type, items]) => {
+        const x = type === "evidence" ? 150 : type === "rule" ? 470 : 820;
+        const height = Math.max(70, 570 / Math.max(1, items.length));
+        items.forEach((item, index) => positions.set(item.id, { x, y: 95 + index * height, type }));
+      });
+      return { visible, positions };
+    }
+    function changedIds(base, comparison) {
+      if (!comparison || !base) return new Set();
+      const a = new Map(base.graph.nodes.map((node) => [node.id, JSON.stringify(node)]));
+      return new Set(comparison.graph.nodes.filter((node) => a.get(node.id) !== JSON.stringify(node)).map((node) => node.id));
+    }
+    function render() {
+      const item = findCase(state.primary, $("caseSelect").value);
+      if (!item) return;
+      $("empty").hidden = true; $("graph").hidden = false;
+      const other = findCase(state.comparison, item.id);
+      const { visible, positions } = layoutNodes(item.graph, $("suppressed").checked, $("rulesOnly").checked);
+      const changed = $("diffOnly").checked ? changedIds(item, other) : new Set();
+      $("edges").innerHTML = item.graph.edges.filter((edge) => positions.has(edge.from) && positions.has(edge.to)).map((edge) => {
+        const from = positions.get(edge.from), to = positions.get(edge.to);
+        return `<path class="edge ${edge.reason === "applied_but_overruled" ? "overruled" : ""}" d="M${from.x + 62},${from.y} C${from.x + 130},${from.y} ${to.x - 130},${to.y} ${to.x - 62},${to.y}"><title>${esc(edge.reason)}</title></path>`;
+      }).join("");
+      $("nodes").innerHTML = visible.map((item) => {
+        const p = positions.get(item.id), overruled = item.type === "rule" && item.value.governing === false;
+        const label = item.type === "evidence" ? item.id.replace("evidence:", "") : item.type === "rule" ? item.value.ruleId : item.type;
+        const sub = item.type === "rule" ? (overruled ? "applied · overruled" : "governing") : item.type === "decision" ? item.value.type : item.type === "action" ? (item.value.to?.intensity || "action") : "signal";
+        return `<g data-node="${esc(item.id)}"><rect class="node ${item.type} ${overruled ? "overruled" : ""} ${changed.has(item.id) ? "changed" : ""}" x="${p.x - 62}" y="${p.y - 24}" width="124" height="48" rx="8"></rect><text class="node-label" x="${p.x}" y="${p.y - 2}" text-anchor="middle">${esc(label.slice(0, 19))}</text><text class="node-sub" x="${p.x}" y="${p.y + 14}" text-anchor="middle">${esc(sub.slice(0, 21))}</text></g>`;
+      }).join("");
+      document.querySelectorAll("[data-node]").forEach((node) => node.addEventListener("click", () => showDetail(item.graph.nodes.find((candidate) => candidate.id === node.dataset.node))));
+      if (other) {
+        const decisionChanged = JSON.stringify(item.decision) !== JSON.stringify(other.decision);
+        const graphChanged = JSON.stringify(item.graph) !== JSON.stringify(other.graph);
+        $("compare").innerHTML = `<span class="${decisionChanged || graphChanged ? "diff" : ""}">${decisionChanged ? "Decision changed" : "Decision unchanged"} · ${graphChanged ? "Graph changed" : "Graph unchanged"}</span>`;
+      } else $("compare").textContent = state.comparison ? "Case is absent from comparison artifact." : "No comparison artifact loaded.";
+    }
+    function showDetail(node) { state.selected = node; $("detail").innerHTML = `<strong>${esc(node.type)} · ${esc(node.id)}</strong><pre>${esc(JSON.stringify(node.value, null, 2))}</pre>`; }
+  </script>
+</body>
+</html>

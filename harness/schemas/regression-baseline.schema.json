@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pacevera.dev/schemas/regression-baseline.schema.json",
+  "title": "Pacevera decision regression baseline",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "corpus", "cases"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0.0" },
+    "corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "source", "groundTruth"],
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string" },
+        "source": { "type": "string" },
+        "groundTruth": { "enum": ["behavioral_regression_baseline"] }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "source", "decision", "graph"],
+        "properties": {
+          "id": { "type": "string" },
+          "source": { "type": "string" },
+          "decision": { "type": "object" },
+          "graph": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["nodes", "edges"],
+            "properties": {
+              "nodes": { "type": "array" },
+              "edges": { "type": "array" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -26,6 +26,7 @@
     "audit:graph": "node scripts/audit-exercise-graph.js",
     "eval": "node eval/runner.js",
     "harness": "node harness/runner.js",
+    "regression:gate": "node scripts/regression-gate.js",
     "harness:plan": "node harness/plan-runner.js",
     "test": "node --test",
     "serve:http": "node apps/mcp-server/src/http.js",
