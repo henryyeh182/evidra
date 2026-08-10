@@ -185,10 +185,28 @@ mode 仍維持 bounded／stateless。durable registry adapter、跨重啟保存�
 
 目標：從個人隱私價值延伸到醫療／隊伍／企業的資料治理價值。
 
+P4 的第一個工程切片是 **G0 — Governance contract**：先固定「誰能看哪位
+athlete 的哪一層資料」與「稽核事件能記錄什麼」，再接入 SSO、VPC／on-prem
+部署與 durable audit store。G0 不接受 caller 自己傳入的 tenant 作為信任來源，
+也不把 raw Evidence 放入團隊輸出或 audit metadata。
+
 - tenant／athlete isolation、角色權限、教練只看必要摘要、不預設看 raw payload。
 - 私有 VPC／on-prem deployment、SSO、audit log、retention／deletion policy、資料區域選擇。
 - 團隊層級只輸出 readiness／availability／decision summary，保留 athlete 的細節控制權。
 - 提供 exportable decision trace，方便教練與醫療合作方審閱，但不變成醫療診斷系統。
+
+G0 的角色與資料面契約：`athlete` 只能讀自己的 self scope；`coach`、`clinician`
+與 `team_admin` 只能讀 verified principal 所列的 athlete scope，且團隊工具預設
+只產生 readiness／availability／decision summary；`auditor` 只讀 trace／audit，
+不讀 raw Evidence。每個 principal 必須帶 `tenant_id`、`sub`、`roles`，跨 tenant
+或 scope 外的請求 fail closed。
+
+G0 完成標準：policy contract tests 覆蓋 self／assigned athlete／cross-tenant／
+role denial；team summary 不含 raw payload；audit event 固定記錄 tenant、actor、
+action、resource、outcome，並對 token、claims、Evidence 與 health metrics 做
+redaction。G0 完成後，G1 才把 verified principal 接到 MCP request context 與
+SQLite／Postgres repository 的 row-level scope；G2 再做 SSO／SCIM、retention、
+deletion 與部署控制面。
 
 完成標準：一個隊伍能在自己的環境管理多位運動員，且任一角色的可見範圍都能被測試與稽核。
 

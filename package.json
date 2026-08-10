@@ -33,6 +33,7 @@
     "review:release": "node scripts/review-release.js",
     "test:rules": "node --test \"packages/rules/test/*.test.js\""
     ,"validate:rule-packages": "node scripts/validate-rule-packages.js"
+    ,"test:governance": "node --test packages/governance/test/*.test.js"
   },
   "engines": {
     "node": ">=20"
