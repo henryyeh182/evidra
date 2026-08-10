@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
-import { readFileSync } from "node:fs";
+import { loadBaseRulePackage } from "./packageBoundary.js";
 
 /**
  * The rule library as text, kept behind one module so the build can replace it.
@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
  * `scripts/build-bundle.js`), which is why no `session-rules.json` travels
  * inside the `.mcpb`.
  */
-export const librarySourceJson = readFileSync(
-  new URL("../data/session-rules.json", import.meta.url),
-  "utf8"
-);
+const packageData = loadBaseRulePackage();
+export const librarySourceJson = packageData.ruleFiles.get("rules/session-rules.json").rules
+  ? JSON.stringify(packageData.ruleFiles.get("rules/session-rules.json"))
+  : "";

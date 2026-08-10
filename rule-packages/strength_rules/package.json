@@ -1,0 +1,1 @@
+{ "packageId": "strength_rules", "version": "0.0.0", "schemaVersion": "1.0.0", "status": "draft", "tier": "domain", "engineCompatibility": { "min": "1.6.0", "max": "<2.0.0" }, "rules": [], "contentFiles": [], "contentChecksum": "sha256:0000000000000000000000000000000000000000000000000000000000000000" }

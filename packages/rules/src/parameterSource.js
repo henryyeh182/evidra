@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
-import { readFileSync } from "node:fs";
+import { loadBaseRulePackage } from "./packageBoundary.js";
 
 /**
  * The engine parameter set as text, kept behind one module so the build can
@@ -13,7 +13,6 @@ import { readFileSync } from "node:fs";
  * `scripts/build-bundle.js`), which is why no `engine-parameters.json` travels
  * inside the `.mcpb`.
  */
-export const parameterSourceJson = readFileSync(
-  new URL("../data/engine-parameters.json", import.meta.url),
-  "utf8"
+export const parameterSourceJson = JSON.stringify(
+  loadBaseRulePackage().ruleFiles.get("rules/engine-parameters.json")
 );

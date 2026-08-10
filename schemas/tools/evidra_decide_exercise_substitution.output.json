@@ -4,6 +4,9 @@
   "title": "evidra_decide_exercise_substitution output",
   "type": "object",
   "properties": {
+    "decisionId": {
+      "type": "string"
+    },
     "evidence": {
       "type": "array"
     },
@@ -142,6 +145,7 @@
     }
   },
   "required": [
+    "decisionId",
     "evidence",
     "decision",
     "action",

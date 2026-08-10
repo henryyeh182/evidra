@@ -1,0 +1,25 @@
+{
+  "packageId": "base_rules",
+  "version": "1.0.0",
+  "schemaVersion": "1.0.0",
+  "status": "released",
+  "tier": "base",
+  "engineCompatibility": { "min": "1.6.0", "max": "<2.0.0" },
+  "rules": [
+    { "id": "EVD-R-001", "path": "rules/session-rules.json" },
+    { "id": "EVD-R-002", "path": "rules/session-rules.json" },
+    { "id": "EVD-R-003", "path": "rules/session-rules.json" },
+    { "id": "EVD-R-004", "path": "rules/session-rules.json" },
+    { "id": "EVD-R-005", "path": "rules/session-rules.json" },
+    { "id": "EVD-R-006", "path": "rules/session-rules.json" },
+    { "id": "EVD-R-007", "path": "rules/session-rules.json" },
+    { "id": "EVD-R-008", "path": "rules/session-rules.json" },
+    { "id": "EVD-R-009", "path": "rules/session-rules.json" },
+    { "id": "EVD-R-010", "path": "rules/session-rules.json" },
+    { "id": "EVD-R-011", "path": "rules/session-rules.json" },
+    { "id": "EVD-R-012", "path": "rules/session-rules.json" }
+  ],
+  "contentFiles": ["rules/engine-parameters.json", "rules/session-rules.json"],
+  "contentChecksum": "sha256:6a7fe7a02cd44cd74f7fe08ac794c4342ec428f91a4d7ae57c20b64f67f20366",
+  "reviewRecord": "R0 package boundary; no rule semantics changed"
+}

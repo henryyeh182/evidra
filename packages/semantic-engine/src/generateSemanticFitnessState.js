@@ -9,7 +9,7 @@ import {
 } from "../../evidence/src/model.js";
 
 // Every number in this block comes from
-// `packages/rules/data/engine-parameters.json`, not from here. None of them
+// `rule-packages/base_rules/rules/engine-parameters.json`, not from here. None of them
 // belong to a rule and none appear in any `decisionBasis`, and they change what
 // the engine decides all the same: the baselines sit underneath a readiness
 // score that three rules cut, and a staleness window decides whether a signal

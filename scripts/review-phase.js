@@ -629,10 +629,10 @@ gate(
       "apps/mcp-server/src/toolDefinitions.js",
       "apps/mcp-server/src/server.js",
       "apps/mcp-server/src/outputSchemas.js",
-      "packages/rules/data/session-rules.json",
+      "rule-packages/base_rules/rules/session-rules.json",
       // 同一種東西：引擎從資料讀值，改一個數字就改行為。它不進 decisionBasis，
       // 呼叫端看不到，所以更需要在這條裡。
-      "packages/rules/data/engine-parameters.json",
+      "rule-packages/base_rules/rules/engine-parameters.json",
       "packages/evidence/src/model.js"
     ];
 

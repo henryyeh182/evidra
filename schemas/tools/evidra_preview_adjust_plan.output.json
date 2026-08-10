@@ -4,6 +4,7 @@
   "title": "evidra_preview_adjust_plan output",
   "type": "object",
   "properties": {
+    "decisionId": { "type": "string" },
     "previewId": { "type": "string" },
     "planId": { "type": "string" },
     "baseVersion": { "type": "number" },
@@ -30,5 +31,5 @@
     },
     "patch": { "type": "object" }
   },
-  "required": ["previewId", "planId", "baseVersion", "summary", "diff", "decisionBasis", "patch"]
+  "required": ["decisionId", "previewId", "planId", "baseVersion", "summary", "diff", "decisionBasis", "patch"]
 }
