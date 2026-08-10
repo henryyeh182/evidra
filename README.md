@@ -67,7 +67,8 @@ Claude Desktop
 connector——Pacevera 從不代替使用者連上 Apple Health、Garmin 或 Strava。
 
 今天已走通的是 **Claude Desktop + desktop extension（MCPB）**。手機情境需要 remote MCP
-server，因此仍卡在 authorization server、OAuth 簽章驗證、HTTPS 公開部署與 hosted 版隱私政策。
+server；本 repo 已補 resource-server/JWT/HTTPS readiness skeleton，但仍卡在真正的
+authorization server、公開部署與 hosted 版隱私政策。
 
 裝好之後貼上去就能跑的六則問法在 [`examples/README.md`](examples/README.md)——走完 `keep`／`adjust`／`advance`／`substitute`／`defer` 五種決策型別。
 
@@ -205,9 +206,9 @@ Form 3 是核心宗旨要的那個版本，不是選配。它排在後面是因�
 | 對外 tool | 6 個（`tools/list` 實測） |
 | 資料標準化 | `packages/connectors` 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP，Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 家。前四家照真實匯出檔寫，Oura／WHOOP 照兩家自己的 OpenAPI 寫、尚未對過真實回應 |
 | 確定性計算 | `semantic-engine`（readiness／分肌群疲勞）· `training-load`（ATL/CTL/TSB/ACWR）· `decision-engine`（from→to）· `planning` · `knowledge-graph`（889 節點 / 5,785 邊） |
-| 測試 | 443 tests、eval 20 golden cases 全綠 |
+| 測試 | 453 tests、eval 20 golden cases 全綠 |
 | 傳輸 | stdio ✅ · Streamable HTTP ✅ |
-| OAuth | 只做了「檢查 token claims」那一半；**簽章驗證器沒填、`serve:http` 進入點沒接線、沒有 authorization server** → 遠端連不起來 |
+| OAuth | resource-server、JWKS/JWT signature、issuer/audience/expiry/scope checks 與 HTTPS config skeleton 已有；**沒有真正 authorization server、公開部署與 hosted privacy policy** → 仍不可宣稱 production |
 | 協定版本 | `2025-06-18`；最新規格是 `2026-07-28`（stateless），升級走 dual-era |
 | 產品形態 | Form 1 desktop extension 可用；Form 2 remote MCP server 目前 NO-GO；Form 3 user-controlled deployment **一行程式都沒有** |
 
@@ -291,7 +292,7 @@ GUI 啟動的 app 拿到的 PATH 很精簡，設定檔裡**不能寫裸的 `node
 ## 指令
 
 ```bash
-npm test                    # 443 tests
+npm test                    # 453 tests
 npm run eval                # golden set 計分（tool 輸出契約）
 npm run harness             # Decision Harness（決策鏈本身；改規則或引擎之後必跑）
 npm run review:phase        # 階段完成審查（宣告「做完了」之前必跑）

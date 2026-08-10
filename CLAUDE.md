@@ -150,7 +150,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 - 對外 **6 個 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` ·
   `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
   （**v0.4.1 起拿掉 `evidra_` 前綴**，改回 v0.1.1 那組名字——見發布章節）
-- **443 tests**、eval 20 golden cases，全綠
+- **453 tests**、eval 20 golden cases，全綠
 - parser 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP；
   Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 個平台。
   **前四家照真實匯出檔寫；Oura 與 WHOOP 照兩家自己的 OpenAPI 寫（2026-08-07），
@@ -164,9 +164,9 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
   同一天的步數會同時來自 Garmin 與手機兩個 recorder（取單一 recorder 最大值，不相加）；
   Garmin 同步進來的值不會有 Fitbit 複合分數（sleep_score／Stress Score 只剩表頭、cardio_load 全 0）
 - 知識圖譜 889 節點 / 5,785 邊（**內部證據來源，不是對外產品**）
-- transport：stdio ✅ · Streamable HTTP ✅；OAuth 只有「檢查 token claims」那一半
-  （`oauth.js`），**簽章驗證器是 `null`、`http.js` 進入點沒傳 `oauth`、沒有 authorization server**
-  → 端到端還不能用
+- transport：stdio ✅ · Streamable HTTP ✅；OAuth resource-server skeleton ✅
+  （RFC 9728 metadata、JWKS/JWT signature、issuer/audience/expiry/scope checks、HTTPS config），
+  **沒有真正 authorization server、公開部署與 hosted privacy policy** → 端到端 production 仍不能用
 - 協定停在 `2025-06-18`；最新規格 `2026-07-28`（stateless）。升級走 dual-era
 - `schemas/sources/` 與 `eval/scenarios/` 四家齊備（Garmin／Google Health Takeout／Apple Health／
   Strava）→ **`review:phase` 的 G5 綠**。Strava 那份量測自 mbp-rd 的真實 bulk export
@@ -175,7 +175,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
   正確；`Intensity = round(NP/FTP×100)` 5/5 完全吻合；`Training Load` 是 TSS 公式取 floor。
   該匯出的 `maxHeartRateIsAgeEstimate` 為 **true**（171 ＝ 220−49），所以整條負荷序列
   站在 220−age 這個經驗法則上
-- **Phase 2：一行程式都沒有**
+- **Phase 2：一行程式都沒有**（remote readiness skeleton 不等於 user-controlled deployment）
 
 ## 未決（不得自行改寫）
 

@@ -10,8 +10,11 @@ import {
   decodeJwtClaims,
   checkTokenClaims,
   wwwAuthenticate,
-  bearerFromHeaders
+  bearerFromHeaders,
+  verifyJwtSignature,
+  createJwksVerifier
 } from "../src/oauth.js";
+import { generateKeyPairSync, sign } from "node:crypto";
 
 const RESOURCE = "https://evidra.example/mcp";
 const NOW = 1_800_000_000;
@@ -125,4 +128,42 @@ test("claims can be read without being trusted", () => {
 test("a token that cannot be read is refused rather than treated as empty", () => {
   assert.equal(checkTokenClaims(null, { resource: RESOURCE, now: NOW }).ok, false);
   assert.equal(checkTokenClaims("string", { resource: RESOURCE, now: NOW }).ok, false);
+});
+
+test("JWT signature verification requires an allowed asymmetric algorithm and configured key", () => {
+  const { publicKey, privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const jwk = { ...publicKey.export({ format: "jwk" }), kid: "k1", alg: "RS256", use: "sig" };
+  const header = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT", kid: "k1" })).toString("base64url");
+  const payload = Buffer.from(JSON.stringify(claims({ sub: "synthetic-user" }))).toString("base64url");
+  const input = `${header}.${payload}`;
+  const signed = `${input}.${sign("RSA-SHA256", Buffer.from(input), privateKey).toString("base64url")}`;
+
+  assert.equal(verifyJwtSignature(signed, { jwks: [jwk], algorithms: ["RS256"] }).sub, "synthetic-user");
+  assert.equal(verifyJwtSignature(`${signed.slice(0, -1)}x`, { jwks: [jwk], algorithms: ["RS256"] }), null);
+  const unsigned = `${Buffer.from(JSON.stringify({ alg: "none" })).toString("base64url")}.${payload}.`;
+  assert.equal(verifyJwtSignature(unsigned, { jwks: [jwk] }), null);
+});
+
+test("JWKS discovery is HTTPS-only, injected in tests, and cached", async () => {
+  const { publicKey, privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const jwk = { ...publicKey.export({ format: "jwk" }), kid: "k2", alg: "RS256", use: "sig" };
+  const header = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT", kid: "k2" })).toString("base64url");
+  const payload = Buffer.from(JSON.stringify(claims({ sub: "cached-user" }))).toString("base64url");
+  const input = `${header}.${payload}`;
+  const signed = `${input}.${sign("RSA-SHA256", Buffer.from(input), privateKey).toString("base64url")}`;
+  let fetches = 0;
+  const verifier = createJwksVerifier({
+    jwksUrl: "https://auth.example/.well-known/jwks.json",
+    fetchImpl: async () => ({ ok: true, status: 200, json: async () => { fetches += 1; return { keys: [jwk] }; } }),
+    cacheTtlSeconds: 60
+  });
+  assert.equal((await verifier(signed)).sub, "cached-user");
+  assert.equal((await verifier(signed)).sub, "cached-user");
+  assert.equal(fetches, 1);
+  assert.throws(() => createJwksVerifier({ jwksUrl: "http://auth.example/jwks" }), /HTTPS/);
+});
+
+test("verified claims still need issuer and expiry", () => {
+  assert.equal(checkTokenClaims({ aud: RESOURCE, iss: "https://auth.example" }, { resource: RESOURCE }).ok, false);
+  assert.equal(checkTokenClaims({ exp: NOW + 600, aud: RESOURCE }, { resource: RESOURCE }).ok, false);
 });

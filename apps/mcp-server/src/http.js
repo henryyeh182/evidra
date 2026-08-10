@@ -13,7 +13,9 @@
  * message and gets a JSON reply, notifications get 202 with no body, and GET is
  * available for a server-initiated stream. Dependency-free, on node:http.
  */
-import { createServer } from "node:http";
+import { createServer as createHttpNodeServer } from "node:http";
+import { createServer as createHttpsNodeServer } from "node:https";
+import { readFileSync } from "node:fs";
 
 import { handleJsonRpcMessage } from "./server.js";
 import {
@@ -21,7 +23,8 @@ import {
   canonicalResourceUri,
   checkTokenClaims,
   wwwAuthenticate,
-  bearerFromHeaders
+  bearerFromHeaders,
+  createJwksVerifier
 } from "./oauth.js";
 
 const RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
@@ -68,7 +71,28 @@ function sendJson(res, status, payload, extraHeaders = {}) {
   res.end(body);
 }
 
-export function createHttpServer(options = {}) {
+function buildOauth(options) {
+  const oauth = options.oauth
+    ? {
+        resource: canonicalResourceUri(options.oauth.resource),
+        authorizationServers: options.oauth.authorizationServers || [],
+        scopes: options.oauth.scopes,
+        requiredScopes: options.oauth.requiredScopes,
+        issuers: options.oauth.issuers,
+        verify: options.oauth.verify || null
+      }
+    : null;
+
+  if (oauth && oauth.authorizationServers.length === 0) {
+    throw new Error("OAuth requires at least one authorization server; a client has nowhere to go without it.");
+  }
+  if (oauth && (typeof oauth.verify !== "function" || !oauth.issuers?.length)) {
+    throw new Error("OAuth requires a signature verifier and at least one trusted issuer.");
+  }
+  return oauth;
+}
+
+function createTransportServer(nodeCreateServer, options = {}) {
   const endpoint = options.endpoint || "/mcp";
   const allowedOrigins = options.allowedOrigins || [];
   const requireToken = options.token || null;
@@ -78,30 +102,18 @@ export function createHttpServer(options = {}) {
    * a token issued for this resource; absent falls back to the shared secret,
    * which is a local-development affordance and says so.
    */
-  const oauth = options.oauth
-    ? {
-        resource: canonicalResourceUri(options.oauth.resource),
-        authorizationServers: options.oauth.authorizationServers || [],
-        scopes: options.oauth.scopes,
-        requiredScopes: options.oauth.requiredScopes,
-        issuers: options.oauth.issuers,
-        // Signature checking belongs to whoever knows the authorization
-        // server's keys. Without a verifier this server refuses tokens rather
-        // than trusting unsigned claims — an unverified JWT is a string an
-        // attacker can write.
-        verify: options.oauth.verify || null
-      }
-    : null;
+  const oauth = buildOauth(options);
 
-  if (oauth && oauth.authorizationServers.length === 0) {
-    throw new Error("OAuth requires at least one authorization server; a client has nowhere to go without it.");
-  }
-
-  const server = createServer(async (req, res) => {
+  const server = nodeCreateServer(options.tls, async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
 
+    const requestOrigin = req.headers.origin;
     const cors = {
-      "access-control-allow-origin": req.headers.origin || "*",
+      // Never reflect an arbitrary Origin. A disallowed browser origin gets
+      // `null`; the request is rejected below, and the response cannot be read.
+      "access-control-allow-origin": requestOrigin
+        ? (originAllowed(requestOrigin, allowedOrigins) ? requestOrigin : "null")
+        : "*",
       "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
       // `mcp-session-id` stays in allow-headers because a client may still send
       // one and there is no reason to reject the request over it. Nothing exposes
@@ -110,6 +122,10 @@ export function createHttpServer(options = {}) {
     };
 
     if (req.method === "OPTIONS") {
+      if (!originAllowed(requestOrigin, allowedOrigins)) {
+        sendJson(res, 403, { error: "Origin not allowed" }, cors);
+        return;
+      }
       res.writeHead(204, cors);
       res.end();
       return;
@@ -265,6 +281,78 @@ export function createHttpServer(options = {}) {
   return server;
 }
 
+/** Local HTTP transport. OAuth remains available for local integration tests. */
+export function createHttpServer(options = {}) {
+  return createTransportServer(createHttpNodeServer, options);
+}
+
+/** HTTPS transport for a hosted deployment. TLS material is supplied by the operator. */
+export function createHttpsServer(options = {}) {
+  if (!options.tls?.key || !options.tls?.cert) {
+    throw new Error("HTTPS requires TLS key and certificate material.");
+  }
+  return createTransportServer(createHttpsNodeServer, options);
+}
+
+/**
+ * Build the hosted transport from environment configuration. This is a
+ * readiness scaffold, not a deployment: it only starts when an operator has
+ * supplied the public URL, authorization-server metadata, JWKS URL and TLS
+ * files. No provider credentials or health evidence are accepted here.
+ */
+export function createConfiguredServer(env = process.env) {
+  const tlsKeyPath = env.MCP_TLS_KEY_PATH;
+  const tlsCertPath = env.MCP_TLS_CERT_PATH;
+  const hosted = Boolean(tlsKeyPath || tlsCertPath || env.MCP_PUBLIC_URL || env.MCP_OAUTH_JWKS_URL);
+  if (!hosted) {
+    return createHttpServer({
+      endpoint: env.MCP_ENDPOINT || "/mcp",
+      token: env.MCP_TOKEN || null,
+      allowedOrigins: (env.MCP_ALLOWED_ORIGINS || "").split(",").filter(Boolean)
+    });
+  }
+  for (const [name, value] of Object.entries({ MCP_TLS_KEY_PATH: tlsKeyPath, MCP_TLS_CERT_PATH: tlsCertPath })) {
+    if (!value) throw new Error(`${name} is required for hosted HTTPS mode.`);
+  }
+  const required = ["MCP_PUBLIC_URL", "MCP_OAUTH_AUTHORIZATION_SERVER", "MCP_OAUTH_ISSUER", "MCP_OAUTH_JWKS_URL"];
+  for (const name of required) {
+    if (!env[name]) throw new Error(`${name} is required for hosted OAuth mode.`);
+  }
+  const resource = canonicalResourceUri(env.MCP_PUBLIC_URL);
+  if (!resource.startsWith("https://")) throw new Error("MCP_PUBLIC_URL must be HTTPS in hosted mode.");
+  const endpoint = env.MCP_ENDPOINT || "/mcp";
+  const expectedResource = canonicalResourceUri(new URL(endpoint, resource).href);
+  if (expectedResource !== resource) {
+    throw new Error("MCP_PUBLIC_URL must identify the configured MCP endpoint.");
+  }
+  const authorizationServer = new URL(env.MCP_OAUTH_AUTHORIZATION_SERVER);
+  const issuer = new URL(env.MCP_OAUTH_ISSUER);
+  const jwksUrl = new URL(env.MCP_OAUTH_JWKS_URL);
+  if (authorizationServer.protocol !== "https:" || issuer.protocol !== "https:" || jwksUrl.protocol !== "https:") {
+    throw new Error("Hosted authorization-server, issuer and JWKS URLs must use HTTPS.");
+  }
+  const scopes = (env.MCP_OAUTH_SCOPES || "fitness.decide").split(",").map((scope) => scope.trim()).filter(Boolean);
+  const requiredScopes = (env.MCP_OAUTH_REQUIRED_SCOPES || scopes.join(","))
+    .split(",").map((scope) => scope.trim()).filter(Boolean);
+  const verify = createJwksVerifier({
+    jwksUrl: jwksUrl.href,
+    algorithms: (env.MCP_OAUTH_ALGORITHMS || "RS256,PS256,ES256,EdDSA").split(",").map((alg) => alg.trim()).filter(Boolean)
+  });
+  return createHttpsServer({
+    endpoint,
+    allowedOrigins: (env.MCP_ALLOWED_ORIGINS || "").split(",").filter(Boolean),
+    tls: { key: readFileSync(tlsKeyPath), cert: readFileSync(tlsCertPath) },
+    oauth: {
+      resource,
+      authorizationServers: [authorizationServer.href],
+      issuers: [issuer.href],
+      scopes,
+      requiredScopes,
+      verify
+    }
+  });
+}
+
 // Run directly: node apps/mcp-server/src/http.js
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) {
   const port = Number(process.env.PORT || 8787);
@@ -280,9 +368,17 @@ if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop()
   const token = process.env.MCP_TOKEN || null;
   const allowedOrigins = (process.env.MCP_ALLOWED_ORIGINS || "").split(",").filter(Boolean);
 
-  createHttpServer({ token, allowedOrigins }).listen(port, host, () => {
-    console.log(`fitness-mcp listening on http://${host}:${port}/mcp`);
-    console.log(token ? "auth: bearer token required" : "auth: none");
+  let server;
+  try {
+    server = createConfiguredServer(process.env);
+  } catch (error) {
+    console.error(`fitness-mcp configuration error: ${error.message}`);
+    process.exitCode = 1;
+  }
+  if (server) server.listen(port, host, () => {
+    const scheme = process.env.MCP_PUBLIC_URL?.startsWith("https://") ? "https" : "http";
+    console.log(`fitness-mcp listening on ${scheme}://${host}:${port}/mcp`);
+    console.log(process.env.MCP_PUBLIC_URL ? "auth: OAuth JWT required" : token ? "auth: bearer token required" : "auth: none");
     console.log(
       host === "127.0.0.1" || host === "localhost"
         ? `bound to ${host}: this machine only. MCP_HOST=0.0.0.0 exposes it — set MCP_TOKEN first.`

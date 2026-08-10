@@ -89,7 +89,8 @@ export function normalizeOuraSleep(records = []) {
         value: Number((record.total_sleep_duration / 3600).toFixed(2)),
         unit: "hours",
         recordedAt,
-        source: "oura"
+        source: "oura",
+        basis: "device_measured"
       });
     }
 
@@ -104,7 +105,8 @@ export function normalizeOuraSleep(records = []) {
         value: record.average_hrv,
         unit: "ms",
         recordedAt,
-        source: "oura"
+        source: "oura",
+        basis: "device_measured"
       });
     }
 
@@ -117,6 +119,7 @@ export function normalizeOuraSleep(records = []) {
         unit: "bpm",
         recordedAt,
         source: "oura",
+        basis: "computed_from_records",
         metadata: {
           // Named so a reader is never misled about whose number this is.
           derivedFrom: "sleep.lowest_heart_rate",
@@ -156,7 +159,8 @@ export function normalizeOuraDailySleep(records = []) {
         value: record.score,
         unit: "score_0_100",
         recordedAt,
-        source: "oura"
+        source: "oura",
+        basis: "vendor_reported"
       });
     }
   }
@@ -179,7 +183,8 @@ export function normalizeOuraDailyReadiness(records = []) {
         type: "vendor_readiness",
         value: record.score,
         unit: "score_0_100",
-        recordedAt
+        recordedAt,
+        basis: "vendor_reported"
       });
     }
   }
@@ -203,7 +208,8 @@ export function normalizeOuraDailyActivity(records = []) {
         value: record.steps,
         unit: "count",
         recordedAt,
-        source: "oura"
+        source: "oura",
+        basis: "device_measured"
       });
     }
   }

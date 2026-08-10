@@ -1,0 +1,49 @@
+{
+  "sleep": [{
+    "id": "oura-sleep-synthetic-1",
+    "day": "2026-07-26",
+    "type": "long_sleep",
+    "bedtime_start": "2026-07-25T23:10:00+08:00",
+    "bedtime_end": "2026-07-26T07:05:00+08:00",
+    "total_sleep_duration": 26100,
+    "time_in_bed": 28500,
+    "average_hrv": 48,
+    "lowest_heart_rate": 52,
+    "average_heart_rate": 58,
+    "efficiency": 91,
+    "low_battery_alert": false
+  }],
+  "dailySleep": [{
+    "id": "oura-daily-sleep-synthetic-1",
+    "day": "2026-07-26",
+    "timestamp": "2026-07-26T07:10:00+08:00",
+    "score": 82,
+    "contributors": { "total_sleep": 90, "hrv_balance": 61 }
+  }],
+  "dailyReadiness": [{
+    "id": "oura-readiness-synthetic-1",
+    "day": "2026-07-26",
+    "timestamp": "2026-07-26T07:15:00+08:00",
+    "score": 74,
+    "contributors": { "hrv_balance": 61, "resting_heart_rate": 88 }
+  }],
+  "dailyActivity": [{
+    "id": "oura-activity-synthetic-1",
+    "day": "2026-07-26",
+    "timestamp": "2026-07-26T23:59:00+08:00",
+    "steps": 9400,
+    "score": 88
+  }],
+  "workouts": [{
+    "id": "oura-workout-synthetic-1",
+    "activity": "running",
+    "day": "2026-07-26",
+    "start_datetime": "2026-07-26T06:00:00+08:00",
+    "end_datetime": "2026-07-26T06:45:00+08:00",
+    "intensity": "moderate",
+    "calories": 410,
+    "distance": 8200,
+    "label": "Synthetic run",
+    "source": "synthetic"
+  }]
+}

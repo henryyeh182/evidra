@@ -25,7 +25,7 @@
 - **6 個對外決策 tool**：`assess_fitness_state`、`decide_session`、
   `decide_exercise_substitution`、`generate_plan`、
   `preview_adjust_plan`、`commit_adjust_plan`
-- **443 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
+- **453 tests** 全綠（dependency-free，Node 20+）；**eval 20 golden cases**，5 個 gate 全綠
 - **知識圖譜** 889 節點 / 5,785 邊；進退階 34 條（17 組互逆）；訓練目標五值域
 - **Rule Library**（`packages/rules` v1.4.0）：**12 條規則**，每條帶 `ruleId`／`version`／
   `category`／`priority`／`basis`／`evidence`（`studyDesign` ＋ `recommendationStrength`，
@@ -116,8 +116,8 @@ LLM 負責理解使用者與表達結果；決策本身必須由 Evidra 的 evid
 | # | 缺口 | 現況 |
 |---|---|---|
 | 1 | Team／Enterprise 帳號 | 個人 Pro 進不去 admin settings |
-| 2 | authorization server | `http.js:95`，與 per-MAU 是同一個缺口，選型硬條件：支援 CIMD |
-| 3 | HTTPS 公開部署 | 只跑 `localhost:8787` |
+| 2 | authorization server | 尚未選型／實作；resource-server 已有 JWT/JWKS boundary，硬條件仍是支援 CIMD |
+| 3 | HTTPS 公開部署 | 已有 TLS/config skeleton；沒有 hostname、certificate、cloud account 或 deployment credentials |
 | 4 | 隱私政策改寫 | 計畫已寫在 [privacy-policy-rewrite-plan.md](privacy-policy-rewrite-plan.md)，觸發點是 #2 開工 |
 
 **Connectors Directory 上架前置清單（14 項，remote 專用）**：✅ 2 項（tool annotations、
@@ -229,7 +229,7 @@ Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google 
 | §3.7 Rule Package | 兩個存在理由都已被否決（`tier` 屬 A6 未定、自動更新牴觸已發布的 `PRIVACY.md`）。**類比本身也要拆**：病毒碼更新失敗是 fail-closed，訓練規則更新失敗是 fail-open |
 | §4「Confidence: High，幾乎不需質疑」 | 與整個庫的設計相反——每個引用強制填 `doesNotSupport`，理由是「in every case so far there is one」。repo 裡就住著反例：EVD-R-006 引 Gabbett，同時載入 Impellizzeri 的反對 |
 | §4 Exercise Science Board | **那個 board 不存在。** 維持 `reviewer` 實名。宣稱一個不存在的審查機構，跟宣稱一個撐不住的證據等級是同一類錯 |
-| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 443 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
+| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 453 tests ＋ 9 gates，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
 | §5 四個新 tool | 逐個理由見 history §4.6.5。**補一條**：§5 自己的表格就顯示五列缺口**全在既有 tool 的輸出欄位裡**，沒有一列是「少一個口」 |
 
 #### 0.2 版號規則（2026-08-07 起照這個走）
@@ -286,7 +286,7 @@ sha256 同為 `294acd57b50cad0d0…eeb8`，`review:release` 六條全綠。
 
 ### 3. 若使用者決定推進 remote（目前 NO-GO，僅供之後參考）
 
-7.1 OAuth 三缺口（簽章驗證器／進入點接線／authorization server）＋ 7.2 公開部署（HTTPS）
+7.1 OAuth 剩餘缺口（authorization server）＋ 7.2 公開部署（HTTPS）
 ＋ Phase 8 上架前置清單剩餘 12 項（見上）＋ 隱私政策改寫（觸發點是 authorization server
 開工那一刻，且必須在 remote 開放前改完）。
 

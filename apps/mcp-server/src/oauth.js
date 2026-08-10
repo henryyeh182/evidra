@@ -1,6 +1,8 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
+import { createPublicKey, verify as verifySignature, RSA_PKCS1_PSS_PADDING } from "node:crypto";
+
 /**
  * OAuth 2.1 Resource Server — our half of the authorization chain.
  *
@@ -52,6 +54,12 @@ export function protectedResourceMetadata(config) {
  */
 export function canonicalResourceUri(value) {
   const url = new URL(value);
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    throw new Error(`Resource URI must use http or https: ${value}`);
+  }
+  if (url.username || url.password || url.search) {
+    throw new Error(`Resource URI must not contain credentials or a query: ${value}`);
+  }
   if (url.hash) throw new Error(`Resource URI must not contain a fragment: ${value}`);
   url.protocol = url.protocol.toLowerCase();
   url.hostname = url.hostname.toLowerCase();
@@ -63,6 +71,131 @@ export function canonicalResourceUri(value) {
 
 const base64UrlDecode = (segment) =>
   Buffer.from(segment.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
+
+const base64UrlBuffer = (segment) =>
+  Buffer.from(segment.replace(/-/g, "+").replace(/_/g, "/"), "base64");
+
+function parseJwt(token) {
+  const parts = String(token).split(".");
+  if (parts.length !== 3 || parts.some((part) => part.length === 0)) return null;
+  try {
+    const header = JSON.parse(base64UrlDecode(parts[0]));
+    const claims = JSON.parse(base64UrlDecode(parts[1]));
+    if (!header || typeof header !== "object" || !claims || typeof claims !== "object") return null;
+    return { header, claims, signingInput: `${parts[0]}.${parts[1]}`, signature: base64UrlBuffer(parts[2]) };
+  } catch {
+    return null;
+  }
+}
+
+function ecdsaJoseToDer(signature) {
+  if (signature.length % 2 !== 0) return null;
+  const width = signature.length / 2;
+  const integer = (bytes) => {
+    let value = Buffer.from(bytes);
+    while (value.length > 1 && value[0] === 0) value = value.subarray(1);
+    if (value[0] & 0x80) value = Buffer.concat([Buffer.from([0]), value]);
+    return Buffer.concat([Buffer.from([0x02, value.length]), value]);
+  };
+  const r = integer(signature.subarray(0, width));
+  const s = integer(signature.subarray(width));
+  const body = Buffer.concat([r, s]);
+  if (body.length >= 128) return Buffer.concat([Buffer.from([0x30, 0x81, body.length]), body]);
+  return Buffer.concat([Buffer.from([0x30, body.length]), body]);
+}
+
+function keyForHeader(header, config) {
+  const keys = config.jwks || config.publicKeys || [];
+  const entries = Array.isArray(keys)
+    ? keys.map((key) => [key.kid, key])
+    : Object.entries(keys);
+  const candidates = entries
+    .filter(([kid, key]) => (!header.kid || kid === header.kid || key?.kid === header.kid))
+    .map(([, key]) => key)
+    .filter((key) => key && (!key.alg || key.alg === header.alg) && (!key.use || key.use === "sig"));
+  if (candidates.length !== 1) return null;
+  try {
+    const key = candidates[0];
+    return key.kty || key.crv ? createPublicKey({ key, format: "jwk" }) : createPublicKey(key);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Verify a compact JWT using an operator-supplied public JWKS. This function
+ * intentionally does not discover keys from an untrusted token or accept
+ * `alg: none`; key discovery belongs to the configured authorization-server
+ * boundary, and the algorithm allow-list is part of deployment configuration.
+ *
+ * @returns {object|null} verified claims, or null when the JWS is invalid
+ */
+export function verifyJwtSignature(token, config = {}) {
+  const parsed = parseJwt(token);
+  if (!parsed) return null;
+  const allowedAlgorithms = config.algorithms || ["RS256", "PS256", "ES256", "EdDSA"];
+  if (!allowedAlgorithms.includes(parsed.header.alg) || parsed.header.alg === "none") return null;
+
+  const key = keyForHeader(parsed.header, config);
+  if (!key) return null;
+
+  let signature = parsed.signature;
+  let algorithm = parsed.header.alg;
+  let options;
+  if (parsed.header.alg.startsWith("ES")) {
+    const expectedBytes = { ES256: 64, ES384: 96, ES512: 132 }[parsed.header.alg];
+    if (signature.length !== expectedBytes) return null;
+    signature = ecdsaJoseToDer(signature);
+    algorithm = { ES256: "sha256", ES384: "sha384", ES512: "sha512" }[parsed.header.alg];
+  } else if (parsed.header.alg.startsWith("RS")) {
+    algorithm = { RS256: "RSA-SHA256", RS384: "RSA-SHA384", RS512: "RSA-SHA512" }[parsed.header.alg];
+  } else if (parsed.header.alg.startsWith("PS")) {
+    algorithm = { PS256: "sha256", PS384: "sha384", PS512: "sha512" }[parsed.header.alg];
+    options = {
+      key,
+      padding: RSA_PKCS1_PSS_PADDING,
+      saltLength: { PS256: 32, PS384: 48, PS512: 64 }[parsed.header.alg]
+    };
+  } else if (parsed.header.alg === "EdDSA") {
+    algorithm = null;
+  } else {
+    return null;
+  }
+
+  try {
+    const valid = verifySignature(algorithm, Buffer.from(parsed.signingInput), options || key, signature);
+    return valid ? parsed.claims : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build a verifier for a static authorization-server JWKS URL. The URL is
+ * configuration, never token input; it must be HTTPS. A short in-memory cache
+ * avoids fetching keys for every call without turning this resource server into
+ * a token store. Tests can inject fetchImpl and never contact a real provider.
+ */
+export function createJwksVerifier({ jwksUrl, fetchImpl = globalThis.fetch, cacheTtlSeconds = 300, algorithms } = {}) {
+  const url = new URL(jwksUrl);
+  if (url.protocol !== "https:") throw new Error("JWKS URL must use HTTPS.");
+  if (typeof fetchImpl !== "function") throw new Error("A fetch implementation is required for JWKS verification.");
+  let cached = null;
+  let expiresAt = 0;
+
+  return async (token) => {
+    const now = Date.now();
+    if (!cached || now >= expiresAt) {
+      const response = await fetchImpl(url, { method: "GET", headers: { accept: "application/json" } });
+      if (!response.ok) throw new Error(`JWKS endpoint returned ${response.status}.`);
+      const body = await response.json();
+      if (!body || !Array.isArray(body.keys)) throw new Error("JWKS response has no keys array.");
+      cached = body.keys;
+      expiresAt = now + cacheTtlSeconds * 1000;
+    }
+    return verifyJwtSignature(token, { jwks: cached, algorithms });
+  };
+}
 
 /**
  * Read a JWT's claims without verifying it.
@@ -105,13 +238,19 @@ export function checkTokenClaims(claims, config) {
     return { ok: false, status: 401, error: "invalid_token", description: "Token could not be read." };
   }
 
-  if (typeof claims.exp === "number" && claims.exp + leeway < now) {
+  if (!Number.isFinite(claims.exp)) {
+    return { ok: false, status: 401, error: "invalid_token", description: "Token has no valid expiry." };
+  }
+  if (claims.exp + leeway < now) {
     return { ok: false, status: 401, error: "invalid_token", description: "Token has expired." };
   }
   if (typeof claims.nbf === "number" && claims.nbf - leeway > now) {
     return { ok: false, status: 401, error: "invalid_token", description: "Token is not valid yet." };
   }
 
+  if (typeof claims.iss !== "string" || claims.iss.length === 0) {
+    return { ok: false, status: 401, error: "invalid_token", description: "Token has no valid issuer." };
+  }
   if (config.issuers && config.issuers.length > 0 && !config.issuers.includes(claims.iss)) {
     // A token from an issuer we do not know is not ours to interpret, however
     // well-formed it looks.
@@ -162,9 +301,10 @@ export function checkTokenClaims(claims, config) {
  * that has never seen this server discovers where to authorize.
  */
 export function wwwAuthenticate({ resourceMetadataUrl, error, description }) {
-  const parts = [`Bearer resource_metadata="${resourceMetadataUrl}"`];
-  if (error) parts.push(`error="${error}"`);
-  if (description) parts.push(`error_description="${description}"`);
+  const quote = (value) => String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/[\r\n]/g, " ");
+  const parts = [`Bearer resource_metadata="${quote(resourceMetadataUrl)}"`];
+  if (error) parts.push(`error="${quote(error)}"`);
+  if (description) parts.push(`error_description="${quote(description)}"`);
   return parts.join(", ");
 }
 

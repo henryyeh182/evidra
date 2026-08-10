@@ -21,14 +21,21 @@ an unrecognised request falls back to the newest.
 | Env var | Meaning |
 |---|---|
 | `PORT` | Listen port (default `8787`) |
-| `MCP_TOKEN` | Require `Authorization: Bearer <token>`, or `?token=` for clients with nowhere to set a header |
+| `MCP_TOKEN` | Local-development-only shared bearer token; accepted from the `Authorization` header |
 | `MCP_ALLOWED_ORIGINS` | Comma-separated browser origins. Requests without an `Origin` (native apps, curl) always pass |
+| `MCP_PUBLIC_URL` | Hosted resource URI, including `/mcp`; enables HTTPS/OAuth configuration |
+| `MCP_TLS_KEY_PATH` / `MCP_TLS_CERT_PATH` | Hosted HTTPS key and certificate paths |
+| `MCP_OAUTH_AUTHORIZATION_SERVER` | External authorization-server metadata/issuer base URL |
+| `MCP_OAUTH_ISSUER` | Trusted JWT issuer, exact match |
+| `MCP_OAUTH_JWKS_URL` | HTTPS JWKS endpoint for signature verification |
+| `MCP_OAUTH_SCOPES` / `MCP_OAUTH_REQUIRED_SCOPES` | Space-of-use and required OAuth scopes, comma-separated |
 
 Endpoints: `POST /mcp` (JSON-RPC), `GET /mcp` (server stream), `GET /health`.
 
-> Set `MCP_TOKEN` before exposing the server beyond localhost. Origin validation
-> is on by default because any web page can POST to localhost, and a server that
-> trusts every origin lets a visited site drive the user's tools.
+> `MCP_TOKEN` is only a local-development fallback. Hosted mode requires HTTPS
+> and the OAuth/JWKS variables above; it rejects startup when those are incomplete.
+> Origin validation is on because any web page can POST to localhost, and a server
+> that trusts every origin lets a visited site drive the user's tools.
 
 ## Tools
 
@@ -235,26 +242,24 @@ npm test                             # full suite
 Client config sample: [`mcp-client-config.example.json`](mcp-client-config.example.json)
 — replace the path with this repo's absolute location.
 
-## Not yet built
+## Readiness boundary
 
 Remote access is one piece of work, not three, and it belongs to Form 2 — the
 remote MCP server described in the [plan](fitness-mcp-implementation-plan.md).
-End-to-end OAuth, a public HTTPS deployment and an authorization server land
-together or not at all, and none of them is near-term. What exists today is
-Form 1: stdio, on the user's own machine.
+The repository now contains the resource-server, JWT/JWKS and HTTPS readiness
+scaffold, but no real authorization server or public deployment. Local stdio and
+the MCPB bundle remain Form 1 and are unchanged.
 
-- **End-to-end OAuth.** The resource-server half is written and dormant:
-  `oauth.js` serves RFC 9728 protected-resource metadata and checks a token's
-  audience, issuer, expiry and scopes, and `createHttpServer` enforces all of it
-  when handed an `oauth` option. Nothing hands it one. Signature verification is
-  deliberately outside `checkTokenClaims` — it depends on the authorization
-  server's keys — and no verifier is configured anywhere, so nothing today
-  proves a token was minted rather than typed. The `serve:http` entry point
-  never passes `oauth`, so running it gives the shared-token mode described
-  above. Do not read the presence of `oauth.js` as OAuth being available.
+- **End-to-end OAuth.** The resource-server half is implemented, including
+  RFC 9728 metadata, JWT signature verification against configured JWKS, issuer,
+  audience, expiry, not-before and scope checks. The entrypoint can build this
+  mode from explicit HTTPS environment configuration, but no real authorization
+  server is selected or configured. Do not read the scaffold as a production
+  OAuth integration.
 - **An authorization server.** None exists. The hard requirement on picking one
   is CIMD support, recorded as D-REGISTRATION in the plan.
-- **A public HTTPS deployment.** The HTTP transport binds loopback by default
-  and has only ever run locally.
+- **A public HTTPS deployment.** The transport can load operator-supplied TLS
+  material and refuses incomplete hosted configuration, but it has no public
+  hostname, certificate, cloud account or deployment credentials.
 - `idempotency-key` on commit, and server-side resolution of relative dates —
   the one item here that is not Form 2 work

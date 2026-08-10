@@ -83,6 +83,7 @@ export function normalizeWhoopRecovery(records = []) {
         unit: "ms",
         recordedAt,
         source: "whoop",
+        basis: "device_measured",
         metadata: { method: "rmssd" }
       });
     }
@@ -95,7 +96,8 @@ export function normalizeWhoopRecovery(records = []) {
         value: Math.round(score.resting_heart_rate),
         unit: "bpm",
         recordedAt,
-        source: "whoop"
+        source: "whoop",
+        basis: "device_measured"
       });
     }
 
@@ -110,7 +112,8 @@ export function normalizeWhoopRecovery(records = []) {
         type: "vendor_readiness",
         value: Math.round(score.recovery_score),
         unit: "score_0_100",
-        recordedAt
+        recordedAt,
+        basis: "vendor_reported"
       });
     }
   }
@@ -172,7 +175,8 @@ export function normalizeWhoopSleep(records = []) {
                 ? Math.round(stages.total_in_bed_time_milli / 60000)
                 : null,
             disturbanceCount: stages.disturbance_count ?? null
-          }
+          },
+          basis: "computed_from_records"
         });
       }
     }
@@ -187,6 +191,7 @@ export function normalizeWhoopSleep(records = []) {
         unit: "score_0_100",
         recordedAt,
         source: "whoop",
+        basis: "vendor_reported",
         metadata: { basis: "sleep_performance_percentage_attainment_ratio" }
       });
     }
@@ -220,6 +225,7 @@ export function normalizeWhoopCycles(records = []) {
         value: Number(record.score.strain.toFixed(2)),
         unit: "load",
         recordedAt,
+        basis: "vendor_reported",
         metadata: { scale: "0-21", inProgress: !record.end }
       });
     }
