@@ -1,130 +1,73 @@
 # Privacy Policy — Pacevera
 
-**Effective date:** 2026-08-06
-**Applies to:** the Pacevera Fitness desktop extension, an MCP server that runs locally on your own computer.
+**Effective date:** 2026-08-10
+**Applies to:** the Pacevera Fitness desktop extension, an MCP server that runs locally on the user's computer.
 
 ## Summary
 
-Pacevera is a calculator, not a data service. It receives the health-related evidence
-your AI assistant passes into a tool call, computes a training decision from it, returns
-the result, and does not retain it. Running as a desktop extension, it does all of this
-on your own machine.
+Pacevera receives health-related Evidence supplied by the calling AI host, computes the requested fitness decision, returns the result, and does not retain the Evidence. The desktop extension performs these operations locally.
 
-## What Pacevera receives
+## Evidence received
 
-Pacevera never goes and gets your data. It only ever sees what the calling AI assistant
-puts into a tool call, which may include:
+Pacevera does not retrieve data from health or training providers. It receives only the content that the calling AI host includes in an MCP tool call. This may include:
 
-- Recovery signals for the current day — sleep, heart rate variability, resting heart
-  rate, stress, and vendor-computed composite scores such as readiness or Body Battery
-- Recent training — session type, duration, and training load
-- The session you already had scheduled, and your plan, when your assistant is holding one
-- Context you state yourself, such as an injury or the equipment available to you
+- Current recovery measurements, including sleep, heart-rate variability, resting heart rate, stress, and vendor-computed assessments such as readiness or Body Battery.
+- Recent training sessions, including session type, duration, and training load.
+- A scheduled session or caller-held training plan.
+- User-provided context, including injuries, available equipment, training goals, and available time.
 
-We call these inputs *evidence*. Your assistant supplies it once per question, and only
-the part a given decision needs.
+These inputs are referred to as Evidence. The calling host determines what Evidence to submit for each request.
 
-## How Pacevera processes it
+## Processing purpose and legal basis
 
-We process only the minimum health-related evidence submitted by the caller, solely to
-compute the requested fitness decision. We do not retain, sell, use for training, or use
-it for unrelated purposes.
+Pacevera processes the minimum health-related Evidence required to compute the requested fitness decision. It does not retain, sell, use Evidence for model training, or use Evidence for unrelated purposes.
 
-Receiving and computing on evidence is itself processing, and we describe it as such.
-What we do not do is keep it.
+Receiving and computing on Evidence constitutes processing. The legal basis is performance of the computation initiated by the user. Where the submitted Evidence concerns health, the user provides consent by choosing to submit it for that computation. The user may withdraw consent by discontinuing submission of Evidence or removing the extension. Because the extension does not retain Evidence, there is no Pacevera-side record to erase after withdrawal.
 
-### Legal basis
+## Desktop extension behavior
 
-The legal basis for processing is performance of the requested computation initiated by
-the user. Pacevera processes evidence only when you ask your AI assistant a question that
-requires a decision, and only for that computation.
+The desktop extension is distributed as a compiled JavaScript bundle and runs locally. The following statements describe the behavior of the Pacevera process itself; they do not describe the AI host, operating system, imported files, backups, or other software on the user's computer.
 
-Where the evidence you submit concerns your health, we rely on your explicit consent,
-given by choosing to submit it for that computation. You can withdraw it at any time by
-not submitting further evidence, or by removing the extension. Because nothing is
-retained, withdrawal leaves nothing behind for us to erase.
+- **No outbound network requests.** The desktop extension does not make HTTP, fetch, socket, or DNS requests and does not transmit Evidence to a provider or third party.
+- **No Evidence persistence.** The desktop extension does not write Evidence to a database, cache, history, log file, or other durable storage. Evidence remains in process memory for the duration of the tool call.
+- **No runtime third-party dependencies.** The extension uses the Node.js standard library and does not include analytics, telemetry, crash reporting, or external SDKs.
+- **No model calls.** Decisions are produced by deterministic calculations and explicit rules. The extension does not send Evidence to an AI model provider.
+- **No accounts or provider tokens.** The extension does not provide Pacevera accounts, sign-in, or provider OAuth token storage. It does not authenticate to Apple Health, Garmin, Strava, Oura, WHOOP, or another provider.
 
-## What Pacevera does not do
+The repository also contains an HTTP transport for local or future remote deployments. That transport is separate from the desktop extension and is not covered by the desktop-specific statements above.
 
-The extension ships one compiled JavaScript file, built from our source. It is minified,
-so it is not pleasant reading — but the two claims below survive that: minification does
-not rename the standard-library modules a file imports, so which capabilities the server
-has can still be read straight off the shipped file.
+## Retention and deletion
 
-- **Pacevera itself performs no outbound network requests.** Its code makes no outgoing
-  HTTP, fetch, socket, or DNS calls, and it transmits your evidence nowhere. The compiled
-  file imports no networking module of any kind — searching it for `node:http`,
-  `node:net`, `node:dgram` or `fetch(` returns nothing. A separate HTTP transport exists
-  in our source repository, kept for the possible hosted deployment described below; it
-  is not compiled into the extension and does not travel in it.
-- **Pacevera itself does not persist your evidence.** It writes nothing but its protocol
-  responses. There is no database, no cache, no log file, and no history. The compiled
-  file contains no call that writes to disk — no `writeFile`, no `appendFile`, no
-  `createWriteStream`, no `mkdir` — and it opens only three kinds of file, all of which
-  ship beside it and none of which are yours: the exercise catalogue, the sample data, and
-  the manifest it reads its own version number out of. One function from a folder our
-  repository names `packages/db` is compiled in: it turns text into a lowercase
-  identifier. No database, no database client, and nothing that could write your evidence
-  anywhere.
-- **No third-party code.** The extension has zero runtime dependencies and runs on the
-  Node.js standard library alone. No analytics, no telemetry, no crash reporting, no SDKs.
-- **No model calls.** Decisions are deterministic arithmetic and explicit rules. Pacevera
-  calls no AI model of its own and sends your evidence to no model provider.
-- **No accounts.** Pacevera has no sign-up, no login, and no user identifier. We do not know
-  who you are.
+Pacevera does not retain Evidence and does not create a durable user record in the desktop extension. Consequently, there is no Pacevera-side Evidence deletion or export operation.
 
-These statements describe Pacevera's own behaviour. They are not statements about the
-computer it runs on, the AI assistant that calls it, or the operating system and Node.js
-runtime underneath it, none of which are under our control.
+The AI host may retain the conversation containing the submitted Evidence and the returned decision under its own policy. The operating system, imported files, backups, and other local software may also retain copies outside Pacevera's control.
 
-Evidence exists only in memory for the duration of a single tool call.
-
-## Data retention
-
-Pacevera does not retain your evidence. Nothing is written to durable storage, so there is
-nothing for us to keep, delete, or export on request.
-
-Because Pacevera does not retain personal information, requests to access, correct, or
-delete stored data generally do not apply. If you believe we hold something about you,
-write to the address below and we will tell you what we have, which we expect to be
-nothing.
-
-Your AI assistant is a separate matter: the conversation containing your evidence and
-Pacevera's results lives in that assistant's history under its own privacy policy, not ours.
-If you want that removed, remove it there.
+If you believe Pacevera holds personal information about you, contact us using the address below. We will review the request and respond based on the information actually held.
 
 ## Sharing
 
-We have nothing to share, because we do not retain your evidence. No sale of data, no
-advertising, no data brokers, no model training, and no transfer to any third party.
+The desktop extension does not share Evidence with third parties. It does not sell Evidence, use Evidence for advertising, provide Evidence to data brokers, or use Evidence for model training.
 
 ## Children
 
-Pacevera is not directed at children under 13 and we knowingly collect nothing from anyone.
+Pacevera is not directed to children under 13. The desktop extension does not knowingly collect personal information from children.
 
-## Not medical advice
+## Medical disclaimer
 
-Pacevera computes training decisions from athletic evidence. It is intended for general
-fitness and training purposes only. It is not a medical device and does not diagnose,
-treat, or provide medical advice. Talk to a qualified professional about symptoms,
-injuries, or medical conditions.
+Pacevera is intended for general fitness and training purposes. It is not a medical device and does not diagnose, treat, or provide medical advice. Consult a qualified professional regarding symptoms, injuries, or medical conditions.
 
-## Future hosted service
+## Future deployments
 
-This policy covers the desktop extension, which runs on your machine. Should we later offer
-a hosted or remote version, it will carry its own published policy describing that
-deployment before you can use it. The commitment in *How Pacevera processes it* above is the
-floor for any version we ship: minimum evidence, computed and discarded, never retained,
-sold, or used for training.
+This policy applies to the local desktop extension only. A future hosted or remote deployment will require a separate published policy describing its data flows, retention, authorization infrastructure, and deletion procedures before that deployment is made available for public use.
+
+The minimum processing commitment stated above—minimum Evidence for the requested computation, no sale, no model training, and no unrelated use—will apply to future deployments unless a more protective policy is published.
 
 ## Changes
 
-Material changes will be published here with a new effective date. The version history of
-this document is public in this repository's commit log.
+Material changes will be published in this file with a new effective date. The public repository commit history records previous versions of this policy.
 
 ## Contact
 
 Privacy questions and requests: **evidramcp@icloud.com**
 
-You can also [open an issue](https://github.com/henryyeh182/evidra/issues), but note that
-issues are public. Use the email address for anything you would rather not post publicly.
+You may also [open a GitHub issue](https://github.com/henryyeh182/evidra/issues), but issues are public. Use email for private requests.

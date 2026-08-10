@@ -1,260 +1,170 @@
-# Pacevera — Fitness Decision Engine
+# Pacevera Fitness Decision Engine
 
-**Your AI assistant is the coach's brain and voice. Pacevera is the exercise science
-and safety engine behind it.**
+Pacevera is a deterministic fitness decision engine exposed through the Model Context Protocol (MCP). It receives normalized training and health evidence supplied by the calling AI host, evaluates recovery and training constraints, and returns a structured decision.
 
-Pacevera is an MCP server. It turns the evidence you already have into a training
-decision — not advice invented from nothing, but a change to the session already on
-your calendar, with the evidence and the rule behind it.
+The primary operation is to evaluate an existing scheduled session. A decision describes the change from the scheduled session to the resulting session:
 
-It runs on your own machine, and it does not retain your evidence.
-
----
-
-## Where this is
-
-The current release is v0.4.2. v0.1.0 was the first public release.
-
-The decision logic is covered by a deterministic test and evaluation suite:
-under the same version of Pacevera, the same evidence produces the same decision,
-and every decision cites the evidence and the rule behind it. It has not yet
-been validated over extended real-world training blocks.
-
-**You supply the evidence.** Pacevera does not connect to Apple Health, Garmin,
-Strava, or any other service on your behalf, and it is not waiting for you to
-link an account. It reads what you or your assistant hand it in the call —
-which can be as ordinary as saying what you trained yesterday and how you
-slept. If you already have exported data from those services, Pacevera can
-evaluate that as input as well.
-
-Signals you do not supply are reported in `signalCoverage` and lower the
-decision's confidence. They are never filled in with defaults.
-
----
-
-## Decision, not recommendation
-
-This distinction is the whole product.
-
-|  | Recommendation | **Decision** |
-|---|---|---|
-| Example | "You should do a Zone 2 run today" | "Today's VO₂max intervals become 45 min Zone 2" |
-| Structure | Emitted from nothing | **A change to something that already exists** |
-| Requires | Nothing | **Knowing what you were already going to do** |
-
-A general-purpose model can produce the left column. It cannot produce the right one,
-because the right one needs your plan, your recent load, and this morning's recovery —
-and then needs the arithmetic done the same way every time.
-
-Every decision comes back in five layers:
-
-```
-Evidence → Fitness State → Decision (intent) → Action (the change itself) → Reason (bound to evidence)
+```text
+scheduled session (from) -> resulting session (to)
 ```
 
-Decision types: `keep` (keeping the session is also a decision) · `adjust` ·
-`substitute` · `defer` · `advance`
+Each decision includes the relevant evidence, applied rules, confidence, signal coverage, and limitations.
 
-Intent and action are kept separate on purpose: the same intent becomes a different
-action depending on your equipment, your schedule, and your injuries.
+## Scope
 
----
+Pacevera provides the following capabilities:
 
-## How the work is divided
+- Deterministic calculation of recovery state, readiness, muscle-group fatigue, and training load.
+- Session decisions with the types `keep`, `adjust`, `substitute`, `defer`, and `advance`.
+- Constraint handling for injuries, equipment, available time, and exercise substitutions.
+- Training-plan generation and caller-owned plan adjustment through preview and commit operations.
+- Structured decision provenance through rule identifiers, measured values, source information, and version metadata.
+- Normalization support for Apple Health, Google Health Takeout, Garmin, Strava, Oura, and WHOOP data shapes.
 
-| Stage | Where | What happens |
-|---|---|---|
-| 1 | Pacevera | Normalize evidence from any source into one shape |
-| 2 | Pacevera | Deterministic computation — `acwr = atl / ctl` is a division, not a prediction |
-| 3 | Your AI assistant | Turn the structured result into plain language |
+Pacevera does not connect to these providers on behalf of the user. The calling host must obtain and normalize provider exports or API responses before passing them to an MCP tool.
 
-**Pacevera calls no model to produce a decision.** Under the same version of Pacevera,
-identical inputs produce an identical decision, and every number is traceable. The
-language you read is your assistant's; the judgment is arithmetic.
+## Architecture
 
----
+```text
+AI host
+  └─ Collects the user's question and evidence
+       └─ MCP server / desktop extension
+            ├─ Evidence normalization
+            ├─ Fitness-state calculation
+            ├─ Training-load calculation
+            ├─ Deterministic rule evaluation
+            ├─ Decision and plan operations
+            └─ Structured result: Decision / Action / Reason
+```
 
-## Tools
+The AI host is responsible for interpreting the user's request, collecting evidence, selecting tools, and presenting the result. Pacevera performs the calculations and rule evaluation; it does not call a model to generate a decision. Given the same code, rule set, and input, the result is deterministic.
 
-| Tool | What it returns |
+## Decision and recommendation
+
+| Type | Description |
 |---|---|
-| `assess_fitness_state` | Today's recovery and training state. State only — it never says what to train. |
-| `decide_session` | What today's scheduled session should become: keep it, ease it, or change it |
-| `decide_exercise_substitution` | What to do instead of a movement you cannot do today |
-| `generate_plan` | A plan, when you don't have one — the substrate decisions are made against |
-| `preview_adjust_plan` | What adjusting a plan would change, without applying it |
-| `commit_adjust_plan` | The plan a previewed adjustment produces, once you have accepted it — you keep it, Pacevera does not |
+| Recommendation | A training suggestion generated without a required prior session or plan. |
+| Decision | A traceable change applied to an existing scheduled session or plan. |
 
----
+`decide_session` requires `scheduledSession` to establish the prior state. If no scheduled session is provided, the tool returns `no_scheduled_session` rather than creating a session. Use `generate_plan` when a plan is required.
 
-## Any single source works
+Decision output follows five layers:
 
-You do not need to own a Garmin, an Apple Watch, and a Strava subscription.
+```text
+Evidence -> Fitness State -> Decision -> Action -> Reason
+```
 
-- A runner with **only Strava** gets decisions from training load.
-- Someone who **doesn't wear a watch to bed** gets decisions from HRV and their
-  vendor's composite score.
-- Someone who just **says it out loud** — "ran 45 minutes yesterday, slept about
-  seven hours" — gets a decision from that.
+Decision intent and resulting action are separate fields. The same intent may produce different actions depending on the user's equipment, available time, injuries, and scheduled session.
 
-This is the design, not a degraded mode. Every response reports which signals it had:
+## MCP tools
+
+### Decision and planning tools
+
+| Tool | Description |
+|---|---|
+| `assess_fitness_state` | Returns recovery, readiness, muscle-group fatigue, and training-load state. |
+| `decide_session` | Evaluates a scheduled session and returns the resulting session. |
+| `decide_exercise_substitution` | Selects a replacement movement subject to injury and equipment constraints. |
+| `generate_plan` | Generates a periodized training plan. |
+| `preview_adjust_plan` | Returns a deterministic patch and diff for a caller-owned plan. |
+| `commit_adjust_plan` | Validates the plan version and applies a caller-owned patch. |
+
+### Supporting and read tools
+
+| Tool | Description |
+|---|---|
+| `get_evidence_coverage` | Reports available and missing evidence signals. |
+| `explain_decision` | Returns the process-local rule and source trace for a previous decision. |
+| `submit_outcome` | Accepts an observed outcome for a prior case; durable storage remains the caller's responsibility. |
+| `search_exercises` / `get_exercise` | Queries the exercise catalog and graph relationships. |
+| `search_workouts` / `get_workout` | Queries structured workout content. |
+| `get_user_profile` | Returns caller-supplied user constraints and training settings. |
+| `get_training_history` / `get_training_context` | Returns training history and related context. |
+
+## Evidence and output
+
+Evidence is supplied by the calling host. It may include recovery measurements, vendor-computed assessments, completed workouts, scheduled sessions, goals, and constraints.
+
+Important input rules:
+
+- Only measured or explicitly provided values should be sent. Missing signals are reported in `signalCoverage` and may lower `confidence`.
+- A workout without a training-load value is not treated as zero load and is excluded from muscle-group fatigue calculations.
+- RPE may be retained as evidence but is not a term in training-load or muscle-fatigue calculations.
+- Vendor-computed values such as readiness, recovery, and Body Battery are used as reported and are not recomputed by Pacevera.
+
+A typical `decide_session` response has this shape:
 
 ```json
-"signalCoverage": {
-  "recovery": { "usable": ["hrv"], "missing": ["sleep"] },
-  "training": { "usable": ["trainingLoad"], "missing": [] }
+{
+  "decision": { "type": "adjust", "intent": "reduce_today_intensity" },
+  "action": {
+    "from": { "focus": "Tempo Run", "durationMinutes": 50, "intensity": "high" },
+    "to": { "focus": "Moderate run", "durationMinutes": 50, "intensity": "moderate" },
+    "changed": ["focus", "intensity"]
+  },
+  "confidence": "high",
+  "signalCoverage": {
+    "recovery": { "usable": ["readiness"], "missing": ["sleep"] },
+    "training": { "usable": ["trainingLoad"], "missing": [] }
+  },
+  "decisionBasis": {
+    "governingRule": {
+      "ruleId": "EVD-R-002",
+      "measured": { "quantity": "readiness_score", "value": 48 }
+    }
+  }
 }
 ```
 
-- `recovery.missing` — no fresh reading today for sleep, HRV, resting heart rate, or stress
-- `training.missing` — a session in the last 7 days arrived without a load figure
+Pacevera does not fill missing values with defaults. `signalCoverage.recovery` describes current recovery-signal availability; `signalCoverage.training` describes whether recent workouts include the training-load data required for fatigue calculations.
 
-**Missing inputs are never filled in with defaults.** No RPE means no RPE, not 5. What's
-missing is reported and confidence drops accordingly. A session without a load figure is
-not counted as zero fatigue, because nobody said it was easy — it's reported as missing
-instead, and `training.missing` is how you find out.
+## Deployment status
 
----
+| Deployment mode | Status | Boundary |
+|---|---|---|
+| Local desktop extension | Available | Runs through stdio on the user's computer. The Pacevera process does not fetch provider data, persist Evidence, or make model calls. |
+| User-controlled private deployment | Planned | Intended to run in a device, private network, or VPC controlled by the user or organization. |
+| Hosted remote deployment | Not available | The repository contains resource-server readiness code, but production deployment, authorization infrastructure, and hosted privacy controls are not complete. |
 
-## Privacy Policy
+The desktop extension has no runtime dependencies beyond the Node.js standard library. It does not use analytics, telemetry, crash reporting, provider accounts, or provider OAuth tokens.
 
-Pacevera runs locally and does not retain your evidence.
+## Privacy
 
-> We process only the minimum health-related evidence submitted by the caller, solely to
-> compute the requested fitness decision. We do not retain, sell, use for training, or use
-> it for unrelated purposes.
+The desktop extension processes the minimum health-related Evidence supplied by the caller for the requested fitness decision. It does not retain, sell, use for model training, or use Evidence for unrelated purposes.
 
-As a desktop extension, this is checkable against the compiled server it ships: **Pacevera itself
-performs no outbound network requests, does not persist your evidence, and has no
-runtime dependencies, telemetry, model calls, or accounts.** Evidence exists in memory for the
-duration of one tool call.
+The extension does not make outbound network requests or persist Evidence. The AI host, operating system, imported files, and any host conversation history are outside the extension's control and are governed by their respective policies.
 
-Full policy: [PRIVACY.md](PRIVACY.md)
+See [PRIVACY.md](PRIVACY.md) for the complete policy and deployment scope.
 
-Pacevera is not a medical device and does not provide medical advice. It is intended for
-general fitness and training purposes only.
+Pacevera is not a medical device and does not provide medical advice. It is intended for general fitness and training purposes only.
 
----
+## Installation
 
-## Install
+Pacevera is distributed as a Claude Desktop extension (`.mcpb`).
 
-Pacevera ships as a Claude Desktop extension (`.mcpb`).
+1. Download `pacevera.mcpb` from [Releases](../../releases).
+2. Optionally verify the SHA-256 checksum published in the release notes:
 
-1. Download the latest `pacevera.mcpb` from [Releases](../../releases)
-2. Check it against the published checksum (optional, and worth doing — see below)
-3. Open **Claude Desktop → Settings → Extensions**
-4. Install the `.mcpb` file
-5. Ask a question that needs a decision — [six to start with](#six-questions-to-start-with)
+   ```bash
+   shasum -a 256 pacevera.mcpb
+   ```
 
-**Requires Node.js 20 or newer.**
+3. In Claude Desktop, open **Settings -> Extensions** and install the file.
+4. Restart Claude Desktop after installing or upgrading the extension.
 
-### Verifying what you downloaded
+The extension requires Node.js 20 or newer.
 
-```
-shasum -a 256 pacevera.mcpb
-```
+Claude Desktop and other local MCP hosts are supported through the desktop extension. Mobile and hosted remote use cases require a remote deployment, which is not currently available for public use.
 
-Compare it with the checksum printed in that release's notes, on the same page
-you downloaded from.
+## Release status
 
-An extension is a copy taken at install time. After installing a new version, restart
-Claude Desktop completely — closing the window is not enough.
-
-### Availability
-
-| | Status |
-|---|---|
-| Claude Desktop (macOS / Windows) | Supported, via the extension above |
-| Mobile, and other MCP hosts | Not yet — these need a remote server, which is not open to the public yet |
-
----
-
-## Six questions to start with
-
-Two need nothing but the sentence. The rest take whatever export you already have.
-
-**1 · Nothing but what you can say out loud**
-
-> I ran 80 minutes yesterday and felt pretty beaten up. Slept about six hours.
-> Today's plan says VO₂max intervals, 60 minutes. Should I still do them?
-
-Often comes back `keep`. Keeping the session is a decision — the evidence was
-checked and it stands. Confidence will be low, and it says so.
-
-**2 · Training load with no recovery signal at all**
-
-> Here's my Strava export. Today is threshold repeats, 60 minutes hard — am I
-> overcooking it?
-
-Strava has no HRV and no sleep. Session load alone decides. Ask where the
-threshold came from and you get the citation, the published objections to it,
-and a plain statement that our cut point is not the one in the paper.
-
-**3 · A vendor's own score, taken as it stands**
-
-> Here's my Garmin data for today. I've got a tempo run scheduled, 50 minutes hard.
-
-Body Battery, Oura Readiness and Whoop Recovery are used as they stand, never
-recomputed, and weigh more than any raw reading.
-
-v0.4.1 names that field in the tool schema, so an assistant can send a vendor
-score as the vendor's own figure rather than falling back to the raw signals.
-Sent that way it counts for more, and the confidence reported alongside the
-decision reflects it.
-
-**4 · Asking to go harder**
-
-> Here's my Oura data. Today is an easy session but I feel great — can I push?
-
-Decisions are not only downward — this one comes back `advance`. Oura reports no
-training load, so Pacevera computes none rather than inventing a number.
-
-The Oura and Whoop readers are the two youngest here. They were written against
-those vendors' own published API specifications and have not yet been checked
-against a real response from either service — and every reader before them turned
-up something on real data that a specification did not mention. The Apple Health,
-Garmin, Google Health and Strava readers were built from actual export files.
-
-**5 · Training around an injury**
-
-> My knee's been bothering me. What can I do instead of squats today? I've got a
-> barbell, a squat rack and dumbbells.
-
-Contraindicated movements are filtered out, not ranked down, and the reply names
-the ones that were removed. The equipment matters to the example: with only
-dumbbells to hand, the alternatives carrying a knee contraindication are already
-gone for want of a barbell, and the filter has nothing left to do. A model can be
-talked past a safety rule; a filter cannot.
-
-**6 · The day it takes the session away**
-
-> Here's my Whoop data for today. I've got VO₂max intervals scheduled, 60 minutes
-> hard. Should I still do them?
-
-This one comes back `defer`, and it is the type the other five never reach. The
-scheduled session is not eased — it is replaced: focus, type, duration, intensity
-and the movements themselves all change, and what you get instead is a recovery
-walk and a mobility flow inside thirty minutes.
-
-Confidence is high. Whoop does not measure stress, so that signal is reported
-missing, and the decision still stands on three recovery signals plus the
-vendor's own recovery score. An engine that only ever nudged would have nothing
-to say on a day like this one. See the note under question 4 about how far the
-Whoop reader has been checked.
-
-Figures are not quoted here — what comes back depends on your evidence.
-
----
+The current public release is `v0.4.2`. The deterministic decision engine and evaluation suite are implemented, but the engine has not been validated across extended real-world training blocks. The Oura and WHOOP readers were implemented from their published API specifications and have not yet been validated against real responses; Apple Health, Garmin, Google Health, and Strava readers were developed from real export files.
 
 ## Support
 
-Bug reports and questions: [open an issue](../../issues)
-
-Privacy requests, or anything you would rather not post publicly: **evidramcp@icloud.com**
-
----
+- Bug reports and technical questions: [GitHub Issues](../../issues)
+- Privacy requests: **evidramcp@icloud.com**
 
 ## License
 
-Proprietary — see [LICENSE](LICENSE). You may install and run Pacevera for your own use.
-Copying, modifying, and redistributing it are not permitted.
+Pacevera is proprietary software. See [LICENSE](LICENSE) for the applicable terms.
