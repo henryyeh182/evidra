@@ -80,8 +80,10 @@ allow-list. It must not be described as the no-network desktop bundle.
 - **Tokens:** the resource server accepts a bearer access token in the
   `Authorization` header and verifies signature, issuer, audience, expiry, and
   scope. It never accepts a provider refresh token. Access-token issuance and
-  revocation belong to the external authorization server; Pacevera must not
-  log the token or its raw JWT claims.
+  revocation belong to the external authorization server in hosted production.
+  The repository's local authorization-server adapter is only a process-local
+  test/private-development slice; it is not a hosted account or credential
+  service. Pacevera must not log the token or its raw JWT claims.
 - **Logging:** only operational metadata such as route, method, status,
   duration, and bounded request size may be logged. Request bodies, tool
   arguments, Evidence, health values, authorization headers, tokens, JWT
@@ -112,4 +114,3 @@ machine-readable manifest and the corresponding tests:
 4. Hosted deployment review confirms no durable Evidence sink and documents
    infrastructure-level log/trace retention before changing `hosted-remote`
    from `no-go`.
-
