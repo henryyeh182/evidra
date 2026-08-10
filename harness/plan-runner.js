@@ -14,6 +14,7 @@
 
 import { fileURLToPath } from "node:url";
 import { handleJsonRpcMessage } from "../apps/mcp-server/src/server.js";
+import { PARAMETERS } from "../packages/rules/src/index.js";
 
 let nextId = 9000;
 
@@ -52,6 +53,17 @@ async function expectRefusal(name, args, expectedError) {
   return [];
 }
 
+async function expectRefusalPayload(name, args, expectedError) {
+  const result = await callTool(name, args);
+  if (!result.isError) {
+    throw new Error(`${name} accepted a request that should have been refused`);
+  }
+  if (expectedError && result.payload.error !== expectedError) {
+    throw new Error(`${name} refused with ${result.payload.error}, expected ${expectedError}`);
+  }
+  return result.payload;
+}
+
 const BASE_EVIDENCE = {
   profile: { timezone: "UTC", fitnessLevel: "intermediate" },
   goals: [{ type: "half_marathon", label: "Half marathon" }],
@@ -74,6 +86,18 @@ const SPARSE_EVIDENCE = {
   profile: { timezone: "UTC", fitnessLevel: "intermediate" },
   goals: [{ type: "half_marathon", label: "Half marathon" }],
   constraints: { availableMinutes: 45, equipment: ["outdoor"] }
+};
+
+const EMPTY_EVIDENCE = {};
+
+const NO_ALTERNATIVE_EVIDENCE = {
+  profile: { timezone: "UTC", fitnessLevel: "intermediate" },
+  goals: [{ type: "build_muscle", label: "Build muscle" }],
+  constraints: {
+    availableMinutes: 30,
+    equipment: ["jump_rope"],
+    avoidMovements: ["squat", "push", "pull", "row", "bridge", "mobility", "run", "bike", "walk"]
+  }
 };
 
 function allSessions(plan) {
@@ -203,13 +227,13 @@ const SCENARIOS = [
       if (committed.version !== plan.version + 1 || committed.status !== "planned") {
         failures.push(`commit should return version ${plan.version + 1}/planned, got ${committed.version}/${committed.status}`);
       }
-      if (!sameJson(committed.plan, { ...preview.patch.resultingPlan, version: plan.version + 1, status: "planned" })) {
-        failures.push("committed plan is not the preview result with exactly version/status advanced");
+      const history = committed.versionHistory || [];
+      if (!sameJson(committed.plan, { ...preview.patch.resultingPlan, version: plan.version + 1, status: "planned", versionHistory: history })) {
+        failures.push("committed plan is not the preview result with version/status/history advanced");
       }
       if (!sameJson(committed.decisionBasis, preview.patch.decisionBasis)) {
         failures.push("commit recomputed, dropped, or changed the preview decisionBasis");
       }
-      const history = committed.versionHistory || [];
       if (history.length !== 1 || history[0].fromVersion !== plan.version || history[0].previewId !== preview.previewId) {
         failures.push("commit did not preserve from-version and preview lineage in versionHistory");
       }
@@ -266,6 +290,179 @@ const SCENARIOS = [
       }
 
       return { failures, artifacts: { plan } };
+    }
+  },
+  {
+    id: "empty-evidence-and-date-boundaries-are-actionable",
+    async run() {
+      const failures = [];
+
+      const missing = await expectRefusalPayload("evidra_generate_plan", { startDate: "2026-08-10" }, "evidence_required");
+      if (!missing.callerAction || !missing.accepts?.["evidence.healthMetrics"]) {
+        failures.push("missing-evidence refusal did not tell the caller what to send next");
+      }
+
+      const relative = await expectRefusalPayload(
+        "evidra_generate_plan",
+        { startDate: "today", evidence: BASE_EVIDENCE },
+        "invalid_date"
+      );
+      if (!/YYYY-MM-DD/.test(relative.shape?.startDate || "")) {
+        failures.push("relative-date refusal did not name the required date shape");
+      }
+
+      const invalidLeap = await expectRefusalPayload(
+        "evidra_generate_plan",
+        { startDate: "2026-02-29", evidence: BASE_EVIDENCE },
+        "invalid_date"
+      );
+      if (!/2026-02-29/.test(invalidLeap.problem || "")) {
+        failures.push("invalid leap-day refusal did not echo the bad date");
+      }
+
+      const validLeap = await expectTool("evidra_generate_plan", {
+        startDate: "2028-02-29",
+        weeks: 1,
+        evidence: BASE_EVIDENCE
+      });
+      if (validLeap.startDate !== "2028-02-29" || validLeap.endDate !== "2028-03-06") {
+        failures.push(`valid leap-day plan dates drifted: ${validLeap.startDate} -> ${validLeap.endDate}`);
+      }
+
+      const empty = await expectTool("evidra_generate_plan", {
+        startDate: "2026-08-10",
+        weeks: 1,
+        evidence: EMPTY_EVIDENCE
+      });
+      if (!sameJson(empty, await expectTool("evidra_generate_plan", { startDate: "2026-08-10", weeks: 1, evidence: EMPTY_EVIDENCE }))) {
+        failures.push("empty evidence did not replay deterministically");
+      }
+      if (!hasBasis(empty.decisionBasis)) {
+        failures.push("empty-evidence plan did not carry a decisionBasis frame");
+      }
+      const emptyText = [...(empty.reasoning || []), ...allSessions(empty).map((session) => session.rationale || "")].join(" ");
+      for (const forbidden of [/readiness/i, /\bhrv\b/i, /recovered/i, /fresh/i, /training load is/i]) {
+        if (forbidden.test(emptyText)) {
+          failures.push(`empty evidence generated a precise readiness/training claim: ${forbidden}`);
+        }
+      }
+
+      return { failures, artifacts: { missing, relative, invalidLeap, validLeap, empty } };
+    }
+  },
+  {
+    id: "no-feasible-alternative-stays-explicit",
+    async run() {
+      const plan = await expectTool("evidra_generate_plan", {
+        startDate: "2026-08-10",
+        weeks: 1,
+        evidence: NO_ALTERNATIVE_EVIDENCE
+      });
+      const failures = [];
+      const fallbackSessions = allSessions(plan).filter((session) => /catalog offers no/.test(session.rationale || ""));
+
+      if (fallbackSessions.length === 0) {
+        failures.push("no-alternative evidence did not say when the catalog had no feasible replacement");
+      }
+      if (!fallbackSessions.some((session) => exerciseIds({ weeks: [{ sessions: [session] }] }).includes("exercise_bodyweight_squat"))) {
+        failures.push("no-alternative fallback did not preserve a concrete exercise id for the caller to inspect");
+      }
+      if (!hasBasis(plan.decisionBasis)) {
+        failures.push("no-alternative plan did not carry a decisionBasis frame");
+      }
+
+      return { failures, artifacts: { plan } };
+    }
+  },
+  {
+    id: "availability-conflict-respects-session-floor",
+    async run() {
+      const plan = await expectTool("evidra_generate_plan", {
+        startDate: "2026-08-10",
+        weeks: 2,
+        evidence: BASE_EVIDENCE
+      });
+      const changeRequest = {
+        kind: "reduce_availability",
+        weekdayAvailableMinutes: 5,
+        weekIndexes: [0],
+        reason: "Temporary hard calendar constraint."
+      };
+      const preview = await expectTool("evidra_preview_adjust_plan", {
+        plan,
+        changeRequest
+      });
+      const failures = [];
+      const changedDurations = (preview.diff || [])
+        .filter((entry) => entry.field === "durationMinutes")
+        .map((entry) => entry.after);
+
+      if (!sameJson(preview, await expectTool("evidra_preview_adjust_plan", { plan, changeRequest }))) {
+        failures.push("availability-conflict preview did not replay deterministically");
+      }
+      if (preview.patch.resultingPlan.constraints.weekdayAvailableMinutes !== 5) {
+        failures.push("availability constraint was not carried into the resulting plan");
+      }
+      if (changedDurations.length === 0 || changedDurations.some((minutes) => minutes < PARAMETERS.planChangeMinSessionMinutes)) {
+        failures.push(`availability conflict cut a session below the planning floor: ${changedDurations.join(", ")}`);
+      }
+      if (new Set((preview.diff || []).map((entry) => entry.weekIndex)).size !== 1 || !preview.diff.every((entry) => entry.weekIndex === 0)) {
+        failures.push("weekIndexes boundary changed sessions outside the requested week");
+      }
+      if (!hasBasis(preview.decisionBasis) || (preview.decisionBasis.appliedRules || []).length !== 0) {
+        failures.push("availability preview should carry an empty decisionBasis frame, not an injury rule");
+      }
+
+      return { failures, artifacts: { plan, preview } };
+    }
+  },
+  {
+    id: "preview-integrity-refuses-tampered-lineage",
+    async run() {
+      const plan = await expectTool("evidra_generate_plan", {
+        startDate: "2026-08-10",
+        weeks: 2,
+        evidence: BASE_EVIDENCE
+      });
+      const preview = await expectTool("evidra_preview_adjust_plan", {
+        plan,
+        changeRequest: { kind: "deload_week", weekIndex: 0 }
+      });
+      const failures = [];
+
+      for (const [label, tampered] of [
+        ["plan id", { ...preview.patch, planId: `${preview.patch.planId}_other` }],
+        ["preview id", { ...preview.patch, previewId: `${preview.patch.previewId}_tampered` }],
+        ["base version", { ...preview.patch, baseVersion: preview.patch.baseVersion + 1 }],
+        ["change request", { ...preview.patch, changeRequest: { kind: "deload_week", weekIndex: 1 } }],
+        ["decisionBasis lineage", { ...preview.patch, decisionBasis: { ...preview.patch.decisionBasis, appliedRules: [{ ruleId: "EVD-R-999" }] } }]
+      ]) {
+        const result = await callTool("evidra_commit_adjust_plan", { plan, preview: tampered });
+        if (!result.isError || result.payload.error !== "commit_refused") {
+          failures.push(`commit accepted tampered ${label}`);
+        }
+      }
+
+      const committed = await expectTool("evidra_commit_adjust_plan", { plan, preview: preview.patch });
+      const nextPreview = await expectTool("evidra_preview_adjust_plan", {
+        plan: committed.plan,
+        changeRequest: { kind: "reduce_availability", weekdayAvailableMinutes: 35 }
+      });
+      const nextCommitted = await expectTool("evidra_commit_adjust_plan", { plan: committed.plan, preview: nextPreview.patch });
+      const replay = await expectTool("evidra_commit_adjust_plan", { plan: committed.plan, preview: nextPreview.patch });
+
+      if (!sameJson(nextCommitted, replay)) {
+        failures.push("second commit did not replay deterministically");
+      }
+      const history = nextCommitted.versionHistory || [];
+      if (history.length !== 2 || history[0].previewId !== preview.previewId || history[1].previewId !== nextPreview.previewId) {
+        failures.push("multi-step decisionBasis/versionHistory lineage was not preserved");
+      }
+      if (!sameJson(nextCommitted.decisionBasis, nextPreview.patch.decisionBasis)) {
+        failures.push("second commit changed the preview decisionBasis lineage");
+      }
+
+      return { failures, artifacts: { plan, preview, committed, nextPreview, nextCommitted } };
     }
   }
 ];

@@ -27,6 +27,7 @@
     "harness:plan": "node harness/plan-runner.js",
     "test": "node --test",
     "serve:http": "node apps/mcp-server/src/http.js",
+    "smoke:release-install": "node scripts/smoke-release-install.js",
     "review:phase": "node scripts/review-phase.js",
     "review:release": "node scripts/review-release.js",
     "test:rules": "node --test \"packages/rules/test/*.test.js\""

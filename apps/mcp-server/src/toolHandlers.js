@@ -463,16 +463,18 @@ export async function commitPlanChangeTool(args = {}) {
     return planStateProblem("evidra_commit_adjust_plan", "commit_refused", error.message);
   }
 
+  const versionHistory = buildVersionHistory(args.plan, args.preview, committed);
+  const plan = { ...committed, versionHistory };
   return jsonContent({
-    planId: committed.id,
-    version: committed.version,
-    status: committed.status,
-    plan: committed,
+    planId: plan.id,
+    version: plan.version,
+    status: plan.status,
+    plan,
     // Read off the preview being committed rather than recomputed: committing
     // applies a patch that was already decided, and a second computation here
     // could disagree with the one the caller approved.
     decisionBasis: args.preview.decisionBasis ?? null,
-    versionHistory: buildVersionHistory(args.plan, args.preview, committed)
+    versionHistory
   });
 }
 
