@@ -1,10 +1,10 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.henryyeh182/evidra",
-  "title": "Evidra Fitness",
+  "title": "Pacevera",
   "description": "Turns the training evidence you already have into a decision about today's session.",
-  "version": "0.4.1",
-  "websiteUrl": "https://github.com/henryyeh182/evidra",
+  "version": "0.4.2",
+  "websiteUrl": "https://pacevera.com",
   "repository": {
     "url": "https://github.com/henryyeh182/evidra",
     "source": "github"
@@ -12,8 +12,8 @@
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/henryyeh182/evidra/releases/download/v0.4.1/evidra.mcpb",
-      "fileSha256": "011e4ef84bf6219cc9482e4c40d70bf47f73a74a45c962861cde882a7ff54e4c",
+      "identifier": "https://github.com/henryyeh182/evidra/releases/download/v0.4.2/pacevera.mcpb",
+      "fileSha256": "cd5a05403f958c3533794b1c6258d24fe413dcbe6a911439d4b714316e8f87eb",
       "transport": {
         "type": "stdio"
       }

@@ -1,4 +1,4 @@
-<title>Evidra — 從證據到今天的訓練決策</title>
+<title>Pacevera — 從證據到今天的訓練決策</title>
 <style>
   :root {
     /* Anthropic 系統色：米灰底 + 駝色層次 */
@@ -326,13 +326,13 @@
         <circle cx="63" cy="23" r="5.8" fill="#157554"/>
       </svg>
       <div>
-        <div class="brand-name">Evidra</div>
+        <div class="brand-name">Pacevera</div>
         <div class="brand-sub">Deterministic Fitness Intelligence</div>
       </div>
     </div>
 
     <p class="corestatement">
-      Evidra is a <b>Fitness Decision Engine</b>,<br>
+      Pacevera is a <b>Fitness Decision Engine</b>,<br>
       not a fitness data connector and not an AI coach.
     </p>
     <p class="docpurpose">
@@ -355,7 +355,7 @@
     </p>
 
     <div class="cta">
-      <a class="primary" href="https://github.com/henryyeh182/evidra/releases/latest">下載 evidra.mcpb</a>
+      <a class="primary" href="https://github.com/henryyeh182/evidra/releases/latest">下載 pacevera.mcpb</a>
       <a class="secondary" href="#install">怎麼裝、怎麼試</a>
       <span>Claude Desktop · 不需帳號 · 原始碼不開放，行為可驗證</span>
     </div>
@@ -372,7 +372,7 @@
         </dl>
       </div>
       <div class="card strong">
-        <h3>Decision　Evidra</h3>
+        <h3>Decision　Pacevera</h3>
         <p class="quote">「今天排定的 VO₂max Intervals，強度由 high 調降為 low。」</p>
         <dl>
           <dt>從哪來</dt><dd>證據 × 運動科學模型</dd>
@@ -385,7 +385,7 @@
 
     <p class="verdict">
       這也是與既有 fitness MCP 的根本差異：<b>他們在 MCP 之後直接回覆</b>；
-      Evidra 在 MCP 與回覆之間，有一層獨立的 <b>Fitness Decision Engine</b>。
+      Pacevera 在 MCP 與回覆之間，有一層獨立的 <b>Fitness Decision Engine</b>。
     </p>
   </header>
 
@@ -410,7 +410,7 @@
             <td class="yes">✓ 已存在</td>
           </tr>
           <tr>
-            <td class="sig-name">Claude 連上 Evidra</td>
+            <td class="sig-name">Claude 連上 Pacevera</td>
             <td><b>我們</b></td>
             <td class="yes">✓ desktop extension v0.4.1（stdio）</td>
             <td class="no">— 手機只支援 remote，尚未完成</td>
@@ -497,7 +497,7 @@
         <div class="who">跑在使用者或機構自己控制的環境</div>
         <p>
           connector、證據模型、決策引擎與持久層整組搬進對方控制的環境，
-          Evidra 變成本機資料層。<strong>這是唯一能保存個人縱向歷史的形態</strong>——
+          Pacevera 變成本機資料層。<strong>這是唯一能保存個人縱向歷史的形態</strong>——
           因為那份資料從頭到尾沒有離開他。醫療與企業要的是這一個，
           <strong>核心宗旨要的也是這一個</strong>。
         </p>
@@ -520,14 +520,14 @@
     <h2>四步，沒有一步是登入</h2>
     <p class="lede">
       Form 1 今天就能裝。整段安裝沒有帳號、沒有 API key、沒有任何設定欄位——
-      <strong>因為 Evidra 不去拿你的資料</strong>，就沒有東西需要授權。
+      <strong>因為 Pacevera 不去拿你的資料</strong>，就沒有東西需要授權。
     </p>
 
     <div class="steps">
       <div class="step">
         <div class="step-n">1</div>
         <div>
-          <h4>下載 <code>evidra.mcpb</code></h4>
+          <h4>下載 <code>pacevera.mcpb</code></h4>
           <p>
             從 <a href="https://github.com/henryyeh182/evidra/releases/latest">releases/latest</a> 取得。
             單一檔案，內含編譯好的 server 與整份規則庫。
@@ -542,7 +542,7 @@
         <div>
           <h4>核對 checksum（可略過，但這是重點之一）</h4>
           <p>
-            <code>shasum -a 256 evidra.mcpb</code>，比對
+            <code>shasum -a 256 pacevera.mcpb</code>，比對
             <a href="https://registry.modelcontextprotocol.io/?q=evidra">官方 MCP registry</a>
             上該版本的 <code>fileSha256</code>——<strong>那串數字存在一個我們控制不了的地方</strong>，
             所以不是我們自己替自己背書。
@@ -643,7 +643,7 @@
         <p class="why">
           和第 2 則對照著看：<strong>同樣是 adjust、同樣降一級，理由卻完全不同</strong>
           （負荷爬太快 vs 今天恢復不良），而且這次信心是 high。
-          Body Battery 是 Garmin 自己算的分數，Evidra <strong>不重算它</strong>——
+          Body Battery 是 Garmin 自己算的分數，Pacevera <strong>不重算它</strong>——
           錶在手腕上，它整合了我們看不到的訊號。
         </p>
       </div>
@@ -715,7 +715,7 @@
     </div>
 
     <p class="note warn">
-      第 1 則沒有附任何檔案，第 5 則也沒有。<strong>「先匯入資料」不是使用 Evidra 的前提</strong>——
+      第 1 則沒有附任何檔案，第 5 則也沒有。<strong>「先匯入資料」不是使用 Pacevera 的前提</strong>——
       問「今天練什麼」而手上沒有課表時，它會回
       <q>This is a recommendation question, not a decision.</q>
       並且不編一個出來。<strong>引擎自己講得出這條界線在哪。</strong>
@@ -737,7 +737,7 @@
         <h4>證據由 AI Agent 帶進來，我們不去拿</h4>
         <p>
           授權對象是使用者已經在用的 AI，不是我們。證據經 tool call 以參數傳入——
-          <strong>Evidra 不連廠商雲端、不持有原始健康資料</strong>。
+          <strong>Pacevera 不連廠商雲端、不持有原始健康資料</strong>。
           所以「Apple Health 沒有伺服器 API」這類問題，在這個架構下不存在。
         </p>
         <div class="readout">
@@ -833,7 +833,7 @@
           <div class="row"><span class="k">limits</span><span class="v dim">No sleep, stress signal was available, so confidence is lowered</span></div>
         </div>
         <p class="note">
-          每條理由都指得回具體訊號值。這份紀錄離開 Evidra 之後仍然看得懂——
+          每條理由都指得回具體訊號值。這份紀錄離開 Pacevera 之後仍然看得懂——
           <strong>三個月後回頭查「那天為什麼把強度降下來」，答案還在</strong>。
         </p>
       </div>
@@ -1031,7 +1031,7 @@
     <p class="lede">
       決策靠的是門檻：readiness 低於 60 就降強度、ACWR 高過 1.4 就減量。
       真正的問題是<strong>那些數字是誰決定的</strong>。
-      Evidra 把每一條門檻連同它的出處存成資料，決策回傳時一併帶出來——
+      Pacevera 把每一條門檻連同它的出處存成資料，決策回傳時一併帶出來——
       <strong>包括「這個數字沒有出處」這件事本身</strong>。
     </p>
 
@@ -1178,7 +1178,7 @@
       </div>
       <div class="finding ok">
         <h4>企業與醫療　Form 3</h4>
-        <p>整組搬進對方控制的環境，Evidra 變成本機資料層。<strong>這是唯一能保存個人縱向歷史的形態</strong>，因為那份資料從頭到尾沒有離開他。核心宗旨要的是這一個。</p>
+        <p>整組搬進對方控制的環境，Pacevera 變成本機資料層。<strong>這是唯一能保存個人縱向歷史的形態</strong>，因為那份資料從頭到尾沒有離開他。核心宗旨要的是這一個。</p>
       </div>
       <div class="finding ok">
         <h4>更多來源，同一套語彙</h4>

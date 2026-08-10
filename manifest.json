@@ -1,16 +1,16 @@
 {
   "manifest_version": "0.3",
-  "name": "Evidra Fitness",
-  "display_name": "Evidra Fitness",
-  "version": "0.4.1",
+  "name": "Pacevera",
+  "display_name": "Pacevera",
+  "version": "0.4.2",
   "description": "Turns the training evidence you already have into a decision about today's session.",
-  "long_description": "Ask your assistant whether today's planned session still makes sense, and Evidra Fitness answers from your own recent training and whatever recovery readings you have: keep the session, ease it, swap a movement, or move it — with the reading and the rule behind the answer. It runs on your own machine. It fetches nothing on its own, keeps nothing once the answer is returned, and calls no AI model of its own. A reading nobody gave it is reported as missing rather than guessed at, and the confidence it reports drops to match.",
+  "long_description": "Ask your assistant whether today's planned session still makes sense, and Pacevera answers from your own recent training and whatever recovery readings you have: keep the session, ease it, swap a movement, or move it — with the reading and the rule behind the answer. It is a local fitness decision engine. It fetches nothing on its own, keeps nothing once the answer is returned, and calls no AI model of its own. A reading nobody gave it is reported as missing rather than guessed at, and the confidence it reports drops to match.",
   "icon": "icon.png",
   "author": {
     "name": "Henry Yeh",
     "url": "https://github.com/henryyeh182"
   },
-  "homepage": "https://github.com/henryyeh182/evidra",
+  "homepage": "https://pacevera.com",
   "documentation": "https://github.com/henryyeh182/evidra/blob/main/README.md",
   "support": "https://github.com/henryyeh182/evidra/issues",
   "privacy_policies": [

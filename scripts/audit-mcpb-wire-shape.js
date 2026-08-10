@@ -37,11 +37,11 @@ const historical = [
 
 const archives = [
   ...historical.filter(([, archive]) => existsSync(archive)),
-  ["new-local", join(rootDir, "dist/evidra.mcpb")]
+  ["new-local", join(rootDir, "dist/pacevera.mcpb")]
 ].filter(([, archive]) => existsSync(archive));
 
 if (archives.length === 0) {
-  console.error(`No .mcpb files found. Expected historical files under ${relDir}, or dist/evidra.mcpb.`);
+  console.error(`No .mcpb files found. Expected historical files under ${relDir}, or dist/pacevera.mcpb.`);
   process.exit(1);
 }
 

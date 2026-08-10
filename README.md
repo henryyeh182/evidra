@@ -1,6 +1,6 @@
-# Evidra — Fitness Decision Engine
+# Pacevera — Fitness Decision Engine
 
-> **Evidra decides today's session.**
+> **Pacevera decides today's session.**
 > 它不查資料、不給建議。它拿**你今天原本排定的課表**與**你現在的身體證據**，
 > 回一個 `from → to` 的變更，並說得出憑什麼。
 
@@ -28,7 +28,7 @@
 }
 ```
 
-**沒有那份 `from`，這一切就只是建議。** 問「今天練什麼」而手上沒有課表時，Evidra 不會
+**沒有那份 `from`，這一切就只是建議。** 問「今天練什麼」而手上沒有課表時，Pacevera 不會
 編一個出來——它回 `intent: no_scheduled_session`，並附一句
 `This is a recommendation question, not a decision.`
 
@@ -48,8 +48,8 @@ Claude Desktop
   │ 聽懂問題、湊齊證據 —— 從使用者的匯出檔，或直接問他
   │「昨天練了什麼、睡多久」本身就是合法的證據
   ▼
-Evidra（MCP tool call）
-  │ 證據以「參數」進入呼叫。Evidra 不連任何雲端、不持有 token、
+Pacevera（MCP tool call）
+  │ 證據以「參數」進入呼叫。Pacevera 不連任何雲端、不持有 token、
   │ 不 fetch 任何人的資料 —— 它只看得到這一次呼叫傳進來的東西
   ├─ 標準化各家方言
   ├─ 計算 ACWR / readiness / 分肌群疲勞
@@ -64,7 +64,7 @@ Claude Desktop
 
 **證據路徑今天長這樣**：`evidenceSource` 只有 `provided`（呼叫端傳入）與 `demo_seed` 兩種。
 `packages/connectors` 的六家解析器是用來**讀懂各家匯出檔的格式**，不是決策路徑上的即時
-connector——Evidra 從不代替使用者連上 Apple Health、Garmin 或 Strava。
+connector——Pacevera 從不代替使用者連上 Apple Health、Garmin 或 Strava。
 
 今天已走通的是 **Claude Desktop + desktop extension（MCPB）**。手機情境需要 remote MCP
 server，因此仍卡在 authorization server、OAuth 簽章驗證、HTTPS 公開部署與 hosted 版隱私政策。
@@ -122,33 +122,33 @@ server，因此仍卡在 authorization server、OAuth 簽章驗證、HTTPS 公�
 > 底下的〈隱私邊界〉是給我們自己看的判準，兩者不要合併。
 > 完整政策：https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md
 
-Evidra runs locally on your own machine and does not retain your evidence.
+Pacevera runs locally on your own machine and does not retain your evidence.
 
 We process only the minimum health-related evidence submitted by the caller, solely to
 compute the requested fitness decision. We do not retain, sell, use for training, or use
 it for unrelated purposes.
 
-Evidra never fetches your data — it only sees what the calling AI assistant passes into a
+Pacevera never fetches your data — it only sees what the calling AI assistant passes into a
 tool call: recovery signals for today, recent training load, the session you had scheduled,
 and context you state yourself. As a desktop extension, this is checkable against the one
 compiled server file it ships — minifying does not hide which standard-library modules a
 file imports:
 
-- **Evidra itself performs no outbound network requests.** No outbound HTTP, fetch, socket,
+- **Pacevera itself performs no outbound network requests.** No outbound HTTP, fetch, socket,
   or DNS calls, and it transmits your evidence nowhere.
-- **Evidra itself does not persist your evidence.** No database, no cache, no log file,
+- **Pacevera itself does not persist your evidence.** No database, no cache, no log file,
   no history.
 - **No runtime dependencies.** Node.js standard library only — no analytics, telemetry, or SDKs.
 - **No model calls.** Decisions are deterministic arithmetic and explicit rules.
 - **No accounts.** No sign-up, no login, no user identifier.
 
-These statements describe Evidra's own behaviour, not the computer it runs on, the AI
+These statements describe Pacevera's own behaviour, not the computer it runs on, the AI
 assistant that calls it, or the operating system and Node.js runtime underneath it.
 
 Evidence exists in memory for the duration of a single tool call. Nothing is written to
 durable storage, so there is nothing for us to keep, delete, or export on request.
 
-Evidra is not a medical device and does not provide medical advice. It is intended for
+Pacevera is not a medical device and does not provide medical advice. It is intended for
 general fitness and training purposes only.
 
 Privacy questions and requests: **evidramcp@icloud.com**
@@ -205,7 +205,7 @@ Form 3 是核心宗旨要的那個版本，不是選配。它排在後面是因�
 | 對外 tool | 6 個（`tools/list` 實測） |
 | 資料標準化 | `packages/connectors` 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP，Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 家。前四家照真實匯出檔寫，Oura／WHOOP 照兩家自己的 OpenAPI 寫、尚未對過真實回應 |
 | 確定性計算 | `semantic-engine`（readiness／分肌群疲勞）· `training-load`（ATL/CTL/TSB/ACWR）· `decision-engine`（from→to）· `planning` · `knowledge-graph`（889 節點 / 5,785 邊） |
-| 測試 | 442 tests、eval 20 golden cases 全綠 |
+| 測試 | 443 tests、eval 20 golden cases 全綠 |
 | 傳輸 | stdio ✅ · Streamable HTTP ✅ |
 | OAuth | 只做了「檢查 token claims」那一半；**簽章驗證器沒填、`serve:http` 進入點沒接線、沒有 authorization server** → 遠端連不起來 |
 | 協定版本 | `2025-06-18`；最新規格是 `2026-07-28`（stateless），升級走 dual-era |
@@ -224,7 +224,7 @@ source schema 與匯出形狀 scenario **四家齊備**（Garmin／Google Health
 phase multiplier 與 return ramp 也已收進 `engine-parameters.json`；值未改，缺來源的狀態改成資料可稽核。
 **但它還沒有經過長期真實訓練週期的驗證。**
 
-**證據由呼叫端提供。** Evidra 不會代替使用者連上 Apple Health、Garmin、Strava
+**證據由呼叫端提供。** Pacevera 不會代替使用者連上 Apple Health、Garmin、Strava
 或任何其他服務，也不需要綁定帳號——它讀的是呼叫時交給它的東西，可以單純是
 「昨天練了什麼、睡了多久」。已經匯出的資料也能當輸入評估。
 沒提供的訊號會列進 `signalCoverage` 並下調 confidence，**不會用預設值補**。
@@ -291,7 +291,7 @@ GUI 啟動的 app 拿到的 PATH 很精簡，設定檔裡**不能寫裸的 `node
 ## 指令
 
 ```bash
-npm test                    # 442 tests
+npm test                    # 443 tests
 npm run eval                # golden set 計分（tool 輸出契約）
 npm run harness             # Decision Harness（決策鏈本身；改規則或引擎之後必跑）
 npm run review:phase        # 階段完成審查（宣告「做完了」之前必跑）

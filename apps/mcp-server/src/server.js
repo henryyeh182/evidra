@@ -70,15 +70,15 @@ const { version: SERVER_VERSION } = JSON.parse(
  * and about a third of the text is interpolated from the rule library, so a
  * policy description edited there can break the limit from outside this file.
  */
-const INSTRUCTIONS = `Evidra turns this user's training evidence into a decision about today's session: keep, ease, substitute, or defer it. Call it when the user asks what to train, whether today's session still fits, or what to do instead of a movement they cannot do — "my knee hurts, what instead of squats" is a call, not a question to answer yourself.
+const INSTRUCTIONS = `Pacevera turns this user's training evidence into a decision about today's session: keep, ease, substitute, or defer it. Call it when the user asks what to train, whether today's session still fits, or what to do instead of a movement they cannot do — "my knee hurts, what instead of squats" is a call, not a question to answer yourself.
 
-The intensity, duration and movements returned are the decision, not a draft. Contraindications and load limits are applied here; do not re-derive them or reason past the result. What to say to the user is yours; what today's session becomes is not.
+The intensity, duration and movements returned are the decision, not a draft. Contraindications and load limits are applied here; do not re-derive them or reason past the result. What to say to the user is yours; what it becomes is not.
 
 Evidence: use whichever source this user has — Apple Health, Garmin, Strava, Oura, Whoop, any other — or the user's own words; two or three plain questions are a normal start. Pass it as \`evidence\`. Any single source decides something. A signal nobody supplied shows in \`signalCoverage\` and lowers confidence: send what exists, not a default, which makes it untrue.
 
 \`decisionBasis\` travels on every decision. Empty \`appliedRules\` means no rule applied, not that nothing was checked; a rule's \`limitations\` say what it does not do. Two policies, by id: arbitration (\`${POLICIES.arbitration.id}\`) — ${POLICIES.arbitration.description} Combination (\`${POLICIES.combination.id}\`) — ${POLICIES.combination.description}
 
-\`basis: internal_composite\` (most rules) — the threshold cuts a score Evidra computes from weights it chose; no study used that score, so empty \`sources\` is by design, not missing information, and it is not evidence-based. \`basis: external_metric\` — defined outside Evidra; \`sources\` cite work on it, \`contested\` names published objections; report both.
+\`basis: internal_composite\` (most rules) — the threshold cuts a score Pacevera computes from weights it chose; no study used that score, so empty \`sources\` is by design, not missing information, and it is not evidence-based. \`basis: external_metric\` — defined outside Pacevera; \`sources\` cite work on it, \`contested\` names published objections; report both.
 
 Plans live with you: this server stores no plan, preview or history. Pass in the plan you hold; persist what comes back.`;
 
@@ -122,7 +122,7 @@ export async function handleJsonRpcMessage(rawMessage) {
           // the title is the only part a person sees in a directory listing, so
           // it is the part that has to say which one this is.
           name: "fitness-mcp",
-          title: "Evidra Fitness",
+          title: "Pacevera",
           version: SERVER_VERSION
         },
         capabilities: {

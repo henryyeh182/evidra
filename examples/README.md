@@ -1,6 +1,6 @@
 # Demo prompts 與 sample evidence
 
-裝好 `evidra.mcpb` 之後，把底下任何一段貼進 Claude Desktop 就會拿到決策。
+裝好 `pacevera.mcpb` 之後，把底下任何一段貼進 Claude Desktop 就會拿到決策。
 
 **每一段的輸出都是引擎真的跑出來的，不是示意。** 重跑指令在最後一節，
 數字對不上就是程式或這份文件其中一邊壞了。
@@ -9,7 +9,7 @@
 
 ## 為什麼沒有「連接你的帳號」這一步
 
-Evidra 不連任何廠商雲端、不持有 OAuth token、不保存任何健康資料。
+Pacevera 不連任何廠商雲端、不持有 OAuth token、不保存任何健康資料。
 證據以**參數**進入 tool call：Claude 讀你貼的檔案或你講的話，整理成參數傳進來，
 算完就沒了。所以底下每一段都是自足的——貼上去就能跑，不需要任何帳號。
 
@@ -68,7 +68,7 @@ Strava 不量 HRV、不量睡眠。它有的是每一場訓練的負荷——這
 
 ## 3 · 只有 Garmin：廠商複合分數當一等證據
 
-Body Battery 是 Garmin 自己算的分數。Evidra **不重算它**——
+Body Battery 是 Garmin 自己算的分數。Pacevera **不重算它**——
 錶在手腕上，它整合了我們看不到的訊號。
 
 > 附上 [`evidence-garmin-hard-day.json`](evidence-garmin-hard-day.json)

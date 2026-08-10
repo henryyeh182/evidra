@@ -20,7 +20,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
-const archivePath = join(rootDir, "dist/evidra.mcpb");
+const archivePath = join(rootDir, "dist/pacevera.mcpb");
 
 const { version } = JSON.parse(readFileSync(join(rootDir, "package.json"), "utf8"));
 const manifest = JSON.parse(readFileSync(join(rootDir, "manifest.json"), "utf8"));
