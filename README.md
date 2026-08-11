@@ -75,7 +75,7 @@ Decision intent and resulting action are separate fields. The same intent may pr
 |---|---|
 | `get_evidence_coverage` | Reports available and missing evidence signals. |
 | `explain_decision` | Returns the process-local rule and source trace for a previous decision. |
-| `submit_outcome` | Accepts an observed outcome for a prior case; durable storage remains the caller's responsibility. |
+| `submit_outcome` | Accepts an observed outcome for a prior case; storage is bounded and local to the configured environment. |
 | `search_exercises` / `get_exercise` | Queries the exercise catalog and graph relationships. |
 | `search_workouts` / `get_workout` | Queries structured workout content. |
 | `get_user_profile` | Returns caller-supplied user constraints and training settings. |
@@ -158,7 +158,7 @@ Claude Desktop and other local MCP hosts are supported through the desktop exten
 
 ## Release status
 
-The current public release is `v0.4.2`. The deterministic decision engine and evaluation suite are implemented, but the engine has not been validated across extended real-world training blocks. The Oura and WHOOP readers were implemented from their published API specifications and have not yet been validated against real responses; Apple Health, Garmin, Google Health, and Strava readers were developed from real export files.
+The current public release is `v0.5.0`, using Decision Engine `1.6.0` and `base_rules@1.1.0`. It includes ten public tools, bounded local continuity, personalized single-workout generation, decision traces, and package validation／dry-run／rollback. The Oura and WHOOP readers were implemented from their published API specifications and have not yet been validated against real responses; Apple Health, Garmin, Google Health, and Strava readers were developed from real export files.
 
 ## Support
 

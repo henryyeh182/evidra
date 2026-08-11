@@ -1,11 +1,11 @@
 # Privacy Policy — Pacevera
 
-**Effective date:** 2026-08-10
+**Effective date:** 2026-08-11
 **Applies to:** the Pacevera Fitness desktop extension, an MCP server that runs locally on the user's computer.
 
 ## Summary
 
-Pacevera receives health-related Evidence supplied by the calling AI host, computes the requested fitness decision, returns the result, and does not retain the Evidence. The desktop extension performs these operations locally.
+Pacevera receives health-related Evidence supplied by the calling AI host, computes the requested fitness decision, returns the result, and performs bounded local continuity when the caller supplies an identity. Raw Evidence is not retained as a health-history database.
 
 ## Evidence received
 
@@ -29,7 +29,7 @@ Receiving and computing on Evidence constitutes processing. The legal basis is p
 The desktop extension is distributed as a compiled JavaScript bundle and runs locally. The following statements describe the behavior of the Pacevera process itself; they do not describe the AI host, operating system, imported files, backups, or other software on the user's computer.
 
 - **No outbound network requests.** The desktop extension does not make HTTP, fetch, socket, or DNS requests and does not transmit Evidence to a provider or third party.
-- **No Evidence persistence.** The desktop extension does not write Evidence to a database, cache, history, log file, or other durable storage. Evidence remains in process memory for the duration of the tool call.
+- **Bounded continuity only.** When a caller supplies an identity, the local extension may use `writeFile` and `mkdir` to maintain a bounded, local, hashed-identity continuity record containing the minimum state needed for continuity. It does not write raw provider payloads, provider tokens, or an unbounded health history.
 - **No runtime third-party dependencies.** The extension uses the Node.js standard library and does not include analytics, telemetry, crash reporting, or external SDKs.
 - **No model calls.** Decisions are produced by deterministic calculations and explicit rules. The extension does not send Evidence to an AI model provider.
 - **No accounts or provider tokens.** The extension does not provide Pacevera accounts, sign-in, or provider OAuth token storage. It does not authenticate to Apple Health, Garmin, Strava, Oura, WHOOP, or another provider.
@@ -38,7 +38,7 @@ The repository also contains an HTTP transport for local or future remote deploy
 
 ## Retention and deletion
 
-Pacevera does not retain Evidence and does not create a durable user record in the desktop extension. Consequently, there is no Pacevera-side Evidence deletion or export operation.
+Pacevera does not retain raw Evidence as a durable health-history database. The local continuity record is process-local to the configured environment, bounded, exportable, and deletable through the continuity tools. Deleting the record removes the Pacevera-side continuity state; it does not delete copies held by the AI host, operating system, imported files, or backups.
 
 The AI host may retain the conversation containing the submitted Evidence and the returned decision under its own policy. The operating system, imported files, backups, and other local software may also retain copies outside Pacevera's control.
 
@@ -61,6 +61,10 @@ Pacevera is intended for general fitness and training purposes. It is not a medi
 This policy applies to the local desktop extension only. A future hosted or remote deployment will require a separate published policy describing its data flows, retention, authorization infrastructure, and deletion procedures before that deployment is made available for public use.
 
 The minimum processing commitment stated above—minimum Evidence for the requested computation, no sale, no model training, and no unrelated use—will apply to future deployments unless a more protective policy is published.
+
+## Verifiable bundle boundary
+
+The shipped bundle contains no provider connector credentials or outbound data path. Searching the compiled bundle for `node:http`, `node:net`, `node:dgram`, or `fetch(` must find no outbound provider call, while `writeFile` and `mkdir` may appear because they implement the bounded local continuity record described above.
 
 ## Changes
 
