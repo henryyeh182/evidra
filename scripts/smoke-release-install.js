@@ -33,6 +33,32 @@ const DEFAULT_CLAUDE_SETTINGS = join(
   "Library/Application Support/Claude/Claude Extensions Settings/local.mcpb.henry-yeh.pacevera.json"
 );
 
+// This is the host-side demo prompt represented as a deterministic MCP call
+// sequence below. MCP servers receive tool calls, not natural-language prompts;
+// keeping the prompt here makes the acceptance scenario explicit and reviewable.
+const DEMO_PROMPT =
+  "I slept 7 hours, my HRV was 52 ms and resting heart rate was 55 bpm. " +
+  "Yesterday's training load was 80. Today I have 45 minutes of high-intensity intervals scheduled. " +
+  "Should I still do it?";
+
+const DEMO_EVIDENCE = {
+  profile: { timezone: "UTC", fitnessLevel: "intermediate" },
+  healthMetrics: [
+    { type: "sleep_duration_hours", value: 7, recordedAt: "2026-08-10T07:00:00Z", source: "athlete" },
+    { type: "hrv_ms", value: 52, recordedAt: "2026-08-10T07:00:00Z", source: "athlete" },
+    { type: "resting_hr_bpm", value: 55, recordedAt: "2026-08-10T07:00:00Z", source: "athlete" }
+  ],
+  workouts: [
+    {
+      startedAt: "2026-08-09T08:00:00Z",
+      durationMinutes: 45,
+      type: "run",
+      trainingLoad: 80,
+      muscleGroups: ["legs"]
+    }
+  ]
+};
+
 const args = new Map();
 const flags = new Set();
 for (let i = 2; i < process.argv.length; i += 1) {
@@ -130,6 +156,26 @@ function runProtocolSmoke(label, cwd, manifest, expectedVersion) {
           constraints: { availableMinutes: 45, equipment: ["outdoor"] }
         }
       }
+    }) +
+    frame(5, "tools/call", {
+      name: "assess_fitness_state",
+      arguments: {
+        date: "2026-08-10",
+        evidence: DEMO_EVIDENCE
+      }
+    }) +
+    frame(6, "tools/call", {
+      name: "decide_session",
+      arguments: {
+        date: "2026-08-10",
+        evidence: DEMO_EVIDENCE,
+        scheduledSession: {
+          type: "run",
+          name: "Intervals",
+          intensity: "high",
+          durationMinutes: 45
+        }
+      }
     });
 
   let messages;
@@ -144,6 +190,8 @@ function runProtocolSmoke(label, cwd, manifest, expectedVersion) {
   const listed = messages.find((message) => message.id === 2);
   const substitution = messages.find((message) => message.id === 3);
   const plan = messages.find((message) => message.id === 4);
+  const state = messages.find((message) => message.id === 5);
+  const decision = messages.find((message) => message.id === 6);
   const tools = listed?.result?.tools || [];
 
   if (initialized?.result?.serverInfo?.version !== expectedVersion) {
@@ -186,11 +234,49 @@ function runProtocolSmoke(label, cwd, manifest, expectedVersion) {
     fail(`${label}: generate_plan did not return a planned v1 plan with decisionBasis`);
   }
 
+  for (const [message, name] of [
+    [state, "assess_fitness_state"],
+    [decision, "decide_session"]
+  ]) {
+    if (message?.error) {
+      fail(`${label}: ${name} demo call failed (${message.error.message})`);
+      continue;
+    }
+    if (message?.result?.structuredContent) {
+      fail(`${label}: ${name} demo call returned structuredContent; release wire shape is content-only`);
+    }
+  }
+
+  const statePayload = parseToolResult(state);
+  if (
+    typeof statePayload?.readinessScore !== "number" ||
+    !statePayload?.signalCoverage ||
+    statePayload?.provenance?.evidenceSource !== "provided"
+  ) {
+    fail(`${label}: demo prompt did not produce Evidence -> Fitness State with provided provenance`);
+  }
+
+  const decisionPayload = parseToolResult(decision);
+  if (
+    !decisionPayload?.decisionId ||
+    !decisionPayload?.decision?.type ||
+    !decisionPayload?.action?.from ||
+    !decisionPayload?.action?.to ||
+    !decisionPayload?.reason ||
+    !decisionPayload?.signalCoverage ||
+    decisionPayload?.provenance?.evidenceSource !== "provided"
+  ) {
+    fail(`${label}: demo prompt did not produce a grounded Fitness State -> Decision -> Action result`);
+  }
+
   return {
     toolCount: tools.length,
     toolDigest: createHash("sha256").update(JSON.stringify(tools)).digest("hex"),
     substitutionRule: substitutionPayload?.decisionBasis?.governingRule?.ruleId || null,
-    planId: planPayload?.id || null
+    planId: planPayload?.id || null,
+    demoPrompt: DEMO_PROMPT,
+    demoState: typeof statePayload?.readinessScore === "number" ? "Evidence -> Fitness State" : null,
+    demoDecision: decisionPayload?.decision?.type || null
   };
 }
 
@@ -396,7 +482,8 @@ function main() {
         const protocol = runProtocolSmoke("local archive", archiveWork, archiveMeta.manifest, serverJson.version);
         if (protocol) {
           note(
-            `local archive: ${archiveMeta.files.length} files, sha256 ${sha256(archive).slice(0, 16)}, tools digest ${protocol.toolDigest.slice(0, 16)}`
+            `local archive: ${archiveMeta.files.length} files, sha256 ${sha256(archive).slice(0, 16)}, tools digest ${protocol.toolDigest.slice(0, 16)}, ` +
+              `demo "${protocol.demoPrompt}" -> ${protocol.demoState} -> Decision(${protocol.demoDecision})`
           );
         }
       }

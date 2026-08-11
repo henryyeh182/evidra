@@ -375,6 +375,20 @@ result 裡而不是協定層**、structured output、transport 選擇。**這些
 npm run review:release
 ```
 
+新的 MCPB 發布在送 `mcp-publisher publish` 之前，先跑完整 gate：
+
+```bash
+npm run release:gate
+mcp-publisher publish
+```
+
+`release:gate` 會依序 `pack`、跑 `review:release`，再直接解開剛打好的本機
+`dist/pacevera.mcpb`，用 stdio 做 handshake／`tools/list`／`tools/call`。其中固定的
+demo prompt 會驗證 caller-supplied Evidence → `assess_fitness_state` 的 Fitness State →
+`decide_session` 的 Decision／Action／Reason、`signalCoverage`、provenance，以及
+content-only MCP wire shape。這是發布前 gate；同一版已經發布後不要重新 `pack`，否則 zip
+timestamp 會改變 checksum。
+
 **每一次發布、每一次上架、每一次動對外文件，都要跑這支。** 它自己判斷驗哪一顆，
 並在標頭印出來：
 

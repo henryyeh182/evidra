@@ -32,6 +32,7 @@
     "serve:http": "node apps/mcp-server/src/http.js",
     "serve:local": "node apps/local-engine/src/stdio.js",
     "smoke:release-install": "node scripts/smoke-release-install.js",
+    "release:gate": "npm run pack && npm run review:release && npm run smoke:release-install -- --skip-online --skip-claude",
     "review:phase": "node scripts/review-phase.js",
     "review:release": "node scripts/review-release.js",
     "test:rules": "node --test \"packages/rules/test/*.test.js\"",
