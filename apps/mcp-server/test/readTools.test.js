@@ -18,6 +18,22 @@ test("advertised tool descriptions use the public legacy names", () => {
   }
 });
 
+test("advertised tools expose product, engine and base rule package identity", () => {
+  const tools = listedToolDefinitions("0.5.0");
+  assert.ok(tools.length > 0);
+  for (const tool of tools) {
+    assert.equal(tool._meta["io.github.henryyeh182/evidra/toolsetVersion"], "0.5.0");
+    assert.equal(tool._meta["io.github.henryyeh182/evidra/decisionEngineVersion"], "1.6.0");
+    assert.deepEqual(tool._meta["io.github.henryyeh182/evidra/rulePackages"], [
+      {
+        packageId: "base_rules",
+        version: "1.1.0",
+        contentChecksum: "sha256:b6b3247b81d1ae62bd664f376e11d2881063d69203ed2d974c8673dfaf4ff250"
+      }
+    ]);
+  }
+});
+
 async function call(name, args = {}) {
   const response = await handleJsonRpcMessage(
     JSON.stringify({ jsonrpc: "2.0", id: nextId++, method: "tools/call", params: { name, arguments: args } })

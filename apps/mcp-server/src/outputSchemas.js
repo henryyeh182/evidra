@@ -855,6 +855,18 @@ export const outputSchemas = {
     ]
   },
 
+  evidra_generate_workout: {
+    type: "object",
+    properties: {
+      tool: { type: "string" }, decisionId: { type: "string" }, userId: { type: "string" }, date: { type: "string" },
+      request: { type: "object", properties: { durationMinutes: { type: "number" }, focus: { type: "string" } }, required: ["durationMinutes", "focus"] },
+      decision: { type: "object", properties: { type: { type: "string" }, intent: { type: "string" }, adjustment: { type: "object" } }, required: ["type", "intent", "adjustment"] },
+      action: { type: "object" }, workout: { type: "object" }, reason: { type: "array", items: { type: "string" } },
+      decisionBasis: { type: "object" }, confidence: { type: "string" }, signalCoverage: { type: "object" }, provenance: { type: "object" }
+    },
+    required: ["tool", "decisionId", "userId", "date", "request", "decision", "action", "workout", "reason", "decisionBasis", "confidence", "signalCoverage", "provenance"]
+  },
+
   evidra_preview_adjust_plan: {
     "type": "object",
     "properties": {

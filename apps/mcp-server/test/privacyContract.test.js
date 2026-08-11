@@ -26,6 +26,15 @@ test("the privacy manifest defines exactly the three deployment modes", () => {
   assert.equal(contract.modes.find((mode) => mode.id === "local-desktop").storage.durableByPacevera, false);
 });
 
+test("the privacy manifest fixes the continuity lifecycle and hosted boundary", () => {
+  assert.deepEqual(contract.continuity.availableModes, ["user-controlled-private"]);
+  assert.match(contract.continuity.storage, /hashed-identity/);
+  assert.equal(contract.continuity.retention, "until_explicit_delete");
+  assert.match(contract.continuity.export, /complete/);
+  assert.match(contract.continuity.delete, /exactly one/);
+  assert.match(contract.continuity.hostedBoundary, /never reads or writes/);
+});
+
 test("redaction removes credentials, identity, and health payloads", () => {
   const value = redactForLog({
     method: "POST",

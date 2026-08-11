@@ -1,0 +1,11 @@
+{
+  "libraryId": "evidra.single-workout-rules",
+  "version": "0.1.0",
+  "lastReview": "2026-08-11",
+  "reviewer": "Henry Yeh",
+  "rules": [
+    { "ruleId": "EVD-R-013", "version": "0.1.0", "status": "draft", "title": "single workout focus adjustment" },
+    { "ruleId": "EVD-R-014", "version": "0.1.0", "status": "draft", "title": "single workout duration adjustment" },
+    { "ruleId": "EVD-R-015", "version": "0.1.0", "status": "draft", "title": "single workout evidence adjustment" }
+  ]
+}

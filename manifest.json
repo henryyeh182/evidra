@@ -4,7 +4,7 @@
   "display_name": "Pacevera",
   "version": "0.4.2",
   "description": "Turns the training evidence you already have into a decision about today's session.",
-  "long_description": "Ask your assistant whether today's planned session still makes sense, and Pacevera answers from your own recent training and whatever recovery readings you have: keep the session, ease it, swap a movement, or move it — with the reading and the rule behind the answer. It is a local fitness decision engine. It fetches nothing on its own, keeps nothing once the answer is returned, and calls no AI model of its own. A reading nobody gave it is reported as missing rather than guessed at, and the confidence it reports drops to match.",
+  "long_description": "Ask your assistant whether today's planned session still makes sense, and Pacevera answers from your own recent training and whatever recovery readings you have: keep the session, ease it, swap a movement, or move it — with the reading and the rule behind the answer. It is a deterministic fitness decision engine. Local/private continuity may store a hashed-identity athlete record on infrastructure you control until you delete it; hosted remote is no-go and, when eventually enabled, must remain transient and stateless. Pacevera calls no AI model of its own. A reading nobody gave it is reported as missing rather than guessed at, and the confidence it reports drops to match.",
   "icon": "icon.png",
   "author": {
     "name": "Henry Yeh",
@@ -61,6 +61,22 @@
     {
       "name": "commit_adjust_plan",
       "description": "Compute the plan a previewed adjustment produces, once the user has accepted the preview. Your assistant keeps the result; this extension stores nothing."
+    },
+    {
+      "name": "get_evidence_coverage",
+      "description": "Report which recovery and training signals are present or missing."
+    },
+    {
+      "name": "explain_decision",
+      "description": "Return the bounded rule and source trace for a decision from this process."
+    },
+    {
+      "name": "submit_outcome",
+      "description": "Normalize an observed result for a prior case; durable outcome storage remains caller-controlled."
+    },
+    {
+      "name": "generate_workout",
+      "description": "Generate one picker-sized workout and adapt it through the decision engine."
     }
   ],
   "compatibility": {

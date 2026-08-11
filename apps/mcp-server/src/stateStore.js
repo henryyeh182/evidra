@@ -9,13 +9,16 @@
  * or by an explicit userId in local development. Anonymous requests never
  * reach this store, so two unrelated model conversations cannot be merged.
  */
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
 import { rootDir } from "./rootDir.js";
 
 const DEFAULT_DIR = join(rootDir, "data", "private", "athletes");
 const writeLocks = new Map();
+
+// Continuity is user-controlled storage, not a hosted retention service.
+export const CONTINUITY_RETENTION = "until_explicit_delete";
 
 function keyFor(identity) {
   return createHash("sha256").update(String(identity)).digest("hex");
@@ -83,6 +86,24 @@ export async function loadAthleteContext(identity, options = {}) {
   if (!identity) return null;
   const record = await readRecord(identity, stateDirectory(options));
   return record?.context || null;
+}
+
+export async function exportAthleteRecord(identity, options = {}) {
+  if (!identity) return null;
+  return readRecord(identity, stateDirectory(options));
+}
+
+/** Delete exactly one hashed-identity record; never scan or delete a directory. */
+export async function deleteAthleteRecord(identity, options = {}) {
+  if (!identity) return false;
+  const destination = recordPath(identity, stateDirectory(options));
+  try {
+    await unlink(destination);
+    return true;
+  } catch (error) {
+    if (error.code === "ENOENT") return false;
+    throw error;
+  }
 }
 
 export async function mergeAthleteEvidence(identity, context, options = {}) {

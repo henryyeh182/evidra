@@ -62,6 +62,19 @@ const EVIDENCE_REQUIREMENTS = {
     "Any single source decides something: training load alone, recovery signals alone, or what the athlete tells you. Whatever is absent is reported in signalCoverage and lowers confidence, so a thin call still returns a decision that says how thin it is."
 };
 
+const SINGLE_WORKOUT_FOCUSES = Object.freeze({
+  short_sprints: { focus: "Short Sprints", type: "run", intensity: "high", targetMuscleGroups: ["legs"], exercises: ["exercise_tempo_run"] },
+  vo2max_intervals: { focus: "VO₂max Intervals", type: "run", intensity: "high", targetMuscleGroups: ["legs"], exercises: ["exercise_tempo_run"] },
+  tempo: { focus: "Tempo Run", type: "run", intensity: "high", targetMuscleGroups: ["legs"], exercises: ["exercise_tempo_run"] },
+  zone2: { focus: "Zone 2 Cardio", type: "run", intensity: "moderate", targetMuscleGroups: ["legs"], exercises: ["exercise_zone2_run"] },
+  warm_up: { focus: "Warm-up", type: "mobility", intensity: "low", targetMuscleGroups: ["hips", "legs"], exercises: ["exercise_lower_body_mobility"] },
+  recovery: { focus: "Recovery Walk", type: "walk", intensity: "low", targetMuscleGroups: ["legs"], exercises: ["exercise_recovery_walk"] },
+  mobility: { focus: "Mobility Flow", type: "mobility", intensity: "low", targetMuscleGroups: ["hips", "legs", "core"], exercises: ["exercise_lower_body_mobility"] },
+  strength: { focus: "Full-body Strength", type: "strength", intensity: "moderate", targetMuscleGroups: ["legs", "back", "core"], exercises: ["exercise_goblet_squat", "exercise_dumbbell_row"] },
+  core: { focus: "Core Strength", type: "strength", intensity: "moderate", targetMuscleGroups: ["core"], exercises: ["exercise_bodyweight_squat"] }
+});
+const SINGLE_WORKOUT_DURATIONS = new Set([5, 10, 15, 20, 25, 30]);
+
 /**
  * Resolve the context a call should reason over.
  *
@@ -82,7 +95,7 @@ const EVIDENCE_REQUIREMENTS = {
  * a UTC instant and never a literal frozen into this file.
  */
 async function resolveContext(args) {
-  const identity = args.__mcpIdentity || args.userId || null;
+  const identity = args.__mcpHosted ? null : (args.__mcpIdentity || args.userId || null);
   if (args.evidence) {
     let context;
     let defaultDate;
@@ -102,7 +115,8 @@ async function resolveContext(args) {
       // had, a caller can fix its payload and try again in the same turn.
       return { invalid: error.message };
     }
-    const persisted = identity ? await mergeAthleteEvidence(identity, context) : null;
+    const stateOptions = args.__mcpStateDirectory ? { directory: args.__mcpStateDirectory } : {};
+    const persisted = identity ? await mergeAthleteEvidence(identity, context, stateOptions) : null;
     return {
       context: persisted || context,
       defaultDate,
@@ -115,7 +129,8 @@ async function resolveContext(args) {
   }
 
   if (identity) {
-    const context = await loadAthleteContext(identity);
+    const stateOptions = args.__mcpStateDirectory ? { directory: args.__mcpStateDirectory } : {};
+    const context = await loadAthleteContext(identity, stateOptions);
     if (context) {
       return {
         context,
@@ -457,6 +472,31 @@ export async function generateTrainingPlanTool(args = {}) {
   return jsonContent({ decisionId: planDecision.decisionId, ...plan });
 }
 
+export async function generateWorkoutTool(args = {}) {
+  if (!SINGLE_WORKOUT_DURATIONS.has(args.durationMinutes)) {
+    return errorContent({ error: "invalid_workout_duration", tool: "evidra_generate_workout", problem: "durationMinutes must be one of 5, 10, 15, 20, 25 or 30.", allowed: [...SINGLE_WORKOUT_DURATIONS] });
+  }
+  if (typeof args.focus !== "string" || !SINGLE_WORKOUT_FOCUSES[args.focus]) {
+    return errorContent({ error: "invalid_workout_focus", tool: "evidra_generate_workout", problem: "focus must be one of the supported single-workout focus values.", allowed: Object.keys(SINGLE_WORKOUT_FOCUSES) });
+  }
+  const scheduledSession = { ...SINGLE_WORKOUT_FOCUSES[args.focus], durationMinutes: args.durationMinutes };
+  const decisionResult = await decideSessionTool({
+    ...args,
+    scheduledSession,
+    availableMinutes: args.availableMinutes ?? args.evidence?.constraints?.availableMinutes
+  });
+  const payload = JSON.parse(decisionResult.content[0].text);
+  if (decisionResult.isError) return errorContent({ ...payload, tool: "evidra_generate_workout" });
+  return jsonContent({
+    tool: "generate_workout", decisionId: payload.decisionId, userId: payload.userId, date: payload.date,
+    request: { durationMinutes: args.durationMinutes, focus: args.focus },
+    decision: { type: "workout_generated", intent: "build_single_workout", adjustment: payload.decision },
+    action: payload.action, workout: payload.action.to, reason: payload.reason,
+    decisionBasis: payload.decisionBasis, confidence: payload.confidence, signalCoverage: payload.signalCoverage,
+    provenance: { ...payload.provenance, requestedFocus: args.focus, requestedDurationMinutes: args.durationMinutes, scheduledSessionSource: "picker" }
+  });
+}
+
 export async function getTrainingPlanTool(args = {}) {
   if (!args.plan) {
     throw new Error("get_plan is stateless: pass the caller-held plan.");
@@ -644,6 +684,7 @@ export const toolHandlers = {
   get_user_profile: getUserProfileTool,
   get_training_history: getTrainingHistoryTool,
   evidra_generate_plan: generateTrainingPlanTool,
+  evidra_generate_workout: generateWorkoutTool,
   get_plan: getTrainingPlanTool,
   list_plans: listTrainingPlansTool,
   evidra_preview_adjust_plan: previewPlanChangeTool,

@@ -4,7 +4,7 @@
 npm run harness
 ```
 
-Fixed evidence in, the whole decision chain run once, and seven questions asked
+Fixed evidence in, the whole decision chain run once, and nine questions asked
 of what comes out.
 
 ## Why this exists next to `eval/` and the package tests
@@ -35,6 +35,7 @@ applies retroactively to every scenario already written.
 | DH-5 | Does a rule that fired and did not govern still leave a trace? |
 | DH-6 | Does a missing signal lower confidence rather than get filled in? |
 | DH-7 | Does an injury restriction really outrank recovery and training goal? |
+| DH-PI | Can prompt-like free text alter a typed decision? |
 
 And one more that is not an invariant at all:
 

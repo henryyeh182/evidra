@@ -3,9 +3,13 @@
   "$id": "https://pacevera.com/schemas/privacy/deployment-mode-contract.schema.json",
   "title": "Pacevera privacy deployment contract",
   "type": "object",
-  "required": ["contractVersion", "modes"],
+  "required": ["contractVersion", "continuity", "modes"],
   "properties": {
     "contractVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "continuity": { "type": "object", "required": ["availableModes", "storage", "retention", "export", "delete", "hostedBoundary"], "additionalProperties": false, "properties": {
+      "availableModes": { "type": "array", "items": { "enum": ["local-desktop", "user-controlled-private", "hosted-remote"] } },
+      "storage": { "type": "string" }, "retention": { "type": "string" }, "export": { "type": "string" }, "delete": { "type": "string" }, "hostedBoundary": { "type": "string" }
+    }},
     "modes": {
       "type": "array",
       "minItems": 3,

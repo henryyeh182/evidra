@@ -1,6 +1,14 @@
 {
   "$schema": "./deployment-mode-contract.schema.json",
   "contractVersion": "1.0",
+  "continuity": {
+    "availableModes": ["user-controlled-private"],
+    "storage": "hashed-identity JSON record in EVIDRA_STATE_DIR; normalized context only",
+    "retention": "until_explicit_delete",
+    "export": "local state-store export returns the complete owner-scoped record",
+    "delete": "local state-store delete removes exactly one owner-scoped record; backups and host copies are separate",
+    "hostedBoundary": "hosted-remote is no-go and never reads or writes continuity storage"
+  },
   "modes": [
     {
       "id": "local-desktop",

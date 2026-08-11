@@ -38,6 +38,9 @@ const PUBLIC_REPO = "henryyeh182/evidra";
 const REGISTRY_NAME = "io.github.henryyeh182/evidra";
 const REGISTRY_SEARCH = "https://registry.modelcontextprotocol.io/v0/servers?search=evidra";
 const TOOLSET_META_KEY = "io.github.henryyeh182/evidra/toolsetVersion";
+const ENGINE_META_KEY = "io.github.henryyeh182/evidra/decisionEngineVersion";
+const RULE_PACKAGES_META_KEY = "io.github.henryyeh182/evidra/rulePackages";
+const VERSION_LINES_PATH = join(rootDir, "docs/release-version-lines.json");
 
 const checks = [];
 function check(id, title, why, run) {
@@ -53,6 +56,10 @@ const serverJson = JSON.parse(readFileSync(join(rootDir, "server.json"), "utf8")
 const declaredVersion = serverJson.version;
 const declaredSha = serverJson.packages?.[0]?.fileSha256;
 const declaredUrl = serverJson.packages?.[0]?.identifier;
+const versionHistory = JSON.parse(readFileSync(VERSION_LINES_PATH, "utf8"));
+const versionRecord = versionHistory.releases?.find(
+  (release) => release.productVersion === declaredVersion
+);
 
 let work = null;
 let mode = null;
@@ -287,6 +294,21 @@ check(
       if (toolsetVersion !== declaredVersion) {
         findings.push(`${tool.name} 的 ${TOOLSET_META_KEY} 是 ${toolsetVersion || "(missing)"}，不是 ${declaredVersion}`);
       }
+      if (versionRecord?.baseRulesPackageVersion !== null && versionRecord?.baseRulesPackageVersion !== undefined) {
+        const engineVersion = tool._meta?.[ENGINE_META_KEY];
+        const baseRules = tool._meta?.[RULE_PACKAGES_META_KEY]?.find(
+          (entry) => entry.packageId === "base_rules"
+        );
+        if (engineVersion !== versionRecord.decisionEngineVersion) {
+          findings.push(`${tool.name} 的 Decision Engine 是 ${engineVersion || "(missing)"}，不是 ${versionRecord.decisionEngineVersion}`);
+        }
+        if (baseRules?.version !== versionRecord.baseRulesPackageVersion) {
+          findings.push(`${tool.name} 的 base_rules 是 ${baseRules?.version || "(missing)"}，不是 ${versionRecord.baseRulesPackageVersion}`);
+        }
+        if (baseRules?.contentChecksum !== versionRecord.baseRulesContentChecksum) {
+          findings.push(`${tool.name} 的 base_rules checksum 與 release record 不符`);
+        }
+      }
       if (tool.outputSchema) {
         findings.push(`${tool.name} 又把 outputSchema 放回 tools/list；v0.1.1 相容 wire shape 不能帶它`);
       }
@@ -395,6 +417,132 @@ check(
   }
 );
 
+check(
+  "R7",
+  "release 明列並核對 Product、Engine 與 rule package 身份",
+  "使用者看到的是 Pacevera、Decision Engine 與實際載入的 rule packages；三者少一個就無法重建出貨組合。",
+  () => {
+    const findings = [];
+    if (!versionRecord) {
+      return [`${VERSION_LINES_PATH} 沒有 product ${declaredVersion} 的 release record`];
+    }
+
+    const requiredKeys = [
+      "productVersion",
+      "status",
+      "releasedOn",
+      "baseRulesPackageVersion",
+      "decisionEngineVersion"
+    ];
+    if (versionRecord.baseRulesPackageVersion === null) requiredKeys.push("ruleLibraryVersion");
+    else requiredKeys.push("baseRulesContentChecksum");
+    for (const key of requiredKeys) {
+      if (!Object.hasOwn(versionRecord, key)) findings.push(`release record 缺少 ${key}`);
+    }
+    if (mode === "published" && versionRecord.status !== "released") {
+      findings.push(`GitHub artifact 已發布，但 runtime identity 紀錄狀態仍是 ${versionRecord.status || "(missing)"}`);
+    }
+    if (mode === "published" && !versionRecord.releasedOn) {
+      findings.push("GitHub artifact 已發布，但 runtime identity 紀錄沒有 releasedOn");
+    }
+
+    const init =
+      JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: {
+          protocolVersion: "2025-06-18",
+          capabilities: {},
+          clientInfo: { name: "release-version-probe", version: "1" }
+        }
+      }) + "\n";
+    const messages = sh("node", [bundledManifest.server.entry_point], {
+      cwd: join(work, "x"),
+      input:
+        init +
+        JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) +
+        "\n" +
+        JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }) +
+        "\n" +
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: 3,
+          method: "tools/call",
+          params: {
+            name: "decide_session",
+            arguments: {
+              evidence: { profile: { timezone: "UTC" }, healthMetrics: [], workouts: [] },
+              date: "2026-01-01",
+              scheduledSession: {
+                focus: "Release version probe",
+                type: "recovery",
+                durationMinutes: 20,
+                intensity: "low",
+                targetMuscleGroups: [],
+                exercises: []
+              }
+            }
+          }
+        }) +
+        "\n",
+      stdio: ["pipe", "pipe", "ignore"]
+    })
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+
+    const listed = messages.find((message) => message.id === 2);
+    const called = messages.find((message) => message.id === 3);
+    const textResult = called?.result?.content?.find((item) => item.type === "text")?.text;
+    if (!textResult) return [...findings, "decide_session version probe 沒有 text result"];
+
+    const basis = JSON.parse(textResult).decisionBasis;
+    if (!basis) return [...findings, "decide_session version probe 沒有 decisionBasis"];
+    if (versionRecord.ruleLibraryVersion && basis.libraryVersion !== versionRecord.ruleLibraryVersion) {
+      findings.push(
+        `bundle Rule Library 是 ${basis.libraryVersion}，release record 是 ${versionRecord.ruleLibraryVersion}`
+      );
+    }
+    if (basis.engineVersion !== versionRecord.decisionEngineVersion) {
+      findings.push(
+        `bundle Decision Engine 是 ${basis.engineVersion}，release record 是 ${versionRecord.decisionEngineVersion}`
+      );
+    }
+
+    if (versionRecord.baseRulesPackageVersion !== null) {
+      const runtimeMeta = listed?.result?.tools?.[0]?._meta;
+      const baseRules = runtimeMeta?.[RULE_PACKAGES_META_KEY]?.find(
+        (entry) => entry.packageId === "base_rules"
+      );
+      if (runtimeMeta?.[ENGINE_META_KEY] !== versionRecord.decisionEngineVersion) {
+        findings.push(`tools/list 沒有回報 Decision Engine ${versionRecord.decisionEngineVersion}`);
+      }
+      if (baseRules?.version !== versionRecord.baseRulesPackageVersion) {
+        findings.push(`tools/list 沒有回報 base_rules ${versionRecord.baseRulesPackageVersion}`);
+      }
+      if (baseRules?.contentChecksum !== versionRecord.baseRulesContentChecksum) {
+        findings.push("tools/list 回報的 base_rules checksum 與 release record 不符");
+      }
+    }
+
+    if (mode === "local" && versionRecord.baseRulesPackageVersion !== null) {
+      const sourcePackage = JSON.parse(
+        readFileSync(join(rootDir, "rule-packages/base_rules/package.json"), "utf8")
+      );
+      if (sourcePackage.version !== versionRecord.baseRulesPackageVersion) {
+        findings.push(
+          `source base_rules 是 ${sourcePackage.version}，release record 是 ${versionRecord.baseRulesPackageVersion}`
+        );
+      }
+      if (sourcePackage.contentChecksum !== versionRecord.baseRulesContentChecksum) {
+        findings.push("source base_rules checksum 與 release record 不符");
+      }
+    }
+    return findings;
+  }
+);
+
 // 這一條的由來寫在 R5 中段：registry 連結改過三次才對，三次都是沒點開過自己放的
 // 連結。那次修的是公開 repo 的 README——而 `docs/user-journey.html` 裡還留著第一版
 // 那個 `?search=evidra`，也就是同一個錯誤原封不動待在 R5 讀不到的檔案裡，直到
@@ -405,7 +553,7 @@ check(
 // 看的東西嗎**。一個回 application/json 的網址，放在「官方 MCP registry」這種
 // 標籤底下，對讀者而言就是證明不了任何事的一串字。
 check(
-  "R7",
+  "R8",
   "對外文件裡的每個連結都連得上，而且點開是給人看的頁面",
   "文件裡的連結沒有人會在改動時重點一次。壞掉的連結不會讓任何測試變紅，只會讓讀者自己撞上。",
   () => {
@@ -473,6 +621,16 @@ console.log(
     ? `  驗的是：GitHub release v${declaredVersion} 下載回來的 pacevera.mcpb\n`
     : `  驗的是：本機 dist/pacevera.mcpb（v${declaredVersion} 尚未發布 —— 發布前對帳）\n`
 );
+if (versionRecord) {
+  console.log("  Runtime release identity：");
+  console.log(`    Product / MCPB：${versionRecord.productVersion}`);
+  console.log(`    Decision Engine：${versionRecord.decisionEngineVersion}`);
+  console.log(`    base_rules package：${versionRecord.baseRulesPackageVersion ?? "尚未獨立封裝"}`);
+  if (versionRecord.ruleLibraryVersion) {
+    console.log(`    Historical Rule Library：${versionRecord.ruleLibraryVersion}`);
+  }
+  console.log();
+}
 
 for (const { id, title, why, run } of checks) {
   let findings = [];

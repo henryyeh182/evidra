@@ -1,0 +1,15 @@
+{
+  "packageId": "single_workout_rules",
+  "version": "0.1.0",
+  "schemaVersion": "1.0.0",
+  "status": "draft",
+  "tier": "domain",
+  "engineCompatibility": { "min": "1.6.0", "max": "<2.0.0" },
+  "rules": [
+    { "id": "EVD-R-013", "path": "rules/single-workout-rules.json" },
+    { "id": "EVD-R-014", "path": "rules/single-workout-rules.json" },
+    { "id": "EVD-R-015", "path": "rules/single-workout-rules.json" }
+  ],
+  "contentFiles": ["rules/single-workout-rules.json"],
+  "contentChecksum": "sha256:8dfca52852e2c128970bb1b5652b7ee9ec7424626fd13bac3e55e5b520be7c60"
+}

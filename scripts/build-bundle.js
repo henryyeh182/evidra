@@ -75,6 +75,26 @@ const layoutShims = {
         loader: "js"
       };
     });
+
+    pluginBuild.onResolve({ filter: /(^|\/)basePackageIdentity\.js$/ }, () => ({
+      path: "evidra:base-package-identity",
+      namespace: "evidra-inline"
+    }));
+
+    pluginBuild.onLoad({ filter: /^evidra:base-package-identity$/, namespace: "evidra-inline" }, () => {
+      const manifest = JSON.parse(
+        readFileSync(join(rootDir, "rule-packages/base_rules/package.json"), "utf8")
+      );
+      const identity = {
+        packageId: manifest.packageId,
+        version: manifest.version,
+        contentChecksum: manifest.contentChecksum
+      };
+      return {
+        contents: `export const BASE_RULE_PACKAGE_IDENTITY = Object.freeze(${JSON.stringify(identity)});`,
+        loader: "js"
+      };
+    });
   }
 };
 

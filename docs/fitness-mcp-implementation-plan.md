@@ -1,354 +1,260 @@
-# Fitness MCP — Implementation Plan
+# Pacevera — Product & Implementation Plan
 
-> 依 [Design Manifesto](design-manifesto.md) 推導 · 位階次於宣言，衝突時以宣言為準。
-> **本文件只留「現況」與「下一步」。** 每個決定的完整理由、原文引述、查證過程、
-> 失敗嘗試與否決掉的方案，全部在
-> [fitness-mcp-implementation-plan-history.md](fitness-mcp-implementation-plan-history.md)
-> ——**現況表格裡的每一項，出處都指得回那裡，不是憑空冒出來的結論。**
+> 更新：2026-08-11
 >
-> **2026-08-07 拆分**：v8 那份累積到 1558 行，同時扛「決策稽核軌跡」與「下一步清單」，
-> 後者越來越難找。拆分不代表任何一句舊結論被撤回，只是換了放的位置。
+> 本文件是 Pacevera 的產品終局、發行現況與開工順序正本。
+> 歷史判斷、舊代號與已淘汰方案保留在
+> [fitness-mcp-implementation-plan-history.md](fitness-mcp-implementation-plan-history.md)，不再放進主閱讀路徑。
 >
-> **與 [user-journey.html](user-journey.html) 的分工（2026-08-07 定）**：
-> 那份是**對外敘事正本**（stakeholder / marketing narrative）——產品是什麼、
-> 為什麼難被取代、今天走得通哪些路，講給沒有領域知識的人聽。
-> **本文件是工程 roadmap 正本**——開工順序、技術債、待裁決問題、上架清單。
-> 兩份都要說真話，但**只有本文件排順序**；user-journey 不列開工順位，也不寫技術債編號。
-> **事實衝突時以本文件的現況表為準**，並回頭修 user-journey。
+> 整合來源：
+> [Evidra_Decision_Engine_開發計畫.md](Evidra_Decision_Engine_開發計畫.md) 的 Decision Infrastructure／九層能力，
+> 以及 [pacevera-product-strategy.md](pacevera-product-strategy.md) 的客群、隱私、部署與產品頁策略。
+> 兩份來源若與目前實作或已定版 release 衝突，以本文件與
+> [release-plan-v0.5.0.md](release-plan-v0.5.0.md) 為準。
 
 ---
 
-## 現況
+## 1. 產品最終樣貌
 
-### 對外元件
+### 1.1 一句話
 
-- **6 個對外決策 tool**：`assess_fitness_state`、`decide_session`、
-  `decide_exercise_substitution`、`generate_plan`、
-  `preview_adjust_plan`、`commit_adjust_plan`
-- **492 個可執行 tests** 全綠（dependency-free，Node 20+；另有 5 個 localhost HTTP integration tests 受 sandbox 權限限制）；**eval 20 golden cases**，5 個 gate 全綠
-- **知識圖譜** 889 節點 / 5,785 邊；進退階 34 條（17 組互逆）；訓練目標五值域
-- **Rule Library**（`packages/rules` v1.4.0）：**12 條規則**，每條帶 `ruleId`／`version`／
-  `category`／`priority`／`basis`／`evidence`（`studyDesign` ＋ `recommendationStrength`，
-  舊的單軸 `evidenceLevel` 由兩軸推導後照常輸出）／`sources`／`contested`／`limitations`。
-  `sources`／`supportingLiterature`／`contested` 三個陣列的每一筆都**必須**帶合法的
-  `verificationStatus`（`contested` 自 2026-08-08 起，見下 R5-C）。
-  決策引擎沒有自己的門檻——`RULES = THRESHOLDS`，改 JSON 就改行為。
-  門檻清單自 2026-08-09 起按引擎分組（`ENGINE_THRESHOLD_KEYS`：session 13／plan 1／
-  planChange 2／catalog 1），聯集由 `assertThresholdsMatch` 雙向驗，並額外驗每條規則的
-  `appliedBy` 與它宣告的門檻屬於同一個引擎。**`decisionBasis` 現在四個 tool 都回傳**
-  （`decide_session`＋`generate_plan`＋`preview`／`commit_adjust_plan`＋
-  `decide_exercise_substitution`），規則開火與否都帶。非規則門檻與係數另由
-  `engine-parameters.json` 1.2.0 治理（ATL／CTL、TSB、recovery 權重、readiness 懲罰、
-  phase multiplier、return ramp 等），並由 `assertParametersMatch` 雙向驗。
-- **來源 parser：6 家**（Apple Health／Garmin／Google Health／Strava／Oura／WHOOP，
-  Strava 另有 API 與 bulk export 兩種方言）。schema registry 共宣告 6 個平台（8 種方言）。
-  **前四家是照真實匯出檔寫的；Oura 與 WHOOP 是照各家自己的 OpenAPI 文件寫的
-  （2026-08-07），還沒對過任何一份真實回應**——見技術債 C13。
-  Garmin 已消化 2026-08-06 交接檔提到的 GDPR 匯出差異：Health Status HRV 已補 parser，
-  `hrvWeeklyAverage` sentinel 仍不映射；剩下的來源成熟度缺口不是 Garmin 欄位路徑，
-  而是真實 AI host / 第三方 MCP server 傳進來的 evidence 形狀（C6）
-- **transport**：stdio ✅ · Streamable HTTP ✅（僅 `localhost:8787`，未公開部署）
-- **OAuth**：resource server 已實作（RFC 9728 metadata、audience 驗證、issuer 白名單、
-  scope 檢查）；**簽章驗證器是空插槽、`http.js` 進入點沒接線、沒有 authorization
-  server**——三者補齊前，`serve:http` 跑起來是共用密碼模式，不是真的 OAuth
-- **協定版本**：`2025-06-18`／`2025-03-26`／`2024-11-05`（legacy 握手式）。
-  最新規格 `2026-07-28`（stateless）尚未跟進，做法已定為 dual-era，未開工
-- **`npm run review:phase` 十三條 gate 現況全綠**（G11 於 2026-08-09 加入：規則庫改動必須跑過 Decision Harness 且指紋已被承認）
+> **Pacevera 是 local-first、deterministic、可解釋的運動科學決策基礎設施：AI 負責理解與溝通，Pacevera 根據使用者持續累積的 Evidence，決定今天的訓練應該從什麼變成什麼。**
 
-### 三種形態（與 user-journey 共用的名稱）
+對外英文主張：
 
-同一顆引擎、同一份決策實作，差別在跑在誰的機器上、證據怎麼進來、誰付錢。
-**這不是三個階段，是三種使用者處境**——remote 上線不會取代 desktop extension，
-Phase 2 也不是 remote 的續集。
+> **Your AI coach should know how you are today—not own your health history.**
 
-| 形態 | 是什麼 | 現況 | 對應本文件哪裡 |
-|---|---|---|---|
-| **Form 1** desktop extension（MCPB） | 跑在使用者自己的電腦上，stdio；**第一個可用形態** | ✅ v0.4.0 可裝（2026-08-09），registry 同版已上架；MCPB 表單審查中 | 「通路與上架」順位 1／3 |
-| **Form 2** remote MCP server | 跑在我們的機器上；**手機唯一可行的路，也是商業化形態**（計價暫定 per-MAU） | 🔴 NO-GO（現在），四個缺口 | 「remote 的四個缺口」、下一步順位 9 |
-| **Form 3** user-controlled deployment | 整組搬進使用者／機構控制的環境；**高隱私與企業形態**，唯一能保存個人縱向歷史的形態 | 🔴 一行程式都沒有 | CLAUDE.md 的 Phase 2；本文件尚無工作包 |
+Pacevera 最終不是另一個健身聊天機器人、健康 dashboard 或穿戴資料倉庫。它是一顆可被 Claude、ChatGPT、Gemini、教練系統或企業軟體呼叫的 Exercise Science Decision Engine。
 
-Form 1 與 Form 3 的計算都在使用者那邊；**Form 2 是唯一把計算放在我們這裡的**，
-也因此是唯一需要 hosted 無狀態這條硬約束的。排序依核心宗旨，不依 Phase 編號——
-**Form 3 排最後是因為最晚開工，不是因為最不重要**。
+### 1.2 使用者最後得到的體驗
 
-### 護城河缺口
+```text
+穿戴／健康資料／訓練紀錄／原定課表
+                ↓
+使用者控制的 Evidence 與縱向狀態
+                ↓
+Pacevera Decision Engine + versioned Rule Packages
+                ↓
+今天維持／調整／替代／延後／進階什麼
+                ↓
+from → to + reason + missing signals + confidence + rule trace
+                ↓
+使用者採用／拒絕／回報結果，形成下一次決策的連續脈絡
+```
 
-**護城河正本（從 `Evidra_Decision_Engine_開發計畫.md` 保留）**：
-Evidra 的護城河不是 MCP server、不是資料庫、不是動作內容庫，也不是「比 AI 更會講健身」。
-它是 **Rule Library + Decision Graph + Evidence Model** 組成的 Decision Infrastructure：
-把使用者交出的 evidence 轉成可解釋、可重現、vendor-neutral 的訓練決策。
+首次成功體驗固定為：**10 分鐘內完成一次「原定課表 → 今日調整後課表」的可追溯決策，並看得懂資料在哪裡、AI 看到了什麼、哪些訊號缺失。**
 
-| 護城河 | 現在對應 | 下一步怎麼加深 |
-|---|---|---|
-| **Evidence Model** | `packages/evidence`、source schema、6 家 parser、coverage／freshness；health metric 用 `basis` enum 表示數字來源，拒收 `quality`／`confidence` 純量 | 驗 C6 真實 host 傳入形狀；補 C13 Oura／WHOOP 真實回應 |
-| **Rule Library** | `packages/rules` v1.4.0，**12 條規則**（9 條 session ＋ EVD-R-010／011／012 分屬 plan／planChange／catalog），含出處、限制與仲裁欄位；證據兩軸與 `verificationStatus` 皆為載入期強制，三個引用陣列（含 `contested`）一律必填；`injury` 那格由四條規則填滿。每條規則必填 `appliedBy`，門檻按引擎分組雙向驗；engine parameter set v1.2.0 收編 ATL/CTL、TSB、recovery 權重、readiness 懲罰係數、phase multiplier、return ramp，並有 180 天 review gate | R2／R3／R4／R5／R7／C9／C10 已完成；下一步是真實週期驗證與 C13 |
-| **Decision Graph** | `decide_session` 的 rule arbitration、knowledge graph 的替代／進退階不變量、planning patch validator；v0.4.0 起四支 decision tool 都帶 `decisionBasis` | 補更強的跨工具衝突案例與 product-facing trace 範例，讓 stakeholder 看得懂 Rule Library 如何真的治理決策 |
+即使換對話視窗、換 AI host 或換裝置，Pacevera 對同一位使用者的 state、plan 與 decision history 不應歸零；同一份 Evidence 與版本組合必須產生相同的結構化決策，AI 只改變表達方式。
 
-**定位句**：A deterministic exercise-science decision engine that converts evidence into explainable training decisions.
-LLM 負責理解使用者與表達結果；決策本身必須由 Evidra 的 evidence、rules、graph 算出來。
-這就是它和「另一個 AI Coach」的分界。
+### 1.3 最終產品由六個部分組成
 
-**不能從開發計畫照搬的部分**：商業分級、Rule Package 自動更新、IP 加密／機器指紋、
-四個新 tool、Cloud 排序仍以本文件「已定案方向」與 history §4.6 的處置為準。
-
-| # | 能力 | 現況 | 缺口 |
-|---|---|---|---|
-| 1 | Semantic Fitness Layer | 🟡 | 6/6 平台有 parser；Apple Health／Garmin／Google Health／Strava 已用真實匯出或真實 API 匯出形狀驗證，Oura／WHOOP 只在 spec 與模擬文件上 |
-| 2 | Fitness Intelligence Engine | 🟢 | 確定性五層決策；ATL/CTL/TSB ＋ detraining 軸線 ＋ 個人基線 |
-| 3 | Fitness Knowledge Graph | 🟢 | 889 節點 / 5,785 邊，進退階與訓練目標皆有不變量把關 |
-| 4 | Feedback Learning | ✅ 已結（設計如此） | 三元組由呼叫端保存，hosted 不留 |
-| 5 | Multi-LLM Interface | 🟡 | stdio／HTTP 已上；OAuth 三缺口（見上）；無 REST API、無 SDK |
-
-### 通路與上架
-
-| 順位 | 通路 | 判定 |
-|---|---|---|
-| 1 | 官方 MCP registry | ✅ **已上架**（`io.github.henryyeh182/evidra` v0.4.0，`status: active`／`isLatest: true`，2026-08-09；registry 無審查流程，publish 即生效） |
-| 2 | PulseMCP | 🟢 隨順位 1 自動抓取，或使用者自行填表 |
-| 3 | Anthropic MCPB 表單 | ✅ **已送出，審查中**（2026-08-07，閉源） |
-| 4 | Smithery（Local MCPB） | 🟡 低優先，未做 |
-| 5 | mcp.so 免費送審 | 🟡 順手做，未做 |
-| 6 | Anthropic remote portal | 🔴 **NO-GO（現在）**——見下方四缺口 |
-| 7 | ChatGPT App Directory／Health | 🔴 **NO-GO（現在）**——PHI 條款是否涵蓋消費性穿戴資料未查證 |
-
-**remote 的四個缺口**（其中兩件互為同一個缺口）：
-
-| # | 缺口 | 現況 |
-|---|---|---|
-| 1 | Team／Enterprise 帳號 | 個人 Pro 進不去 admin settings |
-| 2 | authorization server | 尚未選型／實作；resource-server 已有 JWT/JWKS boundary，硬條件仍是支援 CIMD |
-| 3 | HTTPS 公開部署 | 已有 TLS/config skeleton；沒有 hostname、certificate、cloud account 或 deployment credentials |
-| 4 | 隱私政策改寫 | 計畫已寫在 [privacy-policy-rewrite-plan.md](privacy-policy-rewrite-plan.md)，觸發點是 #2 開工 |
-
-**Connectors Directory 上架前置清單（14 項，remote 專用）**：✅ 2 項（tool annotations、
-讀寫分離）、🟡 5 項（OAuth／描述自審／icon／data handling／compliance 聲明）、
-❌ 7 項（Team 帳號、HTTPS、privacy policy、公開文件、測試帳號、範例 prompt、
-自行跑過每個 tool）。逐項細節見 history。
-
-### 已定案方向
-
-| 決策 | 現在的定案 |
+| 部分 | 最終責任 |
 |---|---|
-| D-POSITION | Permissioned Fitness Decision Engine，不做 App／社群／內容庫 |
-| D-EVIDENCE | 證據由 AI 經 tool call 傳入，我們不 fetch、不持有原始資料 |
-| D-DATA | hosted 不保存任何個人資料；持久層只存在於 Phase 2 使用者控制環境 |
-| D-LLM | 我們的程式不呼叫模型產生決策；host 端的模型使用不受此限 |
-| D-TOOL | 對外收斂為 6 個決策 tool |
-| D-INTERFACE | 目標不只 MCP，還要 REST API ＋ SDK（Phase 7，未開始） |
-| D-CONNECTOR | 不自建來源 connector；來源方官方 connector（Strava／COROS）供資料，我們供決策 |
-| D-CHANNEL | 只走 host 內建目錄（Anthropic Connectors Directory ＋ ChatGPT）；不做 marketplace、不做 model router |
-| D-PROTOCOL | 協定升級走 dual-era，不直接切版本 |
-| D-REGISTRATION | authorization server 選型硬條件：支援 CIMD |
-| D-LICENSE | 閉源送 Anthropic MCPB；已送出，退件理由決定要不要公開 |
-| D-IPGUARD | `開發計畫` §8 的 IP 保護（加密／License Token／機器指紋）全部 NO-GO（現在） |
-| D-RULESCHEMA | ✅ **已實作**（`packages/rules` v1.4.0，12 條規則，見上「對外元件」）。2026-08-07 做過一次出處覆核：Gabbett 升為主文驗證，Mujika 撤回一組查不到的百分比並降級證據等級，ACSM 撤回一句摘要沒講的話。同日做 R3／R5：證據拆兩軸、`verificationStatus` 強制必填（見 §0）。2026-08-08 補上 `contested`，當場又撤回兩句（見 C11） |
+| Evidence layer | 將 Apple Health、Garmin、Google Health、Oura、WHOOP、Strava、手動輸入等資料轉成 vendor-neutral Evidence，明確標示來源、時間、freshness、coverage 與缺值。 |
+| Semantic state | 保存可重算的 readiness、fatigue、load、injury constraints、plan 與 longitudinal state，不把原始歷史全部交給 AI。 |
+| Decision Engine | 固定執行 condition evaluation、conflict resolution、priority arbitration 與 effect combination；LLM 不參與決策計算。 |
+| Rule Packages | 以 `base_rules` 與未來 domain packages 管理 Rule Library、engine parameters、evidence packets、provenance、review 與 regression corpus。 |
+| Explainability & learning | 每次決策都有 decision ID、Decision Graph、Rule／Evidence／Source／Version trace；結果回報是可選、可刪除、由使用者控制的資料。 |
+| Interfaces & deployment | 先以 Desktop MCPB 交付，再延伸到 user-controlled private engine、受控 mobile access、REST／SDK 與 Team／Enterprise 私有部署。 |
 
-每條的完整理由、出處、反對意見在 history 的 §5「決策日誌」。
+### 1.4 三種部署形態與不可混用的隱私承諾
+
+| 形態 | 最終用途 | 可以承諾什麼 |
+|---|---|---|
+| Local desktop | 個人使用者在自己的電腦安裝 MCPB／local engine。 | 原始 Evidence、token、state 與 plan 留在使用者控制的電腦。 |
+| User-controlled private | 教練、隊伍或企業部署在自己的裝置、VPC 或 on-prem 環境。 | 資料留在客戶控制的環境，並有角色、稽核、保留與刪除政策。 |
+| Hosted remote | 提供手機或低門檻 remote host 接入。 | 只能承諾資料最小化、transient processing 與不留存；不能宣稱 Evidence 沒離開使用者電腦。 |
+
+Remote MCP 是 access channel，不是產品護城河，也不能先於 local/private 的資料契約上線。
+
+### 1.5 核心護城河
+
+Pacevera 的護城河是三者合一，而不是 MCP transport 或單一 AI 平台：
+
+1. **Evidence Model**：不同來源進入同一個可稽核的語言。
+2. **Rule Library / Rule Packages**：每個門檻、參數與效果都有版本、來源、限制及人工審核紀錄。
+3. **Decision Graph**：保存哪些規則觸發、哪些被壓過、最後如何形成 `from → to`。
+
+長期治理層再把 Decision → Outcome → Review → Rule update 串起來；LLM 可協助整理候選證據，不能自行核准新規則。
+
+### 1.6 目標客群與商業順序
+
+1. 重視隱私、已有穿戴資料且正在使用 AI 的 serious athletes。
+2. 個人教練與小型訓練團隊。
+3. 運動隊、高績效團隊與企業 private deployment。
+4. 在明確 consent 與責任邊界內的醫療／復健合作；產品仍不宣稱診斷或治療。
+
+定價與 Free／Pro／Enterprise 邊界要在真實使用者驗證後定案。現階段不以 connector 數量、tool call 次數或 Rule 數量作為價值代理，也不先做 marketplace、白牌 AI coach 或健康資料廣告模式。
 
 ---
 
-## 下一步
+## 2. 已完成與發行現況
 
-上架三步（registry／MCPB／release）與 Rule Schema 都已完成，**沒有一件事擋著上架**。
-但 2026-08-07 對 `開發計畫` §3–§5 做過一次逐節 review，產出一組**可直接開工**的項目，
-列在第 0 節；其餘照舊分五類。
+### 2.1 已發行：Pacevera v0.4.2
 
-**交接檔對照（2026-08-06）**：本次交接以
-`~/dev/claude-brain/journal/2026-08-06-evidra-mbp-rd.md` 為準。那份裡的上架待辦、
-Rule Schema、Garmin HRV parser 已被後續 v0.3.7 與本文件消化；Google Health API v4
-仍只停在 `scripts/`，見第 5 節。
+v0.4.2 已於 2026-08-10 發行，是目前公開可安裝的 Desktop MCPB 基線。
 
-### 開工順序（目前建議）
+| 項目 | 已發行內容 |
+|---|---|
+| Product / MCPB | `0.4.2` |
+| Decision Engine | `1.6.0` |
+| Legacy Rule Library | `1.4.0`；當時尚無可獨立識別的 `base_rules` package release line。 |
+| Public tools | 6 個：`assess_fitness_state`、`decide_session`、`decide_exercise_substitution`、`generate_plan`、`preview_adjust_plan`、`commit_adjust_plan`。 |
+| Decision capability | Deterministic session／plan／substitution decisions、injury-first arbitration、coverage／confidence、`decisionBasis` 與規則溯源。 |
+| Evidence capability | 6 家 provider parser；Apple Health／Garmin／Google Health／Strava 已用真實資料形狀驗證，Oura／WHOOP 仍只有官方規格與模擬 fixture。 |
+| Delivery | Local stdio MCPB；Streamable HTTP 為開發能力，不代表 hosted remote 已上線。 |
 
-這裡只排「接下來陸續完成什麼」，不重寫 history 的決策理由。原則是：
-**先補可驗證的不變量，再補規則覆蓋，再補來源成熟度；remote 仍等使用者決定後才開工。**
+### 2.2 v0.4.2 之後，main 已完成
 
-| 順位 | 工作包 | 包含項目 | 為什麼排這裡 | 狀態 |
-|---|---|---|---|---|
-| **1** | Rule schema guardrails | R5 `verificationStatus` enum／`sources` 強制帶狀態；R3 證據等級拆成「研究設計」與「建議強度」兩軸；**R5-C** `contested` 也強制帶狀態 | 這兩項是規則庫的地基。先把資料形狀鎖住，後面加傷病規則或收編 C9 數字才不會繼續累積無法稽核的欄位 | ✅ 已完成（2026-08-07，`8b15468`／`e171966`；R5-C 於 2026-08-08，庫升 v1.2.0。**當時未進 v0.3.7 bundle，已隨 v0.4.0 出貨**） |
-| **2** | Injury rules 入庫 | R2／C12：把現有 injury restriction、contraindication filter 變成有 rule id、category、priority、來源與限制的規則 | `injury` 是仲裁矩陣最高類別，但現況規則庫裡沒有 injury 規則；這是 rule coverage 最大洞 | ✅ 已完成（2026-08-09，庫 1.3.0／引擎 1.5.0）。四處全數入庫：`decide_session`＝EVD-R-009（2026-08-08）、`generatePlan`＝EVD-R-010、`adaptPlan` 的 `add_injury`＝EVD-R-011、catalog＝EVD-R-012。**入庫過程查出 `generatePlan` 的傷病限制不會移除任何動作**（實測：帶膝傷、restriction 寫明 back squat，產出的計畫仍排深蹲）——依使用者決定不改行為，改為誠實記錄在 EVD-R-010 的 `limitations` 與計畫的 `reasoning` 裡 |
-| **3** | 收編非 `decide_session` 門檻 | C9／C10：ATL/CTL、TSB、detraining、baseline fallback、staleness、phase multiplier、return ramp 的數字進治理；先處理兩套 detraining 衝突 | 這決定 R1 能不能做。沒有規則與來源，其他 tool 就算補 `decisionBasis` 也無 rule 可 trace | ✅ **已完成（2026-08-09）**：detraining trigger 回到 EVD-R-007；baseline fallback、staleness、ATL/CTL、TSB、semantic training windows、recovery 權重、readiness 懲罰、planning phase multipliers、return ramp、plan-change deload/cap 全收進 `engine-parameters.json`（參數集 1.2.0，EVD-P-003～048）。值未改、決策未動；缺來源仍誠實記成 `internal_composite`／空 `sources`／`limitations`。`assertParametersMatch` 兩向檢查，fingerprint 已更新 |
-| **4** | 擴大 decision trace | R1：視第 2–3 項結果，決定要不要把 `decisionBasis` 補到另外五個 tool | 對外已誠實縮回「只有 `decide_session` 有」，所以這是能力擴充，不是修誠信缺口 | ✅ 已完成（2026-08-09）：`generate_plan`／`preview_adjust_plan`／`commit_adjust_plan`／`decide_exercise_substitution` 四支都帶，輸出契約與 `schemas/tools/` 同步。`assess_fitness_state` 不帶——它回傳狀態不做決策，沒有規則可指 |
-| **5** | Evidence quality 形狀 | R7／C8：用既有 `*Basis` 類 enum 表示數字站在哪裡，不做 `quality: 0.94` 純量 | 這是 Semantic Fitness Layer 下一個真缺口，但要避開發明權重去影響 confidence | ✅ 已完成（2026-08-09）：health metric 增 `basis` enum，`describeEvidence` 回 `signalBases`，`assertValidEvidence` 拒收 numeric `quality`／`confidence` |
-| **6** | Source maturity | C13：拿 Oura／WHOOP 去識別化真實回應驗 parser；Google Health API v4 決定是否升格正式 connector；C6 對照 AI host／第三方 MCP server 傳入形狀 | 六家 parser 已有，下一步不是再加家數，是確認真實流程裡進來的形狀不會偏 | Oura／WHOOP 需要真實回應；Google API 需使用者決定是否升格 |
-| **7** | 小但硬的技術債 | C1 `maxSampleGapSeconds = 30` 出處或改成 caller 提供；C2 移除 `trainingLoad ?? 分鐘數` 編造負荷 | 這些不擋上架，但會直接影響「不編造」承諾 | 可開工 |
-| **8** | 產品裁決 | A4 tool 改名、A5 理由由引擎寫或交給 Claude、A6 商業分級、A8 local-first vs remote、B2 宣言字句 | 這些不是工程可自行決定；決定後才會改 schema、文案、部署路線 | 等使用者 |
-| **9** | Remote path | A1 authorization server 選型 → OAuth 三缺口 → HTTPS 公開部署 → privacy policy 改寫 → remote 上架清單 | 目前 remote 是 NO-GO（現在）。一旦 A8/A1 決定推進，這條才變成主線 | 暫不開工 |
-| **10** | Protocol dual-era | Phase 9：`2026-07-28` stateless dual-era | 不急；唯一前置影響是 authorization server 選型要支援 CIMD | 暫不開工 |
+- `get_evidence_coverage`、`explain_decision`、`submit_outcome` 三個 support tools。
+- 所有 decision tools 的 `decisionId` 與共用 bounded／TTL Decision Trace Registry。
+- bounded outcome event registry，以及 cross-conversation athlete continuity／本機 state store 的工程基礎。
+- `base_rules` package boundary、manifest、checksum、Engine compatibility、validate、dry-run、明確 install、immutable versions、active pointer 與 rollback。
+- `base_rules@1.1.0` 的五個 evidence packets，以及不誇大文獻支持範圍的 provenance／limitations。
+- Decision Harness、Plan Harness、substitution harness、37-case behavioral regression baseline、package diff gate 與 release-install smoke。
+- 本機 Decision Graph viewer，可檢查 triggered／suppressed rules 與版本差異。
+- provider-token rejection、hosted data boundary、authorization／governance 的 source-level foundation；這些不等於 hosted service 已可用。
 
-**R0/R1/R2 closeout（2026-08-10）**：`base_rules` package boundary、本機更新流程與首批 evidence uplift 已完成。Manifest 由
-`rule-packages/schemas/rule-package.schema.json` 驗證，`reviewRecord` 是 package-local 的
-`reviews/RR-YYYY-NNNN.md` 路徑；空的 domain package 是 `draft`、零規則、零 content files、
-zero checksum。Runtime 已由 package 載入 rule library，package／runtime／MCP trace／Decision
-Harness contract tests 已加入。R1 的 `scripts/rule-package.js` 支援 directory／tar／`.mcpb`
-匯入、validate、dry-run、immutable install、active pointer 與 rollback；安裝要求成功的
-Decision Harness verification 與明確 `--confirm`，不使用隱含 `latest`。`review:phase` G0–G11 全綠；G1 明確隔離 sandbox 下 5 個
-localhost HTTP 測試，G7 明確排除既有 local athlete state store 的合法持久化路徑。R2 在
-`base_rules@1.1.0` 加入 5 個 formal-schema evidence packets；R-006／R-007 只提升為
-systematic-review directional metadata，所有 Pacevera thresholds 與 decision contract 維持不變。
-下一個工程工作是 R3 regression gate，不再重做 R0/R1/R2。
+### 2.3 已實作但尚未合入 main
 
-R3 已於 2026-08-10 完成：`harness/schemas/regression-baseline.schema.json` 固定
-`harness/regression-baseline.json` 的 behavioral regression corpus；目前包含 37 個
-Harness golden／boundary cases。`npm run regression:gate` 會驗證 baseline schema 並比較
-structured decision surface 與 Decision Graph；`package:dry-run` 同時比較 active、candidate
-與 baseline，任何 case 增刪、decision／action／confidence／governing rule／coverage／limit
-或 graph node／edge 漂移都會阻擋候選 package。這個 corpus 是行為 regression baseline，
-不是醫學 ground truth；下一個工程工作是 R4 graph viewer。
+- Commit `6992c32`：Decision Harness prompt-injection guards。
+- Commit `62862fc`：完整的單次 `generate_workout` tool、schema、handler 與 tests。
+- `single_workout_rules@0.1.0` 仍是 draft；EVD-R-013～015 尚未接 runtime。`generate_workout` 目前沿用 Decision Engine `1.6.0` 與 active `base_rules` 做個人化，因此不得宣稱 draft package 已啟用。
 
-**版號基準（2026-08-08 使用者定）**：順位 1 完成的這份規則庫就是 **Rule Library v1.0.0
-正式版**，從 1.0 起算。引擎另有自己的版號（`packages/decision-engine/src/version.js`，
-同樣從 1.0.0 起），與產品版號 `server.json` 脫鉤；兩個都隨每個決策回傳
-（`decisionBasis.libraryVersion`／`engineVersion`）。**已發布的 v0.3.7 bundle 內嵌的
-`"version":"1.0.0"` 是先前自編的 pre-release**，內容是出處覆核之前的舊規則庫，就地作廢
-——archive 改不了，只能在這裡記一句。**v0.4.0 起內嵌的是正式的庫 1.4.0**，
-那個撞號只存在於 v0.3.7 以前的 archive 裡。
+這兩個 commit 在同一條未合入的 commit line，且目前沒有 branch 包含它們；必須先整合與重跑 gates 才能列入公開版本。
 
-**下一個最小可完成版本**：v0.4.0 已關閉發布落差；順位 2 與 4 已完成（injury 類別四條規則、
-四支 decision tool 帶 trace）。Phase C 於 2026-08-09 補完 C9／R4／R7：剩餘裸常數進
-`engine-parameters.json`，`lastReview` 有 180 天 gate，evidence basis 取代 numeric quality。
-接下來先做 **Phase B：產品敘事校準**，把對外頁、README 與本 roadmap 的現況講成同一套話。
+---
 
-### Phase B — 產品敘事校準（2026-08-09 開工）
+## 3. 下一版已定版：Pacevera v0.5.0
 
-這個 phase 不改 runtime 行為；它把 v0.4.0 已經成立的產品形狀講準，並把未來產品頁需要的
-故事骨架拆小，避免一次把 user-journey 變成行銷頁時混進工程技術債。
+### 3.1 使用者看到的版本
 
-| Story | 要完成什麼 | 完成標準 |
-|---|---|---|
-| B1 | v0.4.0 現況校準 | `user-journey.html`、README、本文件對版本、規則數、release 狀態、`decisionBasis` 覆蓋範圍說法一致 |
-| B2 | 產品頁資訊架構 | 保留「Decision ≠ Recommendation」與三種形態，補清楚「今天可用／尚未可用／為什麼尚未可用」三段，不列工程代號 |
-| B3 | 護城河示範 | 至少一段把 Rule Library、Decision Graph、Evidence Model 串成使用者能懂的例子，避免只列名詞 |
-| B4 | 商業化入口不越界 | 說明 Form 1 可用、Form 2/3 是未來路徑；不把未定的 Free／Pro／Enterprise、Rule Package、license 機制寫成已決定 |
-| B5 | 對外驗證 | `npm run review:phase`、`npm run review:release` 全綠；若只改 user-journey，至少確認 G1/G8/G10/R6 沒紅 |
+> **Pacevera v0.5.0，使用 Decision Engine v1.6.0 與 base_rules v1.1.0。**
 
-### 0. Rule Library 治理（2026-08-07 review 產出）
+從 v0.5.0 起，release gate 以三個 runtime identities 為準：
 
-**依賴關係先講**：R1 卡在 R2／C9 後面——沒有規則就沒有 rule 可以 trace。
-**兩項都已於 2026-08-09 完成**（R2 四處入庫、R1 四支 tool 帶 trace），依賴關係留著，
-因為它是下一次新增決策路徑時同樣要走的順序。
+| Version line | v0.5.0 | 何時進版 |
+|---|---:|---|
+| Product / MCPB | `0.5.0` | tool surface、產品功能、bug fix、封裝或使用者可觀察行為改變。 |
+| Decision Engine | `1.6.0` | condition evaluation、arbitration、effect combination 或 Engine output contract 改變。 |
+| Rule Package(s) | `base_rules@1.1.0` | Rule Library、engine parameters、evidence packets、provenance 或 package lifecycle 的可觀察內容改變。 |
 
-| # | 項目 | 為什麼 | 位置 |
+舊 `decisionBasis.libraryVersion` 暫留作相容欄位，但 Rule Library 不再是一條獨立 release line。歷史 release 仍保留該值，避免改寫已發布事實。
+
+每次 MCPB release 都必須把 Product、Engine、所有 active Rule Package versions、checksums 與相容範圍寫入 [release-version-lines.json](release-version-lines.json)，並由 release gate 對實際 bundle 的 `initialize`、`tools/list` 與 decision output 核對。
+
+### 3.2 v0.5.0 對外內容
+
+- 既有 6 個 decision／planning tools。
+- 新增 `generate_workout`，提供單次個人化 workout 的 `from → to` 結果。
+- 新增 `get_evidence_coverage`、`explain_decision`、`submit_outcome`。
+- 總計 10 個 public tools。
+- 每次 decision 可回查 Rule → Evidence → Source → Version trace。
+- 本機 continuity／state 能力只有在 privacy、retention、deletion 與 export 說法完成後才可出貨。
+- `base_rules@1.1.0` package lifecycle、evidence packets、regression gate 與 rollback。
+- Prompt-injection harness guard、完整 release smoke 與固定 runtime identity。
+
+完整 release blocker 與功能歸屬見 [release-plan-v0.5.0.md](release-plan-v0.5.0.md)。在 blockers 關閉前，不先把 `package.json`、`manifest.json` 或 `server.json` bump 到 `0.5.0`。
+
+---
+
+## 4. 由終局倒推的剩餘 Roadmap
+
+狀態只使用：`待開始`、`進行中`、`Blocked`、`完成`。每個 Phase 固定四個 Story；Story 完成後保留結果摘要，細節移到 history。
+
+### Phase 0 — 完成並發行 v0.5.0
+
+目標：把目前已完成的能力變成一顆公開、可安裝、版本資訊一致的 MCPB。
+
+| Story | 交付結果 | 完成條件 | 狀態 |
 |---|---|---|---|
-| ~~**R2**~~ | ✅ **已完成（2026-08-09，庫 1.3.0）**：四處傷病過濾全部入庫並帶 `decisionBasis`——`decideSession` ＝ **EVD-R-009**（2026-08-08）、`generatePlan` 的高衝擊降強度 ＝ **EVD-R-010**、`adaptPlan` 的 `add_injury` ＝ **EVD-R-011**、catalog 的 contraindication 交集 ＝ **EVD-R-012**。現在 `generatePlan` 在尋找 fallback movement 時若被 catalog hard-filter，也會把 EVD-R-012 與被排除候選寫進 plan trace；純 `searchExercises` 仍是查詢，不產生 decisionBasis。四條寫成四條而不是一條，因為**它們的比對方式互不相同**（自由文字 token >3 字元／四個字面 regex／區域 token >=3 字元且 avoid 無長度下限／catalog tag 相等），寫成一條等於宣稱一致性。**入庫查出兩件與宣稱不符的事，都改為誠實記錄而非改行為（使用者決定）**：一，`generatePlan` 的 active injury restrictions **不會移除任何動作**（per-slot 過濾讀的是 `avoidMovements`，restrictions 落在另一個欄位），原本 `reasoning` 卻寫「Active injury constraints applied」；二，substitution 只要呼叫端有傳 avoid list 就無條件印「were hard-filtered out」，**即使一個候選都沒濾掉**（demo 5 正是這種情況：器材過濾先一步移除了那個候選）。兩句話都已改成與實際相符 | 仲裁矩陣把 `injury` 排在最上面，**而排最上面的那一格曾經是空的**（當時：recovery 7、training_goal 1；現在 injury 4） | `packages/decision-engine/src/decideSession.js`、`packages/planning/src/generatePlan.js`、`packages/planning/src/adaptPlan.js`、`packages/knowledge-graph/src/graph.js` |
-| ~~**R1**~~ | ✅ **已完成（2026-08-09，引擎 1.5.0）**：`decisionBasis` 由 `packages/rules/src/basis.js` 的 `buildDecisionBasis` 統一產生，四支 tool 共用同一個形狀（`decide_session` 也改用它，輸出逐欄不變）。**沒有規則開火時欄位照樣回傳、內容為空**——這是這次的重點：缺欄位無法與「這條路徑不檢查」區分。`assess_fitness_state` 不帶，它回傳狀態不做決策 | 對外宣稱已於 2026-08-07 縮回事實，2026-08-09 隨能力擴充改回；server `INSTRUCTIONS` 同步改寫（2042／2048 bytes） | `apps/mcp-server/src/outputSchemas.js` ＋ `schemas/tools/` 四份契約 |
-| ~~**R3**~~ | ✅ **已完成（2026-08-07）**：`evidence` 物件取代單軸 `evidenceLevel`——`studyDesign`（八值，含新增的 `narrative_review`）＋ `recommendationStrength`（`supports_threshold`／`supports_direction_only`／`internal_heuristic`）。EVD-R-007 卡的那個缺口關掉了：它現在直接寫 `narrative_review`，不再四捨五入到 `expert_consensus`。**舊 `evidenceLevel` 由兩軸推導後照常輸出**，當時 8 條規則的值逐字不變，契約不動。**目前全庫沒有任何一條是 `supports_threshold`**——每筆引用的 `doesNotSupport` 都寫著數字不被支持，這件事現在由欄位講，不是由散文講 | `packages/rules/src/models.js`、`session-rules.json` |
-| ~~**R4**~~ | ✅ **已完成（2026-08-09）**：`session-rules.json` 與 `engine-parameters.json` 都必須帶 `reviewPolicy.maxAgeDays`，目前定為 **180 天**。loader 會檢查 `lastReview` 格式、不得在未來、不得超過最大天數；過期時啟動失敗。180 天是治理 cadence，不是生理學門檻 | 2026-08-07 那次覆核**兩個既定入口都不是**（沒有新文獻、沒有 outcome 異常），是人工重讀已有的引用，結果撤回兩項。生命週期缺這第三個入口 | `packages/rules/src/models.js`、`packages/rules/src/parameters.js` |
-| ~~**R5**~~ | ✅ **已完成（2026-08-07）**：`VERIFICATION_STATUSES` 成為載入期 enum，`sources` 與 `supportingLiterature` 兩邊都強制必填。**強制之後翻出一筆**：EVD-R-002 的 Javaloyes 引用是全庫唯一沒有 status 的，因為 2026-08-07 那次覆核只碰了 R-004／006／007（`git show 0337166 --stat` 可核）——**從來沒有人查證過它**。詞彙加第六格 `unverified`（比 `citation_not_read_in_full` 更弱，後者仍暗示有讀過一點），該規則的 `limitations` 也加一行明講。`describeRule` 改成無條件輸出這個欄位：原本「有才帶出」讓沒查過的引用和沒東西可講的引用長得一模一樣。順帶把「檔案宣告的詞彙 vs 載入器強制的詞彙」也綁成不變量 | `packages/rules/src/models.js` |
-| ~~**R6**~~ | ✅ **已完成（2026-08-07）**：雙軌寫進 [`schemas/README.md`](../schemas/README.md) 的「the vocabulary has two tracks」一節，含為什麼不能併成單一 `enum [Low, Moderate, High]`（三家複合分數不是同一個量；而且 readiness 門檻切在 40／60／85，三格裝不下） | 放在 schemas/README 而非 product-spec：那裡才是**加平台的人真的會讀的地方**，而這件事最容易在加平台時做錯 | — |
-| ~~**R7**~~ | ✅ **已完成（2026-08-09）**：health metric 增 `basis` enum（device_measured／vendor_reported／user_reported／computed_from_records／derived_from_synced_source／unstated），`describeEvidence` 彙總 `signalBases`，`assertValidEvidence` 拒收 numeric `quality`／`confidence` | `開發計畫` §3.2 的 `quality: 0.94` 是 `internal_composite`，而它會乘進 confidence。這次只記 footing，不讓發明權重改使用者拿來判斷可信度的 confidence | `packages/evidence/src/model.js`、`schemas/evidence/fitness-evidence.json` |
+| Phase 0 - Story 1 | 整合 prompt-injection guard 與 `generate_workout`。 | `6992c32`／`62862fc` 安全合入 main；tool、schema、manifest 與 tests 一致；draft rules 不被誤啟用。 | 待開始 |
+| Phase 0 - Story 2 | 固定產品與隱私契約。 | 10 tools 的公開文件一致；continuity 的儲存、retention、export、delete 與 hosted boundary 寫入 privacy 文件並有測試。 | 待開始 |
+| Phase 0 - Story 3 | 產出 v0.5.0 release candidate。 | Product `0.5.0`／Engine `1.6.0`／`base_rules@1.1.0` 寫入所有 runtime metadata；bundle 可安裝；checksum 固定。 | 待開始 |
+| Phase 0 - Story 4 | 通過 release gates 並上架。 | 修正 G1 drift；tests、全部 harness、regression、package dry-run、install smoke、local release review 全綠；發布後再跑 published review 並同步 registry／release notes。 | 待開始 |
 
-#### 0.1 明確不採用（**別再重新推導一次**）
+### Phase 1 — pacevera.com 產品頁與市場驗證
 
-| 來源 | 不採用的理由 |
-|---|---|
-| §3.2 `quality: 0.94` 純量 | 見 R7 |
-| §3.3 `trigger: RPE_previous >= 8` | 違反紀律 2 與已實作的決定。`generateSemanticFitnessState.js:129-132`：乘 RPE 會 double-count 強度（廠商負荷已含強度），且讓不供 RPE 的來源算不出疲勞——「which is most of them」 |
-| §3.3 規則級 `confidence: 0.93` | 類別錯誤。confidence 隨每次呼叫的 coverage 變動，規則本身沒有。而 §3.5 的 case 又有一個 `confidence: 0.82`，同名兩個意思 |
-| §3.5／§3.6 Decision Case／Outcome Record | D-DATA 已定：三元組由呼叫端保存。**另外設計上也有問題**：`evidence_coverage: 0.87` 是純量，藏掉缺的是 recovery 還是 training；`rule_applied` 是單數，存不下「哪些規則輸了」 |
-| §3.7 Rule Package | 兩個存在理由都已被否決（`tier` 屬 A6 未定、自動更新牴觸已發布的 `PRIVACY.md`）。**類比本身也要拆**：病毒碼更新失敗是 fail-closed，訓練規則更新失敗是 fail-open |
-| §4「Confidence: High，幾乎不需質疑」 | 與整個庫的設計相反——每個引用強制填 `doesNotSupport`，理由是「in every case so far there is one」。repo 裡就住著反例：EVD-R-006 引 Gabbett，同時載入 Impellizzeri 的反對 |
-| §4 Exercise Science Board | **那個 board 不存在。** 維持 `reviewer` 實名。宣稱一個不存在的審查機構，跟宣稱一個撐不住的證據等級是同一類錯 |
-| §4「用既有 Decision Corpus 回測」 | 那個 corpus 我們不會有（同 D-DATA）。載體是 `eval/` 20 golden cases ＋ 492 tests ＋ regression baseline 37 cases，性質不同：**只能說「行為變了」，不能說「醫學上變錯了」**。而且 2026-08-07 真正攔住改動的是 12 KB frame 上限那條測試，不是 golden case——守住規則庫的是**不變量**，不是案例集 |
-| §5 四個新 tool | 逐個理由見 history §4.6.5。**補一條**：§5 自己的表格就顯示五列缺口**全在既有 tool 的輸出欄位裡**，沒有一列是「少一個口」 |
+目標：用一個真實、可操作的產品頁講清楚 Pacevera，讓目標使用者安裝或加入 private beta。**因此下一個產品階段是 pacevera.com；實作優先順序仍是先關閉 Phase 0 release，網站規劃可在 v0.5.0 scope freeze 後並行。**
 
-#### 0.2 版號規則（2026-08-07 起照這個走）
+| Story | 交付結果 | 完成條件 | 狀態 |
+|---|---|---|---|
+| Phase 1 - Story 1 | 定位與首頁資訊架構。 | Hero、問題、from→to 案例、How it works、適合誰、現在／未來界線與 CTA 完整；不宣稱尚未存在的一鍵 connector 或 hosted privacy。 | 待開始 |
+| Phase 1 - Story 2 | 可理解的產品示範。 | 以 `user-journey.html` 為原型，做一個互動式「原定 Tempo → 根據 Evidence 調整」案例，顯示 reason、coverage、missing signals 與 trace。 | 待開始 |
+| Phase 1 - Story 3 | 信任與安裝區。 | 並列 Local desktop／Private deployment／Hosted remote；顯示 Product／Engine／Rule Package 版本、資料流、privacy policy、非醫療聲明與 v0.5.0 安裝入口。 | 待開始 |
+| Phase 1 - Story 4 | 上線與驗證。 | pacevera.com 第一版上線；waitlist 不收健康資料；完成 3–5 位目標使用者訪談，量測 10 分鐘 activation、7 日回訪與決策採用。 | 待開始 |
 
-生命週期圖只寫「Release（version bump）」，沒說 bump 哪一個。實際同時有三個版號：
+### Phase 2 — Local private engine MVP
 
-- **規則 patch**（`1.0.0 → 1.0.1`）＝只動出處，行為不變
-- **規則 minor**＝門檻或 `effect` 改了
-- **library minor**（`1.0.0 → 1.1.0`）＝任何規則變動
-- **門檻一改就必須重打 `.mcpb`**——bundle 是把 `session-rules.json` 內嵌進去的
+目標：把「Evidence 不離開使用者控制環境」從 MCPB 敘事變成完整、可驗證的 private data plane。
 
-### 1. 等外部結果（不是我們的工作）
+| Story | 交付結果 | 完成條件 | 狀態 |
+|---|---|---|---|
+| Phase 2 - Story 1 | Durable local repository。 | SQLite 優先的 state／plan／decision／outcome repository；process restart 後仍可讀；有 migration、backup、export 與 delete。 | 待開始 |
+| Phase 2 - Story 2 | Private connector boundary。 | 第一批只完成經驗證的 local Evidence workflow；connector token 加密、最小 scope、撤銷與刪除；Oura／WHOOP 先補真實去識別化 fixture，不以平台數量充當完成。 | 待開始 |
+| Phase 2 - Story 3 | Evidence continuity。 | 每次 Decision 帶 state ID、evidence window、Product／Engine／Rule Package identity；新對話或新 host 只讀最小化 bootstrap，不重新取得完整健康歷史。 | 待開始 |
+| Phase 2 - Story 4 | Private-engine acceptance。 | 無 hosted service 時，今日課表調整、低恢復降載、傷病替代、單次 workout 四個情境端到端通過；privacy boundary tests 證明 raw Evidence 與 token 未離開 user-controlled environment。 | 待開始 |
 
-官方 registry 與 MCPB 表單審查結果。收到 MCPB 退件理由時，那就是 D-LICENSE 待查證項
-（MIT 條文是否真的存在）的答案，不是失敗訊號。
+### Phase 3 — 受控手機與跨 AI host 體驗
 
-**已發布的 v0.4.2 與 main 的落差**：v0.4.2 仍是可安裝的 desktop MCPB；main 在該發布後
-新增了 `get_evidence_coverage`、`explain_decision`、`submit_outcome` 三個 bounded support
-tool、`decisionId` output 欄位，以及 hosted boundary 的 provider-token rejection。
-這些差異尚未進入 v0.4.2 archive，因此本次 remote/REST 工作不把它們宣稱成已出貨的 MCPB 行為；
-要隨下一次版本 bump 一起重打包、跑 release smoke，再發布。
+目標：讓手機與不同 AI host 可使用同一個 private engine，同時維持清楚的資料邊界。
 
-**已發布的 v0.4.0 與 main 的落差**：**目前沒有落差。** v0.4.0（2026-08-09 發布，
-sha256 `294acd57b50cad0d0…eeb8`）打包自 `c678df2`，而那就是 main 的 HEAD。
-下載回來解開與本機打包那顆 `diff -rq` 逐檔相同。
+| Story | 交付結果 | 完成條件 | 狀態 |
+|---|---|---|---|
+| Phase 3 - Story 1 | Cross-host conformance。 | Claude、ChatGPT、Gemini 對同一 state／version 組合產生相同結構化 decision；差異只在自然語言表達。 | 待開始 |
+| Phase 3 - Story 2 | Secure device pairing。 | 一次性 pairing code、短期 audience-bound token、scope、rotation、unlink、revocation、replay protection 與連線裝置顯示端到端成立。 | 待開始 |
+| Phase 3 - Story 3 | User-controlled mobile path。 | 受控 tunnel 或 private VPC 路徑可用；連線前能知道資料流向；local endpoint 預設不暴露區網。 | 待開始 |
+| Phase 3 - Story 4 | Hosted remote go／no-go。 | 除 authorization server、HTTPS、claims／scope、redaction、privacy policy、DPA、目標 host E2E 與明確付費需求外，完成 Google Health API mobile OAuth connector：以最小 scopes 取得 API response、正規化為 Evidence、不得把 provider refresh token 或長期 raw health history 留在 hosted Pacevera；desktop importer `4175a1a` 維持 local-only。全數成立才可 GO；否則維持 Blocked。 | Blocked |
 
-**v0.3.7 留下的那批落差，這一版全數關閉**，逐項對照如下——列出來是因為每一項都曾經
-是「公開可安裝的版本仍在宣稱一件已經撤回的事」：
+### Phase 4 — Team／Enterprise 與平台介面
 
-| v0.3.7 那顆的行為 | v0.4.0 |
-|---|---|
-| 規則庫 **1.0.0**，EVD-R-007 仍宣稱 `systematic_review` 並帶著已撤回的「VO₂max 兩到三週掉 4–7%」 | 庫 **1.4.0**，該引用降為 `narrative_review`、數字撤回 |
-| Gabbett 停在 `numbers_from_secondary_sources`、`verificationStatus` 不強制 | 三個引用陣列一律強制，Gabbett 升為主文驗證 |
-| `vendorAssessments` 不在 tool schema——引擎讀得到、呼叫端無從得知 | **已命名**。兩顆 bundle 各自跑起來問 `tools/list` 實測：v0.3.7 三支工具皆 `false`，v0.4.0 皆 `true` |
-| 沒有 EVD-R-009；有傷病限制的日子 `governingRule` 歸給旁邊的恢復規則或整個從缺 | 四條傷病規則（EVD-R-009～012），四支 tool 都帶 `decisionBasis` |
-| 沒有排定課表的呼叫完全不帶 `decisionBasis`，而它是必填欄位 | 一律回傳；沒有規則開火時內容為空 |
-| 目標肌群沒有讀數時報「target-muscle fatigue 0」，那個 0 是加總器初始值 | 改成講「近一週沒有負荷落在這些肌群」 |
-| 沒有 `packages/decision-engine/src/version.js`，引擎版本無對應物可比 | 引擎 **1.6.0**，與庫版號、發布版號三者分開 |
+目標：把個人隱私價值延伸成團隊資料治理與可整合的 Decision Infrastructure。
 
-**三邊已對齊**：GitHub release、`server.json` 與官方 registry 的 `isLatest` 都是 v0.4.0，
-sha256 同為 `294acd57b50cad0d0…eeb8`，`review:release` 六條全綠。
+| Story | 交付結果 | 完成條件 | 狀態 |
+|---|---|---|---|
+| Phase 4 - Story 1 | Tenant／athlete governance。 | Verified principal、tenant isolation、athlete scope、coach／clinician／admin／auditor 權限 fail closed；team output 不含 raw payload。 | 待開始 |
+| Phase 4 - Story 2 | Private deployment operations。 | VPC／on-prem、SSO／SCIM、audit log、retention／deletion、資料區域、backup 與 SLA 可部署及稽核。 | 待開始 |
+| Phase 4 - Story 3 | REST API 與 SDK。 | MCP、REST、SDK 共用同一 Decision contract、版本資訊與 authorization policy；不另做一套會漂移的判斷邏輯。 | 待開始 |
+| Phase 4 - Story 4 | Team pilot 與商業定案。 | 至少一個受控 team pilot 驗證 active-athlete 計價、角色可見範圍、decision trace review 與 support 成本；之後才定 Free／Private Pro／Enterprise 包裝。 | 待開始 |
 
-**這幾段刻意不寫進 user-journey 或 README**：那是產品頁與對外敘事，build 落差屬於本文件。
+---
 
-**這段會過期，而 G9 攔不到**：G9 驗的是這個章節存不存在，不驗內容跟不跟得上 main。
-2026-08-08 就是這樣漏掉整批的——當天三次引擎變動都進了 main，這段仍停在前一天的量測。
-**動到 `packages/decision-engine`、`packages/rules` 或 tool schema 就要回來補這裡。**
+## 5. 跨 Phase 持續治理
 
-### 2. 待使用者裁決的開放問題
+以下不是獨立產品 Phase，而是每次變更都要遵守的 release discipline：
 
-| # | 問題 | 卡在哪 |
-|---|---|---|
-| A1 | authorization server 選哪家（Auth0／WorkOS／Clerk／自建） | 硬條件：支援 CIMD |
-| A3 | max HR 171（220−49 估計值）要不要做一次真實最大努力測試 | 使用者身體資料，只有使用者能決定 |
-| A4 | 4 個 tool 要不要改名（現名遮住 connector 名稱後看不出是健身領域） | `deprecatedToolAliases` 已在，改名不斷既有呼叫 |
-| A5 | 決策理由句子該由引擎寫（現況）還是只回結構化數值交給 Claude 組句 | 牽動 `decideSession.js` 全部 `reason.push(...)`、schema 契約 |
-| A6 | 商業分級（Free／Pro／Enterprise）要不要做 | 與計價單位（暫定 per-MAU）綁在一起，尚未定案前不得寫進資料結構 |
-| A8 | 部署終局是 local-first 還是 remote | 取決於主客群是誰（醫療／企業 vs 個人使用者），非技術問題 |
-| B2 | 宣言內部字句衝突（L40 模型無關 vs L188 里程碑要證明 MCP 增益） | 要改的是宣言，不是計畫；不得自行改宣言 |
+- Rule／parameter／evidence 變更：建立 review record，驗證 schema、checksum、compatibility、golden／boundary／replay behavior 與 Decision Graph diff。
+- Engine 變更：Decision Engine 必須進版，全部 regression／harness 重跑，不能只更新 package version。
+- Product surface 變更：Product／MCPB 進版，README、manifest、schemas、`tools/list`、privacy 與 release notes 同步。
+- 新 domain package：先以 draft 發展；未接 runtime、未通過 review／regression、未列入 active packages 前，不得對外宣稱啟用。
+- Evidence 文獻只支持它真正涵蓋的 claim；研究品質不直接等於個人 decision confidence。
+- Hosted mode 不保存原始 Evidence；任何 telemetry、trace 或 log 都要有 payload redaction test。
 
-### 3. 若使用者決定推進 remote（目前 NO-GO，僅供之後參考）
+## 6. 明確不在近期主線
 
-7.1 OAuth 剩餘缺口（authorization server）＋ 7.2 公開部署（HTTPS）
-＋ Phase 8 上架前置清單剩餘 12 項（見上）＋ 隱私政策改寫（觸發點是 authorization server
-開工那一刻，且必須在 remote 開放前改完）。
+- 泛用健康 dashboard、社群、內容庫或由 Pacevera 自建的聊天 UI。
+- 讓 LLM 直接生成或核准決策規則。
+- 在 local/private contract 完成前公開 hosted Remote MCP。
+- 在有真實付費驗證前製作 Rule Marketplace、白牌 AI coach、複雜授權加密或多層定價。
+- 宣稱 Oura／WHOOP 已完成真實流程驗證，或宣稱 Apple／Google／Garmin 已可一鍵即時同步。
+- 把 behavioral regression corpus 描述成醫學 ground truth。
 
-### 4. 技術債（無出處或未驗證，不擋上架）
+## 7. 舊代號說明
 
-| # | 項目 | 位置 |
-|---|---|---|
-| C1 | `maxSampleGapSeconds = 30` 沒有出處 | `packages/connectors/src/timeInZone.js:106` |
-| ~~C2~~ | ✅ **已關閉（2026-08-09）**：缺少 `trainingLoad` 的 workout 保留為 `null`，不再用 duration 填入偽造負荷；`signalCoverage.training` 因此仍能報告 training load 缺口。已有 model test 與各來源 parser test 釘住此行為 | `packages/evidence/src/model.js`、`packages/evidence/test/model.test.js` |
-| C6 | 🟡 **部分關閉（2026-08-09）**：已用真實 Claude Desktop replay 驗證 host → Evidra 的 canonical evidence tool-call contract（正常 payload、缺 evidence、欄位拼錯、日期／時區錯誤都各有測試）；尚未取得「別家 MCP server → host → Evidra」的 source handoff payload，因此不能宣稱跨 connector handoff 已驗證 | `apps/mcp-server/test/readTools.test.js`；source adapter 仍見 `packages/connectors/src/providers/*/normalize.js` |
-| ~~C8~~ | ✅ **已關閉（2026-08-09，R7）**：Evidence Quality 不做不可稽核純量；health metric 用 `basis` enum，workout 仍用既有 `loadSources`／`rpeBasis` | `packages/evidence/src/model.js`、`schemas/evidence/fitness-evidence.json` |
-| ~~C9~~ | ✅ **已關閉（2026-08-09，parameter set 1.2.0）**：`DEFAULT_BASELINES`、staleness、ATL/CTL 時間常數（42／7）、TSB 分帶（5／−10／−30）、semantic training windows、recovery 權重、readiness 懲罰係數、plan phase multiplier、return ramp、plan-change deload/cap 全收進 `engine-parameters.json`（EVD-P-003～048）。各自帶 `basis`／`sources`／`limitations`，由 `assertParametersMatch` 兩向檢查、進 `rule-fingerprint.json`。**收編不等於有出處**——搬過去只是讓「沒有出處」變成資料裡的欄位。**原本 EVD-P-001／002 已於 C10 移進 EVD-R-007** | `packages/rules/data/engine-parameters.json`、`packages/training-load/src/trainingLoad.js`、`packages/semantic-engine/src/generateSemanticFitnessState.js`、`packages/planning/src/generatePlan.js`、`packages/planning/src/adaptPlan.js` |
-| ~~C10~~ | ✅ **已解（2026-08-09）**：14 天／25% 從 `engine-parameters.json` 的 EVD-P-001／002 移進 EVD-R-007，成為那條規則自己的門檻。分工不再與直覺相反——觸發它的兩個數字現在跟決定降幾級的兩個數字在同一條規則裡，`decisionBasis` 回傳的門檻就是觸發它的門檻。值一個都沒改，harness 37 情境 10 項檢查全過。**但這條留著不刪，因為它查出的東西比原本記的多**：42 天是死的（第 38 天就由另一臂成立）之外，**25% 也是死的**——閒置第 12 天就跨過 25%，而 `&&` 的另一臂要第 14 天才成立，所以 `idle >= 14` 一為真，`loss >= 25` 必然早已為真。2026-08-09 用 `computeTrainingLoad` 量八組訓練史（3～90 堂課、負荷 30～200、間隔 1～3 天）：閒置 11 天一律 23%、12 天一律 25%、14 天最低 27%；代數同意——`(41/42)^14 = 0.714`。**EVD-R-007 四個門檻有兩個永遠不決定任何事**，兩個都保留、都在自己的 limitations 講明，DH-BND 各掛一條書面豁免，每次跑會印 | `packages/rules/data/session-rules.json`、`harness/lib/quantities.js` |
-| ~~C11~~ | ✅ **已關閉（2026-08-07，R5；2026-08-08 補完 `contested`）**：`verificationStatus` 成為載入期 enum，**三個陣列**（`sources`／`supportingLiterature`／`contested`）都強制必填，檔案宣告的詞彙與載入器強制的詞彙也綁成不變量。`contested` 原本刻意豁免並在庫的 readMe 裡記為 known gap，2026-08-08 收掉——**收掉當場抓到兩筆**：Impellizzeri 那筆的第三個子句摘要沒講，Lolli 那筆沒有標題、對不到單一文獻，且本身是 editorial 沒有摘要（所以「兩筆都取自已發表摘要」這句敘述對後者為假）。兩筆都下修，撤回的原文留在各自 `verification` 區塊。**當時未進 v0.3.7 bundle**（commit 晚於發布），**已隨 v0.4.0 出貨** | `packages/rules/src/models.js`、`packages/rules/data/session-rules.json` |
-| ~~C12~~ | ✅ **已關閉（2026-08-09，R2）**：`decide_session`＝EVD-R-009、`generatePlan`＝EVD-R-010、`adaptPlan`＝EVD-R-011、catalog＝EVD-R-012，四處傷病／contraindication 決策都已入庫並帶 trace | 見 §0 的 R2 |
-| C13 | **Oura／WHOOP 的 parser 沒對過真實回應。** 欄位路徑與單位來自兩家自己的 OpenAPI（權威），但**沒有任何一份真實 API 回應驗證過**——spec 說得對不等於實際回傳長那樣（真實資料裡的哨兵值、空陣列、部分欄位缺漏，前四家都是在真檔案上才發現的）。這是 C6 的加強版：C6 是「照匯出檔寫、沒對過真實流程」，這裡連匯出檔都沒有 | `packages/connectors/src/providers/oura`、`.../whoop` |
+舊文件中的 `R1`、`R2`、`C9`、`P1` 等是不同時期的臨時工作包，不是產品版本；部分代號後來被重複使用，已無法讓人一眼辨識先後與歸屬。
 
-### 5. 來源覆蓋（Phase D：Evidence Source 成熟度）
+從本版起：
 
-Phase D 已開工，但不以「connector 數量」作為完成條件。完成條件是：
+- 未完成工作只使用 `Phase N - Story N`。
+- 發行只使用 Product、Decision Engine、Rule Package identity。
+- 歷史代號只留在 [fitness-mcp-implementation-plan-history.md](fitness-mcp-implementation-plan-history.md) 與舊 handoff，供稽核，不再拿來排新工作。
 
-1. Oura／WHOOP 各至少一份去識別化真實 API response fixture，通過 raw source schema、parser、canonical evidence schema 與關鍵缺漏／哨兵案例。
-2. Google Health API v4 明確裁決為正式 connector 或維持實驗性 importer；若升格，才新增正式 source schema、registry、scenario 與 connector 測試。
-3. Host contract 的驗證與 source handoff 的驗證分開記錄。現有 Claude Desktop replay 已證明 canonical evidence 可由 host 傳入並得到可修正的錯誤回應；尚未證明別家 MCP connector 的原始回應會以同一形狀交給 host。
+---
 
-這三項都可以在 remote 之前完成。remote 只增加 OAuth、公開 HTTPS 與 hosted end-to-end 授權路徑，不是本 Phase 的前置條件。
+## 8. 現在開工順序
 
-**六個平台都有 parser 了**（2026-08-07 補上 Oura 與 WHOOP）。**剩下的不是家數，是成熟度**：
-Oura／WHOOP 照兩家自己的 OpenAPI 寫，尚未對過任何真實回應——見技術債 C13，
-關掉它只需要一份去識別化的真實回應。
-
-Google Health API v4（非 Takeout；Google Health API 匯出／轉換腳本）目前停在 `scripts/`
-的 `import:google-health-api`，是否升格為正式 connector 未定案。交接檔裡的剩餘問題仍是
-`dailyRollUp` steps、sleep filter 成員名、是否把 API 方言納入 schema registry／scenario／測試；
-出貨前還要把目前測試用 Web client + 手貼 authorization code 路徑改成 Desktop app client + loopback。
-
-### 6. Phase 9 協定升級（不急，非主軸）
-
-十二個月 deprecation window，唯一耦合點是 7.1-C 的 authorization server 選型要照新版選 CIMD。
+1. `Phase 0 - Story 1`：整合 `6992c32` 與 `62862fc`。
+2. `Phase 0 - Story 2`：關閉 continuity privacy contract 與 10-tool 公開文件落差。
+3. `Phase 0 - Story 3～4`：打包、驗證、發布 Pacevera v0.5.0。
+4. `Phase 1 - Story 1～4`：完成 pacevera.com 第一版與 3–5 位目標使用者驗證。
+5. 根據驗證結果進入 Phase 2；Phase 3 hosted remote 在 go／no-go 條件成立前維持 Blocked。

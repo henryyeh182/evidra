@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "description": "Runtime release identity for every Pacevera MCPB: Product, Decision Engine and rule package versions. Historical releases retain their legacy Rule Library version.",
+  "releases": [
+    {
+      "productVersion": "0.4.0",
+      "status": "released",
+      "releasedOn": "2026-08-09",
+      "baseRulesPackageVersion": null,
+      "ruleLibraryVersion": "1.4.0",
+      "decisionEngineVersion": "1.6.0",
+      "note": "Released before the independently installable base_rules package boundary existed."
+    },
+    {
+      "productVersion": "0.4.1",
+      "status": "released",
+      "releasedOn": "2026-08-09",
+      "baseRulesPackageVersion": null,
+      "ruleLibraryVersion": "1.4.0",
+      "decisionEngineVersion": "1.6.0",
+      "note": "Released before the independently installable base_rules package boundary existed."
+    },
+    {
+      "productVersion": "0.4.2",
+      "status": "released",
+      "releasedOn": "2026-08-10",
+      "baseRulesPackageVersion": null,
+      "ruleLibraryVersion": "1.4.0",
+      "decisionEngineVersion": "1.6.0",
+      "note": "The base_rules package lifecycle and Rule Library 1.5.0 were added to main after this artifact was released."
+    },
+    {
+      "productVersion": "0.5.0",
+      "status": "planned",
+      "releasedOn": null,
+      "baseRulesPackageVersion": "1.1.0",
+      "baseRulesContentChecksum": "sha256:b6b3247b81d1ae62bd664f376e11d2881063d69203ed2d974c8673dfaf4ff250",
+      "decisionEngineVersion": "1.6.0",
+      "note": "Planned next MCPB release, including personalized generate_workout after commits 6992c32 and 62862fc are integrated. User-facing identity is Pacevera 0.5.0 with Decision Engine 1.6.0 and base_rules 1.1.0. The legacy Rule Library version is no longer an independent release line."
+    }
+  ]
+}

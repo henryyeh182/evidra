@@ -76,10 +76,7 @@ Decision intent and resulting action are separate fields. The same intent may pr
 | `get_evidence_coverage` | Reports available and missing evidence signals. |
 | `explain_decision` | Returns the process-local rule and source trace for a previous decision. |
 | `submit_outcome` | Accepts an observed outcome for a prior case; durable storage remains the caller's responsibility. |
-| `search_exercises` / `get_exercise` | Queries the exercise catalog and graph relationships. |
-| `search_workouts` / `get_workout` | Queries structured workout content. |
-| `get_user_profile` | Returns caller-supplied user constraints and training settings. |
-| `get_training_history` / `get_training_context` | Returns training history and related context. |
+| `generate_workout` | Generates one picker-sized workout and adapts it to the supplied evidence. |
 
 ## Evidence and output
 
@@ -122,7 +119,7 @@ Pacevera does not fill missing values with defaults. `signalCoverage.recovery` d
 
 | Deployment mode | Status | Boundary |
 |---|---|---|
-| Local desktop extension | Available | Runs through stdio on the user's computer. The Pacevera process does not fetch provider data, persist Evidence, or make model calls. |
+| Local desktop extension | Available | Runs through stdio on the user's computer. Anonymous calls are in-memory; identified local/private calls may persist continuity in the user-controlled state directory. |
 | User-controlled private deployment | Planned | Intended to run in a device, private network, or VPC controlled by the user or organization. |
 | Hosted remote deployment | Not available | The repository contains resource-server readiness code, but production deployment, authorization infrastructure, and hosted privacy controls are not complete. |
 
@@ -130,9 +127,9 @@ The desktop extension has no runtime dependencies beyond the Node.js standard li
 
 ## Privacy
 
-The desktop extension processes the minimum health-related Evidence supplied by the caller for the requested fitness decision. It does not retain, sell, use for model training, or use Evidence for unrelated purposes.
+The desktop extension processes the minimum health-related Evidence supplied by the caller for the requested fitness decision. Identified local/private calls may merge normalized context into a hashed-identity record under `EVIDRA_STATE_DIR` (default `data/private/athletes`) until the owner explicitly deletes it. The record can be exported through the local state-store API; backups and host conversation copies are separate. Pacevera does not sell, use Evidence for model training, or use it for unrelated purposes.
 
-The extension does not make outbound network requests or persist Evidence. The AI host, operating system, imported files, and any host conversation history are outside the extension's control and are governed by their respective policies.
+The desktop bundle does not make outbound network requests. Hosted remote remains unavailable; its contract is transient/stateless and must not use continuity storage. The AI host, operating system, imported files, backups, and any host conversation history are outside the extension's control and are governed by their respective policies.
 
 See [PRIVACY.md](https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md) for the complete public policy. The deployment contract for the source repository is in [docs/privacy-deployment-contract.md](docs/privacy-deployment-contract.md).
 

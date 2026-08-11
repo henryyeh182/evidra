@@ -341,9 +341,9 @@
     </p>
 
     <div class="docrole">
-      <span><b>Claude Desktop extension</b>　v0.4.2 · stdio</span>
-      <span>6 tools · 6 資料來源 · 12 條規則</span>
-      <span>不需要帳號、不需要設定、不連任何雲端</span>
+      <span><b>目前公開版</b>　Pacevera v0.4.2 · Decision Engine v1.6.0</span>
+      <span><b>下一版定版</b>　v0.5.0 · Engine v1.6.0 · base_rules v1.1.0</span>
+      <span>Local-first · AI 可替換 · 決策與版本可追溯</span>
     </div>
 
     <h1>任何模型都能給你<em>建議</em>。<br>只有握有證據的系統能給<em>決策</em>。</h1>
@@ -437,17 +437,16 @@
       </table>
     </div>
     <p class="note">
-      授權對象自始至終是<strong>使用者已經在用的那個 AI</strong>，不是我們。
-      這不是權宜之計——它是「不建資料湖」這條原則的執行方式：
-      我們沒有拿到金鑰，就沒有能力保存任何人的健康資料，
-      <strong>不需要靠承諾來保證，架構上就做不到</strong>。
+      v0.4.2 的合法 Evidence 路徑是匯出檔、使用者口述，或 host 整理後的 tool input；
+      Pacevera 不持有 provider token。產品終局則由<strong>使用者授權本機 connector／private gateway</strong>，
+      AI 只取得完成當次問題所需的最小化 state 與 decision output。
+      <strong>每個 AI host 都不應各自保存 Apple／Garmin 的 refresh token。</strong>
     </p>
     <p class="note warn">
-      第三列<strong>兩欄都是紅的，而且沒有一欄是我們做得完的</strong>。
-      remote 做好，Apple Health 與 Garmin 的取用也不會跟著出現——
-      <strong>手機情境能不能成立，有一半取決於 host 支援到哪裡。</strong>
-      這一段之所以要寫進來，是為了不讓「等 OAuth 做完就好了」變成一句誤導人的話。
-      今天走得通的證據來源是匯出檔與使用者自己說的話，那也是兩種合法的證據。
+      Remote transport 做好，Apple Health 與 Garmin 的取用也不會自動出現。
+      下一個核心工程是 local private engine：先固定 connector 權限、token 儲存、state／plan 持久化與刪除契約，
+      再談手機 access channel。<strong>Remote 解決的是接觸面，不是資料主權。</strong>
+      今天走得通的匯出檔與使用者口述仍是合法 Evidence，不會因未來 connector 上線而失效。
     </p>
   </section>
 
@@ -507,41 +506,39 @@
       </div>
 
       <div class="form">
-        <div class="stage">Form 2 · <code>hosted-remote</code> — 商業化形態</div>
-        <h4>Remote MCP server</h4>
-        <div class="who">跑在我們的機器上 · 手機唯一可行的路</div>
+        <div class="stage">Form 2 · <code>user-controlled-private</code> — 下一個核心產品</div>
+        <h4>Local private engine</h4>
+        <div class="who">跑在使用者、教練或機構自己控制的環境</div>
         <p>
-          手機上的 Claude <strong>只連得到 remote</strong>，所以「在手機上問今天該練什麼」
-          完全卡在這個形態。它也是計價會發生的地方（暫定按月活躍使用者計）。
-          <strong>證據一樣不留</strong>——hosted 無狀態是這個形態的硬條件，不是可交換的設計選項。
+          connector、Evidence、縱向 state、plan、Decision Engine 與 Rule Packages 都留在
+          user-controlled environment。這個形態讓「換模型不歸零」與
+          <strong>Evidence 不離開你的控制邊界</strong>同時成立，也是未來教練、隊伍與企業部署的地基。
         </p>
         <p class="status wait">
-          <b>下一個形態</b><br>
-          待建：authorization server · OAuth 簽章驗證 · HTTPS 公開部署
+          <b>Phase 2</b><br>
+          待建：durable local repository · connector permissions · export／delete · private acceptance
         </p>
       </div>
 
       <div class="form">
-        <div class="stage">Form 3 · <code>user-controlled-private</code> — 高隱私／企業形態</div>
-        <h4>User-controlled deployment</h4>
-        <div class="who">跑在使用者或機構自己控制的環境</div>
+        <div class="stage">Form 3 · <code>hosted-remote</code> — 後續 access channel</div>
+        <h4>Controlled mobile / Remote MCP</h4>
+        <div class="who">手機連 private engine，或使用 hosted transient endpoint</div>
         <p>
-          connector、證據模型、決策引擎與持久層整組搬進對方控制的環境，
-          Pacevera 變成本機資料層。<strong>這是唯一能保存個人縱向歷史的形態</strong>——
-          因為那份資料從頭到尾沒有離開他。醫療與企業要的是這一個，
-          <strong>核心宗旨要的也是這一個</strong>。
+          手機先以受控 pairing／tunnel 連回使用者或機構的 private engine。
+          若未來提供 Pacevera hosted remote，只能承諾最小化 Evidence、transient processing 與不留存；
+          <strong>不能把它描述成「Evidence 不離開你的電腦」</strong>。
         </p>
         <p class="status none">
-          <b>方向已定</b><br>
-          與 Form 1 共用同一份決策實作；尚未開工
+          <b>Phase 3 · 目前 Blocked</b><br>
+          authorization · HTTPS · redaction · privacy policy · host E2E 與付費需求全部成立才 GO
         </p>
       </div>
     </div>
 
     <p class="note">
-      Form 1 與 Form 3 的計算都在使用者那邊，<strong>Form 2 是唯一把計算放在我們這裡的</strong>，
-      也因此是唯一需要「無狀態」這條硬約束的。這三者的排序依核心宗旨，不依開發編號——
-      <strong>Form 3 排最後不是因為它最不重要，是因為它最晚開工</strong>。
+      Form 1 與 Form 2 都把計算放在使用者控制的環境；Form 3 可能只是通往 private engine 的受控入口，
+      也可能是 hosted transient service。<strong>兩條資料流必須在使用者連線前就清楚標示，不能共用同一句隱私承諾。</strong>
     </p>
   </section>
 
@@ -605,6 +602,8 @@
     <p class="note">
       也在<a href="https://github.com/modelcontextprotocol/registry">官方 MCP registry</a> 上架，
       識別碼 <code>io.github.henryyeh182/evidra</code>。Anthropic 的 MCPB 目錄審查中。
+      這裡安裝的是目前公開的 v0.4.2；下一版 v0.5.0 規劃為 10 個 public tools，
+      使用 Decision Engine v1.6.0 與 <code>base_rules@1.1.0</code>，完成 release gates 後才替換下載入口。
     </p>
 
   </section>
@@ -754,9 +753,11 @@
 
   <section class="spine">
     <p class="section-label">The Chain</p>
-    <h2>五層決策模型</h2>
+    <h2>一次決策的五層可見鏈</h2>
     <p class="lede">
-      每一層都有明確產出，且不可跳層。以下走完一次真實的判定——
+      產品終局包含 Evidence、Semantic State、Decision Engine、Rule Packages、Explainability／Learning
+      與 deployment interfaces 六個責任；對使用者可見的一次呼叫，則濃縮成下面五層，且不可跳層。
+      以下走完一次真實的判定——
       一位半馬訓練者，昨天跑了 80 分鐘 RPE 8，今天排定 VO₂max 間歇。
     </p>
 
@@ -764,11 +765,11 @@
     <div class="layer">
       <div class="layer-name">Evidence</div>
       <div class="layer-body">
-        <h4>證據由 AI Agent 帶進來，我們不去拿</h4>
+        <h4>今天由 host 帶入；終局由使用者控制的 connector 提供</h4>
         <p>
-          授權對象是使用者已經在用的 AI，不是我們。證據經 tool call 以參數傳入——
-          <strong>Pacevera 不連廠商雲端、不持有原始健康資料</strong>。
-          所以「Apple Health 沒有伺服器 API」這類問題，在這個架構下不存在。
+          v0.4.2 的 Evidence 經 tool call 以參數傳入，Pacevera 不持有 provider token。
+          未來 local private engine 會讓使用者直接授權自己的 connector，保存可重算的 state，
+          再只把當次所需結果交給 AI。<strong>兩種路徑都不要求 Pacevera 建立集中健康資料庫。</strong>
         </p>
         <div class="readout">
           <div class="row"><span class="k">hrv_ms</span><span class="v">39</span><span class="v dim">· 個人基線 48（40 筆，可信）</span></div>
@@ -1149,6 +1150,8 @@
       都會回傳同一種 trace：哪條規則開火、哪條規則治理、它屬於哪個引擎、引用與限制在哪裡。
       <code>assess_fitness_state</code> 不帶它，因為那支工具只回傳狀態，還沒有對課表做 from → to 的決定。
       <strong>已經做好與還沒做好分開講</strong>，這條紀律現在也套到每一支 tool 上。
+      v0.5.0 起對外 release identity 固定顯示 Product、Decision Engine 與 active Rule Package；
+      舊 <code>libraryVersion</code> 只作相容欄位，不再獨立進版。
     </p>
   </section>
 
@@ -1198,28 +1201,27 @@
 
     <h3 class="whatsnext-h">往哪裡走</h3>
     <p class="lede" style="margin-bottom:22px">
-      同一顆引擎，往三個方向長。<strong>每一項都是把已經成立的決策鏈送到更多情境裡</strong>，
-      不是補上缺掉的零件——決策今天就做得出來，變的是誰的機器在跑、證據從哪條路進來。
+      近期先把已完成能力發成 v0.5.0，再用 pacevera.com 驗證誰真的需要它；
+      之後才把同一顆引擎擴成完整 private data plane、手機入口與團隊治理。
     </p>
     <div class="findings">
       <div class="finding ok">
-        <h4>手機　Form 2</h4>
-        <p>手機上的 Claude 只連得到 remote，所以那個形態一開，同一顆引擎就進了口袋。它也是計價會發生的地方。<strong>證據一樣不留</strong>——hosted 無狀態是這個形態的硬條件，不是可交換的設計選項。</p>
+        <h4>Phase 0–1　發行與產品驗證</h4>
+        <p>先發布 v0.5.0，再完成 pacevera.com：真實 from → to demo、三種 privacy mode、版本透明、安裝入口與 3–5 位目標使用者訪談。</p>
       </div>
       <div class="finding ok">
-        <h4>企業與醫療　Form 3</h4>
-        <p>整組搬進對方控制的環境，Pacevera 變成本機資料層。<strong>這是唯一能保存個人縱向歷史的形態</strong>，因為那份資料從頭到尾沒有離開他。核心宗旨要的是這一個。</p>
+        <h4>Phase 2　Local private engine</h4>
+        <p>完成 durable local repository、connector permissions、Evidence continuity、export／delete 與 privacy acceptance，讓<strong>換模型不歸零</strong>成為可見能力。</p>
       </div>
       <div class="finding ok">
-        <h4>更多來源，同一套語彙</h4>
-        <p>新增一家等於加一張映射表，下游一行不動。<strong>接下來要做的是把 Oura 與 WHOOP 的解析器對到真實回應</strong>——目前是照兩家自己的 OpenAPI 寫的，規格說得對不等於實際回傳長那樣。</p>
+        <h4>Phase 3–4　Mobile 與 Team</h4>
+        <p>先做受控 pairing／private access，再依 go／no-go 決定 hosted remote；最後加入 tenant governance、VPC／on-prem、REST／SDK 與 team pilot。</p>
       </div>
     </div>
 
     <p class="note">
-      至於手機上的 Apple Health 與 Garmin Connect 授權，那一段授權對象是 host app 而不是我們——
-      <strong>今天走得通的證據路徑是匯出檔與使用者自己說的話，那也是兩種合法的證據</strong>。
-      寫在這裡是因為它決定了先做哪一個形態，不是因為它是缺口。
+      今天走得通的證據路徑仍是匯出檔與使用者口述。Oura／WHOOP parser 尚未對過真實回應；
+      private connectors 與 mobile access 都是未來能力。<strong>產品頁只說已驗證的事，roadmap 不當成現成功能。</strong>
     </p>
 
     <p class="footnote">
@@ -1232,7 +1234,8 @@
       <code>docs/fitness-mcp-implementation-plan.md</code>，不重複寫在這裡；
       兩份衝突時，以那份的現況表為準。
       <br>
-      對照日期 2026-08-10，對照對象是實際程式碼與規則庫（v1.4.0，12 條規則）。
+      對照日期 2026-08-11。目前公開版為 Pacevera v0.4.2／Decision Engine v1.6.0／legacy Rule Library v1.4.0；
+      下一版固定為 Pacevera v0.5.0／Decision Engine v1.6.0／<code>base_rules@1.1.0</code>。
       可複製的 demo prompts 與 sample evidence 在 <code>examples/README.md</code>，
       每一則的輸出都由測試釘住。
       產品策略與下一階段的取捨見 <code>docs/pacevera-product-strategy.md</code>；

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "fitness-mcp/tools/evidra_generate_workout.input",
+  "title": "evidra_generate_workout input",
+  "type": "object",
+  "properties": {
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "profile": { "type": "object", "properties": { "timezone": { "type": "string" }, "fitnessLevel": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] } } },
+        "goals": { "type": "array", "items": { "type": "object" } },
+        "constraints": { "type": "object" },
+        "healthMetrics": { "type": "array", "items": { "type": "object", "properties": { "type": { "type": "string", "enum": ["sleep_duration_hours", "sleep_quality", "hrv_ms", "resting_hr_bpm", "steps", "stress"] }, "value": { "type": "number" }, "recordedAt": { "type": "string" }, "source": { "type": "string" } }, "required": ["type", "value", "recordedAt"] } },
+        "vendorAssessments": { "type": "array", "items": { "type": "object", "properties": { "type": { "type": "string", "enum": ["vendor_readiness", "body_battery", "recovery_time_minutes", "vendor_acute_load"] }, "value": { "type": "number" }, "recordedAt": { "type": "string" }, "source": { "type": "string" } }, "required": ["type", "value", "recordedAt"] } },
+        "workouts": { "type": "array", "items": { "type": "object", "properties": { "startedAt": { "type": "string" }, "durationMinutes": { "type": "number" }, "type": { "type": "string" }, "rpe": { "type": "number" }, "trainingLoad": { "type": "number" }, "muscleGroups": { "type": "array", "items": { "type": "string" } } }, "required": ["startedAt", "durationMinutes"] } }
+      }
+    },
+    "userId": { "type": "string" },
+    "date": { "type": "string" },
+    "durationMinutes": { "type": "number", "enum": [5, 10, 15, 20, 25, 30] },
+    "focus": { "type": "string", "enum": ["short_sprints", "vo2max_intervals", "tempo", "zone2", "warm_up", "recovery", "mobility", "strength", "core"] },
+    "availableMinutes": { "type": "number" }
+  },
+  "required": ["durationMinutes", "focus"]
+}

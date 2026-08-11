@@ -293,7 +293,8 @@ function createTransportServer(nodeCreateServer, options = {}) {
 
     for (const message of messages) {
       const response = await handleJsonRpcMessage(JSON.stringify(message), {
-        identity: req.mcpIdentity || null
+        identity: req.mcpIdentity || null,
+        hosted: Boolean(oauth)
       });
       // Notifications resolve to null and must not produce a frame.
       if (response !== null) responses.push(response);

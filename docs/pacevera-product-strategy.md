@@ -177,7 +177,13 @@ mode 仍維持 bounded／stateless。durable registry adapter、跨重啟保存�
   private-development slice，不是 hosted authorization service。
 - 評估官方／標準化 tunnel 能否被所有目標 host 使用；不能就先把 mobile path 定位為 private VPC 或 hosted remote。
 - 若開 hosted remote，仍須完成 production authorization server、JWKS／issuer／audience／scope、HTTPS、payload redaction、DPA 與新的 privacy policy。
-- hosted remote 只接最小化 Evidence；不直接連 Apple／Google／Garmin，也不持有 provider refresh token。
+- hosted remote 的 Phase 3 connector 可在使用者授權後讀取 Google Health API，取得後立即
+  正規化為最小化 Evidence；不把 provider refresh token 或長期 raw health history 留在
+  hosted Pacevera。`4175a1a` 的 `scripts/import-google-health-api.js` 仍是 desktop local
+  importer，不是 hosted OAuth client。
+- hosted Google connector 必須完成最小 scopes、token vault／rotation／revocation、raw
+  response 與 normalized Evidence 的 retention／delete／export 邊界，以及 Google OAuth
+  review、provider terms 與 privacy policy 審查。
 - 用產品 UI 清楚標示：`Private local`、`Private deployment`、`Hosted transient`。
 
 完成標準：使用者在連線前就知道資料是否離開本機；撤銷後既有 token 不能再呼叫；所有 mode 都有可重現的資料流測試。

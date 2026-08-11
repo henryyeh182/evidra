@@ -5,14 +5,19 @@ import {
   EVIDENCE_METRIC_TYPES,
   EVIDENCE_VENDOR_ASSESSMENT_TYPES
 } from "../../../packages/evidence/src/index.js";
+import { ENGINE_VERSION } from "../../../packages/decision-engine/src/version.js";
+import { BASE_RULE_PACKAGE_IDENTITY } from "../../../packages/rules/src/basePackageIdentity.js";
 
 const TOOLSET_META_KEY = "io.github.henryyeh182/evidra/toolsetVersion";
+const ENGINE_META_KEY = "io.github.henryyeh182/evidra/decisionEngineVersion";
+const RULE_PACKAGES_META_KEY = "io.github.henryyeh182/evidra/rulePackages";
 
 const publicToolNames = {
   evidra_assess_fitness_state: "assess_fitness_state",
   evidra_decide_session: "decide_session",
   evidra_decide_exercise_substitution: "decide_exercise_substitution",
   evidra_generate_plan: "generate_plan",
+  evidra_generate_workout: "generate_workout",
   evidra_preview_adjust_plan: "preview_adjust_plan",
   evidra_commit_adjust_plan: "commit_adjust_plan"
 };
@@ -281,6 +286,25 @@ export const toolDefinitions = [
     }
   },
   {
+    name: "evidra_generate_workout",
+    title: "Generate Personalized Workout",
+    annotations: { title: "Generate Personalized Workout", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+    description:
+      "Generate one personalized workout for today from a duration picker and a focus picker. Use this when the user has no existing session and asks for a single workout. Pass recent evidence so readiness, fatigue, training load, injury restrictions, equipment and available time can shape the result. For a multi-week plan use evidra_generate_plan; for an already scheduled session use evidra_decide_session.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        evidence: EVIDENCE_INPUT,
+        userId: { type: "string", description: "User identifier." },
+        date: { type: "string", description: "Date in YYYY-MM-DD. Defaults to today in the user's timezone." },
+        durationMinutes: { type: "number", enum: [5, 10, 15, 20, 25, 30], description: "Requested workout duration." },
+        focus: { type: "string", enum: ["short_sprints", "vo2max_intervals", "tempo", "zone2", "warm_up", "recovery", "mobility", "strength", "core"], description: "Requested workout focus." },
+        availableMinutes: { type: "number", description: "Optional explicit time available today; the workout will not exceed it." }
+      },
+      required: ["durationMinutes", "focus"]
+    }
+  },
+  {
     name: "search_exercises",
     deprecated: true,
     description:
@@ -537,6 +561,7 @@ export const deprecatedToolAliases = {
   decide_session: "evidra_decide_session",
   decide_exercise_substitution: "evidra_decide_exercise_substitution",
   generate_plan: "evidra_generate_plan",
+  generate_workout: "evidra_generate_workout",
   preview_adjust_plan: "evidra_preview_adjust_plan",
   commit_adjust_plan: "evidra_commit_adjust_plan"
 };
@@ -566,7 +591,9 @@ export function listedToolDefinitions(version) {
         name: publicToolNames[tool.name] || tool.name,
         _meta: {
           ...(tool._meta || {}),
-          [TOOLSET_META_KEY]: version
+          [TOOLSET_META_KEY]: version,
+          [ENGINE_META_KEY]: ENGINE_VERSION,
+          [RULE_PACKAGES_META_KEY]: [BASE_RULE_PACKAGE_IDENTITY]
         }
       };
     });

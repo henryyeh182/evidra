@@ -152,6 +152,8 @@ MCP Presentation Layer
 
 目前缺少的主要是：
 
+- Google Health API mobile OAuth connector（`4175a1a` 目前只有 desktop local importer，讀取
+  `data/private/google-health/raw/`，尚未接 OAuth 或 hosted MCP）。
 - Garmin OAuth authorization flow。
 - Garmin API client。
 - Token 安全保存，或 user-controlled deployment。

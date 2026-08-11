@@ -15,6 +15,30 @@ synonyms for the implementation phases in the roadmap:
 | `user-controlled-private` | planned | A device, NAS, private network, or VPC controlled by the user or their organisation | Raw Evidence and provider tokens stay in that environment; its operator owns retention and deletion |
 | `hosted-remote` | no-go | A Pacevera-operated HTTPS resource server, when eventually deployed | Only minimum Evidence is transiently processed; production requires the controls and policy below to be independently verified |
 
+## Continuity lifecycle contract
+
+Continuity is available only to a local or user-controlled-private operator.
+The store contains one JSON record per identity: normalized profile,
+constraints, goals, workouts, health metrics, and vendor assessments merged from
+calls. The filename is a SHA-256 hash of the identity; the raw identity is not
+used as a filename. Records are written with mode `0600` beneath the configured
+`EVIDRA_STATE_DIR` (default `data/private/athletes`) and the directory is
+created with mode `0700`.
+
+The current policy is **retain until explicit delete**: there is no hidden TTL
+or background purge. The owner/operator may export the complete JSON record via
+the local state-store API and may delete exactly one identity record via the
+corresponding delete operation. Deleting the record does not delete copies in
+host conversations, OS backups, or operator backups; those must be deleted by
+their owner. A deployment may impose a shorter retention schedule, but must
+document it before enabling continuity.
+
+Hosted remote is a hard boundary: an OAuth subject may authenticate a request,
+but the hosted path never reads or writes the continuity directory. It has no
+continuity export or delete endpoint because it must not create a durable
+Evidence record. Hosted infrastructure log/trace/authorization-server
+retention remains a release blocker while the mode is `no-go`.
+
 ## Contract by mode
 
 ### `local-desktop`
@@ -99,6 +123,12 @@ Hosted remote remains **no-go** until an end-to-end deployment proves the
 application, load balancer, APM, error reporter, queue, object store, and
 authorization server obey the same boundary. The existing HTTPS/JWKS code is a
 resource-server readiness scaffold, not that proof.
+
+The Phase 3 target may add a separately reviewed Google Health API connector for
+mobile Claude/ChatGPT use. That future connector is not covered by the current
+no-go implementation: it must define provider OAuth scopes, token vault and
+revocation, transient raw-response handling, and retention/export/delete before
+the hosted privacy contract can change.
 
 ## Verification requirements
 

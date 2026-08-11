@@ -40,12 +40,12 @@ Endpoints: `POST /mcp` (JSON-RPC), `GET /mcp` (server stream), `GET /health`.
 
 ## Tools
 
-The six public decision tools remain model-agnostic. Evidence continuity is
-server-side: when a request has an authenticated OAuth subject (`sub`) or an
-explicit `userId`, new evidence is merged into that athlete's durable record.
-Later calls from another MCP host or conversation can omit `evidence` and the
-server loads the same record. Anonymous calls remain stateless. Plans and
-previews are still caller-owned. See the [Design
+The ten public tools remain model-agnostic. In local/private mode, when a
+request has an authenticated identity or explicit `userId`, new evidence is
+merged into that athlete's durable record. Later calls can omit `evidence` and
+the server loads the same record. Anonymous calls remain stateless. Hosted
+OAuth mode is no-go and forcibly disables this continuity path: it computes
+from the current request only. Plans and previews are still caller-owned. See the [Design
 Manifesto](design-manifesto.md) for why the surface is this small.
 
 Two name spaces, deliberately: the names below are the **public** ones — what
@@ -216,6 +216,15 @@ containing the diff, base version, and resulting plan. `commit` receives the
 current plan plus that patch, validates the optimistic-concurrency version,
 and returns the next plan. The AI host or external storage owns approval,
 history, and persistence; this server retains neither plan nor preview.
+
+### Supporting public tools
+
+| Tool | Contract |
+|---|---|
+| `get_evidence_coverage` | Reports available, missing, and quality-bounded evidence signals. |
+| `explain_decision` | Reads the bounded process-local trace for a returned `decisionId`. |
+| `submit_outcome` | Normalizes an outcome event; durable outcome storage remains caller-controlled. |
+| `generate_workout` | Builds one picker-sized session and runs it through the decision path. |
 
 ## Evidence
 
