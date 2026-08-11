@@ -37,6 +37,74 @@
 
 「不離開你的電腦」必須只用在真正 user-controlled 的部署形態。Remote hosted MCP 可以讓手機 AI 使用，但若原始或最小化 Evidence 傳到 Pacevera 雲端，就不能把它描述成同一個隱私承諾。
 
+## 重新收斂：不是另一個 AI fitness coach
+
+TrainState、Clai 與同類產品已經證明 training load、recovery、readiness、長期模式與 AI coaching 是清楚且擁擠的產品類別。Pacevera 不應以「更好的 readiness dashboard」或「另一個 AI coach」進入市場。
+
+### 新的產品定位
+
+> **Pacevera 是 AI host、教練工作流與 private deployment 使用的 Fitness Decision Engine。**
+
+對外簡化為：
+
+> **Keep your coach. Add a decision layer.**
+>
+> 保留你熟悉的 AI coach，補上一層可追溯的訓練決策。
+
+Pacevera 不取代 AI host。AI host 負責理解使用者的問題、整理輸入、選擇工具與用自然語言溝通；Pacevera 負責將既有課表、Evidence、限制與規則轉成結構化且可追溯的 Action。
+
+### 技術與產品設計差異
+
+| 差異 | 常見 AI fitness product | Pacevera |
+|---|---|---|
+| 產品單位 | insight、score 或 recommendation | 一次對既有 session 的 decision |
+| 核心問題 | 今天我應該做什麼？ | 今天原本排定的課表應該如何修改？ |
+| 輸出 | 自然語言建議或新 workout | `keep / adjust / substitute / defer / advance` + `from → to` |
+| 證據 | 用於生成個人化內容 | 用於計算狀態、仲裁規則並留下可回查的依據 |
+| 不確定性 | 容易被一句流暢回答掩蓋 | 顯示 `missing signals`、`coverage` 與 `confidence` |
+| 安全限制 | 由模型在生成時自行判斷 | 禁忌動作與硬限制先過濾，不能被模型繞過 |
+| AI 關係 | 產品本身就是 coach | 與 AI host 解耦，可跨 host 使用 |
+| 部署邊界 | 通常以產品自己的資料平台為中心 | local-first，支援 coach workflow 與 user-controlled private deployment |
+
+這些是 Pacevera 的設計差異，不應包裝成已被市場驗證的護城河。第一個要驗證的是：教練與 serious athlete 是否認為「對既有課表做可追溯變更」比一般 recommendation 有更高的採用與信任價值。
+
+### 唯一核心 Demo
+
+首頁與銷售敘事只需要先證明一件事：同一份 Evidence 如何改變今天原本排定的 session。
+
+```text
+Evidence → current state → decision intent → scheduled workout (from)
+  → executable workout (to) → reason + missing signals + confidence
+```
+
+示例：
+
+```text
+From: Tempo Run · 50 min · high
+Evidence: readiness 48 · recent fatigue elevated
+To:   Moderate Run · 50 min · moderate
+
+Why: readiness below threshold
+Missing: sleep signal
+Confidence: medium
+```
+
+如果這個 Demo 看起來仍像一般 readiness recommendation，Pacevera 的定位尚未收斂；不能靠增加更多 metrics 或 connector 數量解決。
+
+### 明確不做的事情
+
+- 不做另一個 readiness／recovery dashboard。
+- 不以「AI 會替你規劃一切」作為主要承諾。
+- 不把 connector 數量當作產品價值。
+- 不把 hosted remote 或尚未完成的 connector 說成目前已可用。
+- 不建立一個要求使用者交出完整健康歷史的集中式產品。
+
+### 對首頁架構的影響
+
+公司首頁採用 `Home / Product / Solutions / Privacy / About / Contact`；`user-journey.html` 改定位為 Product 底下的深度案例頁，而不是公司首頁。
+
+首頁的 Hero 應先講清楚「decision layer」與 `from → to`，接著展示一個具體案例，再分別說明 AI host、coach workflow 與 private deployment。readiness、training load 與 recovery 只作為 Evidence 的輸入，不作為首頁主角。
+
 ## 用戶真正要買的是什麼
 
 用戶不是在買另一個健康資料 dashboard，也不是在買一個會背運動知識的聊天機器人。他們要的是：

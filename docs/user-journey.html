@@ -48,6 +48,37 @@
   .standfirst { font-size: clamp(16px, 1.9vw, 18.5px); color: var(--text-2); max-width: 62ch; text-wrap: pretty; }
   .standfirst strong { color: var(--text); font-weight: 600; }
 
+  /* ---------- phase 1 landing page spine ---------- */
+  .hero-kicker {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--mint); margin: 42px 0 14px;
+  }
+  .hero-sub { color: var(--text-2); font-size: 16px; max-width: 58ch; margin-top: 18px; }
+  .hero-sub strong { color: var(--text); font-weight: 620; }
+  .jumpnav { display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:24px; font-family:var(--mono); font-size:11px; }
+  .jumpnav a { color:var(--text-3); text-decoration:none; border-bottom:1px solid var(--line); padding-bottom:3px; }
+  .jumpnav a:hover { color:var(--mint); border-color:var(--mint); }
+  .problem { margin-top: 88px; padding-top: 42px; border-top: 1px solid var(--line); }
+  .problem-grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
+  .problem-card { border:1px solid var(--line); border-radius:6px; padding:20px 22px; background:var(--surface); }
+  .problem-card h3 { font-size:16px; font-weight:620; margin-bottom:8px; }
+  .problem-card p { color:var(--text-2); font-size:14px; line-height:1.6; }
+  .case { margin-top: 88px; padding: 30px; border: 1px solid var(--mint-dim); border-radius: 7px; background: linear-gradient(135deg, var(--mint-soft), var(--surface)); }
+  .case .section-label { margin-bottom: 8px; }
+  .case h2 { margin-bottom: 10px; }
+  .case-lede { color:var(--text-2); font-size:15px; max-width:60ch; margin-bottom:24px; }
+  .case-grid { display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:stretch; }
+  .case-step { background:rgba(250,249,245,.78); border:1px solid var(--line); border-radius:5px; padding:16px; }
+  .case-step.to { border-color:var(--mint-dim); }
+  .case-step .tag { font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-3); margin-bottom:9px; }
+  .case-step.to .tag { color:var(--mint); }
+  .case-step h3 { font-size:18px; margin-bottom:5px; }
+  .case-step p { font-family:var(--mono); font-size:12px; color:var(--text-2); }
+  .case-arrow { align-self:center; font-family:var(--mono); color:var(--mint); font-size:22px; }
+  .case-reason { margin-top:18px; padding-top:15px; border-top:1px solid rgba(21,117,84,.22); color:var(--text-2); font-size:13.5px; }
+  .case-reason strong { color:var(--text); }
+  @media (max-width:620px) { .case { padding:22px 18px; } .case-grid { grid-template-columns:1fr; } .case-arrow { transform:rotate(90deg); } }
+
   /* ---------- the contrast that defines the product ---------- */
   .contrast {
     margin-top: 48px; display: grid; gap: 16px;
@@ -346,12 +377,14 @@
       <span>Local-first · AI 可替換 · 決策與版本可追溯</span>
     </div>
 
-    <h1>任何模型都能給你<em>建議</em>。<br>只有握有證據的系統能給<em>決策</em>。</h1>
+    <p class="hero-kicker">Fitness decisions, with your evidence under your control</p>
+    <h1>你的 AI coach 應該知道<em>今天的你</em>，<br>不必擁有你的健康歷史。</h1>
     <p class="standfirst">
-      「建議今天跑 Zone 2」是憑空發出的一句話，GPT-6 也說得出來。
-      「今天排定的 VO₂max Intervals 改成 Zone 2」不一樣——它是<strong>對既有狀態的變更</strong>，
-      前提是<strong>知道你今天原本要做什麼</strong>，以及<strong>你現在的身體證據</strong>。
-      本頁的所有數字，都來自實際跑出來的引擎輸出。
+      Pacevera 是一個 <strong>Fitness Decision Engine</strong>：把你今天原本排定的訓練，
+      和當下的身體證據放在一起，產生一個看得懂、追得回理由的決策。
+    </p>
+    <p class="hero-sub">
+      你繼續使用熟悉的 AI；<strong>Evidence 留在你的控制邊界</strong>，Pacevera 只負責把狀態轉成今天能執行的變更。
     </p>
 
     <div class="cta">
@@ -359,6 +392,11 @@
       <a class="secondary" href="#install">怎麼裝、怎麼試</a>
       <span>Claude Desktop · 不需帳號 · 原始碼不開放，行為可驗證</span>
     </div>
+    <nav class="jumpnav" aria-label="頁面導覽">
+      <a href="#problem">你正在解決的問題</a>
+      <a href="#case">看一個 from → to 決策</a>
+      <a href="#install">現在就試</a>
+    </nav>
 
     <div class="contrast">
       <div class="card weak">
@@ -388,6 +426,49 @@
       Pacevera 在 MCP 與回覆之間，有一層獨立的 <b>Fitness Decision Engine</b>。
     </p>
   </header>
+
+  <section class="problem" id="problem">
+    <p class="section-label">The problem</p>
+    <h2>一般 AI 知道運動知識，卻不知道你的連續狀態</h2>
+    <p class="lede">
+      每個新對話都可能重新開始：昨晚睡了多少、這幾週累積了多少負荷、今天原本排了什麼，
+      都要靠你再次交代。問題不是缺少另一個 dashboard，而是<strong>今天的課表要不要照做，以及如果不照做要改成什麼</strong>。
+    </p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <h3>只有建議，沒有前置狀態</h3>
+        <p>「今天跑 Zone 2」聽起來合理，但它沒有回答：原本排的是什麼？哪個訊號改變了答案？</p>
+      </div>
+      <div class="problem-card">
+        <h3>只有資料，沒有今天的動作</h3>
+        <p>穿戴資料與 dashboard 可以告訴你發生了什麼，卻不一定能把它轉成一個具體、可執行的課表變更。</p>
+      </div>
+      <div class="problem-card">
+        <h3>健康歷史不該變成平台資產</h3>
+        <p>你需要的是能使用證據的決策層，不是再交出一份長期健康資料庫。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case" id="case">
+    <p class="section-label">One decision, made concrete</p>
+    <h2>從原定課表，到今天真正適合做的事</h2>
+    <p class="case-lede">同一個人、同一天；差別不是 AI 換了一句話，而是 Evidence 改變了既有 session。</p>
+    <div class="case-grid">
+      <div class="case-step">
+        <div class="tag">From · 原本排定</div>
+        <h3>Tempo Run</h3>
+        <p>50 min · high intensity</p>
+      </div>
+      <div class="case-arrow" aria-hidden="true">→</div>
+      <div class="case-step to">
+        <div class="tag">To · 今日執行</div>
+        <h3>Moderate run</h3>
+        <p>50 min · <strong>moderate intensity</strong></p>
+      </div>
+    </div>
+    <p class="case-reason"><strong>為什麼：</strong> readiness 48，且近期證據顯示恢復不足。輸出同時標示依據、信心與缺少的訊號；不是把不確定性藏起來。</p>
+  </section>
 
   <section class="spine">
     <p class="section-label">Before The Chain</p>
