@@ -31,12 +31,12 @@
     },
     {
       "productVersion": "0.5.0",
-      "status": "planned",
-      "releasedOn": null,
+      "status": "released",
+      "releasedOn": "2026-08-11",
       "baseRulesPackageVersion": "1.1.0",
       "baseRulesContentChecksum": "sha256:b6b3247b81d1ae62bd664f376e11d2881063d69203ed2d974c8673dfaf4ff250",
       "decisionEngineVersion": "1.6.0",
-      "note": "Planned next MCPB release, including personalized generate_workout after commits 6992c32 and 62862fc are integrated. User-facing identity is Pacevera 0.5.0 with Decision Engine 1.6.0 and base_rules 1.1.0. The legacy Rule Library version is no longer an independent release line."
+      "note": "Released as the v0.5.0 MCPB. User-facing identity is Pacevera 0.5.0 with Decision Engine 1.6.0 and base_rules 1.1.0. The legacy Rule Library version is no longer an independent release line."
     }
   ]
 }
