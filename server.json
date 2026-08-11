@@ -3,7 +3,7 @@
   "name": "io.github.henryyeh182/evidra",
   "title": "Pacevera",
   "description": "Turns the training evidence you already have into a decision about today's session.",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "websiteUrl": "https://pacevera.com",
   "repository": {
     "url": "https://github.com/henryyeh182/evidra",
@@ -12,8 +12,8 @@
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/henryyeh182/evidra/releases/download/v0.4.2/pacevera.mcpb",
-      "fileSha256": "cd5a05403f958c3533794b1c6258d24fe413dcbe6a911439d4b714316e8f87eb",
+      "identifier": "https://github.com/henryyeh182/evidra/releases/download/v0.5.0/pacevera.mcpb",
+      "fileSha256": "20a52046cc8df3a92c0049b1ed67b10b0614d6fe1bb7a6577f7553bfa739c418",
       "transport": {
         "type": "stdio"
       }

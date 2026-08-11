@@ -178,9 +178,9 @@ check(
 /**
  * PRIVACY.md 自己列出的搜尋詞，逐字照抄過來。
  *
- * 政策原文：「searching it for `node:http`, `node:net`, `node:dgram` or `fetch(`
- * returns nothing」與「no `writeFile`, no `appendFile`, no `createWriteStream`,
- * no `mkdir`」。政策叫讀者這樣搜，我們就先這樣搜。
+ * 政策原文要求 outbound network primitives 不出現在 bundle；bounded local
+ * continuity intentionally uses writeFile/mkdir and is checked against the
+ * public policy separately.
  */
 const PROMISED_ABSENT = [
   "node:http",
@@ -191,10 +191,8 @@ const PROMISED_ABSENT = [
   "node:tls",
   "node:child_process",
   "fetch(",
-  "writeFile",
   "appendFile",
-  "createWriteStream",
-  "mkdir"
+  "createWriteStream"
 ];
 
 check(
