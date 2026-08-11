@@ -77,6 +77,8 @@ Pacevera 的護城河是三者合一，而不是 MCP transport 或單一 AI 平�
 
 長期治理層再把 Decision → Outcome → Review → Rule update 串起來；LLM 可協助整理候選證據，不能自行核准新規則。
 
+Pacevera 的核心流程固定為：**Evidence → State → Decision → Action → Outcome**。
+
 ### 1.6 目標客群與商業順序
 
 1. 重視隱私、已有穿戴資料且正在使用 AI 的 serious athletes。
@@ -85,6 +87,30 @@ Pacevera 的護城河是三者合一，而不是 MCP transport 或單一 AI 平�
 4. 在明確 consent 與責任邊界內的醫療／復健合作；產品仍不宣稱診斷或治療。
 
 定價與 Free／Pro／Enterprise 邊界要在真實使用者驗證後定案。現階段不以 connector 數量、tool call 次數或 Rule 數量作為價值代理，也不先做 marketplace、白牌 AI coach 或健康資料廣告模式。
+
+### 1.7 競品與視覺參考：AthleteSpace
+
+[AthleteSpace](https://athletespace.ai/) 是 Pacevera 的相鄰競品與 Phase 0.5 視覺參考。它把
+training、recovery、readiness、strain 與 HRV／sleep 等訊號集中成一個面向運動者的
+AI endurance experience，產品方向接近 Pacevera 的 **Evidence → State → Action**：
+先讀取身體與訓練訊號，形成目前狀態，再把狀態轉成下一步訓練行動。
+
+Phase 0.5 可以參考 AthleteSpace 的資訊架構、狀態卡片、指標層次、視覺節奏與從資料到
+行動的導覽方式，但不複製其「AI coach／dashboard」定位。Pacevera 必須把辨識度加深在
+**deterministic decision engine**：
+
+- Evidence 要顯示來源、時間窗、freshness、coverage 與缺失訊號。
+- State 要顯示 readiness、fatigue、load、injury constraint 與 plan context 如何形成。
+- Decision 要表達保留、調整、替代、延後或進階的確定性判斷。
+- Action 要以明確的 `from → to` 呈現，而不是泛用 recommendation 或聊天回答。
+- 每個 Decision 都要能展開 reason、confidence、triggered／suppressed rules、Rule → Evidence →
+  Source → Version trace，並可在後續接收 Outcome。
+- UI 可以有 AI coach 的入口，但 AI 只負責理解與溝通；畫面上的決策結果必須來自可重現、
+  版本化、可稽核的 Rule／Engine 執行。
+
+視覺驗證的成功標準不是「看起來像另一個健康 dashboard」，而是使用者在數秒內看懂：
+**今天原本要做什麼、哪些 Evidence 改變了判斷、Pacevera 確定決定要改成什麼，以及這個
+決定能否被追溯。**
 
 ---
 
@@ -173,6 +199,21 @@ v0.4.2 已於 2026-08-10 發行，是目前公開可安裝的 Desktop MCPB 基�
 | Phase 0 - Story 3 | 產出 v0.5.0 release candidate。 | Product `0.5.0`／Engine `1.6.0`／`base_rules@1.1.0` 寫入所有 runtime metadata；bundle 可安裝；checksum 固定。 | 待開始 |
 | Phase 0 - Story 4 | 通過 release gates 並上架。 | 修正 G1 drift；tests、全部 harness、regression、package dry-run、install smoke、local release review 全綠；發布後再跑 published review 並同步 registry／release notes。 | 待開始 |
 
+### Phase 0.5 — Decision Engine 視覺化 UI 原型
+
+目標：從 2026-08-12 開始，建立一個可操作的視覺化 UI 原型，借鑑
+[AthleteSpace](https://athletespace.ai/) 的資訊架構與視覺層次，將 Pacevera 的
+Evidence → State → Decision → Action → Outcome 與 deterministic decision engine 變成
+使用者一眼看懂的產品體驗。本階段是產品／視覺驗證，不改變 v0.5.0 的 runtime contract，
+也不把 mock data 描述成已完成的 connector 或 private engine 能力。
+
+| Story | 交付結果 | 完成條件 | 狀態 |
+|---|---|---|---|
+| Phase 0.5 - Story 1 | 視覺語言與頁面骨架。 | 定義 Evidence、State、Decision、Action、Outcome、Trace 的色彩、層級、卡片與狀態語言；完成 desktop-first 主畫面與 responsive 基本規則。 | 待開始 |
+| Phase 0.5 - Story 2 | Evidence → State → Decision → Action 主流程。 | 以一個「原定 Tempo Run → 今日調整」案例呈現來源訊號、狀態判斷、`from → to`、reason、confidence 與 missing signals。 | 待開始 |
+| Phase 0.5 - Story 3 | Deterministic Decision Graph。 | 可視化 triggered／suppressed rules、優先序／仲裁結果、Rule → Evidence → Source → Version trace；AI 對話不是主要視覺焦點。 | 待開始 |
+| Phase 0.5 - Story 4 | Outcome 與 prototype review。 | 能記錄採用／拒絕／結果回報的入口；以 3–5 位目標使用者或內部 reviewer 檢查「是否看懂今天為何改課表」，並記錄 AthleteSpace 可借鑑處及 Pacevera 必須保持的差異。 | 待開始 |
+
 ### Phase 1 — pacevera.com 產品頁與市場驗證
 
 目標：用一個真實、可操作的產品頁講清楚 Pacevera，讓目標使用者安裝或加入 private beta。**因此下一個產品階段是 pacevera.com；實作優先順序仍是先關閉 Phase 0 release，網站規劃可在 v0.5.0 scope freeze 後並行。**
@@ -256,5 +297,6 @@ v0.4.2 已於 2026-08-10 發行，是目前公開可安裝的 Desktop MCPB 基�
 1. `Phase 0 - Story 1`：整合 `6992c32` 與 `62862fc`。
 2. `Phase 0 - Story 2`：關閉 continuity privacy contract 與 10-tool 公開文件落差。
 3. `Phase 0 - Story 3～4`：打包、驗證、發布 Pacevera v0.5.0。
-4. `Phase 1 - Story 1～4`：完成 pacevera.com 第一版與 3–5 位目標使用者驗證。
-5. 根據驗證結果進入 Phase 2；Phase 3 hosted remote 在 go／no-go 條件成立前維持 Blocked。
+4. `Phase 0.5 - Story 1～4`：以 AthleteSpace 為視覺參考，完成 Decision Engine UI 原型與 review。
+5. `Phase 1 - Story 1～4`：完成 pacevera.com 第一版與 3–5 位目標使用者驗證。
+6. 根據驗證結果進入 Phase 2；Phase 3 hosted remote 在 go／no-go 條件成立前維持 Blocked。
