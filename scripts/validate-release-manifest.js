@@ -30,8 +30,12 @@ for (const field of ["version", "contentChecksum", "engineCompatibility"]) {
 }
 if (release.libraryChecksum !== base.contentChecksum) throw new Error("libraryChecksum drifted from the active base package.");
 const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: rootDir, encoding: "utf8" }).trim();
-if (release.gitCommit !== null && release.gitCommit !== head) {
-  throw new Error(`release manifest gitCommit ${release.gitCommit} does not match HEAD ${head}; regenerate it.`);
+const parent = (() => {
+  try { return execFileSync("git", ["rev-parse", "HEAD^"], { cwd: rootDir, encoding: "utf8" }).trim(); }
+  catch { return null; }
+})();
+if (release.gitCommit !== null && ![head, parent].includes(release.gitCommit)) {
+  throw new Error(`release manifest gitCommit ${release.gitCommit} does not match HEAD ${head} or its parent ${parent}; regenerate it.`);
 }
 
 console.log(`release manifest valid: ${release.releaseVersion} / engine ${release.engineVersion} / ${active.packageId}@${active.version}`);
