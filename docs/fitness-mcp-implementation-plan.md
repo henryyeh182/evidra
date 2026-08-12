@@ -184,7 +184,98 @@ v0.4.2 已於 2026-08-10 發行，是目前公開可安裝的 Desktop MCPB 基�
 
 ---
 
-## 4. 由終局倒推的剩餘 Roadmap
+## 4. 版本與發行更新機制（獨立工作流）
+
+這是一條獨立於產品功能 Phase 的交付工作流，現在即開始實作。目標是讓目前的
+Desktop `.mcpb` 與未來的 Remote MCP 共用同一份 Engine、Rule Packages、schemas、
+tests 與 release identity；未來切換 deployment target 時，不重寫決策邏輯，也不建立
+第二套版本系統。
+
+### 4.1 目前基線：MCPB v0.5.0
+
+目前已發行的 bundle identity 是：
+
+```text
+Pacevera MCPB 0.5.0
+├── Decision Engine 1.6.0
+└── base_rules 1.1.0
+```
+
+`.mcpb` 是完整 bundled release：Engine 與 active Base Rules 隨 bundle 發行，不在
+runtime 自行下載或替換。更新流程是下載新版 bundle、驗證 checksum、重新安裝並重啟
+MCP host。這個 offline 行為是 local privacy contract 的一部分，不實作隱藏式 updater。
+
+### 4.2 下一版與 Remote 模式 A
+
+若下一版同時修改 Engine 與 Base Rules，預定 identity 為：
+
+```text
+Release 0.6.0
+├── Decision Engine 1.7.0
+└── base_rules 1.2.0
+```
+
+但 Remote 化本身不強制 Engine 或 Rules 進版。若只是新增 Remote deployment target，
+可以是同一組 `Engine 1.6.0 + base_rules 1.1.0`，分別產出 `.mcpb` 與 Remote image。
+
+Remote 初期採模式 A：Engine 與 Base Rules 綁在同一個 immutable server release，
+不做每個 request 的 rule download，也不做獨立 runtime rule registry。
+
+```text
+同一份 source release
+├── pacevera.mcpb              （local stdio）
+└── pacevera-server:<release>  （Remote MCP / HTTPS）
+```
+
+每個 Remote release 必須能回答：使用哪一版 Engine、哪一版 Base Rules、哪一個
+content checksum、哪一個 git commit／image digest。部署採 immutable image、health
+check、smoke test、canary／blue-green（具備時）與整體 rollback；不允許只替換 Engine
+或只替換 Rules 而留下未驗證的組合。
+
+### 4.3 共用 Release Manifest
+
+建立單一 `release-manifest.json` 作為 `.mcpb` 與 Remote image 的 release identity：
+
+```json
+{
+  "releaseVersion": "0.6.0",
+  "engineVersion": "1.7.0",
+  "libraryVersion": "1.2.0",
+  "libraryChecksum": "sha256:<64 hex>",
+  "gitCommit": "<commit>",
+  "imageDigest": "<digest when remote>"
+}
+```
+
+`imageDigest` 在 local bundle 可為 `null`。Product／MCPB version、Engine version、
+active Rule Package version 與 checksum 必須由 release gate 核對，不允許只改其中一處。
+所有 decision output 保留 `libraryVersion` 與 `engineVersion`，並逐步增加
+`releaseVersion` 與 `libraryChecksum`，以支援重現、稽核與 rollback 後的診斷。
+
+### 4.4 可直接排程的實作工作
+
+| Story | 交付結果 | 完成條件 | 狀態 |
+|---|---|---|---|
+| Release Story 1 | Unified release manifest。 | 建立 manifest schema／loader；由 Product、Engine、active Rule Packages 產生；檢查版本、checksum、engine compatibility 與 git metadata。 | 待開始 |
+| Release Story 2 | Dual-target build。 | 同一份 source release 可產生 `.mcpb` 與 Remote-ready container image；兩者的 tool contract、Engine、Rules、schemas 與 manifest 相同。 | 待開始 |
+| Release Story 3 | Runtime identity output。 | decision／read／trace output 帶有 release、engine、library identity；既有 `libraryVersion`／`engineVersion` 保持相容；tests 驗證 metadata 不漂移。 | 待開始 |
+| Release Story 4 | Release／rollback gate。 | CI 依序執行 tests、harness、package validation、bundle install smoke、Remote container smoke、checksum／manifest gate；image 可切回上一個完整 release。 | 待開始 |
+
+### 4.5 Migration contract：MCPB → Remote
+
+Migration 不是把本機 `.mcpb` 自動改成 Remote，而是保留兩個明確 deployment target：
+
+| Target | Transport | 更新單位 | 資料邊界 |
+|---|---|---|---|
+| Local MCPB | stdio | 使用者重新安裝 bundle | 使用者本機 |
+| Remote MCP | HTTPS MCP | server immutable release | Remote deployment／其 privacy contract |
+
+兩者共用 MCP tool names、input／output schemas、decision contract、version metadata 與
+regression suite。切換時由 host 設定改用 Remote endpoint；不做未經同意的自動切換，
+也不假設 local state 可以自動搬到 Remote。若日後需要 state migration，另立明確的
+export／import、consent、authentication 與 deletion workflow。
+
+## 5. 由終局倒推的剩餘 Roadmap
 
 狀態只使用：`待開始`、`進行中`、`Blocked`、`完成`。每個 Phase 固定四個 Story；Story 完成後保留結果摘要，細節移到 history。
 
@@ -317,7 +408,7 @@ Evidence 必須區分 `ingestionSource`（Google Health API）與 `originalWrite
 
 ---
 
-## 5. 跨 Phase 持續治理
+## 6. 跨 Phase 持續治理
 
 以下不是獨立產品 Phase，而是每次變更都要遵守的 release discipline：
 
@@ -328,7 +419,7 @@ Evidence 必須區分 `ingestionSource`（Google Health API）與 `originalWrite
 - Evidence 文獻只支持它真正涵蓋的 claim；研究品質不直接等於個人 decision confidence。
 - Hosted mode 不保存原始 Evidence；任何 telemetry、trace 或 log 都要有 payload redaction test。
 
-## 6. 明確不在近期主線
+## 7. 明確不在近期主線
 
 - 泛用健康 dashboard、社群、內容庫或由 Pacevera 自建的聊天 UI。
 - 讓 LLM 直接生成或核准決策規則。
@@ -337,7 +428,7 @@ Evidence 必須區分 `ingestionSource`（Google Health API）與 `originalWrite
 - 宣稱 Oura／WHOOP 已完成真實流程驗證，或宣稱 Apple／Google／Garmin 已可一鍵即時同步。
 - 把 behavioral regression corpus 描述成醫學 ground truth。
 
-## 7. 舊代號說明
+## 8. 舊代號說明
 
 舊文件中的 `R1`、`R2`、`C9`、`P1` 等是不同時期的臨時工作包，不是產品版本；部分代號後來被重複使用，已無法讓人一眼辨識先後與歸屬。
 
@@ -349,11 +440,15 @@ Evidence 必須區分 `ingestionSource`（Google Health API）與 `originalWrite
 
 ---
 
-## 8. 現在開工順序
+## 9. 現在開工順序
 
-1. `Phase 0.5 - Story 4`：完成 Decision Graph／Outcome 的 3–5 位 reviewer review，先不宣稱 durable outcome storage。
-2. `Phase 1 - Story 1～4`：完成 pacevera.com 第一版與 3–5 位目標使用者驗證；不把 Google Health、Apple Health 或 Garmin 寫成已完成的一鍵 connector。
-3. `Phase 2 - Story 1`：建立 local state／plan／decision／outcome repository，含 migration、export 與 delete。
-4. `Phase 2 - Story 2`：將既有 Google Health API importer 接到 local OAuth／connector boundary，完成 token、scope、撤銷與最小化同步。
-5. `Phase 2 - Story 3～4`：完成 source-aware Evidence continuity、Garmin／Apple Watch provenance、HRV missing handling 與 private-engine acceptance。
-6. `Phase 3 - Story 4`：只有在 authorization、HTTPS、redaction、DPA、privacy policy、host E2E 與付費需求全部成立後，才重新評估 hosted Google Health OAuth；此前維持 Blocked。
+1. `Release Story 1`：建立 unified release manifest，先支援目前 `.mcpb` v0.5.0 的 identity 驗證。
+2. `Release Story 3`：將 release、engine、library、checksum metadata 完整放入 decision／trace output。
+3. `Release Story 4`：把現有 MCPB release gate 擴充成可驗證 immutable release 與 rollback 的 gate。
+4. `Release Story 2`：建立 Remote-ready container build，但先不宣稱 hosted Remote MCP 已上線。
+5. `Phase 0.5 - Story 4`：完成 Decision Graph／Outcome 的 3–5 位 reviewer review，先不宣稱 durable outcome storage。
+6. `Phase 1 - Story 1～4`：完成 pacevera.com 第一版與 3–5 位目標使用者驗證；不把 Google Health、Apple Health 或 Garmin 寫成已完成的一鍵 connector。
+7. `Phase 2 - Story 1`：建立 local state／plan／decision／outcome repository，含 migration、export 與 delete。
+8. `Phase 2 - Story 2`：將既有 Google Health API importer 接到 local OAuth／connector boundary，完成 token、scope、撤銷與最小化同步。
+9. `Phase 2 - Story 3～4`：完成 source-aware Evidence continuity、Garmin／Apple Watch provenance、HRV missing handling 與 private-engine acceptance。
+10. `Phase 3 - Story 4`：只有在 authorization、HTTPS、redaction、DPA、privacy policy、host E2E 與付費需求全部成立後，才重新評估 hosted Google Health OAuth；此前維持 Blocked。
