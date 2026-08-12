@@ -1,6 +1,6 @@
 # Pacevera — Product & Implementation Plan
 
-> 更新：2026-08-11
+> 更新：2026-08-12
 >
 > 本文件是 Pacevera 的產品終局、發行現況與開工順序正本。
 > 歷史判斷、舊代號與已淘汰方案保留在
@@ -116,21 +116,21 @@ Phase 0.5 可以參考 AthleteSpace 的資訊架構、狀態卡片、指標層�
 
 ## 2. 已完成與發行現況
 
-### 2.1 已發行：Pacevera v0.4.2
+### 2.1 已發行：Pacevera v0.5.0
 
-v0.4.2 已於 2026-08-10 發行，是目前公開可安裝的 Desktop MCPB 基線。
+v0.5.0 已於 2026-08-11 發行，是目前公開可安裝的 Desktop MCPB 基線。
 
 | 項目 | 已發行內容 |
 |---|---|
-| Product / MCPB | `0.4.2` |
+| Product / MCPB | `0.5.0` |
 | Decision Engine | `1.6.0` |
 | Legacy Rule Library | `1.4.0`；當時尚無可獨立識別的 `base_rules` package release line。 |
-| Public tools | 6 個：`assess_fitness_state`、`decide_session`、`decide_exercise_substitution`、`generate_plan`、`preview_adjust_plan`、`commit_adjust_plan`。 |
+| Public tools | 10 個：既有 6 個 decision／planning tools，加上 `get_evidence_coverage`、`explain_decision`、`submit_outcome`、`generate_workout`。 |
 | Decision capability | Deterministic session／plan／substitution decisions、injury-first arbitration、coverage／confidence、`decisionBasis` 與規則溯源。 |
 | Evidence capability | 6 家 provider parser；Apple Health／Garmin／Google Health／Strava 已用真實資料形狀驗證，Oura／WHOOP 仍只有官方規格與模擬 fixture。 |
 | Delivery | Local stdio MCPB；Streamable HTTP 為開發能力，不代表 hosted remote 已上線。 |
 
-### 2.2 v0.4.2 之後，main 已完成
+### 2.2 v0.5.0 與目前 main 已完成
 
 - `get_evidence_coverage`、`explain_decision`、`submit_outcome` 三個 support tools。
 - 所有 decision tools 的 `decisionId` 與共用 bounded／TTL Decision Trace Registry。
@@ -139,23 +139,31 @@ v0.4.2 已於 2026-08-10 發行，是目前公開可安裝的 Desktop MCPB 基�
 - `base_rules@1.1.0` 的五個 evidence packets，以及不誇大文獻支持範圍的 provenance／limitations。
 - Decision Harness、Plan Harness、substitution harness、37-case behavioral regression baseline、package diff gate 與 release-install smoke。
 - 本機 Decision Graph viewer，可檢查 triggered／suppressed rules 與版本差異。
+- `generate_workout` 已整合至 main，包含 picker、schema、handler、public tool metadata 與 tests；它沿用 active `base_rules`，沒有啟用 draft package。
+- prompt-injection guard 已整合至 Decision Harness。
+- unified release manifest、MCPB／Remote-ready build scaffolding、artifact verification 與 rollback gate 已落地。
 - provider-token rejection、hosted data boundary、authorization／governance 的 source-level foundation；這些不等於 hosted service 已可用。
 
-### 2.3 已實作但尚未合入 main
+### 2.3 目前仍未完成或未宣稱完成
 
-- Commit `6992c32`：Decision Harness prompt-injection guards。
-- Commit `62862fc`：完整的單次 `generate_workout` tool、schema、handler 與 tests。
 - `single_workout_rules@0.1.0` 仍是 draft；EVD-R-013～015 尚未接 runtime。`generate_workout` 目前沿用 Decision Engine `1.6.0` 與 active `base_rules` 做個人化，因此不得宣稱 draft package 已啟用。
-
-這兩個 commit 在同一條未合入的 commit line，且目前沒有 branch 包含它們；必須先整合與重跑 gates 才能列入公開版本。
+- Remote image build／smoke 尚未在本機完成，因 Docker daemon 不可用；local release gate 只能以 `--skip-remote` 執行。
+- `review:phase` 目前仍有 G2／G2b（`generate_workout` 未加入 review whitelist，且 tool description 缺少使用者觸發語句與 evidence 來源）及 G9（未記錄已發布 v0.5.0 與 main 的公開行為差異）。
+- 完整 `npm test` 在 sandbox 受 localhost `listen` 的 EPERM 影響，5 個 HTTP／authorization／privacy integration tests 未能執行；其餘 504 tests 通過。這是驗證環境限制，但仍須在可監聽 localhost 的環境重跑。
+- 公開 privacy URL、release review 與 MCPB archive／published review 仍需收尾；`docs/privacy-deployment-contract.md` 是目前的 canonical implementation contract，不等同於已完成 hosted privacy policy。
 
 ---
 
 ## 3. 下一版已定版：Pacevera v0.5.0
 
-### 3.1 使用者看到的版本
+### 3.1 使用者看到的版本（已發行）
 
 > **Pacevera v0.5.0，使用 Decision Engine v1.6.0 與 base_rules v1.1.0。**
+
+這個 identity 已寫入 `package.json`、`manifest.json`、`server.json`、
+`docs/release-version-lines.json` 與 root `release-manifest.json`；
+`npm run release:validate` 目前通過。後續工作是補齊發行後驗證與文件一致性，不再把
+v0.5.0 視為尚未 bump 的 release candidate。
 
 從 v0.5.0 起，release gate 以三個 runtime identities 為準：
 
@@ -294,10 +302,10 @@ export／import、consent、authentication 與 deletion workflow。
 
 | Story | 交付結果 | 完成條件 | 狀態 |
 |---|---|---|---|
-| Phase 0 - Story 1 | 整合 prompt-injection guard 與 `generate_workout`。 | `6992c32`／`62862fc` 安全合入 main；tool、schema、manifest 與 tests 一致；draft rules 不被誤啟用。 | 待開始 |
-| Phase 0 - Story 2 | 固定產品與隱私契約。 | 10 tools 的公開文件一致；continuity 的儲存、retention、export、delete 與 hosted boundary 寫入 privacy 文件並有測試。 | 待開始 |
-| Phase 0 - Story 3 | 產出 v0.5.0 release candidate。 | Product `0.5.0`／Engine `1.6.0`／`base_rules@1.1.0` 寫入所有 runtime metadata；bundle 可安裝；checksum 固定。 | 待開始 |
-| Phase 0 - Story 4 | 通過 release gates 並上架。 | 修正 G1 drift；tests、全部 harness、regression、package dry-run、install smoke、local release review 全綠；發布後再跑 published review 並同步 registry／release notes。 | 待開始 |
+| Phase 0 - Story 1 | 整合 prompt-injection guard 與 `generate_workout`。 | tool、schema、manifest 與 tests 已在 main 一致；draft rules 不被誤啟用。 | 完成 |
+| Phase 0 - Story 2 | 固定產品與隱私契約。 | 10 tools 的公開文件與 continuity 邊界大致完成；仍需補公開 privacy URL／發行文件收尾與一致性 review。 | 進行中 |
+| Phase 0 - Story 3 | 產出 v0.5.0 release candidate。 | Product `0.5.0`／Engine `1.6.0`／`base_rules@1.1.0` 已寫入 runtime metadata；release manifest checksum 驗證通過。 | 完成 |
+| Phase 0 - Story 4 | 通過 release gates 並上架。 | v0.5.0 已登錄為 released；但 release review 的 G2／G2b／G9、localhost integration rerun、MCPB archive／published review 與 Remote smoke 尚未全部綠。 | 進行中 |
 
 ### Phase 0.5 — Decision Engine 視覺化 UI 原型
 
@@ -323,14 +331,6 @@ Evidence → State → Decision → Action → Outcome 與 deterministic decisio
 - **Product boundary review**：`docs/user-journey.html` 維持 stakeholder／marketing explainer 的長文角色，並把 v0.5.0、connectors、hosted remote、private engine 與 account capability 改成 preview／release-target／future language；homepage 保留較短的 install CTA 與 visual demo。
 - **Validation**：static HTML parse、required-label/accessibility assertions、script syntax checks 與 repository tests are the evidence for the prototype; no claim is made that 3–5 external user interviews or a browser-run smoke session have occurred.
 
-### Phase 1 — pacevera.com 產品頁與市場驗證
-
-目標：在製作公司首頁前，先把 Pacevera 的核心產品表面做出來。這不是完整 dashboard，也不是 connector 專案；只驗證「同一份 Evidence 如何改變今天原本排定的 session」。Prototype 必須可嵌入首頁，並使用 repo 已有的實際 engine output。
-
-| Story | 交付結果 | 完成條件 | 狀態 |
-|---|---|---|---|
-| Phase 0.5 - Story 1 | Today’s Decision Brief UI。 | 一個可展示的 `Today’s Brief` 視覺化介面；至少包含 `from → to`、decision type、readiness／fatigue／training load、reason、missing signals、confidence 與 rule trace；至少提供 `adjust` 及 `keep` 或 `defer` 兩種案例；標示為 prototype／example decision，不宣稱正式 dashboard 或尚未存在的 connector。 | 待開始 |
-
 Phase 0.5 的核心畫面：
 
 ```text
@@ -340,13 +340,11 @@ Evidence → current state → decision intent → scheduled workout (from)
 
 完成這個 prototype 後，才進入 Phase 1 的首頁視覺設計。若畫面仍像一般 readiness dashboard，先修正產品敘事與 UI，不以增加 metrics 或 connector 數量代替差異化。
 
-### Phase 1 — pacevera.com 產品頁與市場驗證
-
-目標：以 Phase 0.5 的 Decision Brief 為視覺核心，用一個真實、可操作的產品頁講清楚 Pacevera，讓目標使用者安裝或加入 private beta。**實作優先順序仍是先關閉 Phase 0 release；Phase 0.5 可在 v0.5.0 scope freeze 後並行，Phase 1 首頁依賴其完成。**
+目標：以 Phase 0.5 的 Decision Brief 為視覺核心，用一個真實、可操作的產品頁講清楚 Pacevera，讓目標使用者安裝或加入 private beta。**Phase 0.5 的 prototype 已可作為視覺核心；Phase 1 的首頁工程與市場驗證仍待進行。**
 
 | Story | 交付結果 | 完成條件 | 狀態 |
 |---|---|---|---|
-| Phase 1 - Story 1 | 定位與首頁資訊架構。 | 完成獨立公司首頁的 Hero、問題、from→to 案例、How it works、適合誰、現在／未來界線與 CTA；`user-journey.html` 僅作 Product 深度案例；不宣稱尚未存在的一鍵 connector 或 hosted privacy。 | 定位已收斂；首頁待拆分實作 |
+| Phase 1 - Story 1 | 定位與首頁資訊架構。 | 完成獨立公司首頁的 Hero、問題、from→to 案例、How it works、適合誰、現在／未來界線與 CTA；`user-journey.html` 僅作 Product 深度案例；不宣稱尚未存在的一鍵 connector 或 hosted privacy。 | 進行中（定位已收斂；首頁待拆分實作） |
 | Phase 1 - Story 2 | 可理解的產品示範。 | 將 Phase 0.5 的 Decision Brief prototype 嵌入獨立首頁，並以 `user-journey.html` 作為 Product 深度案例；互動式展示「原定 Tempo → 根據 Evidence 調整」，顯示 reason、coverage、missing signals 與 trace。 | 待開始 |
 | Phase 1 - Story 3 | 信任與安裝區。 | 並列 Local desktop／Private deployment／Hosted remote；顯示 Product／Engine／Rule Package 版本、資料流、privacy policy、非醫療聲明與 v0.5.0 安裝入口。 | 待開始 |
 | Phase 1 - Story 4 | 上線與驗證。 | pacevera.com 第一版上線；waitlist 不收健康資料；完成 3–5 位目標使用者訪談，量測 10 分鐘 activation、7 日回訪與決策採用。 | 待開始 |
@@ -451,12 +449,12 @@ Evidence 必須區分 `ingestionSource`（Google Health API）與 `originalWrite
 
 ## 9. 現在開工順序
 
-1. `Release Story 1`：建立 unified release manifest，先支援目前 `.mcpb` v0.5.0 的 identity 驗證。
-2. `Release Story 3`：將 release、engine、library、checksum metadata 完整放入 decision／trace output。
-3. `Release Story 4`：把現有 MCPB release gate 擴充成可驗證 immutable release 與 rollback 的 gate。
-4. `Release Story 2`：建立 Remote-ready container build，但先不宣稱 hosted Remote MCP 已上線。
+1. `Phase 0 - Story 2`：補公開 privacy URL、10-tool 文件一致性與 continuity／retention／export／delete 的 release wording。
+2. `Phase 0 - Story 4`：修正 `review:phase` 的 G2／G2b／G9，並在可監聽 localhost 的環境重跑完整 tests、package dry-run、install smoke、MCPB archive／published review。
+3. `Release Story 2`：完成 Remote-ready image build／smoke；Docker daemon 可用前不宣稱 hosted Remote MCP 已上線。
+4. `Release Story 4`：把 release gate 接到可重現的 CI／artifact 流程，補齊完整 rollback evidence。
 5. `Phase 0.5 - Story 4`：完成 Decision Graph／Outcome 的 3–5 位 reviewer review，先不宣稱 durable outcome storage。
-6. `Phase 1 - Story 1～4`：完成 pacevera.com 第一版與 3–5 位目標使用者驗證；不把 Google Health、Apple Health 或 Garmin 寫成已完成的一鍵 connector。
+6. `Phase 1 - Story 2～4`：完成 pacevera.com 第一版與 3–5 位目標使用者驗證；不把 Google Health、Apple Health 或 Garmin 寫成已完成的一鍵 connector。
 7. `Phase 2 - Story 1`：建立 local state／plan／decision／outcome repository，含 migration、export 與 delete。
 8. `Phase 2 - Story 2`：將既有 Google Health API importer 接到 local OAuth／connector boundary，完成 token、scope、撤銷與最小化同步。
 9. `Phase 2 - Story 3～4`：完成 source-aware Evidence continuity、Garmin／Apple Watch provenance、HRV missing handling 與 private-engine acceptance。
