@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pacevera.dev/schemas/rule-candidate.schema.json",
+  "title": "Pacevera candidate rule draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["candidateId", "status", "createdAt", "generatedBy", "sourceDocuments", "claim", "proposedRule", "reviewRequired"],
+  "properties": {
+    "candidateId": { "type": "string", "pattern": "^CAND-R-[0-9]{4}$" },
+    "status": { "const": "draft" },
+    "createdAt": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "generatedBy": { "enum": ["human", "llm_assisted", "manual_review"] },
+    "sourceDocuments": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["citation", "sourceType", "verificationStatus"], "properties": { "citation": { "type": "string", "minLength": 1 }, "url": { "type": "string", "minLength": 1 }, "sourceType": { "enum": ["guideline", "position_stand", "systematic_review", "meta_analysis", "rct", "expert_consensus", "observational", "internal_outcome"] }, "verificationStatus": { "enum": ["primary_full_text_verified", "abstract_verified_full_text_not_read", "abstract_verified_full_text_paywalled", "numbers_from_secondary_sources", "citation_not_read_in_full", "unverified"] }, "supports": { "type": "string", "minLength": 1 }, "doesNotSupport": { "type": "string", "minLength": 1 } } } },
+    "claim": { "type": "string", "minLength": 1 },
+    "proposedRule": { "type": "object", "additionalProperties": false, "required": ["title", "category", "basis", "evidence", "thresholds", "effect", "limitations"], "properties": { "title": { "type": "string", "minLength": 1 }, "category": { "enum": ["injury", "illness", "recovery", "training_goal", "preference"] }, "basis": { "enum": ["external_metric", "internal_composite"] }, "evidence": { "type": "object", "additionalProperties": false, "required": ["studyDesign", "recommendationStrength"], "properties": { "studyDesign": { "enum": ["guideline", "position_stand", "systematic_review", "rct", "observational", "narrative_review", "expert_consensus", "none"] }, "recommendationStrength": { "enum": ["supports_threshold", "supports_direction_only", "internal_heuristic"] } } }, "thresholds": { "type": "array", "minItems": 1, "items": { "type": "object" } }, "effect": { "type": "object" }, "limitations": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } } },
+    "unresolvedQuestions": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "reviewRequired": { "const": true }
+  }
+}

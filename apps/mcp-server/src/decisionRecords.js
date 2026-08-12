@@ -36,7 +36,7 @@ function prune(now = Date.now()) {
   while (decisionStore.size > decisionStore.maxRecords) decisionStore.delete(decisionStore.entries().next().value[0]);
 }
 
-export function recordDecision(payload, { userId = null, evidenceSource = "provided" } = {}) {
+export function recordDecision(payload, { userId = null, evidenceSource = "provided", decisionRepository = null } = {}) {
   prune();
   const decisionId = payload.decisionId || `dec_${createHash("sha256")
     .update(JSON.stringify({ payload, userId, evidenceSource }))
@@ -84,10 +84,16 @@ export function recordDecision(payload, { userId = null, evidenceSource = "provi
     }
   };
   decisionStore.set(decisionId, record);
+  if (decisionRepository) {
+    if (typeof decisionRepository.saveDecisionRecord !== "function") {
+      throw new Error("Decision repository must implement saveDecisionRecord.");
+    }
+    decisionRepository.saveDecisionRecord(record);
+  }
   return { decisionId, ...payload };
 }
 
-export function attachDecisionCommit(decisionId, commitment) {
+export function attachDecisionCommit(decisionId, commitment, decisionRepository = null) {
   prune();
   const record = decisionStore.get(decisionId);
   if (!record) return null;
@@ -96,21 +102,35 @@ export function attachDecisionCommit(decisionId, commitment) {
     record.trace.snapshots.committedPlan = structuredClone(commitment.committedPlanSnapshot);
   }
   record.trace.versions = { ...record.trace.versions, committedPlanVersion: commitment.committedPlanVersion };
+  if (decisionRepository) {
+    if (typeof decisionRepository.saveDecisionRecord !== "function") {
+      throw new Error("Decision repository must implement saveDecisionRecord.");
+    }
+    decisionRepository.saveDecisionRecord(record);
+  }
   return record;
 }
 
-export function explainDecision(decisionId) {
+export function explainDecision(decisionId, { decisionRepository = null, userId = null } = {}) {
   prune();
-  return decisionStore.get(decisionId) || null;
+  return decisionStore.get(decisionId) || decisionRepository?.getDecisionRecord(decisionId, userId) || null;
 }
 
-export function submitOutcome(caseId, outcome) {
+export async function submitOutcome(caseId, outcome, { repository = null, userId = null, decisionId = null } = {}) {
   const event = {
     outcomeId: `out_${randomUUID()}`,
     caseId,
     outcome,
     recordedAt: new Date().toISOString()
   };
+  if (repository) {
+    if (typeof repository.saveOutcome !== "function" || typeof repository.listOutcomes !== "function") {
+      throw new Error("Outcome repository must implement saveOutcome and listOutcomes.");
+    }
+    await repository.saveOutcome(event, { userId, decisionId });
+    const persisted = await repository.listOutcomes(caseId, userId);
+    return { event, totalForCase: persisted.length, persistence: "user_controlled_repository" };
+  }
   const list = outcomes.get(caseId) || [];
   list.push(event);
   outcomes.set(caseId, list);

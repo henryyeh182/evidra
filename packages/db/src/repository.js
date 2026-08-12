@@ -165,6 +165,22 @@ export class FitnessRepository {
   async getPlannedWorkoutForDate(_userId, _date) {
     throw new Error("FitnessRepository.getPlannedWorkoutForDate must be implemented.");
   }
+
+  async saveOutcome(_event, _context = {}) {
+    throw new Error("FitnessRepository.saveOutcome must be implemented.");
+  }
+
+  async listOutcomes(_caseId, _userId = null) {
+    throw new Error("FitnessRepository.listOutcomes must be implemented.");
+  }
+
+  saveDecisionRecord(_record) {
+    throw new Error("FitnessRepository.saveDecisionRecord must be implemented.");
+  }
+
+  getDecisionRecord(_decisionId, _userId = null) {
+    throw new Error("FitnessRepository.getDecisionRecord must be implemented.");
+  }
 }
 
 /**
@@ -392,6 +408,66 @@ export class SQLiteFitnessRepository extends FitnessRepository {
       exerciseIds: json(row.exercise_ids_json, []),
       exercises: json(row.exercises_json, []),
       rationale: row.rationale
+    };
+  }
+
+  async saveOutcome(event, { userId = null, decisionId = null } = {}) {
+    this.db.prepare(`
+      INSERT INTO outcome_records
+        (outcome_id, case_id, user_id, decision_id, recorded_at, outcome_json)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      event.outcomeId, event.caseId, userId, decisionId,
+      event.recordedAt, JSON.stringify(event.outcome)
+    );
+    return event;
+  }
+
+  async listOutcomes(caseId, userId = null) {
+    const rows = this.db.prepare(`
+      SELECT * FROM outcome_records
+      WHERE case_id = ?${userId ? " AND user_id = ?" : ""}
+      ORDER BY recorded_at ASC, outcome_id ASC
+    `).all(...(userId ? [caseId, userId] : [caseId]));
+    return rows.map((row) => ({
+      outcomeId: row.outcome_id,
+      caseId: row.case_id,
+      outcome: json(row.outcome_json, {}),
+      recordedAt: row.recorded_at,
+      userId: row.user_id,
+      decisionId: row.decision_id
+    }));
+  }
+
+  saveDecisionRecord(record) {
+    this.db.prepare(`
+      INSERT INTO decision_records
+        (decision_id, user_id, created_at, evidence_source, tool, trace_json)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(decision_id) DO UPDATE SET
+        user_id=excluded.user_id, created_at=excluded.created_at,
+        evidence_source=excluded.evidence_source, tool=excluded.tool,
+        trace_json=excluded.trace_json
+    `).run(
+      record.decisionId, record.userId, new Date(record.createdAt).toISOString(),
+      record.evidenceSource, record.tool, JSON.stringify(record.trace)
+    );
+    return record;
+  }
+
+  getDecisionRecord(decisionId, userId = null) {
+    const row = this.db.prepare(`
+      SELECT * FROM decision_records
+      WHERE decision_id = ?${userId ? " AND user_id = ?" : ""}
+    `).get(...(userId ? [decisionId, userId] : [decisionId]));
+    if (!row) return null;
+    return {
+      decisionId: row.decision_id,
+      createdAt: new Date(row.created_at).getTime(),
+      userId: row.user_id,
+      evidenceSource: row.evidence_source,
+      tool: row.tool,
+      trace: json(row.trace_json, {})
     };
   }
 }

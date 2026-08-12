@@ -26,6 +26,31 @@
     "evidencePackets": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "pattern": "^evidence/EP-[0-9]{3}\\.json$" } },
     "contentFiles": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$" } },
     "contentChecksum": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
-    "reviewRecord": { "type": "string", "pattern": "^reviews/RR-[0-9]{4}-[0-9]{4}\\.md$" }
+    "reviewRecord": { "type": "string", "pattern": "^reviews/RR-[0-9]{4}-[0-9]{4}\\.md$" },
+    "governanceReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reviewer", "reviewedAt", "proposedBy", "independentReview", "scope", "regression"],
+      "properties": {
+        "status": { "enum": ["approved", "rejected", "needs_changes"] },
+        "reviewer": { "type": "string", "minLength": 1 },
+        "reviewedAt": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+        "proposedBy": { "type": "string", "minLength": 1 },
+        "independentReview": { "type": "boolean" },
+        "scope": { "type": "string", "minLength": 1 },
+        "regression": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "baseline", "cases", "decisionDiffs", "graphDiffs"],
+          "properties": {
+            "status": { "enum": ["passed", "failed"] },
+            "baseline": { "type": "string", "minLength": 1 },
+            "cases": { "type": "integer", "minimum": 0 },
+            "decisionDiffs": { "type": "integer", "minimum": 0 },
+            "graphDiffs": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    }
   }
 }

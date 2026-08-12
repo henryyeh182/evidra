@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
@@ -39,6 +39,42 @@ test("package validation rejects duplicate rule identity and checksum drift", ()
   const packageDir = join(root, "rule-packages", "base_rules");
   assert.throws(() => validateRulePackage(packageDir, { engineVersion: "2.0.0" }), /incompatible/);
   assert.throws(() => validateRulePackage(packageDir, { engineVersion: "1.5.0" }), /incompatible/);
+});
+
+test("released packages require an approved machine-checkable governance review", async () => {
+  const temporary = await mkdtemp(join(tmpdir(), "pacevera-review-gate-"));
+  try {
+    const manifest = {
+      packageId: "temporary",
+      version: "1.0.0",
+      schemaVersion: "1.0.0",
+      status: "released",
+      tier: "domain",
+      engineCompatibility: { min: "1.6.0", max: "<2.0.0" },
+      rules: [{ id: "EVD-R-001", path: "rules.json" }],
+      contentFiles: ["rules.json"],
+      contentChecksum: "sha256:" + "0".repeat(64),
+      reviewRecord: "reviews/RR-2026-0001.md"
+    };
+    await writeFile(join(temporary, "package.json"), JSON.stringify(manifest));
+    await mkdir(join(temporary, "reviews"));
+    await writeFile(join(temporary, "reviews/RR-2026-0001.md"), "review record");
+    await assert.rejects(async () => validateRulePackage(temporary, { engineVersion: ENGINE_VERSION, expectedPackageId: "temporary" }), /governanceReview/);
+
+    manifest.governanceReview = {
+      status: "rejected",
+      reviewer: "reviewer",
+      reviewedAt: "2026-08-12",
+      proposedBy: "author",
+      independentReview: true,
+      scope: "test review",
+      regression: { status: "passed", baseline: "harness/regression-baseline.json", cases: 37, decisionDiffs: 0, graphDiffs: 0 }
+    };
+    await writeFile(join(temporary, "package.json"), JSON.stringify(manifest));
+    await assert.rejects(async () => validateRulePackage(temporary, { engineVersion: ENGINE_VERSION, expectedPackageId: "temporary" }), /must be approved/);
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
+  }
 });
 
 test("the manifest schema is executable and empty domain packages are explicit", async () => {

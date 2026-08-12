@@ -142,15 +142,28 @@ v0.5.0 已於 2026-08-11 發行，是目前公開可安裝的 Desktop MCPB 基�
 - `generate_workout` 已整合至 main，包含 picker、schema、handler、public tool metadata 與 tests；它沿用 active `base_rules`，沒有啟用 draft package。
 - prompt-injection guard 已整合至 Decision Harness。
 - unified release manifest、MCPB／Remote-ready build scaffolding、artifact verification 與 rollback gate 已落地。
+- Rule Review Schema 與 released package 的 machine-checkable `governanceReview` gate 已落地；released package 必須有 approved review、review scope、proposer／reviewer identity，以及零 Decision／Graph regression diff。
+- LLM assistance boundary 已定義並以 contract／test 固定：文獻只能產生 `rule-candidate` draft，不能進 runtime；既有 Rule 的白話解釋只能讀取已載入的 Rule／`decisionBasis` metadata。
 - provider-token rejection、hosted data boundary、authorization／governance 的 source-level foundation；這些不等於 hosted service 已可用。
 
 ### 2.3 目前仍未完成或未宣稱完成
 
 - `single_workout_rules@0.1.0` 仍是 draft；EVD-R-013～015 尚未接 runtime。`generate_workout` 目前沿用 Decision Engine `1.6.0` 與 active `base_rules` 做個人化，因此不得宣稱 draft package 已啟用。
 - Remote image build／smoke 尚未在本機完成，因 Docker daemon 不可用；local release gate 只能以 `--skip-remote` 執行。
-- `review:phase` 目前仍有 G2／G2b（`generate_workout` 未加入 review whitelist，且 tool description 缺少使用者觸發語句與 evidence 來源）及 G9（未記錄已發布 v0.5.0 與 main 的公開行為差異）。
-- 完整 `npm test` 在 sandbox 受 localhost `listen` 的 EPERM 影響，5 個 HTTP／authorization／privacy integration tests 未能執行；其餘 504 tests 通過。這是驗證環境限制，但仍須在可監聽 localhost 的環境重跑。
+- `review:phase` 的 G2／G2b／G9 已修正並通過；目前機械 gate 13/13 全綠。
+- 完整 `npm test` 在 sandbox 受 localhost `listen` 的 EPERM 影響，5 個 HTTP／authorization／privacy integration tests 未能執行；其餘 512 tests 通過。這是驗證環境限制，但仍須在可監聽 localhost 的環境重跑。
 - 公開 privacy URL、release review 與 MCPB archive／published review 仍需收尾；`docs/privacy-deployment-contract.md` 是目前的 canonical implementation contract，不等同於已完成 hosted privacy policy。
+- Outcome repository 已接入 user-controlled local engine：SQLite `outcome_records`、migration `0004`、`saveOutcome`／`listOutcomes` 與 local MCP injection 已完成；hosted MCP 仍維持 process-local/stateless，且尚未形成自動 Rule learning loop。
+- Durable decision trace 已接入同一個 user-controlled SQLite：`decision_records`、local `explain_decision` restart recovery 與 user scope test 已完成；backup、export、delete 尚待補齊。
+
+### 2.4 已發布的 v0.5.0 與 main 的落差
+
+目前 main 在 v0.5.0 發布後仍有公開行為面的後續變更。這些變更不應被回溯描述成
+v0.5.0 已具備；下一次正式 release 前，需重新打包並更新 release identity：
+
+- `generate_workout` 的 public description／review contract 已在 main 補強。
+- `outputSchemas.js`、`server.js` 與其他 public surface 可能比已發布 bundle 新；以
+  `review:phase` 的 G9 實際 diff 為準，不把 main 文件直接當成已發布 bundle 的行為。
 
 ---
 
@@ -305,7 +318,7 @@ export／import、consent、authentication 與 deletion workflow。
 | Phase 0 - Story 1 | 整合 prompt-injection guard 與 `generate_workout`。 | tool、schema、manifest 與 tests 已在 main 一致；draft rules 不被誤啟用。 | 完成 |
 | Phase 0 - Story 2 | 固定產品與隱私契約。 | 10 tools 的公開文件與 continuity 邊界大致完成；仍需補公開 privacy URL／發行文件收尾與一致性 review。 | 進行中 |
 | Phase 0 - Story 3 | 產出 v0.5.0 release candidate。 | Product `0.5.0`／Engine `1.6.0`／`base_rules@1.1.0` 已寫入 runtime metadata；release manifest checksum 驗證通過。 | 完成 |
-| Phase 0 - Story 4 | 通過 release gates 並上架。 | v0.5.0 已登錄為 released；但 release review 的 G2／G2b／G9、localhost integration rerun、MCPB archive／published review 與 Remote smoke 尚未全部綠。 | 進行中 |
+| Phase 0 - Story 4 | 通過 release gates 並上架。 | v0.5.0 已登錄為 released；G2／G2b／G9 已綠，但 localhost integration rerun、MCPB archive／published review 與 Remote smoke 尚未全部完成。 | 進行中 |
 
 ### Phase 0.5 — Decision Engine 視覺化 UI 原型
 
@@ -355,7 +368,7 @@ Evidence → current state → decision intent → scheduled workout (from)
 
 | Story | 交付結果 | 完成條件 | 狀態 |
 |---|---|---|---|
-| Phase 2 - Story 1 | Durable local repository。 | SQLite 優先的 state／plan／decision／outcome repository；process restart 後仍可讀；有 migration、backup、export 與 delete。 | 待開始 |
+| Phase 2 - Story 1 | Durable local repository。 | SQLite 優先的 state／plan／decision／outcome repository；process restart 後仍可讀；有 migration、backup、export 與 delete。 | 進行中（decision／outcome records、migration 與 local restart recovery 已完成；backup、export、delete 尚待補齊） |
 | Phase 2 - Story 2 | Private connector boundary。 | 第一批只完成經驗證的 local Evidence workflow；Google Health API local connector 重用既有 importer／normalizer；connector token 加密、最小 scope、撤銷與刪除；Oura／WHOOP 先補真實去識別化 fixture，不以平台數量充當完成。 | 待開始 |
 | Phase 2 - Story 3 | Evidence continuity。 | 每次 Decision 帶 state ID、evidence window、Product／Engine／Rule Package identity；保留 ingestion source、original writer、platform 與 signal provenance；新對話或新 host 只讀最小化 bootstrap，不重新取得完整健康歷史。 | 待開始 |
 | Phase 2 - Story 4 | Private-engine acceptance。 | 無 hosted service 時，Google Health API → Evidence → Decision、今日課表調整、低恢復降載、傷病替代、單次 workout 五個情境端到端通過；privacy boundary tests 證明 raw Evidence 與 token 未離開 user-controlled environment，且 Garmin chain 缺少 HRV 時明確回報 missing。 | 待開始 |
@@ -450,12 +463,12 @@ Evidence 必須區分 `ingestionSource`（Google Health API）與 `originalWrite
 ## 9. 現在開工順序
 
 1. `Phase 0 - Story 2`：補公開 privacy URL、10-tool 文件一致性與 continuity／retention／export／delete 的 release wording。
-2. `Phase 0 - Story 4`：修正 `review:phase` 的 G2／G2b／G9，並在可監聽 localhost 的環境重跑完整 tests、package dry-run、install smoke、MCPB archive／published review。
+2. `Phase 0 - Story 4`：在可監聽 localhost 的環境重跑完整 tests、package dry-run、install smoke、MCPB archive／published review；G2／G2b／G9 已關閉。
 3. `Release Story 2`：完成 Remote-ready image build／smoke；Docker daemon 可用前不宣稱 hosted Remote MCP 已上線。
 4. `Release Story 4`：把 release gate 接到可重現的 CI／artifact 流程，補齊完整 rollback evidence。
 5. `Phase 0.5 - Story 4`：完成 Decision Graph／Outcome 的 3–5 位 reviewer review，先不宣稱 durable outcome storage。
 6. `Phase 1 - Story 2～4`：完成 pacevera.com 第一版與 3–5 位目標使用者驗證；不把 Google Health、Apple Health 或 Garmin 寫成已完成的一鍵 connector。
-7. `Phase 2 - Story 1`：建立 local state／plan／decision／outcome repository，含 migration、export 與 delete。
+7. `Phase 2 - Story 1`：完成 local state／plan／decision／outcome repository；records、migration 與 local restart recovery 已完成，接著補 backup、export 與 delete。
 8. `Phase 2 - Story 2`：將既有 Google Health API importer 接到 local OAuth／connector boundary，完成 token、scope、撤銷與最小化同步。
 9. `Phase 2 - Story 3～4`：完成 source-aware Evidence continuity、Garmin／Apple Watch provenance、HRV missing handling 與 private-engine acceptance。
 10. `Phase 3 - Story 4`：只有在 authorization、HTTPS、redaction、DPA、privacy policy、host E2E 與付費需求全部成立後，才重新評估 hosted Google Health OAuth；此前維持 Blocked。

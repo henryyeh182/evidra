@@ -150,9 +150,29 @@ CREATE TABLE IF NOT EXISTS planned_workouts (
   UNIQUE (plan_id, id)
 );
 
+CREATE TABLE IF NOT EXISTS decision_records (
+  decision_id TEXT PRIMARY KEY,
+  user_id TEXT,
+  created_at TEXT NOT NULL,
+  evidence_source TEXT NOT NULL,
+  tool TEXT,
+  trace_json TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS outcome_records (
+  outcome_id TEXT PRIMARY KEY,
+  case_id TEXT NOT NULL,
+  user_id TEXT,
+  decision_id TEXT,
+  recorded_at TEXT NOT NULL,
+  outcome_json TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS goals_user_priority_idx ON goals(user_id, priority);
 CREATE INDEX IF NOT EXISTS workouts_user_started_idx ON workouts(user_id, started_at DESC);
 CREATE INDEX IF NOT EXISTS health_metrics_user_type_recorded_idx ON health_metrics(user_id, type, recorded_at DESC);
 CREATE INDEX IF NOT EXISTS semantic_states_user_date_idx ON semantic_fitness_states(user_id, state_date DESC);
 CREATE INDEX IF NOT EXISTS plans_user_start_date_idx ON plans(user_id, start_date DESC);
 CREATE INDEX IF NOT EXISTS planned_workouts_user_date_idx ON planned_workouts(user_id, workout_date);
+CREATE INDEX IF NOT EXISTS decision_records_user_created_idx ON decision_records(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS outcome_records_case_recorded_idx ON outcome_records(case_id, recorded_at ASC);

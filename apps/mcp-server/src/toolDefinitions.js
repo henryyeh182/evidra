@@ -290,7 +290,7 @@ export const toolDefinitions = [
     title: "Generate Personalized Workout",
     annotations: { title: "Generate Personalized Workout", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     description:
-      "Generate one personalized workout for today from a duration picker and a focus picker. Use this when the user has no existing session and asks for a single workout. Pass recent evidence so readiness, fatigue, training load, injury restrictions, equipment and available time can shape the result. For a multi-week plan use evidra_generate_plan; for an already scheduled session use evidra_decide_session.",
+      "Generate one personalized workout for today from a duration picker and a focus picker. Use this for 'give me a 20-minute workout', 'what should I do today if I have no plan', or 'make me a short strength session'. Use this when the user has no existing session and asks for a single workout. Pass recent `evidence` from the user's health source or their own report so readiness, fatigue, training load, injury restrictions, equipment and available time can shape the result. For a multi-week plan use evidra_generate_plan; for an already scheduled session use evidra_decide_session.",
     inputSchema: {
       type: "object",
       properties: {

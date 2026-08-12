@@ -186,6 +186,18 @@ export async function handleJsonRpcMessage(rawMessage, requestContext = {}) {
           enumerable: false
         });
       }
+      if (requestContext.outcomeRepository) {
+        Object.defineProperty(argumentsWithIdentity, "__outcomeRepository", {
+          value: requestContext.outcomeRepository,
+          enumerable: false
+        });
+      }
+      if (requestContext.decisionRepository) {
+        Object.defineProperty(argumentsWithIdentity, "__decisionRepository", {
+          value: requestContext.decisionRepository,
+          enumerable: false
+        });
+      }
       const result = await handler(argumentsWithIdentity);
 
       // The deprecated tools declare no output schema, so they send no structured

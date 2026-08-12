@@ -36,7 +36,13 @@ export async function loadKnownIds() {
 
   return {
     users: new Set([context.user.id]),
-    goals: new Set((context.goals || []).map((goal) => goal.id)),
+    // The planner deliberately uses this stable fallback when a caller does
+    // not provide an explicit goal. It is a canonical system value, not a
+    // runtime-minted ID, so it belongs in the grounding universe.
+    goals: new Set([
+      ...(context.goals || []).map((goal) => goal.id),
+      "goal_general_fitness"
+    ]),
     workouts: new Set([
       ...(context.workouts || []).map((workout) => workout.id),
       ...workoutLibrary.map((workout) => workout.id)

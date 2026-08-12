@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../rule-packages");
 const MANIFEST_SCHEMA = JSON.parse(readFileSync(join(ROOT, "schemas/rule-package.schema.json"), "utf8"));
 const EVIDENCE_PACKET_SCHEMA = JSON.parse(readFileSync(join(ROOT, "schemas/evidence-packet.schema.json"), "utf8"));
+const RULE_REVIEW_SCHEMA = JSON.parse(readFileSync(join(ROOT, "schemas/rule-review.schema.json"), "utf8"));
 const SEMVER = /^(\d+)\.(\d+)\.(\d+)$/;
 const RULE_ID = /^EVD-R-\d{3}$/;
 const TIERS = new Set(["base", "domain"]);
@@ -25,8 +26,11 @@ function schemaType(value) {
 // package. This small validator implements the vocabulary used by the package
 // manifest schema, so the schema file is executable rather than documentary.
 function validateSchema(value, schema, path = "$") {
-  if (schema.type && ![].concat(schema.type).includes(schemaType(value))) {
-    fail(`${path} must be ${[].concat(schema.type).join(" or ")}.`);
+  if (schema.type) {
+    const matches = [].concat(schema.type).some((type) =>
+      type === "integer" ? typeof value === "number" && Number.isInteger(value) : type === schemaType(value)
+    );
+    if (!matches) fail(`${path} must be ${[].concat(schema.type).join(" or ")}.`);
   }
   if (schema.enum && !schema.enum.some((candidate) => Object.is(candidate, value))) {
     fail(`${path} must be one of ${schema.enum.join(", ")}.`);
@@ -36,6 +40,7 @@ function validateSchema(value, schema, path = "$") {
   }
   if (schema.minLength !== undefined && value.length < schema.minLength) fail(`${path} is too short.`);
   if (schema.minItems !== undefined && value.length < schema.minItems) fail(`${path} must contain at least ${schema.minItems} item(s).`);
+  if (schema.minimum !== undefined && value < schema.minimum) fail(`${path} must be at least ${schema.minimum}.`);
   if (schema.uniqueItems) {
     const serialized = value.map((item) => JSON.stringify(item));
     if (new Set(serialized).size !== serialized.length) fail(`${path} must contain unique items.`);
@@ -108,6 +113,27 @@ export function validateRulePackage(packageDir, { engineVersion = null, expected
   if (manifest.status === "released" && entries.length === 0) fail("a released package must declare rules.");
   if (manifest.status === "released" && (!manifest.reviewRecord || !existsSync(join(packageDir, manifest.reviewRecord)))) {
     fail("a released package must point to an existing reviewRecord.");
+  }
+  if (manifest.status === "released" && !manifest.governanceReview) {
+    fail("a released package must include a machine-checkable governanceReview.");
+  }
+  if (manifest.governanceReview) {
+    validateSchema(manifest.governanceReview, RULE_REVIEW_SCHEMA, "$.governanceReview");
+    if (manifest.governanceReview.independentReview && manifest.governanceReview.reviewer === manifest.governanceReview.proposedBy) {
+      fail("governanceReview cannot claim independent review when reviewer and proposer are the same person.");
+    }
+    if (manifest.status === "released" && manifest.governanceReview.status !== "approved") {
+      fail("a released package governanceReview must be approved.");
+    }
+    if (manifest.status === "released" && manifest.governanceReview.regression.status !== "passed") {
+      fail("a released package governanceReview must record a passed regression.");
+    }
+    if (manifest.status === "released" && manifest.governanceReview.regression.decisionDiffs !== 0) {
+      fail("a released package governanceReview cannot have decision diffs.");
+    }
+    if (manifest.status === "released" && manifest.governanceReview.regression.graphDiffs !== 0) {
+      fail("a released package governanceReview cannot have graph diffs.");
+    }
   }
   if (manifest.status === "released" && manifest.contentFiles.length === 0) fail("a released package must declare contentFiles.");
   const ids = new Set();

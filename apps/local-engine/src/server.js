@@ -64,6 +64,6 @@ export function createLocalMcpHandler({ engine } = {}) {
       }
     }
 
-    return handleHostedJsonRpcMessage(rawMessage);
+    return handleHostedJsonRpcMessage(rawMessage, { outcomeRepository: engine.repository, decisionRepository: engine.repository });
   };
 }

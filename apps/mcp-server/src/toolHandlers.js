@@ -310,7 +310,7 @@ export async function explainDecisionTool(args = {}) {
       problem: "Pass the decisionId returned by a decision tool."
     });
   }
-  const record = explainDecision(args.decisionId);
+  const record = explainDecision(args.decisionId, { decisionRepository: args.__decisionRepository, userId: args.userId ?? null });
   if (!record) {
     return errorContent({
       error: "decision_not_found",
@@ -330,11 +330,18 @@ export async function submitOutcomeTool(args = {}) {
   if (!args.outcome || typeof args.outcome !== "object" || Array.isArray(args.outcome)) {
     return errorContent({ error: "outcome_required", tool: "submit_outcome", problem: "outcome must be an object." });
   }
+  const persistence = await submitOutcome(args.caseId, args.outcome, {
+    repository: args.__outcomeRepository,
+    userId: args.userId ?? null,
+    decisionId: args.decisionId ?? null
+  });
   return jsonContent({
     caseId: args.caseId,
-    ...submitOutcome(args.caseId, args.outcome),
+    ...persistence,
     runtimeIdentity: RELEASE_IDENTITY,
-    note: "Process-local MVP only. Persist the returned event in the caller or private engine Outcome DB."
+    note: persistence.persistence === "process_local"
+      ? "Process-local MVP only. Use the user-controlled private engine to persist Outcome events."
+      : "Persisted in the user-controlled private engine repository. Hosted/stateless requests never use this path."
   });
 }
 
@@ -474,7 +481,7 @@ export async function generateTrainingPlanTool(args = {}) {
     versions: { plan: plan.version },
     planSnapshot: structuredClone(plan),
     ...plan
-  }, { userId: context.user.id, evidenceSource: provenance.evidenceSource });
+  }, { userId: context.user.id, evidenceSource: provenance.evidenceSource, decisionRepository: args.__decisionRepository });
   return jsonContent({ decisionId: planDecision.decisionId, ...plan });
 }
 
@@ -488,6 +495,7 @@ export async function generateWorkoutTool(args = {}) {
   const scheduledSession = { ...SINGLE_WORKOUT_FOCUSES[args.focus], durationMinutes: args.durationMinutes };
   const decisionResult = await decideSessionTool({
     ...args,
+    __decisionRepository: args.__decisionRepository,
     scheduledSession,
     availableMinutes: args.availableMinutes ?? args.evidence?.constraints?.availableMinutes
   });
@@ -589,7 +597,7 @@ export async function previewPlanChangeTool(args = {}) {
     versions: { basePlan: preview.baseVersion },
     planSnapshot: structuredClone(preview.resultingPlan),
     previewSnapshot: structuredClone(preview)
-  }, { userId: args.plan.userId ?? null, evidenceSource: "caller" });
+  }, { userId: args.plan.userId ?? null, evidenceSource: "caller", decisionRepository: args.__decisionRepository });
 
   return jsonContent({
     decisionId: previewDecision.decisionId,
@@ -634,7 +642,7 @@ export async function commitPlanChangeTool(args = {}) {
       committedPlanVersion: plan.version,
       baseVersion: args.preview.baseVersion,
       committedPlanSnapshot: structuredClone(plan)
-    });
+    }, args.__decisionRepository);
     if (!attached) {
       return errorContent({
         error: "decision_trace_not_found",
@@ -657,7 +665,7 @@ export async function commitPlanChangeTool(args = {}) {
       provenance: { evidenceSource: "caller", previewId: args.preview.previewId },
       versions: { basePlan: args.preview.baseVersion, committedPlan: plan.version },
       planSnapshot: structuredClone(plan)
-    }, { userId: plan.userId ?? null, evidenceSource: "caller" }).decisionId;
+    }, { userId: plan.userId ?? null, evidenceSource: "caller", decisionRepository: args.__decisionRepository }).decisionId;
   }
   return jsonContent({
     decisionId,
@@ -778,5 +786,5 @@ export async function decideSessionTool(args = {}) {
       scheduledSessionSource: args.scheduledSession ? "provided" : "missing",
       proposedSessionSource: args.proposedSession ? "provided" : "none"
     }
-  }, { userId: context.user.id, evidenceSource: provenance.evidenceSource }));
+  }, { userId: context.user.id, evidenceSource: provenance.evidenceSource, decisionRepository: args.__decisionRepository }));
 }

@@ -238,7 +238,8 @@
           "type": "string",
           "enum": [
             "provided",
-            "demo_seed"
+            "demo_seed",
+            "server_durable_record"
           ]
         },
         "signalWriters": {

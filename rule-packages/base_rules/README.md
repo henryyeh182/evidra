@@ -5,6 +5,12 @@ degradation, decision, and arbitration rules. Its content is mapped from the
 legacy `packages/rules/data` files without changing decision semantics. It also
 contains five formally validated evidence packets under `evidence/`.
 
+Released packages must include `governanceReview` in `package.json`. The
+machine-checkable record requires an identified proposer and reviewer, review
+scope, approval status, and a passed Decision Harness regression with zero
+decision or graph diffs. `reviews/RR-2026-0002.md` remains the human-readable
+review record; the package validator enforces the structured approval gate.
+
 Validate it with `npm run package:validate -- rule-packages/base_rules`.
 Review a candidate with `npm run package:dry-run -- <package-dir|archive>`.
 Installation requires explicit `--confirm`, stores an immutable version under

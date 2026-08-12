@@ -40,3 +40,43 @@ test("SQLite repository round-trips user context and plan/planned workouts", asy
     repository.close();
   }
 });
+
+test("SQLite repository persists and scopes outcome events", async () => {
+  const repository = new SQLiteFitnessRepository();
+  try {
+    const event = {
+      outcomeId: "out_test_1",
+      caseId: "decision_test_1",
+      outcome: { status: "completed", perceivedEffort: 7 },
+      recordedAt: "2026-08-12T10:00:00.000Z"
+    };
+    await repository.saveOutcome(event, { userId: "athlete-1", decisionId: "dec_test_1" });
+    assert.deepEqual(await repository.listOutcomes("decision_test_1", "athlete-1"), [{
+      ...event,
+      userId: "athlete-1",
+      decisionId: "dec_test_1"
+    }]);
+    assert.deepEqual(await repository.listOutcomes("decision_test_1", "athlete-2"), []);
+  } finally {
+    repository.close();
+  }
+});
+
+test("SQLite repository persists a decision trace", () => {
+  const repository = new SQLiteFitnessRepository();
+  try {
+    const record = {
+      decisionId: "dec_test_persisted",
+      createdAt: Date.now(),
+      userId: "athlete-1",
+      evidenceSource: "local-user-context",
+      tool: "decide_session",
+      trace: { decision: { type: "adjust" }, versions: { release: "0.5.0" } }
+    };
+    repository.saveDecisionRecord(record);
+    assert.deepEqual(repository.getDecisionRecord(record.decisionId, "athlete-1"), record);
+    assert.equal(repository.getDecisionRecord(record.decisionId, "athlete-2"), null);
+  } finally {
+    repository.close();
+  }
+});

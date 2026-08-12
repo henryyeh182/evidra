@@ -162,7 +162,8 @@ export const outputSchemas = {
             "type": "string",
             "enum": [
               "provided",
-              "demo_seed"
+              "demo_seed",
+              "server_durable_record"
             ]
           },
           "signalWriters": {
@@ -475,7 +476,8 @@ export const outputSchemas = {
             "type": "string",
             "enum": [
               "provided",
-              "demo_seed"
+              "demo_seed",
+              "server_durable_record"
             ]
           },
           "signalWriters": {
@@ -1039,7 +1041,7 @@ export const outputSchemas = {
       caseId: { type: "string" },
       event: { type: "object" },
       totalForCase: { type: "number" },
-      persistence: { type: "string", enum: ["process_local"] },
+      persistence: { type: "string", enum: ["process_local", "user_controlled_repository"] },
       runtimeIdentity: { type: "object" },
       note: { type: "string" }
     },

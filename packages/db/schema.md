@@ -54,9 +54,15 @@ host to resend the plan.
 - Add exercise prescription tables.
 - Add audit logs and consent records.
 
-The state → decision → outcome triple is **not** stored here on our behalf. The caller
-keeps it and may pass it back as evidence; in Phase 2 the caller is the user's own
-environment, so these tables are where it would live — owned by the user, not by us.
+The hosted service does not store the state → decision → outcome triple. In the
+user-controlled private engine, the SQLite repository now stores outcome events;
+durable decision traces and the remaining lifecycle operations are still being
+added. The caller/operator owns this database and its retention policy.
+
+Migration `0004_decision_outcome_records.sql` adds `decision_records` and
+`outcome_records`. The SQLite repository exposes `saveOutcome` and
+`listOutcomes`; the local MCP path injects that repository into
+`submit_outcome`. The hosted MCP path remains process-local and stateless.
 
 ## Connector Events
 

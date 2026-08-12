@@ -35,6 +35,7 @@ const APPROVED_DECISION_TOOLS = [
   "evidra_decide_session",
   "evidra_decide_exercise_substitution",
   "evidra_generate_plan",
+  "evidra_generate_workout",
   "evidra_preview_adjust_plan",
   "evidra_commit_adjust_plan"
 ];
@@ -61,6 +62,7 @@ const SELF_EXPLANATION = {
   evidra_decide_session: ["decision", "action", "reason", "confidence", "signalCoverage", "limits", "provenance"],
   evidra_decide_exercise_substitution: ["decision", "action", "reason", "confidence", "limits"],
   evidra_generate_plan: ["reasoning"],
+  evidra_generate_workout: ["decisionBasis", "confidence", "signalCoverage", "provenance"],
   evidra_preview_adjust_plan: ["diff", "summary"],
   evidra_commit_adjust_plan: ["versionHistory"]
 };

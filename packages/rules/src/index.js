@@ -13,6 +13,8 @@ export {
 export { arbitrate, orderByPriorityMatrix, combineIntensitySteps, getPolicies, describePolicies } from "./arbitrate.js";
 
 export { buildDecisionBasis } from "./basis.js";
+export { validateRuleCandidate } from "./candidate.js";
+export { explainRuleForUser } from "./explanation.js";
 
 export { ENGINE_THRESHOLD_KEYS } from "./engineThresholds.js";
 
