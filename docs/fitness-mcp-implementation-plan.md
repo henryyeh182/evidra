@@ -209,8 +209,8 @@ Evidence → State → Decision → Action → Outcome 與 deterministic decisio
 
 | Story | 交付結果 | 完成條件 | 狀態 |
 |---|---|---|---|
-| Phase 0.5 - Story 1 | 視覺語言與頁面骨架。 | 定義 Evidence、State、Decision、Action、Outcome、Trace 的色彩、層級、卡片與狀態語言；完成 desktop-first 主畫面與 responsive 基本規則。 | 待開始 |
-| Phase 0.5 - Story 2 | Evidence → State → Decision → Action 主流程。 | 以一個「原定 Tempo Run → 今日調整」案例呈現來源訊號、狀態判斷、`from → to`、reason、confidence 與 missing signals。 | 待開始 |
+| Phase 0.5 - Story 1 | 視覺語言與頁面骨架。 | 定義 Evidence、State、Decision、Action、Outcome、Trace 的色彩、層級、卡片與狀態語言；完成 desktop-first 主畫面與 responsive 基本規則。 | 完成 |
+| Phase 0.5 - Story 2 | Evidence → State → Decision → Action 主流程。 | 以一個「原定 Tempo Run → 今日調整」案例呈現來源訊號、狀態判斷、`from → to`、reason、confidence 與 missing signals。 | 完成 |
 | Phase 0.5 - Story 3 | Deterministic Decision Graph。 | 可視化 triggered／suppressed rules、優先序／仲裁結果、Rule → Evidence → Source → Version trace；AI 對話不是主要視覺焦點。 | 完成 |
 | Phase 0.5 - Story 4 | Outcome 與 prototype review。 | 能記錄採用／拒絕／結果回報的入口；以 3–5 位目標使用者或內部 reviewer 檢查「是否看懂今天為何改課表」，並記錄 AthleteSpace 可借鑑處及 Pacevera 必須保持的差異。 | 進行中 |
 
@@ -218,8 +218,10 @@ Evidence → State → Decision → Action → Outcome 與 deterministic decisio
 
 - **Story 3**：`docs/pacevera-home.html` 的 Today’s Brief 以 `Why this changed · open Decision Trace` 開啟 drawer；Tempo Run → Moderate Run fixture 明確展示 `triggered`、`suppressed`、priority arbitration，以及 Rule → Evidence → Source → Version rows。Drawer 可由按鈕、背景點擊與 Escape 關閉，並在開啟時將 focus 移至 close control。
 - **Story 4**：同一頁新增 prototype-only Outcome controls：`Adopted`、`Changed`、`Skipped` 與 perceived-effort slider。互動回饋明確寫出 `not saved`，不冒充 durable outcome persistence、account 或 hosted service。實際 reviewer sessions 尚未完成；Excel 填寫版見 [`docs/phase-0.5-review.xlsx`](phase-0.5-review.xlsx)。
+- **Story 4**：外部／內部 reviewer sessions 尚未完成，review protocol 與 findings template 見 [`docs/phase-0.5-review.md`](phase-0.5-review.md)。
+- **Story 1–2**：首頁已具備視覺語言、responsive 基本規則與 Evidence → State → Decision → Action 的 Tempo Run → Moderate Run 主流程；狀態依現有 static evidence 更新為完成。
 - **Product boundary review**：`docs/user-journey.html` 維持 stakeholder／marketing explainer 的長文角色，並把 v0.5.0、connectors、hosted remote、private engine 與 account capability 改成 preview／release-target／future language；homepage 保留較短的 install CTA 與 visual demo。
-- **Validation**：static HTML parse、required-label/accessibility assertions、script syntax checks 與 repository tests are the evidence for this delivery; no claim is made that 3–5 external user interviews or a browser-run smoke session have occurred.
+- **Validation**：static HTML parse、required-label/accessibility assertions、script syntax checks 與 repository tests are the evidence for the prototype; no claim is made that 3–5 external user interviews or a browser-run smoke session have occurred.
 
 ### Phase 1 — pacevera.com 產品頁與市場驗證
 
