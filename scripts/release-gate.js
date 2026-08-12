@@ -14,8 +14,9 @@ function run(command, commandArgs) {
 }
 
 run("npm", ["run", "release:validate"]);
-run("npm", ["run", "package:validate"]);
-run("npm", ["run", "package:dry-run"]);
+run("node", ["scripts/validate-rule-packages.js"]);
+run("node", ["scripts/rule-package.js", "validate", "rule-packages/base_rules"]);
+run("node", ["scripts/rule-package.js", "dry-run", "rule-packages/base_rules"]);
 run("node", ["--test", "packages/release/test/index.test.js"]);
 run("npm", ["run", "build:bundle"]);
 if (!args.has("--skip-archive")) {
@@ -24,8 +25,10 @@ if (!args.has("--skip-archive")) {
   }
   run("node", ["scripts/verify-release-artifacts.js"]);
 }
-if (!args.has("--skip-remote")) {
-  console.log("remote image gate: skipped (pass --build-remote to build with Docker)");
+if (args.has("--build-remote")) {
+  run("node", ["scripts/build-remote-image.js"]);
+  run("node", ["scripts/smoke-remote-image.js"]);
+} else if (!args.has("--skip-remote")) {
+  throw new Error("remote image gate was not run; pass --build-remote or explicitly use --skip-remote for local-only verification.");
 }
-if (args.has("--build-remote")) run("node", ["scripts/build-remote-image.js"]);
 console.log("\nrelease gate passed");

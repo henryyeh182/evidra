@@ -266,6 +266,9 @@ active Rule Package version 與 checksum 必須由 release gate 核對，不允�
 - Root `release-manifest.json` is generated from `package.json`, `manifest.json`, `ENGINE_VERSION` and the validated active `base_rules` package; it records release, engine, legacy library, package checksum, compatibility, and git commit identity.
 - `release-manifest.schema.json` defines the shared release identity contract. `packages/release/src/index.js` loads and validates the manifest for source/runtime use; the bundle build inlines the same manifest content.
 - `npm run release:validate` is a drift gate for product version, engine version, active package version/checksum/compatibility, and git metadata. Decision basis, trace versions, and MCP `initialize.serverInfo` now expose `releaseVersion` and `libraryChecksum` while preserving `libraryVersion` and `engineVersion`.
+- Remote target scaffolding is present in `Dockerfile`, `apps/mcp-server/src/http-entry.js`, `scripts/build-remote-image.js`, and `scripts/smoke-remote-image.js`; the same source release builds the stdio bundle by default and the HTTP entrypoint with `BUNDLE_ENTRY=apps/mcp-server/src/http-entry.js`.
+- `scripts/verify-release-artifacts.js` checks archive metadata, bundled `initialize`, and `tools/list`; `scripts/release-gate.js` runs package validation, dry-run regression, bundle build, and optional artifact／remote smoke. `scripts/rollback-remote-image.js` only verifies an immutable release-labelled image and does not mutate a mutable `latest` tag.
+- Remote image build／smoke remains unexecuted locally because the Docker daemon is unavailable. Local release gate passed with `--skip-archive --skip-remote`; the archive gate also awaits the existing `mcpb` pack command completing.
 
 ### 4.5 Migration contract：MCPB → Remote
 
