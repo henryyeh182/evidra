@@ -3,7 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Pacevera turns training evidence into an explainable decision for today's planned session.">
+  <meta name="description" content="Pacevera turns training evidence into an explainable decision for today’s planned session.">
+  <link rel="canonical" href="https://pacevera.com/">
+  <link rel="icon" type="image/png" sizes="32x32" href="brand/evidra-icon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="brand/evidra-icon-64.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="brand/evidra-icon-square-1024.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Pacevera">
+  <meta property="og:url" content="https://pacevera.com/">
+  <meta property="og:title" content="Pacevera — Adaptive training decisions">
+  <meta property="og:description" content="Turn the evidence you already have into an explainable change to today’s planned session.">
+  <meta property="og:image" content="https://pacevera.com/brand/pacevera-og.svg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Pacevera — Adaptive training decisions">
+  <meta name="twitter:description" content="Turn training evidence into an explainable decision for today’s session.">
+  <meta name="twitter:image" content="https://pacevera.com/brand/pacevera-og.svg">
   <title>Pacevera — Adaptive training decisions</title>
   <style>
     :root { --paper:#f0eee6; --surface:#faf9f5; --surface-2:#e9e3d6; --line:#dad2c3; --ink:#1f1e1d; --muted:#68645c; --mint:#157554; --mint-soft:#dcede4; --navy:#111b30; --navy-card:#1e2a40; --navy-line:#34445e; --lime:#49d993; --amber:#ecae4d; --red:#ec7972; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif; }
@@ -205,7 +221,7 @@
 
       <section class="section" id="about"><div class="final-cta"><div class="final-cta-inner"><p class="eyebrow">Pacevera</p><h2>Every training <em>decision</em><br>deserves a <em>reason.</em></h2><p>Your readiness score is only the beginning. Pacevera shows what changes in today’s planned session, why it changed, and what evidence is still missing.</p><a class="button" href="https://github.com/henryyeh182/evidra/releases/latest"><img class="github-icon" src="https://github.githubassets.com/favicons/favicon.svg" alt="">Get started for free</a></div></div></section>
     </main>
-    <footer><span>© 2026 Pacevera · Fitness decision infrastructure · public preview</span><nav><a href="#about">About</a><a href="mailto:hello@pacevera.com">Contact</a><a href="user-journey.html">Product journey</a></nav></footer>
+    <footer><span>© 2026 Pacevera · Fitness decision infrastructure · public preview</span><nav><a href="#about">About</a><a href="https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md">Privacy</a><a href="mailto:evidramcp@icloud.com">Contact</a><a href="user-journey.html">Product journey</a></nav></footer>
   </div>
   <div class="drawer-backdrop" id="traceDrawer" role="dialog" aria-modal="true" aria-labelledby="traceTitle" aria-hidden="true"><aside class="trace-drawer"><div class="drawer-head"><div><p class="trace-kicker">Decision Graph · prototype fixture</p><h2 id="traceTitle">Tempo Run → Moderate Run</h2></div><button class="drawer-close" id="traceClose" type="button" aria-label="Close Decision Trace">×</button></div><p class="body-copy">The engine compared the scheduled session with the available evidence, then kept the highest-priority applicable rule.</p><div class="graph" aria-label="Decision Graph"><div class="graph-node"><div><b>Evidence</b><small>Readiness 48 · legs fatigue 72 · sleep missing</small></div><em>input</em></div><div class="graph-node"><div><b>EVD-R-002 · reduce today intensity</b><small>Readiness is below the high-intensity threshold</small></div><em>triggered</em></div><div class="graph-node suppressed"><div><b>EVD-R-000 · keep as planned</b><small>Evidence is not fully in range, so this candidate is suppressed</small></div><em>suppressed</em></div><div class="graph-node arbitrated"><div><b>Arbitration → adjust</b><small>Priority 70 wins over keep priority 10</small></div><em>governing</em></div><div class="graph-node arbitrated"><div><b>Action · Tempo Run → Moderate Run</b><small>Same duration · lower intensity · medium confidence</small></div><em>output</em></div></div><table class="trace-table"><thead><tr><th>Trace</th><th>Resolved value</th></tr></thead><tbody><tr><td>Rule</td><td><code>EVD-R-002</code> · reduce_today_intensity</td></tr><tr><td>Evidence</td><td>readiness 48; leg fatigue 72; sleep missing</td></tr><tr><td>Source</td><td>fixture: garmin-morning-summary.json</td></tr><tr><td>Version</td><td>Engine 1.6.0 · base_rules 1.1.0</td></tr></tbody></table><p class="prototype-note">Illustrative UI for Phase 0.5. The graph is not a hosted history view and does not imply connected Garmin access.</p></aside></div>
   <script>
