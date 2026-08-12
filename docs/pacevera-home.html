@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Pacevera turns training evidence into an explainable decision for today's planned session.">
+  <title>Pacevera — Adaptive training decisions</title>
+  <style>
+    :root { --paper:#f0eee6; --surface:#faf9f5; --surface-2:#e9e3d6; --line:#dad2c3; --ink:#1f1e1d; --muted:#68645c; --mint:#157554; --mint-soft:#dcede4; --navy:#111b30; --navy-card:#1e2a40; --navy-line:#34445e; --lime:#49d993; --amber:#ecae4d; --red:#ec7972; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+    .shell { width:min(1240px, calc(100% - 48px)); margin:auto; }
+    .nav { height:92px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; border-bottom:1px solid var(--line); }
+    .brand { display:flex; gap:10px; align-items:center; color:var(--ink); text-decoration:none; font-weight:720; font-size:20px; letter-spacing:-.035em; }
+    .mark { width:36px; height:36px; object-fit:contain; }
+    .navlinks { display:flex; align-items:center; gap:4px; padding:5px; background:var(--surface); border:1px solid var(--line); border-radius:999px; }
+    .navlinks a { color:var(--muted); text-decoration:none; font-size:12px; font-weight:700; padding:8px 11px; border-radius:999px; white-space:nowrap; }
+    .navlinks a:first-child,.navlinks a:hover { color:var(--ink); background:var(--surface-2); }
+    .nav-cta { justify-self:end; }
+    .nav-cta,.button { border:0; background:var(--mint); color:#fff; padding:12px 18px; border-radius:999px; text-decoration:none; font-weight:700; font-size:13px; cursor:pointer; }
+    .nav-cta:hover,.button:hover { background:#0e6748; }
+    .github-icon { width:15px; height:15px; vertical-align:-3px; margin-right:7px; filter:invert(91%) sepia(12%) saturate(380%) hue-rotate(4deg) brightness(101%) contrast(90%); }
+    .hero { padding:102px 0 116px; display:grid; grid-template-columns:minmax(0, .84fr) minmax(480px, 1.16fr); align-items:center; gap:70px; }
+    .eyebrow { margin:0 0 17px; color:var(--mint); font-family:var(--mono); font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+    h1 { font-size:clamp(50px,5.7vw,78px); line-height:.94; letter-spacing:-.073em; margin:0 0 26px; max-width:650px; }
+    h1 em { color:var(--mint); font-style:normal; }
+    .hero-copy { font-size:17px; line-height:1.65; color:var(--muted); max-width:52ch; margin:0; }
+    .hero-copy strong { color:var(--ink); }
+    .actions { display:flex; align-items:center; gap:18px; margin-top:30px; }
+    .text-link { color:var(--ink); font-size:13px; font-weight:700; text-decoration:none; border-bottom:1px solid var(--line); padding-bottom:3px; }
+    .proof { display:flex; align-items:center; gap:9px; margin-top:33px; color:var(--muted); font-family:var(--mono); font-size:10px; }
+    .proof i { width:7px; height:7px; display:block; border-radius:50%; background:var(--mint); }
+    /* Today's Brief */
+    .product-stage { display:grid; grid-template-columns:minmax(165px,.46fr) minmax(0,1fr); gap:13px; align-items:end; }
+    .coach-chat { background:#18233a; color:#e9eff3; border:1px solid #2c3b56; border-radius:12px; padding:14px; box-shadow:0 18px 34px rgba(35,37,30,.13); margin-bottom:30px; }
+    .chat-head { display:flex; gap:7px; align-items:center; margin-bottom:16px; color:#b6c1ce; font:9px var(--mono); letter-spacing:.1em; text-transform:uppercase; }
+    .chat-head:before { content:"✦"; color:var(--lime); font-size:14px; }
+    .bubble { font-size:11px; line-height:1.5; padding:10px; border-radius:7px; margin-bottom:8px; }
+    .bubble.evidence { background:#26344c; color:#dbe5ec; border:1px solid #34445e; }
+    .bubble.user { background:#dcede4; color:#1f3c31; margin-left:17px; }
+    .bubble small { display:block; margin-bottom:5px; font:8px var(--mono); letter-spacing:.09em; text-transform:uppercase; opacity:.7; }
+    .attachment { display:flex; gap:6px; align-items:center; color:#8bdbb8; font:9px var(--mono); margin-top:7px; }
+    .attachment:before { content:"↳"; }
+    .chat-handoff { color:#92a1b1; font:9px var(--mono); line-height:1.45; padding:4px 2px 0; }
+    .decision-chain { margin:17px 2px 0; padding-top:14px; border-top:1px solid #34445e; }
+    .chain-step { display:grid; grid-template-columns:14px 1fr; gap:7px; align-items:center; color:#b4c2ce; font:9px var(--mono); letter-spacing:.03em; }
+    .chain-step strong { color:#f2f5f6; font-weight:700; }
+    .chain-arrow { color:var(--lime); font:13px var(--mono); height:13px; padding-left:2px; }
+    .brief { background:var(--navy); border:1px solid #0d172a; border-radius:13px; color:#eef4f5; padding:17px; box-shadow:0 24px 45px rgba(35,37,30,.16); }
+    .brief-top { display:flex; justify-content:space-between; align-items:center; padding:0 5px 13px; }
+    .brief-label { font-family:var(--mono); color:#9faebe; font-size:10px; letter-spacing:.12em; text-transform:uppercase; }
+    .live { display:flex; gap:7px; align-items:center; color:#aebbc9; font-family:var(--mono); font-size:10px; }
+    .live:before { content:""; width:6px; height:6px; background:var(--lime); border-radius:50%; box-shadow:0 0 0 4px rgba(73,217,147,.1); }
+    .brief-card { background:var(--navy-card); border:1px solid var(--navy-line); border-radius:9px; padding:24px; }
+    .brief-heading { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; }
+    .brief-heading h2 { font-size:23px; line-height:1.12; margin:0; letter-spacing:-.04em; }
+    .status { background:#12573f; color:var(--lime); padding:8px 11px; white-space:nowrap; border-radius:99px; font-size:11px; font-weight:700; }
+    .status:before { content:"●"; font-size:9px; margin-right:6px; }
+    .status.adjust { background:#5d4827; color:#ffd081; }
+    .status.adjust:before { content:"●"; }
+    .status.defer { background:#603a3a; color:#ffaaa4; }
+    .metric-grid { display:grid; grid-template-columns:1fr auto; row-gap:11px; padding:22px 0 19px; border-bottom:1px solid var(--navy-line); font-family:var(--mono); font-size:12px; }
+    .metric-grid dt { color:#9daaba; } .metric-grid dd { margin:0; color:#e7edf2; } .up { color:var(--lime); padding-left:5px; }
+    .decision { padding:20px 0; border-bottom:1px solid var(--navy-line); }
+    .decision-label { color:#9daaba; font-size:10px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.1em; margin-bottom:12px; }
+    .from-to { display:grid; grid-template-columns:1fr 28px 1fr; gap:10px; align-items:center; }
+    .workout small { display:block; color:#9daaba; font-size:9px; font-family:var(--mono); letter-spacing:.1em; text-transform:uppercase; margin-bottom:5px; }
+    .workout b { display:block; font-size:14px; letter-spacing:-.02em; } .workout span { display:block; color:#b2c0cc; font:11px var(--mono); margin-top:4px; }
+    .arrow { text-align:center; color:var(--lime); font:20px var(--mono); }
+    .brief-reason { padding:17px 0 1px; font-size:12px; line-height:1.55; color:#b8c4cf; }
+    .brief-reason strong { color:#f0f4f6; } .brief-reason code { color:#ffe0a0; font:10px var(--mono); }
+    .brief-tabs { display:flex; gap:7px; margin:13px 5px 0; }
+    .brief-tabs button { flex:1; background:transparent; color:#9daaba; border:0; padding:8px 2px; font:10px var(--mono); cursor:pointer; border-bottom:2px solid transparent; }
+    .brief-tabs button.active { color:#fff; border-bottom-color:var(--lime); }
+    .section { padding:124px 0; border-top:1px solid var(--line); }
+    .section-head { display:flex; justify-content:space-between; align-items:end; gap:30px; margin-bottom:58px; } .section-head h2 { margin:0; font-size:clamp(38px,4.1vw,58px); line-height:.98; letter-spacing:-.067em; max-width:13ch; }
+    .section-head p { margin:0; color:var(--muted); font-size:15px; line-height:1.65; max-width:46ch; }
+    .feature-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0; border-top:1px solid var(--line); }
+    .feature { min-height:284px; padding:26px 30px 26px 0; display:flex; flex-direction:column; justify-content:space-between; border-right:1px solid var(--line); }
+    .feature + .feature { padding-left:30px; } .feature:last-child { border-right:0; }
+    .feature .number { color:var(--mint); font:11px var(--mono); } .feature h3 { font-size:clamp(25px,2.4vw,34px); line-height:1.03; letter-spacing:-.055em; margin:32px 0 11px; } .feature p { margin:0; color:var(--muted); line-height:1.65; font-size:14px; max-width:30ch; }
+    .split { display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; }
+    .flow { padding:27px; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; }
+    .flow-row { display:grid; grid-template-columns:28px 1fr; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); } .flow-row:last-child { border-bottom:0; }
+    .flow-row i { width:26px; height:26px; display:grid; place-items:center; border-radius:50%; background:var(--surface); color:var(--mint); font:11px var(--mono); font-style:normal; } .flow-row b { font-size:14px; } .flow-row p { margin:3px 0 0; color:var(--muted); font-size:13px; }
+    .quote { font-size:clamp(43px,4.35vw,62px); line-height:.97; font-weight:730; letter-spacing:-.071em; margin:12px 0 25px; } .quote em { color:var(--mint); font-style:normal; }
+    .body-copy { color:var(--muted); line-height:1.7; font-size:15px; max-width:52ch; }
+    .pricing { background:var(--surface-2); color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:50px; display:grid; grid-template-columns:.9fr 1.1fr; gap:54px; align-items:start; } .pricing .eyebrow { color:var(--mint); } .pricing h2 { max-width:11ch; margin:0; font-size:clamp(38px,4vw,57px); line-height:.98; letter-spacing:-.065em; } .pricing > div > p { color:var(--muted); max-width:38ch; line-height:1.6; margin:18px 0 0; font-size:14px; }
+    .plan { padding:28px; background:var(--surface); border:1px solid var(--mint); border-radius:8px; box-shadow:0 14px 25px rgba(49,48,39,.07); } .plan-top { display:flex; justify-content:space-between; align-items:start; gap:12px; border-bottom:1px solid var(--line); padding-bottom:20px; } .plan-name { margin:0; font-size:23px; letter-spacing:-.04em; } .plan-price { text-align:right; } .plan-price b { font-size:25px; letter-spacing:-.04em; } .plan-price span { display:block; color:var(--muted); font:10px var(--mono); margin-top:2px; } .plan ul { list-style:none; padding:0; margin:21px 0 25px; display:grid; gap:11px; color:var(--muted); font-size:13px; } .plan li { display:flex; gap:9px; align-items:start; } .plan li:before { content:"✓"; color:var(--mint); font-weight:800; } .plan .button { display:block; text-align:center; background:var(--mint); color:#fff; } .plan .button:hover { background:#0e6748; }
+    .final-cta { background:var(--surface-2); color:var(--ink); border:1px solid var(--line); border-radius:10px; min-height:490px; padding:70px 30px; display:grid; place-items:center; text-align:center; } .final-cta-inner { max-width:780px; } .final-cta .eyebrow { color:var(--mint); } .final-cta h2 { margin:0; font-size:clamp(45px,5.2vw,73px); line-height:.96; letter-spacing:-.073em; } .final-cta h2 em { color:var(--mint); font-style:normal; } .final-cta p { color:var(--muted); margin:24px auto 0; max-width:52ch; font-size:17px; line-height:1.55; } .final-cta .button { display:inline-block; margin-top:31px; background:var(--mint); color:#fff; padding:14px 20px; font-size:14px; } .final-cta .button:hover { background:#0e6748; }
+    footer { padding:38px 0 55px; display:flex; justify-content:space-between; color:var(--muted); font-size:12px; } footer a { color:inherit; text-decoration:none; margin-left:18px; }
+    @media (max-width:850px) { .nav { display:flex; justify-content:space-between; } .navlinks { display:none; } .hero,.split { grid-template-columns:1fr; } .hero { padding-top:64px; gap:42px; } .product-stage { max-width:660px; } .feature-grid { grid-template-columns:1fr; } .feature,.feature + .feature { border-right:0; border-bottom:1px solid var(--line); padding:28px 0; min-height:0; } .feature:last-child { border-bottom:0; } .section { padding:82px 0; } .section-head { display:block; } .section-head h2 { margin-bottom:18px; } .pricing { grid-template-columns:1fr; padding:30px; gap:30px; } }
+    @media (max-width:480px) { .shell { width:min(100% - 28px,1180px); } .nav { height:72px; } .product-stage { grid-template-columns:1fr; } .coach-chat { margin:0; } .brief-card { padding:18px; } .brief-heading h2 { font-size:21px; } .status { padding:7px 8px; font-size:9px; } h1 { font-size:48px; } .from-to { grid-template-columns:1fr 20px 1fr; gap:6px; } .workout b { font-size:12px; } .workout span { font-size:9px; } footer { display:block; } footer nav { margin-top:12px; } footer a:first-child { margin-left:0; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="#top" aria-label="Pacevera home"><img class="mark" src="brand/evidra-icon-64.png" alt="">Pacevera</a>
+      <div class="navlinks">
+        <a href="#features">Features</a><a href="#ai-coaching">AI Coaching</a><a href="#decision-layer">Decision Layer</a><a href="#pricing">Pricing</a><a href="#about">About</a>
+      </div>
+      <a class="nav-cta" href="https://github.com/henryyeh182/evidra/releases/latest"><img class="github-icon" src="https://github.githubassets.com/favicons/favicon.svg" alt="">Get started free</a>
+    </nav>
+
+    <main id="top">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Adaptive training, made accountable</p>
+          <h1>Know what to do <em>today.</em></h1>
+          <p class="hero-copy">Pacevera turns your training evidence into an explainable change to the workout you already planned. <strong>Keep your AI coach. Add a decision layer.</strong></p>
+          <div class="actions"><a class="button" href="#decision-layer">See how it works</a><a class="text-link" href="#features">Explore features →</a></div>
+          <p class="proof"><i></i> Local-first decision engine · Evidence stays in your control</p>
+        </div>
+        <div class="product-stage" aria-label="AI chat and Today's Brief example decision">
+          <aside class="coach-chat" aria-label="AI coaching conversation">
+            <div class="chat-head">AI Coaching</div>
+            <div class="bubble evidence"><small>Evidence shared</small><span id="evidenceText">Garmin readiness 48 · recovery signals checked</span><div class="attachment" id="attachment">garmin-morning-summary.json</div></div>
+            <div class="bubble user"><small>Today’s session</small><span id="chatPrompt">I have a Tempo Run, 50 min at high intensity. Should I keep it?</span></div>
+            <p class="chat-handoff" id="chatHandoff">Pacevera checked the evidence and returned an accountable decision.</p>
+            <div class="decision-chain" aria-label="Pacevera decision chain">
+              <div class="chain-step"><span>01</span><strong>Evidence</strong></div><div class="chain-arrow">↓</div>
+              <div class="chain-step"><span>02</span><strong>Today’s Brief</strong></div><div class="chain-arrow">↓</div>
+              <div class="chain-step"><span>03</span><strong>From → To</strong></div><div class="chain-arrow">↓</div>
+              <div class="chain-step"><span>04</span><strong>Reason · Missing · Confidence</strong></div>
+            </div>
+          </aside>
+          <div class="brief">
+          <div class="brief-top"><span class="brief-label">Morning readiness</span><span class="live">Evidence checked</span></div>
+          <div class="brief-card">
+            <div class="brief-heading"><h2>Today’s<br>Brief</h2><span class="status adjust" id="status">Adjust today</span></div>
+            <dl class="metric-grid" id="metrics">
+              <dt>Readiness</dt><dd>48 ↓</dd><dt>Sleep</dt><dd>— missing</dd><dt>Leg fatigue</dt><dd>72 / 100 ↓</dd><dt>Training load</dt><dd>4.1h this week ↑</dd>
+            </dl>
+            <div class="decision"><div class="decision-label">Today’s decision</div><div class="from-to"><div class="workout"><small>From · scheduled</small><b id="fromTitle">Tempo Run</b><span id="fromMeta">50 min · High</span></div><div class="arrow">→</div><div class="workout"><small>To · today</small><b id="toTitle">Moderate Run</b><span id="toMeta">50 min · Moderate</span></div></div></div>
+            <p class="brief-reason" id="reason"><strong>Why this changed:</strong> Readiness is below the intensity threshold. <code>RULE EVD-R-002</code></p>
+          </div>
+          <div class="brief-tabs" aria-label="Decision examples"><button data-case="keep">Keep</button><button class="active" data-case="adjust">Adjust</button><button data-case="defer">Defer</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="section-head"><h2>Training data is useful. A decision is better.</h2><p>Readiness is a signal, not the destination. Pacevera makes it useful by showing exactly what changes in today’s scheduled session—and why.</p></div>
+        <div class="feature-grid">
+          <article class="feature"><span class="number">01 / TODAY’S BRIEF</span><div><h3>One clear decision</h3><p>See the session you planned, the session to execute, and the evidence that connects them.</p></div></article>
+          <article class="feature"><span class="number">02 / TRACEABLE</span><div><h3>Reasons you can inspect</h3><p>Every decision carries its rule, evidence coverage, missing signals, and confidence—not a black-box score.</p></div></article>
+          <article class="feature"><span class="number">03 / YOUR BOUNDARY</span><div><h3>Evidence under your control</h3><p>Designed for local-first and private deployments. Your health history is not our product.</p></div></article>
+        </div>
+      </section>
+
+      <section class="section" id="ai-coaching">
+        <div class="split"><div><p class="eyebrow">AI Coaching</p><h2 class="quote">Your AI can coach. <em>Pacevera helps it decide.</em></h2><p class="body-copy">Use the AI host you already trust to ask questions and communicate in your own words. Pacevera takes the structured part: calculating fitness state, applying rules, and returning an action that can be checked later.</p></div><div class="flow"><div class="flow-row"><i>01</i><div><b>You ask your coach</b><p>“Should I keep today’s Tempo Run?”</p></div></div><div class="flow-row"><i>02</i><div><b>Pacevera evaluates evidence</b><p>Recovery, fatigue, load, constraints and the scheduled workout.</p></div></div><div class="flow-row"><i>03</i><div><b>You receive a decision</b><p>A concrete from → to change, with reasons and limits.</p></div></div></div></div>
+      </section>
+
+      <section class="section" id="decision-layer">
+        <div class="split"><div class="flow"><div class="flow-row"><i>→</i><div><b>From: Tempo Run</b><p>50 min · high intensity</p></div></div><div class="flow-row"><i>→</i><div><b>To: Moderate Run</b><p>50 min · moderate intensity</p></div></div><div class="flow-row"><i>✓</i><div><b>Decision: adjust</b><p>Readiness 48 · sleep signal missing · medium confidence</p></div></div></div><div><p class="eyebrow">Decision Layer</p><h2 class="quote">Not another<br>recommendation.<br><em>A change you can act on.</em></h2><p class="body-copy">Pacevera starts with a prior state: the session you planned. It outputs an accountable change—keep, adjust, substitute, defer, or advance—rather than inventing a workout from scratch.</p></div></div>
+      </section>
+
+      <section class="section" id="pricing"><div class="pricing"><div><p class="eyebrow">Pricing</p><h2>Start with the decision.</h2><p>Pacevera Desktop is free while we validate the decision engine with serious athletes and coaches. No account, no health-data signup.</p></div><article class="plan"><div class="plan-top"><div><p class="eyebrow">Desktop</p><h3 class="plan-name">Free</h3></div><div class="plan-price"><b>$0</b><span>free to install</span></div></div><ul><li>Local Pacevera MCPB for Claude Desktop</li><li>Today’s session decisions: keep, adjust, substitute, defer, advance</li><li>Evidence coverage, missing signals and confidence</li><li>Decision reason and rule trace</li><li>No account and no health-data upload to Pacevera</li></ul><a class="button" href="https://github.com/henryyeh182/evidra/releases/latest"><img class="github-icon" src="https://github.githubassets.com/favicons/favicon.svg" alt="">Get started for free</a></article></div></section>
+
+      <section class="section" id="about"><div class="final-cta"><div class="final-cta-inner"><p class="eyebrow">Pacevera</p><h2>Every training <em>decision</em><br>deserves a <em>reason.</em></h2><p>Your readiness score is only the beginning. Pacevera shows what changes in today’s planned session, why it changed, and what evidence is still missing.</p><a class="button" href="https://github.com/henryyeh182/evidra/releases/latest"><img class="github-icon" src="https://github.githubassets.com/favicons/favicon.svg" alt="">Get started for free</a></div></div></section>
+    </main>
+    <footer><span>© 2026 Pacevera · Fitness decision infrastructure</span><nav><a href="#about">About</a><a href="mailto:hello@pacevera.com">Contact</a><a href="user-journey.html">Product journey</a></nav></footer>
+  </div>
+  <script>
+    const scenarios = {
+      keep: { status:'Ready to train', statusClass:'', metrics:[['Readiness','82 ↑'],['Sleep','7h 42m ↑'],['Leg fatigue','28 / 100 ↑'],['Training load','1.3h this week ↑']], from:['HIIT Conditioning','40 min · High'], to:['HIIT Conditioning','40 min · High'], evidence:'Sleep, HRV, fatigue and load are in range', attachment:'morning-evidence-summary.json', prompt:'I have HIIT Conditioning, 40 min at high intensity. Should I keep it?', handoff:'Pacevera checked the evidence and confirmed the scheduled session.', reason:'<strong>Why this changed:</strong> Evidence is in range. Keep the session as planned. <code>RULE EVD-R-000</code>' },
+      adjust: { status:'Adjust today', statusClass:'adjust', metrics:[['Readiness','48 ↓'],['Sleep','— missing'],['Leg fatigue','72 / 100 ↓'],['Training load','4.1h this week ↑']], from:['Tempo Run','50 min · High'], to:['Moderate Run','50 min · Moderate'], evidence:'Garmin readiness 48 · recovery signals checked', attachment:'garmin-morning-summary.json', prompt:'I have a Tempo Run, 50 min at high intensity. Should I keep it?', handoff:'Pacevera checked the evidence and returned an accountable decision.', reason:'<strong>Why this changed:</strong> Readiness is below the intensity threshold. <code>RULE EVD-R-002</code>' },
+      defer: { status:'Recovery first', statusClass:'defer', metrics:[['Readiness','6 ↓'],['Sleep','5h 18m ↓'],['Leg fatigue','91 / 100 ↓'],['Training load','5.6h this week ↑']], from:['VO₂max Intervals','60 min · High'], to:['Recovery + mobility','30 min · Low'], evidence:'WHOOP recovery 12% · readiness 6 · high fatigue', attachment:'whoop-recovery-summary.json', prompt:'I have VO₂max Intervals, 60 min at high intensity. Should I keep it?', handoff:'Pacevera found recovery below the safety floor and replaced the session.', reason:'<strong>Why this changed:</strong> Recovery is below the safety floor. Swap today’s session. <code>RULE EVD-R-001</code>' }
+    };
+    const $ = id => document.getElementById(id);
+    document.querySelectorAll('[data-case]').forEach(button => button.addEventListener('click', () => {
+      const s = scenarios[button.dataset.case];
+      document.querySelectorAll('[data-case]').forEach(b => b.classList.toggle('active', b === button));
+      $('status').textContent = s.status; $('status').className = `status ${s.statusClass}`;
+      $('metrics').innerHTML = s.metrics.map(([label,value]) => `<dt>${label}</dt><dd>${value}</dd>`).join('');
+      $('fromTitle').textContent=s.from[0]; $('fromMeta').textContent=s.from[1]; $('toTitle').textContent=s.to[0]; $('toMeta').textContent=s.to[1]; $('reason').innerHTML=s.reason;
+      $('evidenceText').textContent=s.evidence; $('attachment').textContent=s.attachment; $('chatPrompt').textContent=s.prompt; $('chatHandoff').textContent=s.handoff;
+    }));
+  </script>
+</body>
+</html>
