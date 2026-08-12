@@ -15,6 +15,7 @@ import { parseJsonRpcMessage, jsonRpcError, jsonRpcResult } from "./jsonRpc.js";
 import { toolHandlers } from "./toolHandlers.js";
 import { findProviderTokenField } from "./providerBoundary.js";
 import { describePolicies } from "../../../packages/rules/src/index.js";
+import { RELEASE_IDENTITY } from "../../../packages/release/src/index.js";
 
 /**
  * The policy prose the host is told, taken from the library rather than retyped.
@@ -124,7 +125,11 @@ export async function handleJsonRpcMessage(rawMessage, requestContext = {}) {
           // it is the part that has to say which one this is.
           name: "fitness-mcp",
           title: "Pacevera",
-          version: SERVER_VERSION
+          version: SERVER_VERSION,
+          releaseVersion: RELEASE_IDENTITY.releaseVersion,
+          engineVersion: RELEASE_IDENTITY.engineVersion,
+          libraryVersion: RELEASE_IDENTITY.libraryVersion,
+          libraryChecksum: RELEASE_IDENTITY.libraryChecksum
         },
         capabilities: {
           tools: {}

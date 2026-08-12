@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "releaseVersion": "0.5.0",
+  "engineVersion": "1.6.0",
+  "libraryVersion": "1.5.0",
+  "libraryChecksum": "sha256:b6b3247b81d1ae62bd664f376e11d2881063d69203ed2d974c8673dfaf4ff250",
+  "activeRulePackages": [
+    {
+      "packageId": "base_rules",
+      "version": "1.1.0",
+      "contentChecksum": "sha256:b6b3247b81d1ae62bd664f376e11d2881063d69203ed2d974c8673dfaf4ff250",
+      "engineCompatibility": {
+        "min": "1.6.0",
+        "max": "<2.0.0"
+      }
+    }
+  ],
+  "gitCommit": "dd47798465808b00178934e7ec7db0492976f015",
+  "imageDigest": null
+}

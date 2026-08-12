@@ -3,6 +3,7 @@
 
 import { LIBRARY_VERSION, describeRule } from "./library.js";
 import { arbitrate, getPolicies } from "./arbitrate.js";
+import { RELEASE_IDENTITY } from "../../release/src/index.js";
 
 /**
  * The frame that says what a decision stands on, built the same way wherever a
@@ -27,6 +28,8 @@ export function buildDecisionBasis({ engineVersion, fired = [] }) {
   return {
     libraryVersion: LIBRARY_VERSION,
     engineVersion,
+    releaseVersion: RELEASE_IDENTITY.releaseVersion,
+    libraryChecksum: RELEASE_IDENTITY.libraryChecksum,
     policies: getPolicies(),
     governingRule: arbitration.governing
       ? describeRule(arbitration.governing.ruleId, readingFor.get(arbitration.governing.ruleId)?.measured)

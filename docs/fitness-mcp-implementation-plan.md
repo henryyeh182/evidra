@@ -256,10 +256,16 @@ active Rule Package version 與 checksum 必須由 release gate 核對，不允�
 
 | Story | 交付結果 | 完成條件 | 狀態 |
 |---|---|---|---|
-| Release Story 1 | Unified release manifest。 | 建立 manifest schema／loader；由 Product、Engine、active Rule Packages 產生；檢查版本、checksum、engine compatibility 與 git metadata。 | 待開始 |
+| Release Story 1 | Unified release manifest。 | 建立 manifest schema／loader；由 Product、Engine、active Rule Packages 產生；檢查版本、checksum、engine compatibility 與 git metadata。 | 完成 |
 | Release Story 2 | Dual-target build。 | 同一份 source release 可產生 `.mcpb` 與 Remote-ready container image；兩者的 tool contract、Engine、Rules、schemas 與 manifest 相同。 | 待開始 |
 | Release Story 3 | Runtime identity output。 | decision／read／trace output 帶有 release、engine、library identity；既有 `libraryVersion`／`engineVersion` 保持相容；tests 驗證 metadata 不漂移。 | 待開始 |
 | Release Story 4 | Release／rollback gate。 | CI 依序執行 tests、harness、package validation、bundle install smoke、Remote container smoke、checksum／manifest gate；image 可切回上一個完整 release。 | 待開始 |
+
+#### Release Story 1 completion evidence — 2026-08-12
+
+- Root `release-manifest.json` is generated from `package.json`, `manifest.json`, `ENGINE_VERSION` and the validated active `base_rules` package; it records release, engine, legacy library, package checksum, compatibility, and git commit identity.
+- `release-manifest.schema.json` defines the shared release identity contract. `packages/release/src/index.js` loads and validates the manifest for source/runtime use; the bundle build inlines the same manifest content.
+- `npm run release:validate` is a drift gate for product version, engine version, active package version/checksum/compatibility, and git metadata. Decision basis, trace versions, and MCP `initialize.serverInfo` now expose `releaseVersion` and `libraryChecksum` while preserving `libraryVersion` and `engineVersion`.
 
 ### 4.5 Migration contract：MCPB → Remote
 

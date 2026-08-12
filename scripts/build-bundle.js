@@ -76,6 +76,19 @@ const layoutShims = {
       };
     });
 
+    pluginBuild.onResolve({ filter: /(^|\/)releaseManifestSource\.js$/ }, () => ({
+      path: "evidra:release-manifest",
+      namespace: "evidra-inline"
+    }));
+
+    pluginBuild.onLoad({ filter: /^evidra:release-manifest$/, namespace: "evidra-inline" }, () => {
+      const manifest = readFileSync(join(rootDir, "release-manifest.json"), "utf8");
+      return {
+        contents: `export const releaseManifestJson = ${JSON.stringify(manifest)};`,
+        loader: "js"
+      };
+    });
+
     pluginBuild.onResolve({ filter: /(^|\/)basePackageIdentity\.js$/ }, () => ({
       path: "evidra:base-package-identity",
       namespace: "evidra-inline"

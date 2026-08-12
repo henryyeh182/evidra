@@ -5,6 +5,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { arbitrate, combineIntensitySteps } from "../../../packages/rules/src/index.js";
 import { LIBRARY_VERSION } from "../../../packages/rules/src/index.js";
 import { ENGINE_VERSION } from "../../../packages/decision-engine/src/version.js";
+import { RELEASE_IDENTITY } from "../../../packages/release/src/index.js";
 
 const MAX_RECORDS = 256;
 const RECORD_TTL_MS = 15 * 60 * 1000;
@@ -72,6 +73,8 @@ export function recordDecision(payload, { userId = null, evidenceSource = "provi
       versions: {
         engine: basis?.engineVersion ?? ENGINE_VERSION,
         ruleLibrary: basis?.libraryVersion ?? LIBRARY_VERSION,
+        release: basis?.releaseVersion ?? RELEASE_IDENTITY.releaseVersion,
+        libraryChecksum: basis?.libraryChecksum ?? RELEASE_IDENTITY.libraryChecksum,
         ...(payload.versions ?? {})
       },
       // Compatibility alias for existing callers; the canonical nodes above

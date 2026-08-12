@@ -72,5 +72,5 @@ server.json
 
 # Kept: manifest.json, README.md (the submission requires its Privacy Policy
 # section to travel with the bundle), package.json (the server reads its
-# version), dist/, and data/seeds + data/fixtures, which the server reads at
+# version), release-manifest.json (the runtime identity), dist/, and data/seeds + data/fixtures, which the server reads at
 # runtime through knowledgeBase.js and demoData.js.
