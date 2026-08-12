@@ -73,6 +73,45 @@
     .brief-tabs { display:flex; gap:7px; margin:13px 5px 0; }
     .brief-tabs button { flex:1; background:transparent; color:#9daaba; border:0; padding:8px 2px; font:10px var(--mono); cursor:pointer; border-bottom:2px solid transparent; }
     .brief-tabs button.active { color:#fff; border-bottom-color:var(--lime); }
+    .trace-trigger { display:flex; width:100%; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; padding:11px 12px; border:1px solid var(--navy-line); border-radius:7px; background:#162238; color:#dbe5ec; font:10px var(--mono); text-align:left; cursor:pointer; }
+    .trace-trigger:hover,.trace-trigger:focus-visible { border-color:var(--lime); outline:none; }
+    .trace-trigger span:last-child { color:var(--lime); font-size:14px; }
+    .prototype-note { margin:12px 0 0; color:#7f91a3; font:9px var(--mono); line-height:1.45; }
+    .drawer-backdrop { position:fixed; inset:0; z-index:10; display:grid; justify-items:end; background:rgba(17,27,48,.38); opacity:0; pointer-events:none; transition:opacity .2s ease; }
+    .drawer-backdrop.open { opacity:1; pointer-events:auto; }
+    .trace-drawer { width:min(560px,100%); height:100%; overflow:auto; padding:28px; background:var(--surface); color:var(--ink); box-shadow:-24px 0 55px rgba(31,30,29,.16); transform:translateX(100%); transition:transform .25s ease; }
+    .drawer-backdrop.open .trace-drawer { transform:translateX(0); }
+    .drawer-head { display:flex; justify-content:space-between; gap:18px; align-items:start; border-bottom:1px solid var(--line); padding-bottom:20px; }
+    .drawer-head h2 { margin:0; font-size:30px; line-height:1; letter-spacing:-.06em; }
+    .drawer-close { border:1px solid var(--line); border-radius:50%; width:32px; height:32px; background:transparent; color:var(--ink); cursor:pointer; font-size:20px; line-height:1; }
+    .drawer-close:hover,.drawer-close:focus-visible { background:var(--surface-2); outline:none; }
+    .trace-kicker { margin:0 0 8px; color:var(--mint); font:10px var(--mono); letter-spacing:.12em; text-transform:uppercase; }
+    .graph { display:grid; gap:0; margin:24px 0; }
+    .graph-node { display:grid; grid-template-columns:10px 1fr auto; gap:12px; align-items:center; padding:13px 14px; border:1px solid var(--line); border-radius:7px; background:var(--surface-2); }
+    .graph-node + .graph-node { margin-top:8px; }
+    .graph-node:before { content:""; width:8px; height:8px; border-radius:50%; background:var(--mint); }
+    .graph-node.suppressed:before { background:#b9b1a5; }
+    .graph-node.arbitrated { border-color:var(--mint); background:var(--mint-soft); }
+    .graph-node b { display:block; font-size:13px; }
+    .graph-node small { display:block; margin-top:3px; color:var(--muted); font:10px var(--mono); line-height:1.45; }
+    .graph-node em { color:var(--mint); font:10px var(--mono); font-style:normal; }
+    .graph-node.suppressed em { color:var(--muted); }
+    .trace-table { width:100%; border-collapse:collapse; font-size:11px; }
+    .trace-table th,.trace-table td { padding:11px 8px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    .trace-table th { color:var(--muted); font:9px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+    .trace-table td:first-child { color:var(--mint); font:10px var(--mono); white-space:nowrap; }
+    .trace-table code { color:var(--ink); font:10px var(--mono); }
+    .outcome-box { padding:28px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); }
+    .outcome-box h3 { margin:0; font-size:25px; letter-spacing:-.05em; }
+    .outcome-box p { color:var(--muted); font-size:13px; line-height:1.6; }
+    .feedback-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:20px 0; }
+    .feedback-grid button { padding:13px 8px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); font-weight:700; cursor:pointer; }
+    .feedback-grid button:hover,.feedback-grid button.selected { border-color:var(--mint); background:var(--mint-soft); color:var(--mint); }
+    .effort-label { display:flex; justify-content:space-between; color:var(--muted); font:10px var(--mono); }
+    .effort { width:100%; accent-color:var(--mint); }
+    .feedback-status { min-height:18px; margin:14px 0 0; color:var(--mint); font:10px var(--mono); }
+    .preview-tag { display:inline-block; margin-left:8px; padding:4px 7px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font:9px var(--mono); vertical-align:2px; }
+    body.drawer-open { overflow:hidden; }
     .section { padding:124px 0; border-top:1px solid var(--line); }
     .section-head { display:flex; justify-content:space-between; align-items:end; gap:30px; margin-bottom:58px; } .section-head h2 { margin:0; font-size:clamp(38px,4.1vw,58px); line-height:.98; letter-spacing:-.067em; max-width:13ch; }
     .section-head p { margin:0; color:var(--muted); font-size:15px; line-height:1.65; max-width:46ch; }
@@ -136,6 +175,8 @@
             <div class="decision"><div class="decision-label">Today’s decision</div><div class="from-to"><div class="workout"><small>From · scheduled</small><b id="fromTitle">Tempo Run</b><span id="fromMeta">50 min · High</span></div><div class="arrow">→</div><div class="workout"><small>To · today</small><b id="toTitle">Moderate Run</b><span id="toMeta">50 min · Moderate</span></div></div></div>
             <p class="brief-reason" id="reason"><strong>Why this changed:</strong> Readiness is below the intensity threshold. <code>RULE EVD-R-002</code></p>
           </div>
+          <button class="trace-trigger" id="traceTrigger" type="button" aria-controls="traceDrawer" aria-expanded="false"><span>Why this changed · open Decision Trace</span><span>↗</span></button>
+          <p class="prototype-note">Interactive preview · this example uses fixture evidence, not a connected account.</p>
           <div class="brief-tabs" aria-label="Decision examples"><button data-case="keep">Keep</button><button class="active" data-case="adjust">Adjust</button><button data-case="defer">Defer</button></div>
           </div>
         </div>
@@ -158,12 +199,15 @@
         <div class="split"><div class="flow"><div class="flow-row"><i>→</i><div><b>From: Tempo Run</b><p>50 min · high intensity</p></div></div><div class="flow-row"><i>→</i><div><b>To: Moderate Run</b><p>50 min · moderate intensity</p></div></div><div class="flow-row"><i>✓</i><div><b>Decision: adjust</b><p>Readiness 48 · sleep signal missing · medium confidence</p></div></div></div><div><p class="eyebrow">Decision Layer</p><h2 class="quote">Not another<br>recommendation.<br><em>A change you can act on.</em></h2><p class="body-copy">Pacevera starts with a prior state: the session you planned. It outputs an accountable change—keep, adjust, substitute, defer, or advance—rather than inventing a workout from scratch.</p></div></div>
       </section>
 
-      <section class="section" id="pricing"><div class="pricing"><div><p class="eyebrow">Pricing</p><h2>Start with the decision.</h2><p>Pacevera Desktop is free while we validate the decision engine with serious athletes and coaches. No account, no health-data signup.</p></div><article class="plan"><div class="plan-top"><div><p class="eyebrow">Desktop</p><h3 class="plan-name">Free</h3></div><div class="plan-price"><b>$0</b><span>free to install</span></div></div><ul><li>Local Pacevera MCPB for Claude Desktop</li><li>Today’s session decisions: keep, adjust, substitute, defer, advance</li><li>Evidence coverage, missing signals and confidence</li><li>Decision reason and rule trace</li><li>No account and no health-data upload to Pacevera</li></ul><a class="button" href="https://github.com/henryyeh182/evidra/releases/latest"><img class="github-icon" src="https://github.githubassets.com/favicons/favicon.svg" alt="">Get started for free</a></article></div></section>
+      <section class="section" id="outcome"><div class="split"><div><p class="eyebrow">Outcome · prototype</p><h2 class="quote">A decision is useful<br>when you can say<br><em>what happened next.</em></h2><p class="body-copy">Try the review step for this example. This preview records your selection only in the page session; it does not create an account or send health data anywhere.</p></div><div class="outcome-box"><h3>How did today’s change land?</h3><p>Select the outcome, then add the effort you perceived.</p><div class="feedback-grid" role="group" aria-label="Outcome feedback"><button type="button" data-outcome="Adopted">Adopted</button><button type="button" data-outcome="Changed">Changed</button><button type="button" data-outcome="Skipped">Skipped</button></div><label class="effort-label" for="effort"><span>Perceived effort</span><span id="effortValue">5 / 10</span></label><input class="effort" id="effort" type="range" min="0" max="10" value="5"><p class="feedback-status" id="feedbackStatus" aria-live="polite">Prototype only · nothing saved yet.</p></div></div></section>
+
+      <section class="section" id="pricing"><div class="pricing"><div><p class="eyebrow">Public preview</p><h2>Start with the decision.</h2><p>Pacevera Desktop is the current install path while we validate the decision engine with serious athletes and coaches. No account, no health-data signup.</p></div><article class="plan"><div class="plan-top"><div><p class="eyebrow">Desktop<span class="preview-tag">preview</span></p><h3 class="plan-name">Free</h3></div><div class="plan-price"><b>$0</b><span>while in preview</span></div></div><ul><li>Local Pacevera MCPB for Claude Desktop</li><li>Today’s session decisions: keep, adjust, substitute, defer, advance</li><li>Evidence coverage, missing signals and confidence</li><li>Decision reason and rule trace</li><li>No account and no health-data upload to Pacevera</li></ul><a class="button" href="https://github.com/henryyeh182/evidra/releases/latest"><img class="github-icon" src="https://github.githubassets.com/favicons/favicon.svg" alt="">View desktop release</a></article></div></section>
 
       <section class="section" id="about"><div class="final-cta"><div class="final-cta-inner"><p class="eyebrow">Pacevera</p><h2>Every training <em>decision</em><br>deserves a <em>reason.</em></h2><p>Your readiness score is only the beginning. Pacevera shows what changes in today’s planned session, why it changed, and what evidence is still missing.</p><a class="button" href="https://github.com/henryyeh182/evidra/releases/latest"><img class="github-icon" src="https://github.githubassets.com/favicons/favicon.svg" alt="">Get started for free</a></div></div></section>
     </main>
-    <footer><span>© 2026 Pacevera · Fitness decision infrastructure</span><nav><a href="#about">About</a><a href="mailto:hello@pacevera.com">Contact</a><a href="user-journey.html">Product journey</a></nav></footer>
+    <footer><span>© 2026 Pacevera · Fitness decision infrastructure · public preview</span><nav><a href="#about">About</a><a href="mailto:hello@pacevera.com">Contact</a><a href="user-journey.html">Product journey</a></nav></footer>
   </div>
+  <div class="drawer-backdrop" id="traceDrawer" role="dialog" aria-modal="true" aria-labelledby="traceTitle" aria-hidden="true"><aside class="trace-drawer"><div class="drawer-head"><div><p class="trace-kicker">Decision Graph · prototype fixture</p><h2 id="traceTitle">Tempo Run → Moderate Run</h2></div><button class="drawer-close" id="traceClose" type="button" aria-label="Close Decision Trace">×</button></div><p class="body-copy">The engine compared the scheduled session with the available evidence, then kept the highest-priority applicable rule.</p><div class="graph" aria-label="Decision Graph"><div class="graph-node"><div><b>Evidence</b><small>Readiness 48 · legs fatigue 72 · sleep missing</small></div><em>input</em></div><div class="graph-node"><div><b>EVD-R-002 · reduce today intensity</b><small>Readiness is below the high-intensity threshold</small></div><em>triggered</em></div><div class="graph-node suppressed"><div><b>EVD-R-000 · keep as planned</b><small>Evidence is not fully in range, so this candidate is suppressed</small></div><em>suppressed</em></div><div class="graph-node arbitrated"><div><b>Arbitration → adjust</b><small>Priority 70 wins over keep priority 10</small></div><em>governing</em></div><div class="graph-node arbitrated"><div><b>Action · Tempo Run → Moderate Run</b><small>Same duration · lower intensity · medium confidence</small></div><em>output</em></div></div><table class="trace-table"><thead><tr><th>Trace</th><th>Resolved value</th></tr></thead><tbody><tr><td>Rule</td><td><code>EVD-R-002</code> · reduce_today_intensity</td></tr><tr><td>Evidence</td><td>readiness 48; leg fatigue 72; sleep missing</td></tr><tr><td>Source</td><td>fixture: garmin-morning-summary.json</td></tr><tr><td>Version</td><td>Engine 1.6.0 · base_rules 1.1.0</td></tr></tbody></table><p class="prototype-note">Illustrative UI for Phase 0.5. The graph is not a hosted history view and does not imply connected Garmin access.</p></aside></div>
   <script>
     const scenarios = {
       keep: { status:'Ready to train', statusClass:'', metrics:[['Readiness','82 ↑'],['Sleep','7h 42m ↑'],['Leg fatigue','28 / 100 ↑'],['Training load','1.3h this week ↑']], from:['HIIT Conditioning','40 min · High'], to:['HIIT Conditioning','40 min · High'], evidence:'Sleep, HRV, fatigue and load are in range', attachment:'morning-evidence-summary.json', prompt:'I have HIIT Conditioning, 40 min at high intensity. Should I keep it?', handoff:'Pacevera checked the evidence and confirmed the scheduled session.', reason:'<strong>Why this changed:</strong> Evidence is in range. Keep the session as planned. <code>RULE EVD-R-000</code>' },
@@ -171,6 +215,12 @@
       defer: { status:'Recovery first', statusClass:'defer', metrics:[['Readiness','6 ↓'],['Sleep','5h 18m ↓'],['Leg fatigue','91 / 100 ↓'],['Training load','5.6h this week ↑']], from:['VO₂max Intervals','60 min · High'], to:['Recovery + mobility','30 min · Low'], evidence:'WHOOP recovery 12% · readiness 6 · high fatigue', attachment:'whoop-recovery-summary.json', prompt:'I have VO₂max Intervals, 60 min at high intensity. Should I keep it?', handoff:'Pacevera found recovery below the safety floor and replaced the session.', reason:'<strong>Why this changed:</strong> Recovery is below the safety floor. Swap today’s session. <code>RULE EVD-R-001</code>' }
     };
     const $ = id => document.getElementById(id);
+    const traceDrawer = $('traceDrawer');
+    const setTraceOpen = open => { traceDrawer.classList.toggle('open', open); traceDrawer.setAttribute('aria-hidden', String(!open)); $('traceTrigger').setAttribute('aria-expanded', String(open)); document.body.classList.toggle('drawer-open', open); if (open) $('traceClose').focus(); else $('traceTrigger').focus(); };
+    $('traceTrigger').addEventListener('click', () => setTraceOpen(true)); $('traceClose').addEventListener('click', () => setTraceOpen(false)); traceDrawer.addEventListener('click', event => { if (event.target === traceDrawer) setTraceOpen(false); }); document.addEventListener('keydown', event => { if (event.key === 'Escape' && traceDrawer.classList.contains('open')) setTraceOpen(false); });
+    const feedbackStatus = $('feedbackStatus');
+    document.querySelectorAll('[data-outcome]').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('[data-outcome]').forEach(b => b.classList.toggle('selected', b === button)); feedbackStatus.textContent = `Prototype only · ${button.dataset.outcome} selected · not saved.`; }));
+    $('effort').addEventListener('input', event => { $('effortValue').textContent = `${event.target.value} / 10`; });
     document.querySelectorAll('[data-case]').forEach(button => button.addEventListener('click', () => {
       const s = scenarios[button.dataset.case];
       document.querySelectorAll('[data-case]').forEach(b => b.classList.toggle('active', b === button));

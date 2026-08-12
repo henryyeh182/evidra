@@ -341,8 +341,8 @@
     </p>
 
     <div class="docrole">
-      <span><b>目前公開版</b>　Pacevera v0.4.2 · Decision Engine v1.6.0</span>
-      <span><b>下一版定版</b>　v0.5.0 · Engine v1.6.0 · base_rules v1.1.0</span>
+      <span><b>Public preview</b>　Pacevera desktop decision engine · fixture-led walkthrough</span>
+      <span><b>Release line</b>　v0.5.0 target · Engine v1.6.0 · base_rules v1.1.0</span>
       <span>Local-first · AI 可替換 · 決策與版本可追溯</span>
     </div>
 
@@ -355,9 +355,9 @@
     </p>
 
     <div class="cta">
-      <a class="primary" href="https://github.com/henryyeh182/evidra/releases/latest">下載 pacevera.mcpb</a>
+      <a class="primary" href="https://github.com/henryyeh182/evidra/releases/latest">查看 desktop preview</a>
       <a class="secondary" href="#install">怎麼裝、怎麼試</a>
-      <span>Claude Desktop · 不需帳號 · 原始碼不開放，行為可驗證</span>
+      <span>Claude Desktop · 不需帳號 · preview scope 清楚標示</span>
     </div>
 
     <div class="contrast">
@@ -493,7 +493,7 @@
       <div class="form now">
         <div class="stage">Form 1 · <code>local-desktop</code> — 第一個可用形態</div>
         <h4>Desktop extension（MCPB）</h4>
-        <div class="who">跑在使用者自己的電腦上 · v0.4.2</div>
+        <div class="who">跑在使用者自己的電腦上 · current desktop path</div>
         <p>
           <strong>今天就能裝的那一個。</strong>使用者在 Claude Desktop 安裝一顆
           <code>.mcpb</code>，走 stdio，整個決策計算發生在他自己的機器上。
@@ -501,7 +501,7 @@
         </p>
         <p class="status ok">
           <b>✓ 可用</b><br>
-          已上架官方 MCP registry；Anthropic MCPB 表單已送出，審查中
+          public preview · install path is available for local evaluation
         </p>
       </div>
 
@@ -602,8 +602,9 @@
     <p class="note">
       也在<a href="https://github.com/modelcontextprotocol/registry">官方 MCP registry</a> 上架，
       識別碼 <code>io.github.henryyeh182/evidra</code>。Anthropic 的 MCPB 目錄審查中。
-      這裡安裝的是目前公開的 v0.4.2；下一版 v0.5.0 規劃為 10 個 public tools，
-      使用 Decision Engine v1.6.0 與 <code>base_rules@1.1.0</code>，完成 release gates 後才替換下載入口。
+      這裡介紹的是 local desktop public preview；v0.5.0 是目前的 release target，
+      不是對 hosted connectors、private engine 或帳號能力已完成的承諾。
+      Product／Engine／Rule Package 版本會在 release gates 完成後才作為正式對外 identity。
     </p>
 
   </section>
@@ -1234,8 +1235,9 @@
       <code>docs/fitness-mcp-implementation-plan.md</code>，不重複寫在這裡；
       兩份衝突時，以那份的現況表為準。
       <br>
-      對照日期 2026-08-11。目前公開版為 Pacevera v0.4.2／Decision Engine v1.6.0／legacy Rule Library v1.4.0；
-      下一版固定為 Pacevera v0.5.0／Decision Engine v1.6.0／<code>base_rules@1.1.0</code>。
+      對照日期 2026-08-12。本頁是 stakeholder／marketing explainer 與產品旅程原型；
+      public preview 的安裝入口仍以實際 release 狀態為準。v0.5.0、private connectors、hosted remote 與帳號能力
+      都必須等各自的 release／privacy gate 完成後才能對外宣稱。
       可複製的 demo prompts 與 sample evidence 在 <code>examples/README.md</code>，
       每一則的輸出都由測試釘住。
       產品策略與下一階段的取捨見 <code>docs/pacevera-product-strategy.md</code>；
