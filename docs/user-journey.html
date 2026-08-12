@@ -1,4 +1,7 @@
 <title>Pacevera — 從證據到今天的訓練決策</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     /* Anthropic 系統色：米灰底 + 駝色層次 */
@@ -16,13 +19,14 @@
     --mint-dim: #A9CFBC;
     --warn: #8D6221;
     --stop: #A8483C;
-    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "PingFang TC", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --body: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "PingFang TC", sans-serif;
+    --display: "Space Grotesk", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "PingFang TC", sans-serif;
   }
   body {
     background: var(--paper);
     color: var(--text);
-    font-family: var(--sans);
+    font-family: var(--body);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
@@ -38,6 +42,10 @@
     text-transform: uppercase;
     background: linear-gradient(90deg, #2C8F68, #3E7F8C, #3A62A0);
     -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--display);
   }
 
   h1 {
@@ -363,34 +371,34 @@
     </div>
 
     <p class="corestatement">
-      Pacevera is a <b>Fitness Decision Engine</b>,<br>
-      not a fitness data connector and not an AI coach.
+      Pacevera 是一個<b>訓練決策引擎</b>，<br>
+      不是資料搬運工具，也不是另一個 AI 教練。
     </p>
     <p class="docpurpose">
-      這份文件講的是<b>這個產品是什麼、往哪裡走</b>——給 stakeholder 看的方向。
+      這份文件講的是<b>這個產品是什麼、往哪裡走</b>——給利害關係人與一般觀眾看的方向。
       三種部署形態、五層決策、證據語彙與出處治理，是同一個方向的四個切面。
     </p>
 
     <div class="docrole">
-      <span><b>Public preview</b>　Pacevera desktop decision engine · fixture-led walkthrough</span>
-      <span><b>Release line</b>　v0.5.0 target · Engine v1.6.0 · base_rules v1.1.0</span>
-      <span>Local-first · AI 可替換 · 決策與版本可追溯</span>
+      <span><b>公開預覽</b>　Pacevera 桌面版 · 以真實資料形狀示範</span>
+      <span><b>版本目標</b>　v0.5.0 · 決策引擎 v1.6.0 · 基礎規則 v1.1.0</span>
+      <span>本機優先 · AI 可以替換 · 決策與版本都可追溯</span>
     </div>
 
-    <p class="hero-kicker">Fitness decisions, with your evidence under your control</p>
+    <p class="hero-kicker">訓練決定由資料支持，而資料仍由你控制</p>
     <h1>你的 AI coach 應該知道<em>今天的你</em>，<br>不必擁有你的健康歷史。</h1>
     <p class="standfirst">
-      Pacevera 是一個 <strong>Fitness Decision Engine</strong>：把你今天原本排定的訓練，
+      Pacevera 是一個<strong>訓練決策引擎</strong>：把你今天原本排定的訓練，
       和當下的身體證據放在一起，產生一個看得懂、追得回理由的決策。
     </p>
     <p class="hero-sub">
-      你繼續使用熟悉的 AI；<strong>Evidence 留在你的控制邊界</strong>，Pacevera 只負責把狀態轉成今天能執行的變更。
+      你繼續使用熟悉的 AI；<strong>資料留在你的控制範圍</strong>，Pacevera 只負責把目前狀態轉成今天能執行的調整。
     </p>
 
     <div class="cta">
-      <a class="primary" href="https://github.com/henryyeh182/evidra/releases/latest">查看 desktop preview</a>
+      <a class="primary" href="https://github.com/henryyeh182/evidra/releases/latest">查看桌面版公開預覽</a>
       <a class="secondary" href="#install">怎麼裝、怎麼試</a>
-      <span>Claude Desktop · 不需帳號 · preview scope 清楚標示</span>
+      <span>Claude Desktop · 不需帳號 · 公開預覽範圍清楚標示</span>
     </div>
     <nav class="jumpnav" aria-label="頁面導覽">
       <a href="#problem">你正在解決的問題</a>
@@ -400,7 +408,7 @@
 
     <div class="contrast">
       <div class="card weak">
-        <h3>Recommendation　裸模型</h3>
+        <h3>一般建議　只憑語言推測</h3>
         <p class="quote dim">「你昨天練得重，今天建議做 Zone 2 輕鬆跑。」</p>
         <dl>
           <dt>從哪來</dt><dd>憑語言推測</dd>
@@ -410,8 +418,8 @@
         </dl>
       </div>
       <div class="card strong">
-        <h3>Decision　Pacevera</h3>
-        <p class="quote">「今天排定的 VO₂max Intervals，強度由 high 調降為 low。」</p>
+        <h3>訓練決定　Pacevera</h3>
+        <p class="quote">「今天原定做高強度間歇，建議調低強度。」</p>
         <dl>
           <dt>從哪來</dt><dd>證據 × 運動科學模型</dd>
           <dt>前置狀態</dt><dd>今天排定的課表</dd>
@@ -422,26 +430,26 @@
     </div>
 
     <p class="verdict">
-      這也是與既有 fitness MCP 的根本差異：<b>他們在 MCP 之後直接回覆</b>；
-      Pacevera 在 MCP 與回覆之間，有一層獨立的 <b>Fitness Decision Engine</b>。
+      這也是與一般健身工具的根本差異：<b>它們通常直接回覆建議</b>；
+      Pacevera 會先檢查資料與原定課表，再決定今天是否需要調整。
     </p>
   </header>
 
   <section class="problem" id="problem">
-    <p class="section-label">The problem</p>
+    <p class="section-label">我們要解決的問題</p>
     <h2>一般 AI 知道運動知識，卻不知道你的連續狀態</h2>
     <p class="lede">
       每個新對話都可能重新開始：昨晚睡了多少、這幾週累積了多少負荷、今天原本排了什麼，
-      都要靠你再次交代。問題不是缺少另一個 dashboard，而是<strong>今天的課表要不要照做，以及如果不照做要改成什麼</strong>。
+      都要靠你再次交代。問題不是缺少另一個儀表板，而是<strong>今天的課表要不要照做，以及如果不照做要改成什麼</strong>。
     </p>
     <div class="problem-grid">
       <div class="problem-card">
         <h3>只有建議，沒有前置狀態</h3>
-        <p>「今天跑 Zone 2」聽起來合理，但它沒有回答：原本排的是什麼？哪個訊號改變了答案？</p>
+        <p>「今天輕鬆跑」聽起來合理，但它沒有回答：原本排的是什麼？哪個訊號改變了答案？</p>
       </div>
       <div class="problem-card">
         <h3>只有資料，沒有今天的動作</h3>
-        <p>穿戴資料與 dashboard 可以告訴你發生了什麼，卻不一定能把它轉成一個具體、可執行的課表變更。</p>
+        <p>穿戴資料與儀表板可以告訴你發生了什麼，卻不一定能把它轉成具體、可以照做的課表調整。</p>
       </div>
       <div class="problem-card">
         <h3>健康歷史不該變成平台資產</h3>
@@ -451,27 +459,27 @@
   </section>
 
   <section class="case" id="case">
-    <p class="section-label">One decision, made concrete</p>
+    <p class="section-label">把一個訓練決定說清楚</p>
     <h2>從原定課表，到今天真正適合做的事</h2>
-    <p class="case-lede">同一個人、同一天；差別不是 AI 換了一句話，而是 Evidence 改變了既有 session。</p>
+    <p class="case-lede">同一個人、同一天；差別不是 AI 換了一句話，而是今天的資料改變了原定訓練。</p>
     <div class="case-grid">
       <div class="case-step">
         <div class="tag">原定訓練</div>
         <h3>Tempo Run</h3>
-        <p>50 min · high intensity</p>
+        <p>50 分鐘 · 高強度</p>
       </div>
       <div class="case-arrow" aria-hidden="true">→</div>
       <div class="case-step to">
         <div class="tag">今天執行</div>
-        <h3>Moderate run</h3>
-        <p>50 min · <strong>moderate intensity</strong></p>
+        <h3>中等強度跑</h3>
+        <p>50 分鐘 · <strong>中等強度</strong></p>
       </div>
     </div>
-    <p class="case-reason"><strong>為什麼：</strong> readiness 48，且近期證據顯示恢復不足。輸出同時標示依據、信心與缺少的訊號；不是把不確定性藏起來。</p>
+    <p class="case-reason"><strong>為什麼：</strong>準備程度只有 48，近期資料也顯示恢復不足。輸出同時標示依據、信心與缺少的訊號，不把不確定性藏起來。</p>
   </section>
 
   <section class="spine">
-    <p class="section-label">Before The Chain</p>
+    <p class="section-label">資料如何進入決策</p>
     <h2>證據怎麼到 AI 手上</h2>
     <p class="lede">
       決策鏈要能開始，證據得先進到「今天該練什麼」那句對話裡——而這段路上的每一步，
@@ -493,24 +501,24 @@
           <tr>
             <td class="sig-name">Claude 連上 Pacevera</td>
             <td><b>我們</b></td>
-            <td class="yes">✓ desktop extension v0.4.2（stdio）</td>
-            <td class="no">— 手機只支援 remote，尚未完成</td>
+            <td class="yes">✓ 桌面版擴充功能 v0.4.2（本機連線）</td>
+            <td class="no">— 手機目前只有遠端入口，尚未完成</td>
           </tr>
           <tr>
             <td class="sig-name">取得 Apple Health／Garmin 資料</td>
-            <td>host app 的權限與各家 OAuth</td>
+            <td>AI 使用的應用程式權限與各家授權</td>
             <td class="no">— 不在我們手上（今天走匯出檔或口述）</td>
             <td class="no">— 不在我們手上</td>
           </tr>
           <tr>
-            <td class="sig-name">證據以參數進入 tool call</td>
-            <td><b>我們</b>　Fitness Evidence Model</td>
+            <td class="sig-name">資料送進決策工具</td>
+            <td><b>我們</b>　訓練資料格式</td>
             <td class="yes">✓ 已完成</td>
             <td class="yes">✓ 同一份實作</td>
           </tr>
           <tr>
             <td class="sig-name">五層決策</td>
-            <td><b>我們</b>　Fitness Decision Engine</td>
+            <td><b>我們</b>　訓練決策引擎</td>
             <td class="yes">✓ 已完成，見下</td>
             <td class="yes">✓ 同一份實作</td>
           </tr>
@@ -518,43 +526,43 @@
       </table>
     </div>
     <p class="note">
-      v0.4.2 的合法 Evidence 路徑是匯出檔、使用者口述，或 host 整理後的 tool input；
-      Pacevera 不持有 provider token。產品終局則由<strong>使用者授權本機 connector／private gateway</strong>，
-      AI 只取得完成當次問題所需的最小化 state 與 decision output。
-      <strong>每個 AI host 都不應各自保存 Apple／Garmin 的 refresh token。</strong>
+      v0.4.2 目前可用的資料來源是匯出檔、使用者口述、使用者日誌，或由 AI 整理後送進工具的資料；
+      Pacevera 不保存 Apple／Garmin 的登入憑證。未來由<strong>使用者授權自己的本機連接器或私人入口</strong>，
+      AI 每次只取得回答當前問題所需的最少資料與結果。
+      <strong>完整健康歷史與登入憑證不應由每個 AI 服務各自保存。</strong>
     </p>
     <p class="note warn">
-      Remote transport 做好，Apple Health 與 Garmin 的取用也不會自動出現。
-      下一個核心工程是 local private engine：先固定 connector 權限、token 儲存、state／plan 持久化與刪除契約，
-      再談手機 access channel。<strong>Remote 解決的是接觸面，不是資料主權。</strong>
-      今天走得通的匯出檔與使用者口述仍是合法 Evidence，不會因未來 connector 上線而失效。
+      遠端連線完成後，Apple Health 與 Garmin 的資料也不會自動出現。
+      下一步要先建立本機私人引擎，定義連線權限、登入憑證保存、訓練紀錄保存與刪除方式，再談手機入口。
+      <strong>遠端連線解決的是接觸面，不是資料主權。</strong>
+      今天可用的匯出檔、使用者口述與使用者日誌，未來接上連接器後仍然有效。
     </p>
   </section>
 
   <section class="spine">
-    <p class="section-label">Who It Serves</p>
+    <p class="section-label">先服務誰</p>
     <h2>先服務不想再交出健康歷史的人</h2>
     <p class="lede">
-      Pacevera 的第一個 beachhead 不是泛用健身大眾，而是已經在使用 AI、手上有 Apple Health、
-      Garmin 或相近穿戴資料，卻不願再把資料搬進另一個平台的 serious athlete。
-      他們最先要解決的不是「再看一個 dashboard」，而是<strong>今天原本的課表要不要照做</strong>。
+      Pacevera 的第一批使用者不是泛用健身大眾，而是已經在使用 AI、手上有 Apple Health、
+      Garmin 或相近穿戴資料，卻不願再把資料搬進另一個平台的認真訓練者。
+      他們最先要解決的不是「再看一個儀表板」，而是<strong>今天原本的課表要不要照做</strong>。
     </p>
     <div class="contrast">
       <div class="card strong">
-        <h3>First user</h3>
+        <h3>第一批使用者</h3>
         <p class="quote">「我今天該照課表做嗎？如果不該，具體改成什麼？」</p>
         <dl>
-          <dt>已有</dt><dd>AI host、穿戴資料、固定訓練習慣</dd>
+          <dt>已有</dt><dd>AI 工具、穿戴資料、固定訓練習慣</dd>
           <dt>在意</dt><dd>新鮮證據、可解釋的訓練變更、資料留在自己的邊界</dd>
           <dt>首次成功</dt><dd>10 分鐘內完成一次可追溯的課表調整</dd>
         </dl>
       </div>
       <div class="card">
-        <h3>Not the promise</h3>
-        <p class="quote dim">Pacevera 不是健康資料 dashboard，也不是另一個 AI coach。</p>
+        <h3>不做過度承諾</h3>
+        <p class="quote dim">Pacevera 不是健康資料儀表板，也不是另一個 AI 教練。</p>
         <dl>
           <dt>不做</dt><dd>不取代使用者已經在用的 AI</dd>
-          <dt>不承諾</dt><dd>不把 hosted remote 說成「Evidence 不離開你的電腦」</dd>
+          <dt>不承諾</dt><dd>不把遠端服務說成「資料不離開你的電腦」</dd>
           <dt>長期方向</dt><dd>把同一顆引擎帶進教練、隊伍與企業私有環境</dd>
         </dl>
       </div>
@@ -562,19 +570,19 @@
   </section>
 
   <section class="spine">
-    <p class="section-label">Three Forms</p>
+    <p class="section-label">三種使用形態</p>
     <h2>同一顆引擎，三種形態</h2>
     <p class="lede">
       底下的決策鏈在三種形態裡是<strong>同一份實作</strong>，差別只在它跑在誰的機器上、
       證據怎麼進來、誰付錢。<strong>這不是三個階段，是三種使用者處境</strong>——
-      remote 上線不會取代 desktop extension，user-controlled private deployment 也不是 remote 的續集。
+      遠端服務上線不會取代桌面版；由使用者控制的私人部署，也不是遠端服務的下一版。
     </p>
 
     <div class="forms">
       <div class="form now">
-        <div class="stage">Form 1 · <code>local-desktop</code> — 第一個可用形態</div>
-        <h4>Desktop extension（MCPB）</h4>
-        <div class="who">跑在使用者自己的電腦上 · current desktop path</div>
+        <div class="stage">形態 1 · 本機桌面版 — 第一個可用形態</div>
+        <h4>桌面擴充功能（MCPB）</h4>
+        <div class="who">跑在使用者自己的電腦上 · 今天就能使用</div>
         <p>
           <strong>今天就能裝的那一個。</strong>使用者在 Claude Desktop 安裝一顆
           <code>.mcpb</code>，走 stdio，整個決策計算發生在他自己的機器上。
@@ -582,52 +590,52 @@
         </p>
         <p class="status ok">
           <b>✓ 可用</b><br>
-          public preview · install path is available for local evaluation
+          公開預覽 · 已有本機安裝方式可供評估
         </p>
       </div>
 
       <div class="form">
-        <div class="stage">Form 2 · <code>user-controlled-private</code> — 下一個核心產品</div>
-        <h4>Local private engine</h4>
+        <div class="stage">形態 2 · 使用者控制的私人環境 — 下一個核心產品</div>
+        <h4>本機私人引擎</h4>
         <div class="who">跑在使用者、教練或機構自己控制的環境</div>
         <p>
-          connector、Evidence、縱向 state、plan、Decision Engine 與 Rule Packages 都留在
-          user-controlled environment。這個形態讓「換模型不歸零」與
-          <strong>Evidence 不離開你的控制邊界</strong>同時成立，也是未來教練、隊伍與企業部署的地基。
+          連接器、資料、長期紀錄、訓練計畫、決策引擎與規則都留在
+          使用者控制的環境。這個形態讓「換模型不歸零」與
+          <strong>資料不離開你的控制範圍</strong>同時成立，也是未來教練、隊伍與企業部署的地基。
         </p>
         <p class="status wait">
-          <b>Phase 2</b><br>
-          待建：durable local repository · connector permissions · export／delete · private acceptance
+          <b>第二階段</b><br>
+          待建：本機資料庫 · 連線權限 · 匯出／刪除 · 私人環境驗收
         </p>
       </div>
 
       <div class="form">
-        <div class="stage">Form 3 · <code>hosted-remote</code> — 後續 access channel</div>
-        <h4>Controlled mobile / Remote MCP</h4>
-        <div class="who">手機連 private engine，或使用 hosted transient endpoint</div>
+        <div class="stage">形態 3 · 遠端服務 — 後續使用入口</div>
+        <h4>受控手機入口／遠端連線</h4>
+        <div class="who">手機連回私人引擎，或使用只處理當次問題的遠端服務</div>
         <p>
-          手機先以受控 pairing／tunnel 連回使用者或機構的 private engine。
-          若未來提供 Pacevera hosted remote，只能承諾最小化 Evidence、transient processing 與不留存；
-          <strong>不能把它描述成「Evidence 不離開你的電腦」</strong>。
+          手機先以受控方式連回使用者或機構的私人引擎。
+          若未來提供 Pacevera 遠端服務，只能承諾最少資料、只處理當次問題、不保存完整歷史；
+          <strong>不能把它描述成「資料不離開你的電腦」</strong>。
         </p>
         <p class="status none">
-          <b>Phase 3 · 目前 Blocked</b><br>
-          authorization · HTTPS · redaction · privacy policy · host E2E 與付費需求全部成立才 GO
+          <b>第三階段 · 目前暫停</b><br>
+          授權 · HTTPS · 資料遮蔽 · 隱私政策 · 端到端測試與付費需求全部成立才上線
         </p>
       </div>
     </div>
 
     <p class="note">
-      Form 1 與 Form 2 都把計算放在使用者控制的環境；Form 3 可能只是通往 private engine 的受控入口，
-      也可能是 hosted transient service。<strong>兩條資料流必須在使用者連線前就清楚標示，不能共用同一句隱私承諾。</strong>
+      形態 1 與形態 2 都把計算放在使用者控制的環境；形態 3 可能只是通往私人引擎的受控入口，
+      也可能是只處理當次問題的遠端服務。<strong>兩條資料流必須在使用者連線前清楚標示，不能共用同一句隱私承諾。</strong>
     </p>
   </section>
 
   <section class="spine" id="install">
-    <p class="section-label">Install</p>
+    <p class="section-label">安裝與試用</p>
     <h2>四步，沒有一步是登入</h2>
     <p class="lede">
-      Form 1 今天就能裝。整段安裝沒有帳號、沒有 API key、沒有任何設定欄位——
+      形態 1 今天就能安裝。整段安裝沒有帳號、沒有 API 金鑰、沒有任何設定欄位——
       <strong>因為 Pacevera 不去拿你的資料</strong>，就沒有東西需要授權。
     </p>
 
@@ -637,8 +645,8 @@
         <div>
           <h4>下載 <code>pacevera.mcpb</code></h4>
           <p>
-            從 <a href="https://github.com/henryyeh182/evidra/releases/latest">releases/latest</a> 取得。
-            單一檔案，內含編譯好的 server 與整份規則庫。
+            從 <a href="https://github.com/henryyeh182/evidra/releases/latest">發布頁</a> 取得。
+            單一檔案，內含可直接執行的服務與整份規則庫。
           </p>
           <p class="hash">
             v0.4.2 · sha256 cd5a05403f958c3533794b1c6258d24fe413dcbe6a911439d4b714316e8f87eb
@@ -648,7 +656,7 @@
       <div class="step">
         <div class="step-n">2</div>
         <div>
-          <h4>核對 checksum（可略過，但這是重點之一）</h4>
+          <h4>核對檔案指紋（可略過，但這是重點之一）</h4>
           <p>
             <code>shasum -a 256 pacevera.mcpb</code>，比對
             <a href="https://registry.modelcontextprotocol.io/?q=pacevera">官方 MCP registry</a>
@@ -663,7 +671,7 @@
         <div>
           <h4>Claude Desktop → 設定 → 擴充功能 → 安裝</h4>
           <p>
-            拖進去就好。<strong>沒有設定畫面</strong>——這顆 extension 沒有宣告任何
+            拖進去就好。<strong>沒有設定畫面</strong>——這個擴充功能沒有宣告任何
             <code>user_config</code> 欄位，因為它不需要知道你是誰。
           </p>
         </div>
@@ -673,7 +681,7 @@
         <div>
           <h4>直接問</h4>
           <p>
-            六個 tool 立刻可用。<strong>不需要先匯入資料</strong>：你自己講的話就是合法的證據，
+            六個工具立刻可用。<strong>不需要先匯入資料</strong>：你自己講的話就是有效資料，
             匯出檔也是。下一節有六則可以整段複製的問法。
           </p>
         </div>
@@ -683,16 +691,16 @@
     <p class="note">
       也在<a href="https://github.com/modelcontextprotocol/registry">官方 MCP registry</a> 上架，
       識別碼 <code>io.github.henryyeh182/evidra</code>。Anthropic 的 MCPB 目錄審查中。
-      這裡介紹的是 local desktop public preview；v0.5.0 是目前的 release target，
-      不是對 hosted connectors、private engine 或帳號能力已完成的承諾。
-      Product／Engine／Rule Package 版本會在 release gates 完成後才作為正式對外 identity。
+      這裡介紹的是本機桌面版公開預覽；v0.5.0 是目前的版本目標，
+      不是對遠端連接器、本機私人引擎或帳號能力已完成的承諾。
+      產品、引擎與規則版本會在發布檢查完成後才正式對外公布。
     </p>
 
   </section>
 
   <section class="spine">
-    <p class="section-label">Try</p>
-    <h2>六種問法，五種決策型別到齊</h2>
+    <p class="section-label">實際試問</p>
+    <h2>六種問法，看懂五種決定</h2>
     <p class="lede">
       裝好之後貼上去就會跑。<strong>底下每一則的輸出都是引擎實際產生的</strong>，
       並且由測試釘住——這份頁面寫的數字若和程式不一致，測試會紅。
@@ -709,10 +717,10 @@
           <q>我昨天跑了 80 分鐘，感覺蠻累的，昨晚睡了 6 小時。今天課表排的是 VO₂max 間歇 60 分鐘，我還該照做嗎？</q>
         </div>
         <div class="got">
-          <span>decision <b class="mint">keep</b></span>
-          <span>action 照原定執行</span>
-          <span>confidence <b class="warn">low</b></span>
-          <span>缺 hrv · restingHeartRate · stress</span>
+          <span>決定 <b class="mint">維持</b></span>
+          <span>執行方式：照原定課表</span>
+          <span>信心 <b class="warn">低</b></span>
+          <span>缺少 HRV · 靜息心率 · 壓力</span>
         </div>
         <p class="why">
           <strong>重點是它沒有改課表。</strong> keep 也是決策——「檢查過了，可以執行」，
@@ -727,10 +735,10 @@
           <q>這是我最近四週的 Strava 訓練紀錄（附檔）。今天排的是 Threshold Repeats 60 分鐘高強度，該照跑嗎？</q>
         </div>
         <div class="got">
-          <span>decision <b class="mint">adjust</b></span>
-          <span>action high <b>→</b> moderate</span>
+          <span>決定 <b class="mint">調整</b></span>
+          <span>強度：高 <b>→</b> 中</span>
           <span>規則 <b>EVD-R-006</b> · ACWR <b>1.61</b></span>
-          <span>confidence <b class="warn">low</b></span>
+          <span>信心 <b class="warn">低</b></span>
         </div>
         <p class="why">
           Strava 不量 HRV、不量睡眠。它有的是每一場訓練的負荷——<strong>這樣就足以做出決策</strong>。
@@ -745,15 +753,15 @@
           <q>這是我今天的 Garmin 數據（附檔）。今天排 Tempo Run 50 分鐘高強度。</q>
         </div>
         <div class="got">
-          <span>decision <b class="mint">adjust</b></span>
-          <span>action high <b>→</b> moderate</span>
-          <span>規則 <b>EVD-R-002</b> · readiness <b>48</b></span>
-          <span>confidence <b class="mint">high</b></span>
+          <span>決定 <b class="mint">調整</b></span>
+          <span>強度：高 <b>→</b> 中</span>
+          <span>規則 <b>EVD-R-002</b> · 準備程度 <b>48</b></span>
+          <span>信心 <b class="mint">高</b></span>
           <span>缺 —</span>
         </div>
         <p class="why">
           和第 2 則對照著看：<strong>同樣是 adjust、同樣降一級，理由卻完全不同</strong>
-          （負荷爬太快 vs 今天恢復不良），而且這次信心是 high。
+          （負荷爬太快，或是今天恢復不良），而且這次信心是高。
           Body Battery 是 Garmin 自己算的分數，Pacevera <strong>不重算它</strong>——
           錶在手腕上，它整合了我們看不到的訊號。
         </p>
@@ -765,10 +773,10 @@
           <q>這是我今天的 Oura 數據（附檔）。今天排了低強度的間歇 60 分鐘，我感覺很好，可以加強度嗎？</q>
         </div>
         <div class="got">
-          <span>decision <b class="mint">advance</b></span>
-          <span>action low <b>→</b> moderate</span>
-          <span>規則 <b>EVD-R-008</b> · readiness <b>96</b></span>
-          <span>confidence <b class="warn">low</b></span>
+          <span>決定 <b class="mint">進階</b></span>
+          <span>強度：低 <b>→</b> 中</span>
+          <span>規則 <b>EVD-R-008</b> · 準備程度 <b>96</b></span>
+          <span>信心 <b class="warn">低</b></span>
         </div>
         <p class="why">
           <strong>這則是往上調，不是往下。</strong> 決策不是只會叫你少練——證據支持就往上加。
@@ -783,11 +791,11 @@
           <q>我膝蓋不舒服，今天的深蹲能換成什麼？我有槓鈴、深蹲架跟啞鈴。</q>
         </div>
         <div class="got">
-          <span>decision <b class="mint">substitute</b></span>
-          <span>action Back Squat <b>→</b> Bodyweight Squat</span>
+          <span>決定 <b class="mint">替代</b></span>
+          <span>動作：槓鈴深蹲 <b>→</b> 徒手深蹲</span>
           <span>其他選項 Goblet Squat</span>
           <span>規則 <b>EVD-R-012</b> · 剔除 <b>Front Squat</b></span>
-          <span>confidence <b class="mint">high</b></span>
+          <span>信心 <b class="mint">高</b></span>
         </div>
         <p class="why">
           回傳的理由裡有一句
@@ -807,11 +815,11 @@
           <q>這是我今天的 Whoop 數據（附檔）。今天排的是 VO₂max 間歇 60 分鐘高強度，我還是照做嗎？</q>
         </div>
         <div class="got">
-          <span>decision <b class="mint">defer</b></span>
-          <span>action VO₂max Intervals 60min high <b>→</b> Recovery + mobility 30min low</span>
+          <span>決定 <b class="mint">延後</b></span>
+          <span>課表：高強度間歇 60 分鐘 <b>→</b> 恢復與活動 30 分鐘</span>
           <span>換上 Recovery Walk · Mobility Flow</span>
-          <span>規則 <b>EVD-R-001</b> · readiness <b>6</b></span>
-          <span>confidence <b class="mint">high</b></span>
+          <span>規則 <b>EVD-R-001</b> · 準備程度 <b>6</b></span>
+          <span>信心 <b class="mint">高</b></span>
         </div>
         <p class="why">
           <strong>這則和前面五則的差別在「改了什麼」。</strong> 前面最多動兩三個欄位；這一則
@@ -819,7 +827,7 @@
           <code>exercises</code> 五個全動，連做什麼動作都換掉。
           <strong><code>adjust</code> 是把課表調軟，<code>defer</code> 是把課表拿走換成別的</strong>——
           兩者是不同的決策型別，不是程度差異。
-          而且 confidence 是 high：Whoop 不量壓力，那一格缺著，但四個恢復訊號有三個加上廠商自己的
+          而且信心是高：Whoop 不量壓力，那一格缺著，但四個恢復訊號有三個加上廠商自己的
           recovery 分數都在——<strong>證據足夠時它照樣敢把一整堂高強度課取消。</strong>
         </p>
       </div>
@@ -828,29 +836,29 @@
     <p class="note warn">
       第 1 則沒有附任何檔案，第 5 則也沒有。<strong>「先匯入資料」不是使用 Pacevera 的前提</strong>——
       問「今天練什麼」而手上沒有課表時，它會回
-      <q>This is a recommendation question, not a decision.</q>
+      <q>這是「請給我建議」的問題，不是「請調整既有課表」的決定。</q>
       並且不編一個出來。<strong>引擎自己講得出這條界線在哪。</strong>
     </p>
   </section>
 
   <section class="spine">
-    <p class="section-label">The Chain</p>
+    <p class="section-label">完整決策流程</p>
     <h2>一次決策的五層可見鏈</h2>
     <p class="lede">
-      產品終局包含 Evidence、Semantic State、Decision Engine、Rule Packages、Explainability／Learning
-      與 deployment interfaces 六個責任；對使用者可見的一次呼叫，則濃縮成下面五層，且不可跳層。
+      產品終局包含資料、健康狀態、決策引擎、規則、可解釋的理由與持續學習
+      與使用入口六個責任；對使用者可見的一次使用，則濃縮成下面五層，且不可跳層。
       以下走完一次真實的判定——
       一位半馬訓練者，昨天跑了 80 分鐘 RPE 8，今天排定 VO₂max 間歇。
     </p>
 
     <!-- 1 -->
     <div class="layer">
-      <div class="layer-name">Evidence</div>
+        <div class="layer-name">資料</div>
       <div class="layer-body">
-        <h4>今天由 host 帶入；終局由使用者控制的 connector 提供</h4>
+        <h4>今天由 AI 帶入；未來由使用者控制的連接器提供</h4>
         <p>
-          v0.4.2 的 Evidence 經 tool call 以參數傳入，Pacevera 不持有 provider token。
-          未來 local private engine 會讓使用者直接授權自己的 connector，保存可重算的 state，
+          v0.4.2 的資料由工具接收，Pacevera 不保存來源服務的登入憑證。
+          未來本機私人引擎會讓使用者直接授權自己的連接器，保存可重新計算的紀錄，
           再只把當次所需結果交給 AI。<strong>兩種路徑都不要求 Pacevera 建立集中健康資料庫。</strong>
         </p>
         <div class="readout">
@@ -868,7 +876,7 @@
 
     <!-- 2 -->
     <div class="layer">
-      <div class="layer-name">State</div>
+        <div class="layer-name">目前狀態</div>
       <div class="layer-body">
         <h4>狀態判定，並誠實說出看不到什麼</h4>
         <p>
@@ -877,7 +885,7 @@
         </p>
         <div class="readout">
           <div class="row"><span class="k">recovery</span><span class="v">70</span></div>
-          <div class="row"><span class="k">readiness</span><span class="v warn">50</span></div>
+          <div class="row"><span class="k">準備程度</span><span class="v warn">50</span></div>
           <div class="row"><span class="k">muscle_fatigue.legs</span><span class="v stop">92</span><span class="v dim">/ 100</span></div>
           <div class="row"><span class="k">CTL / ATL / TSB</span><span class="v">33.8 / 34.6 / −5.8</span></div>
           <div class="row"><span class="k">ACWR</span><span class="v">1.02</span><span class="v dim">· neutral（42 天已收斂）</span></div>
@@ -898,30 +906,30 @@
 
     <!-- 3 + 4 -->
     <div class="layer key">
-      <div class="layer-name">Decision → Action</div>
+        <div class="layer-name">決定 → 今日執行</div>
       <div class="layer-body">
         <h4>意圖與變更分開：一個判斷，可對應不同做法</h4>
         <p>
-          Decision 是<strong>意圖</strong>（降低今天強度）；Action 是<strong>具體變更</strong>（從原定訓練到今天執行）。
+          決定是<strong>要達成的方向</strong>（降低今天強度）；今日執行是<strong>具體變更</strong>（從原定訓練到今天怎麼做）。
           分開的理由：同一個意圖，在不同器材、時間、傷病下會落成不同的 Action。
         </p>
         <div class="transform">
           <div class="side">
             <div class="tag">原定訓練</div>
             <div class="title">VO₂max Intervals</div>
-            <div class="meta">60 min · <span>high</span></div>
+            <div class="meta">60 分鐘 · <span>高強度</span></div>
           </div>
           <div class="arrow">→</div>
           <div class="side to">
             <div class="tag">今天執行</div>
             <div class="title">Easy run</div>
-            <div class="meta">60 min · <b>low</b></div>
+            <div class="meta">60 分鐘 · <b>低強度</b></div>
           </div>
         </div>
         <div class="readout">
-          <div class="row"><span class="k">decision.type</span><span class="v mint">adjust</span></div>
-          <div class="row"><span class="k">decision.intent</span><span class="v mint">reduce_today_intensity</span></div>
-          <div class="row"><span class="k">action.changed</span><span class="v">["focus", "intensity"]</span></div>
+          <div class="row"><span class="k">決定類型</span><span class="v mint">調整</span></div>
+          <div class="row"><span class="k">決定方向</span><span class="v mint">降低今天強度</span></div>
+          <div class="row"><span class="k">調整項目</span><span class="v">訓練重點、強度</span></div>
         </div>
         <p class="note">
           決策型別有五種：<code>keep</code>（照原定執行，也是決策）·
@@ -933,17 +941,17 @@
 
     <!-- 5 -->
     <div class="layer">
-      <div class="layer-name">Reason</div>
+        <div class="layer-name">理由</div>
       <div class="layer-body">
         <h4>理由綁回證據，不是事後編的說法</h4>
         <div class="reasons">
-          <div class="reason"><i>01</i><span>Readiness 50 is below 60, so intensity comes down.</span></div>
+          <div class="reason"><i>01</i><span>準備程度 50 低於 60，因此降低今天的訓練強度。</span></div>
           <div class="reason"><i>02</i><span>legs fatigue is 92, at the ceiling: that muscle group takes no further stimulus today.</span></div>
         </div>
         <div class="readout" style="margin-top:14px">
-          <div class="row"><span class="k">evidence</span><span class="v">readiness=50 · muscle_fatigue.legs=92 · acwr=1.02</span></div>
-          <div class="row"><span class="k">confidence</span><span class="v">high</span></div>
-          <div class="row"><span class="k">limits</span><span class="v dim">No sleep, stress signal was available, so confidence is lowered</span></div>
+          <div class="row"><span class="k">資料依據</span><span class="v">準備程度=50 · 腿部疲勞=92 · ACWR=1.02</span></div>
+          <div class="row"><span class="k">信心</span><span class="v">高</span></div>
+          <div class="row"><span class="k">限制</span><span class="v dim">缺少睡眠與壓力資料，因此信心下調</span></div>
         </div>
         <p class="note">
           每條理由都指得回具體訊號值。這份紀錄離開 Pacevera 之後仍然看得懂——
@@ -954,7 +962,7 @@
   </section>
 
   <section class="spine">
-    <p class="section-label">Escalation</p>
+    <p class="section-label">決策升級</p>
     <h2>隔天，同一條鏈，不同的決策</h2>
     <p class="lede">
       決策型別不是固定的——它跟著證據走。同一位使用者隔天再問一次：
@@ -964,18 +972,18 @@
 
     <div class="daygrid">
       <div class="day">
-        <div class="day-tag">7 / 27　readiness 50</div>
+        <div class="day-tag">7 / 27　準備程度 50</div>
         <div class="readout">
-          <div class="row"><span class="k">decision</span><span class="v mint">adjust</span></div>
-          <div class="row"><span class="k">action</span><span class="v">VO₂max Intervals 60min <b>high → low</b></span></div>
+          <div class="row"><span class="k">決定</span><span class="v mint">調整</span></div>
+          <div class="row"><span class="k">執行方式</span><span class="v">高強度間歇 60 分鐘 <b>高 → 低</b></span></div>
           <div class="row"><span class="k">changed</span><span class="v dim">intensity</span></div>
         </div>
       </div>
       <div class="day">
-        <div class="day-tag">7 / 28　readiness 25</div>
+        <div class="day-tag">7 / 28　準備程度 25</div>
         <div class="readout">
-          <div class="row"><span class="k">decision</span><span class="v stop">defer</span></div>
-          <div class="row"><span class="k">action</span><span class="v">Tempo Run 50min high<br>→ <b>Recovery + mobility 30min low</b></span></div>
+          <div class="row"><span class="k">決定</span><span class="v stop">延後</span></div>
+          <div class="row"><span class="k">執行方式</span><span class="v">節奏跑 50 分鐘 高強度<br>→ <b>恢復與活動 30 分鐘 低強度</b></span></div>
           <div class="row"><span class="k">changed</span><span class="v dim">focus · type · duration · intensity · exercises</span></div>
         </div>
       </div>
@@ -985,26 +993,26 @@
       <div class="side">
         <div class="tag">原定訓練</div>
         <div class="title">Tempo Run</div>
-        <div class="meta">50 min · high</div>
+        <div class="meta">50 分鐘 · 高強度</div>
         <div class="meta" style="margin-top:6px">Tempo Run</div>
       </div>
       <div class="arrow">→</div>
       <div class="side to">
         <div class="tag">今天執行</div>
         <div class="title">Recovery + mobility</div>
-        <div class="meta">30 min · <b>low</b></div>
-        <div class="meta" style="margin-top:6px"><b>Recovery Walk</b> · <b>Mobility Flow</b></div>
+        <div class="meta">30 分鐘 · <b>低強度</b></div>
+        <div class="meta" style="margin-top:6px"><b>恢復步行</b> · <b>活動度訓練</b></div>
       </div>
     </div>
 
     <div class="reasons">
-      <div class="reason"><i>01</i><span>Readiness 25 低於 40，今日不宜訓練負荷，改為 30 分鐘以內的恢復課表。</span></div>
+      <div class="reason"><i>01</i><span>準備程度 25 低於 40，今日不宜增加訓練負荷，改為 30 分鐘以內的恢復課表。</span></div>
     </div>
 
     <p class="note">
       <strong>換課就要連動作一起換。</strong> 若只改標題而留著原本的 Tempo Run，
       這份紀錄會自相矛盾——使用者看到「恢復課表」卻配著「節奏跑」。
-      換上的是徒手、低衝擊的動作，因為 readiness 低的日子往往伴隨關節限制。
+      換上的是徒手、低衝擊的動作，因為準備程度低的日子往往伴隨關節限制。
     </p>
     <p class="note">
       五種決策型別都是決策，包含 <code>keep</code>——照原定執行同樣要附上證據，
@@ -1013,7 +1021,7 @@
   </section>
 
   <section class="spine">
-    <p class="section-label">Semantic Fitness Layer</p>
+      <p class="section-label">把不同來源的資料整理成同一套說法</p>
     <h2>六個平台，一套語彙</h2>
     <p class="lede">
       Garmin 叫 <code>sleepTimeSeconds</code>，Apple 發 <code>HKCategoryTypeIdentifierSleepAnalysis</code> 區間，
@@ -1037,7 +1045,7 @@
       </table>
     </div>
     <p class="note">
-      廠商自己算好的複合分數（readiness、Body Battery、WHOOP strain）當作<strong>一等證據</strong>收進來，
+      廠商自己算好的複合分數（準備程度、Body Battery、WHOOP strain）當作<strong>重要資料</strong>收進來，
       不忽略重算——裝置在手腕上，它整合了我們看不到的訊號。
     </p>
     <p class="note">
@@ -1116,7 +1124,7 @@
           </tr>
           <tr>
             <td class="sig-name">只有 Oura</td>
-            <td>睡眠 · HRV · 靜息心率 · Readiness</td>
+            <td>睡眠 · HRV · 靜息心率 · 準備程度</td>
             <td class="yes">依恢復狀態調整（無負荷曲線）</td>
           </tr>
           <tr>
@@ -1134,15 +1142,15 @@
     </div>
     <p class="note">
       多接一家不會讓決策從「做不到」變成「做得到」，只會讓同一個決策的<strong>信心提高</strong>。
-      這也是為什麼產品的價值不以 connector 數量衡量。
+      這也是為什麼產品的價值不以連接器數量衡量。
     </p>
   </section>
 
   <section class="spine">
-    <p class="section-label">Provenance</p>
+    <p class="section-label">資料與規則出處</p>
     <h2>每個門檻都說得出哪來的——包括說不出的那些</h2>
     <p class="lede">
-      決策靠的是門檻：readiness 低於 60 就降強度、ACWR 高過 1.4 就減量。
+      決策靠的是門檻：準備程度低於 60 就降低強度，ACWR 高過 1.4 就減少訓練量。
       真正的問題是<strong>那些數字是誰決定的</strong>。
       Pacevera 把每一條門檻連同它的出處存成資料，決策回傳時一併帶出來——
       <strong>包括「這個數字沒有出處」這件事本身</strong>。
@@ -1227,27 +1235,27 @@
       <strong>同一個形狀的錯，第二次被同一個機制抓到。</strong>
     </p>
     <p class="note">
-      v0.4.0 起，<code>decisionBasis</code> 已經不是 <code>decide_session</code> 專用欄位。
+      v0.4.0 起，決策依據已經不是單一工具專用的欄位。
       會做決策的四條路徑——今天課表決策、產生計畫、預覽／提交計畫變更、動作替代——
-      都會回傳同一種 trace：哪條規則開火、哪條規則治理、它屬於哪個引擎、引用與限制在哪裡。
-      <code>assess_fitness_state</code> 不帶它，因為那支工具只回傳狀態，還沒有把原定課表改成今天的執行方案。
-      <strong>已經做好與還沒做好分開講</strong>，這條紀律現在也套到每一支 tool 上。
-      v0.5.0 起對外 release identity 固定顯示 Product、Decision Engine 與 active Rule Package；
+      都會回傳同一種可追溯理由：哪條規則生效、由哪個引擎處理、引用與限制在哪裡。
+      只查詢目前狀態的工具不帶這項理由，因為它還沒有把原定課表改成今天的執行方案。
+      <strong>已經做好與還沒做好分開講</strong>，這條紀律現在也套到每一項工具上。
+      v0.5.0 起對外版本資訊固定顯示產品、決策引擎與目前啟用的規則版本；
       舊 <code>libraryVersion</code> 只作相容欄位，不再獨立進版。
     </p>
   </section>
 
   <section class="spine">
-    <p class="section-label">Guarantee</p>
+    <p class="section-label">版本保證</p>
     <h2>寫入前必須先看見</h2>
     <p class="lede">
-      改動計畫走兩階段：<code>preview</code> 回傳 diff 與 token，
-      <strong>沒有有效 token 的 commit 一律拒絕</strong>；
+      改動計畫走兩階段：先預覽差異與版本憑證，
+      <strong>沒有有效憑證的確認動作一律拒絕</strong>；
       preview 之後計畫若已變動，commit 會因版本不符而失敗，而不是覆蓋掉別的改動。
     </p>
     <div class="readout">
       <div class="row"><span class="k">preview_adjust_plan</span><span class="v">→ previewId · diff · baseVersion</span></div>
-      <div class="row"><span class="k">commit_adjust_plan</span><span class="v">→ 驗證 token 與版本 → v2</span></div>
+      <div class="row"><span class="k">確認調整後的計畫</span><span class="v">→ 驗證憑證與版本 → v2</span></div>
       <div class="row"><span class="k">若版本已變</span><span class="v stop">拒絕：Preview is stale</span></div>
     </div>
     <p class="note">
@@ -1284,45 +1292,45 @@
     <h3 class="whatsnext-h">往哪裡走</h3>
     <p class="lede" style="margin-bottom:22px">
       近期先把已完成能力發成 v0.5.0，再用 pacevera.com 驗證誰真的需要它；
-      之後才把同一顆引擎擴成完整 private data plane、手機入口與團隊治理。
+      之後才把同一顆引擎擴成完整的私人資料環境、手機入口與團隊治理。
     </p>
     <div class="findings">
       <div class="finding ok">
-        <h4>Phase 0–1　發行與產品驗證</h4>
-        <p>先發布 v0.5.0，再完成 pacevera.com：真實訓練變更 demo、三種 privacy mode、版本透明、安裝入口與 3–5 位目標使用者訪談。</p>
+        <h4>階段 0–1　發布與產品驗證</h4>
+        <p>先發布 v0.5.0，再完成 pacevera.com：展示真實訓練變更、三種隱私模式、版本透明、安裝入口與 3–5 位目標使用者訪談。</p>
       </div>
       <div class="finding ok">
-        <h4>Phase 2　Local private engine</h4>
-        <p>完成 durable local repository、connector permissions、Evidence continuity、export／delete 與 privacy acceptance，讓<strong>換模型不歸零</strong>成為可見能力。</p>
+        <h4>第二階段　本機私人引擎</h4>
+        <p>完成可靠的本機資料庫、連線權限、資料連續性、匯出／刪除與隱私驗收，讓<strong>換模型不歸零</strong>成為可見能力。</p>
       </div>
       <div class="finding ok">
-        <h4>Phase 3–4　Mobile 與 Team</h4>
-        <p>先做受控 pairing／private access，再依 go／no-go 決定 hosted remote；最後加入 tenant governance、VPC／on-prem、REST／SDK 與 team pilot。</p>
+        <h4>第三至四階段　手機與團隊</h4>
+        <p>先做受控的私人連線，再依上線條件決定是否提供遠端服務；最後加入團隊權限、私有部署、系統介面與團隊試用。</p>
       </div>
     </div>
 
     <p class="note">
-      今天走得通的證據路徑仍是匯出檔與使用者口述。Oura／WHOOP parser 尚未對過真實回應；
-      private connectors 與 mobile access 都是未來能力。<strong>產品頁只說已驗證的事，roadmap 不當成現成功能。</strong>
+      今天走得通的資料路徑仍是匯出檔、使用者口述與使用者日誌。Oura／WHOOP 解析器尚未對過真實回應；
+      私人連接器與手機入口都是未來能力。<strong>產品頁只說已驗證的事，下一步不當成現成功能。</strong>
     </p>
 
     <p class="footnote">
-      本頁所有數值皆為引擎實際輸出，非示意：readiness 50、legs 疲勞 92、CTL 33.8 / ATL 34.6 / TSB −5.8、
+      本頁所有數值皆為引擎實際輸出，非示意：準備程度 50、腿部疲勞 92、CTL 33.8 / ATL 34.6 / TSB −5.8、
       ACWR 1.02、HRV 個人基線 48（40 筆樣本）。決策為 <code>adjust / reduce_today_intensity</code>，
-      action 為 VO₂max Intervals 60 min <code>high → low</code>。
+      執行方式為高強度間歇 60 分鐘，強度由高調低。
       <br><br>
       <b>這份文件的角色</b>：對外敘事正本，同時是<b>未來產品頁的原型</b>——講產品是什麼、
       往哪裡走、怎麼裝、怎麼試、為什麼難被取代。工程面的內容在
       <code>docs/fitness-mcp-implementation-plan.md</code>，不重複寫在這裡；
       兩份衝突時，以那份的現況表為準。
       <br>
-      對照日期 2026-08-12。本頁是 stakeholder／marketing explainer 與產品旅程原型；
-      public preview 的安裝入口仍以實際 release 狀態為準。v0.5.0、private connectors、hosted remote 與帳號能力
-      都必須等各自的 release／privacy gate 完成後才能對外宣稱。
-      可複製的 demo prompts 與 sample evidence 在 <code>examples/README.md</code>，
+      對照日期 2026-08-12。本頁是給利害關係人與一般觀眾看的產品說明與使用旅程原型；
+      公開預覽的安裝入口仍以實際發布狀態為準。v0.5.0、本機私人連接器、遠端服務與帳號能力
+      都必須等各自的發布與隱私檢查完成後才能對外宣稱。
+      可複製的示範問題與資料範例在 <code>examples/README.md</code>，
       每一則的輸出都由測試釘住。
       產品策略與下一階段的取捨見 <code>docs/pacevera-product-strategy.md</code>；
-      本頁是未來 pacevera.com 網站的敘事原型，不是工程 roadmap。
+      本頁是未來 pacevera.com 網站的敘事原型，不是工程執行清單。
     </p>
   </section>
 
