@@ -1,6 +1,6 @@
 # Pacevera 產品策略與下一階段開發規劃
 
-> 2026-08-10
+> 更新：2026-08-12
 >
 > 本文件把現有的 `product-spec.md`、`design-manifesto.md`、`user-journey.html`
 > 與 implementation plan 轉成產品決策稿。它不取代工程 roadmap；它回答的是：先服務誰、
@@ -37,6 +37,42 @@
 
 「不離開你的電腦」必須只用在真正 user-controlled 的部署形態。Remote hosted MCP 可以讓手機 AI 使用，但若原始或最小化 Evidence 傳到 Pacevera 雲端，就不能把它描述成同一個隱私承諾。
 
+對外精準定位固定為：
+
+> **The decision layer for adaptive training.**
+>
+> **Turn your planned workout into the right workout for today.**
+
+中文表述：
+
+> **保留你熟悉的 AI coach，補上一層可追溯的訓練決策。**
+
+這個定位是產品邊界，不是單純的 marketing 文案。Pacevera 不取代 AthleteSpace、TrainState 或其他 AI coach app，而是提供一層可嵌入的決策能力，讓不同 AI host、教練軟體或企業系統共用同一套 Evidence、規則與決策紀錄。
+
+## 競品與 Decision Layer 差異
+
+| 產品 | 定位 | 主要產品單位 | 與 Pacevera 的關係 |
+|---|---|---|---|
+| AthleteSpace | 面向耐力運動員的完整 AI training platform | 自適應訓練計畫、session、賽事與 performance analytics | 直接幫 athlete 安排、調整與執行訓練的 AI coach app |
+| TrainState | 面向 athlete 的 AI performance coaching app | readiness、HRV／睡眠／training load insight 與每日訓練建議 | 直接把穿戴資料轉成 coaching insight 與 workout recommendation |
+| Pacevera | Adaptive training 的 decision layer／fitness decision engine | 一次可追溯的 training decision | 讓任何 AI coach 根據可追溯、可控的資料做出一致決策的 engine |
+
+核心差異不是「Pacevera 也有一個 readiness score」，而是產品單位從 insight／score 變成一次可追溯的 training decision。核心輸出固定為：
+
+```text
+keep / adjust / substitute / defer / advance
+scheduled workout (from) → resulting workout (to)
+```
+
+Decision Layer 必須讓使用者與整合方看見：
+
+- 同一份 Evidence、規則版本與輸入，應產生相同的結構化結果；
+- 哪些 Rule 被觸發、哪些 Rule 被 suppressed，以及最後如何仲裁；
+- 使用了哪些 Evidence、時間窗與來源，哪些訊號缺失或過期；
+- 為何原定課表從 `from` 變成今日的 `to`，以及使用者是否採用、結果如何。
+
+因此 Pacevera 的核心差異化固定為 **decision provenance、privacy boundary、AI-host independence、可嵌入性**。網站或 demo 仍必須用一個簡單的使用者入口呈現價值：**原定課表 → 今日調整後課表**；不能只展示抽象分數、資料整合數量或 AI 對話。
+
 ## 用戶真正要買的是什麼
 
 用戶不是在買另一個健康資料 dashboard，也不是在買一個會背運動知識的聊天機器人。他們要的是：
@@ -47,10 +83,16 @@
 4. **換 AI、換對話視窗、換裝置後，對「我」的理解不要歸零。**
 5. **健康歷史不要變成 Pacevera、AI 平台或第三方的資料資產。**
 
-Pacevera 的產品單位不是回答，而是連續的決策鏈：
+Pacevera 的核心流程固定為：
 
 ```text
-原始來源 → 本機 Evidence / 狀態 → 今日 Decision → Action from → to → 結果回饋
+Evidence → State → Decision → Action → Outcome
+```
+
+產品單位不是回答，而是這條可持續回饋的決策鏈：
+
+```text
+原始來源 → Evidence → State → 今日 Decision → Action from → to → Outcome
 ```
 
 其中 AI host（ChatGPT、Claude、Gemini 等）負責理解問題、選工具與把結果講成人話；Pacevera 負責標準化、縱向計算、規則仲裁與可追溯輸出。這是「換模型不會讓理解歸零」的核心。
@@ -113,6 +155,18 @@ AI host 只拿到完成當次問題所需的最小化結果
 - **Pacevera hosted Remote MCP**：作為低門檻手機路徑，但只可承諾「最小化 Evidence、transient processing、不留存」，不能承諾「Evidence 不離開你的電腦」。
 
 MCP `2026-07-28` 的 stateless HTTP 對 remote scaling 有幫助，但它解決的是 transport／session，不是資料主權。Remote MCP 是否開工，應排在 local private engine 的產品契約之後，而不是反過來。
+
+## 產品對齊與 Phase Review Gate
+
+本文件是每次新功能開發、phase review、release review 與網站文案 review 的產品對齊基準。任何工作在進入實作前與完成 review 時，都必須回答以下問題；若無法回答，功能不得被描述為 Pacevera 的核心能力：
+
+1. 這項功能服務的是 `Evidence → State → Decision → Action → Outcome` 哪一段？是否讓完整流程更可用，而不是新增孤立的 dashboard、score 或 chatbot 能力？
+2. 它是否強化「一次可追溯的 training decision」與 `from → to` 輸出？若只是新增 insight／score，必須說明它如何影響或解釋 Decision。
+3. 同一份 Evidence、輸入、Engine／Rule 版本是否能重現相同的結構化結果？是否保留 Rule、Evidence、source、version、missing signal 與 confidence trace？
+4. 它是否維持 privacy boundary、AI-host independence 與可嵌入性？是否不必要地把 Pacevera 變成另一個 AI coach app、資料倉庫或泛用 fitness dashboard？
+5. 使用者是否能在簡單情境中看懂「原定課表 → 今日調整後課表」，並知道是否採用及後續 Outcome？
+
+Phase review 必須留下：對齊的產品問題、影響的流程節點、輸入／輸出契約、Decision provenance 變更、privacy mode 影響、成功指標，以及刻意不做的範圍。若功能改變 verdict、threshold、Rule precedence 或 from／to 行為，還必須走 Rule Package／regression／human review gate；不能只更新測試 fingerprint。
 
 ## 下一階段開發優先序
 
@@ -231,22 +285,27 @@ deletion 與部署控制面。
 
 ### 首頁資訊架構
 
-1. **Hero**：Evidence 不離開你的電腦；用你熟悉的 AI，做出今天的訓練決策。
+1. **Hero**：The decision layer for adaptive training；用你熟悉的 AI，把原定課表變成今天適合你的課表。
 2. **問題**：一般 AI 知道運動知識，但每個新視窗都重新理解你；身體狀態卻是連續的。
-3. **一個真實情境**：原本 Tempo Run → 根據低 readiness／睡眠不足 → Moderate run；顯示 from → to、reason、缺少的訊號。
-4. **How it works**：AI host、Pacevera engine、user-controlled Evidence 三段分工。
-5. **Privacy modes**：清楚並列 Local desktop／Private deployment／Hosted remote，標示目前可用與未來路徑。
-6. **護城河**：Evidence Model + Rule Library + Decision Graph；用一個例子說明換模型仍保留狀態與決策可追溯性。
-7. **適合誰**：privacy-conscious athletes → coaches／teams → enterprise／clinical partners。
-8. **現在能做什麼**：目前可用的 MCPB、支援的 host、三個範例 prompts、安裝入口。
-9. **信任區**：資料流圖、privacy policy、source code／release、非醫療診斷聲明、聯絡方式。
-10. **CTA**：`Install for Claude Desktop`、`Join private beta`、`Talk to us about team deployment`。
+3. **一個真實情境**：原本 Tempo Run → 根據低 readiness／睡眠不足 → Moderate run；顯示 from → to、reason、觸發／被壓過的 Rule、缺少的訊號。
+4. **Decision Layer**：AthleteSpace／TrainState 幫 athlete 直接安排與執行訓練；Pacevera 讓任何 AI coach 根據可追溯、可控資料做出一致的 training decision。
+5. **How it works**：AI host、Pacevera Decision Layer、user-controlled Evidence 三段分工。
+6. **Privacy modes**：清楚並列 Local desktop／Private deployment／Hosted remote，標示目前可用與未來路徑。
+7. **護城河**：Evidence Model + Rule Library + Decision Graph；用一個例子說明換模型仍保留狀態與決策可追溯性。
+8. **適合誰**：privacy-conscious athletes → coaches／teams → enterprise／clinical partners。
+9. **現在能做什麼**：目前可用的 MCPB、支援的 host、三個範例 prompts、安裝入口。
+10. **信任區**：資料流圖、privacy policy、source code／release、非醫療診斷聲明、聯絡方式。
+11. **CTA**：`Install for Claude Desktop`、`Join private beta`、`Talk to us about team deployment`。
 
 ### 產品頁第一版文案草稿
 
 > **Your AI coach should know how you are today—not own your health history.**
 >
 > Pacevera runs the fitness decision engine where your evidence lives. Connect the AI you already use, keep your health history under your control, and turn today’s scheduled session into a decision you can understand and act on.
+
+Decision Layer 輔助文案：
+
+> AthleteSpace and TrainState coach the athlete directly. Pacevera is the decision layer that lets any AI coach turn controlled evidence into a consistent, traceable training decision.
 
 中文輔助文案：
 
