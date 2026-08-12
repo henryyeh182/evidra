@@ -223,12 +223,29 @@ Evidence → State → Decision → Action → Outcome 與 deterministic decisio
 
 ### Phase 1 — pacevera.com 產品頁與市場驗證
 
-目標：用一個真實、可操作的產品頁講清楚 Pacevera，讓目標使用者安裝或加入 private beta。**因此下一個產品階段是 pacevera.com；實作優先順序仍是先關閉 Phase 0 release，網站規劃可在 v0.5.0 scope freeze 後並行。**
+目標：在製作公司首頁前，先把 Pacevera 的核心產品表面做出來。這不是完整 dashboard，也不是 connector 專案；只驗證「同一份 Evidence 如何改變今天原本排定的 session」。Prototype 必須可嵌入首頁，並使用 repo 已有的實際 engine output。
 
 | Story | 交付結果 | 完成條件 | 狀態 |
 |---|---|---|---|
-| Phase 1 - Story 1 | 定位與首頁資訊架構。 | Hero、問題、from→to 案例、How it works、適合誰、現在／未來界線與 CTA 完整；不宣稱尚未存在的一鍵 connector 或 hosted privacy。 | 待開始 |
-| Phase 1 - Story 2 | 可理解的產品示範。 | 以 `user-journey.html` 為原型，做一個互動式「原定 Tempo → 根據 Evidence 調整」案例，顯示 reason、coverage、missing signals 與 trace。 | 待開始 |
+| Phase 0.5 - Story 1 | Today’s Decision Brief UI。 | 一個可展示的 `Today’s Brief` 視覺化介面；至少包含 `from → to`、decision type、readiness／fatigue／training load、reason、missing signals、confidence 與 rule trace；至少提供 `adjust` 及 `keep` 或 `defer` 兩種案例；標示為 prototype／example decision，不宣稱正式 dashboard 或尚未存在的 connector。 | 待開始 |
+
+Phase 0.5 的核心畫面：
+
+```text
+Evidence → current state → decision intent → scheduled workout (from)
+  → executable workout (to) → reason + missing signals + confidence
+```
+
+完成這個 prototype 後，才進入 Phase 1 的首頁視覺設計。若畫面仍像一般 readiness dashboard，先修正產品敘事與 UI，不以增加 metrics 或 connector 數量代替差異化。
+
+### Phase 1 — pacevera.com 產品頁與市場驗證
+
+目標：以 Phase 0.5 的 Decision Brief 為視覺核心，用一個真實、可操作的產品頁講清楚 Pacevera，讓目標使用者安裝或加入 private beta。**實作優先順序仍是先關閉 Phase 0 release；Phase 0.5 可在 v0.5.0 scope freeze 後並行，Phase 1 首頁依賴其完成。**
+
+| Story | 交付結果 | 完成條件 | 狀態 |
+|---|---|---|---|
+| Phase 1 - Story 1 | 定位與首頁資訊架構。 | 完成獨立公司首頁的 Hero、問題、from→to 案例、How it works、適合誰、現在／未來界線與 CTA；`user-journey.html` 僅作 Product 深度案例；不宣稱尚未存在的一鍵 connector 或 hosted privacy。 | 定位已收斂；首頁待拆分實作 |
+| Phase 1 - Story 2 | 可理解的產品示範。 | 將 Phase 0.5 的 Decision Brief prototype 嵌入獨立首頁，並以 `user-journey.html` 作為 Product 深度案例；互動式展示「原定 Tempo → 根據 Evidence 調整」，顯示 reason、coverage、missing signals 與 trace。 | 待開始 |
 | Phase 1 - Story 3 | 信任與安裝區。 | 並列 Local desktop／Private deployment／Hosted remote；顯示 Product／Engine／Rule Package 版本、資料流、privacy policy、非醫療聲明與 v0.5.0 安裝入口。 | 待開始 |
 | Phase 1 - Story 4 | 上線與驗證。 | pacevera.com 第一版上線；waitlist 不收健康資料；完成 3–5 位目標使用者訪談，量測 10 分鐘 activation、7 日回訪與決策採用。 | 待開始 |
 

@@ -72,6 +72,19 @@ Decision Layer 必須讓使用者與整合方看見：
 - 為何原定課表從 `from` 變成今日的 `to`，以及使用者是否採用、結果如何。
 
 因此 Pacevera 的核心差異化固定為 **decision provenance、privacy boundary、AI-host independence、可嵌入性**。網站或 demo 仍必須用一個簡單的使用者入口呈現價值：**原定課表 → 今日調整後課表**；不能只展示抽象分數、資料整合數量或 AI 對話。
+## 明確不做的事情
+
+- 不做另一個 readiness／recovery dashboard。
+- 不以「AI 會替你規劃一切」作為主要承諾。
+- 不把 connector 數量當作產品價值。
+- 不把 hosted remote 或尚未完成的 connector 說成目前已可用。
+- 不建立一個要求使用者交出完整健康歷史的集中式產品。
+
+## 對首頁架構的影響
+
+公司首頁採用 `Home / Product / Solutions / Privacy / About / Contact`；`user-journey.html` 改定位為 Product 底下的深度案例頁，而不是公司首頁。
+
+首頁的 Hero 應先講清楚「decision layer」與 `from → to`，接著展示一個具體案例，再分別說明 AI host、coach workflow 與 private deployment。readiness、training load 與 recovery 只作為 Evidence 的輸入，不作為首頁主角。
 
 ## 用戶真正要買的是什麼
 
