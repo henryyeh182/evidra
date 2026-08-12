@@ -1,6 +1,6 @@
 {
   "name": "fitness-mcp",
-  "version": "0.3.7",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "Semantic Fitness Layer exposed through MCP for model-agnostic AI fitness coaching.",
@@ -26,6 +26,7 @@
     "harness": "node harness/runner.js",
     "test": "node --test",
     "serve:http": "node apps/mcp-server/src/http.js",
+    "spike:chatgpt:mcp": "node scripts/spike-chatgpt-mcp.js",
     "review:phase": "node scripts/review-phase.js",
     "review:release": "node scripts/review-release.js",
     "test:rules": "node --test \"packages/rules/test/*.test.js\""
