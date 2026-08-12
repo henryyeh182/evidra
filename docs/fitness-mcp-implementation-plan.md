@@ -239,9 +239,40 @@ Evidence → State → Decision → Action → Outcome 與 deterministic decisio
 | Story | 交付結果 | 完成條件 | 狀態 |
 |---|---|---|---|
 | Phase 2 - Story 1 | Durable local repository。 | SQLite 優先的 state／plan／decision／outcome repository；process restart 後仍可讀；有 migration、backup、export 與 delete。 | 待開始 |
-| Phase 2 - Story 2 | Private connector boundary。 | 第一批只完成經驗證的 local Evidence workflow；connector token 加密、最小 scope、撤銷與刪除；Oura／WHOOP 先補真實去識別化 fixture，不以平台數量充當完成。 | 待開始 |
-| Phase 2 - Story 3 | Evidence continuity。 | 每次 Decision 帶 state ID、evidence window、Product／Engine／Rule Package identity；新對話或新 host 只讀最小化 bootstrap，不重新取得完整健康歷史。 | 待開始 |
-| Phase 2 - Story 4 | Private-engine acceptance。 | 無 hosted service 時，今日課表調整、低恢復降載、傷病替代、單次 workout 四個情境端到端通過；privacy boundary tests 證明 raw Evidence 與 token 未離開 user-controlled environment。 | 待開始 |
+| Phase 2 - Story 2 | Private connector boundary。 | 第一批只完成經驗證的 local Evidence workflow；Google Health API local connector 重用既有 importer／normalizer；connector token 加密、最小 scope、撤銷與刪除；Oura／WHOOP 先補真實去識別化 fixture，不以平台數量充當完成。 | 待開始 |
+| Phase 2 - Story 3 | Evidence continuity。 | 每次 Decision 帶 state ID、evidence window、Product／Engine／Rule Package identity；保留 ingestion source、original writer、platform 與 signal provenance；新對話或新 host 只讀最小化 bootstrap，不重新取得完整健康歷史。 | 待開始 |
+| Phase 2 - Story 4 | Private-engine acceptance。 | 無 hosted service 時，Google Health API → Evidence → Decision、今日課表調整、低恢復降載、傷病替代、單次 workout 五個情境端到端通過；privacy boundary tests 證明 raw Evidence 與 token 未離開 user-controlled environment，且 Garmin chain 缺少 HRV 時明確回報 missing。 | 待開始 |
+
+### Phase 2 entry decision — Google Health ingestion
+
+Google Health API 的資料處理核心已存在：`scripts/import-google-health-api.js` 能讀取已取得的 Google Health API v4 raw response，並交給既有 Google Health normalizer 產生 Evidence。這個 importer 是 **local-only**，不是 hosted OAuth client；下一步不應重做 parser，而是補上受控的取得與連線層。
+
+本工程正式歸入 **Phase 2 - Story 2**，並以 Story 1 的 local repository 作為保存、匯出與刪除邊界的前置條件。帳號身分與健康資料授權必須分離：
+
+```text
+Sign in with Google       = Pacevera user identity
+Connect Google Health     = Google Health API data permission
+```
+
+Phase 2 的目標資料流固定為：
+
+```text
+Google account identity
+        ↓
+Connect Google Health（獨立授權）
+        ↓
+Google Health API OAuth token
+        ↓
+existing importer / normalizer
+        ↓
+Evidence + source provenance
+        ↓
+Decision Engine
+```
+
+Evidence 必須區分 `ingestionSource`（Google Health API）與 `originalWriter`（例如 Garmin Connect 或 Apple Watch／HealthKit）。Garmin → Apple Health 的同步是單向資料路徑，且目前實測 Garmin chain 沒有 HRV；HRV 缺失時必須保留為 `missing`，不得推測或補值。Apple Watch HRV 將由後續 HealthKit connector 驗證，不把 Google Health 的聚合結果自動標成 Apple Watch 資料。
+
+`Sign in with Google` 不應在 Phase 0.5 public preview 中獨立上線；若進入 mobile／private-engine product，應與 `Connect Google Health` 一起設計，但使用不同 consent、token scope、撤銷與刪除流程。Hosted Google OAuth、mobile access 與 hosted retention／DPA 仍屬 **Phase 3 - Story 4**，目前維持 `Blocked`。
 
 ### Phase 3 — 受控手機與跨 AI host 體驗
 
@@ -301,9 +332,9 @@ Evidence → State → Decision → Action → Outcome 與 deterministic decisio
 
 ## 8. 現在開工順序
 
-1. `Phase 0 - Story 1`：整合 `6992c32` 與 `62862fc`。
-2. `Phase 0 - Story 2`：關閉 continuity privacy contract 與 10-tool 公開文件落差。
-3. `Phase 0 - Story 3～4`：打包、驗證、發布 Pacevera v0.5.0。
-4. `Phase 0.5 - Story 1～4`：以 AthleteSpace 為視覺參考，完成 Decision Engine UI 原型與 review。
-5. `Phase 1 - Story 1～4`：完成 pacevera.com 第一版與 3–5 位目標使用者驗證。
-6. 根據驗證結果進入 Phase 2；Phase 3 hosted remote 在 go／no-go 條件成立前維持 Blocked。
+1. `Phase 0.5 - Story 4`：完成 Decision Graph／Outcome 的 3–5 位 reviewer review，先不宣稱 durable outcome storage。
+2. `Phase 1 - Story 1～4`：完成 pacevera.com 第一版與 3–5 位目標使用者驗證；不把 Google Health、Apple Health 或 Garmin 寫成已完成的一鍵 connector。
+3. `Phase 2 - Story 1`：建立 local state／plan／decision／outcome repository，含 migration、export 與 delete。
+4. `Phase 2 - Story 2`：將既有 Google Health API importer 接到 local OAuth／connector boundary，完成 token、scope、撤銷與最小化同步。
+5. `Phase 2 - Story 3～4`：完成 source-aware Evidence continuity、Garmin／Apple Watch provenance、HRV missing handling 與 private-engine acceptance。
+6. `Phase 3 - Story 4`：只有在 authorization、HTTPS、redaction、DPA、privacy policy、host E2E 與付費需求全部成立後，才重新評估 hosted Google Health OAuth；此前維持 Blocked。
