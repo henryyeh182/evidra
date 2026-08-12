@@ -394,7 +394,7 @@
     </div>
     <nav class="jumpnav" aria-label="頁面導覽">
       <a href="#problem">你正在解決的問題</a>
-      <a href="#case">看一個 from → to 決策</a>
+      <a href="#case">看一次訓練變更</a>
       <a href="#install">現在就試</a>
     </nav>
 
@@ -456,13 +456,13 @@
     <p class="case-lede">同一個人、同一天；差別不是 AI 換了一句話，而是 Evidence 改變了既有 session。</p>
     <div class="case-grid">
       <div class="case-step">
-        <div class="tag">From · 原本排定</div>
+        <div class="tag">原定訓練</div>
         <h3>Tempo Run</h3>
         <p>50 min · high intensity</p>
       </div>
       <div class="case-arrow" aria-hidden="true">→</div>
       <div class="case-step to">
-        <div class="tag">To · 今日執行</div>
+        <div class="tag">今天執行</div>
         <h3>Moderate run</h3>
         <p>50 min · <strong>moderate intensity</strong></p>
       </div>
@@ -545,7 +545,7 @@
         <p class="quote">「我今天該照課表做嗎？如果不該，具體改成什麼？」</p>
         <dl>
           <dt>已有</dt><dd>AI host、穿戴資料、固定訓練習慣</dd>
-          <dt>在意</dt><dd>新鮮證據、可解釋的 from → to、資料留在自己的邊界</dd>
+          <dt>在意</dt><dd>新鮮證據、可解釋的訓練變更、資料留在自己的邊界</dd>
           <dt>首次成功</dt><dd>10 分鐘內完成一次可追溯的課表調整</dd>
         </dl>
       </div>
@@ -902,18 +902,18 @@
       <div class="layer-body">
         <h4>意圖與變更分開：一個判斷，可對應不同做法</h4>
         <p>
-          Decision 是<strong>意圖</strong>（降低今天強度）；Action 是<strong>具體變更</strong>（from → to）。
+          Decision 是<strong>意圖</strong>（降低今天強度）；Action 是<strong>具體變更</strong>（從原定訓練到今天執行）。
           分開的理由：同一個意圖，在不同器材、時間、傷病下會落成不同的 Action。
         </p>
         <div class="transform">
           <div class="side">
-            <div class="tag">From — 原本排定</div>
+            <div class="tag">原定訓練</div>
             <div class="title">VO₂max Intervals</div>
             <div class="meta">60 min · <span>high</span></div>
           </div>
           <div class="arrow">→</div>
           <div class="side to">
-            <div class="tag">To — 今日執行</div>
+            <div class="tag">今天執行</div>
             <div class="title">Easy run</div>
             <div class="meta">60 min · <b>low</b></div>
           </div>
@@ -983,14 +983,14 @@
 
     <div class="transform" style="margin-top:26px">
       <div class="side">
-        <div class="tag">From — 原本排定</div>
+        <div class="tag">原定訓練</div>
         <div class="title">Tempo Run</div>
         <div class="meta">50 min · high</div>
         <div class="meta" style="margin-top:6px">Tempo Run</div>
       </div>
       <div class="arrow">→</div>
       <div class="side to">
-        <div class="tag">To — 今日執行</div>
+        <div class="tag">今天執行</div>
         <div class="title">Recovery + mobility</div>
         <div class="meta">30 min · <b>low</b></div>
         <div class="meta" style="margin-top:6px"><b>Recovery Walk</b> · <b>Mobility Flow</b></div>
@@ -1230,7 +1230,7 @@
       v0.4.0 起，<code>decisionBasis</code> 已經不是 <code>decide_session</code> 專用欄位。
       會做決策的四條路徑——今天課表決策、產生計畫、預覽／提交計畫變更、動作替代——
       都會回傳同一種 trace：哪條規則開火、哪條規則治理、它屬於哪個引擎、引用與限制在哪裡。
-      <code>assess_fitness_state</code> 不帶它，因為那支工具只回傳狀態，還沒有對課表做 from → to 的決定。
+      <code>assess_fitness_state</code> 不帶它，因為那支工具只回傳狀態，還沒有把原定課表改成今天的執行方案。
       <strong>已經做好與還沒做好分開講</strong>，這條紀律現在也套到每一支 tool 上。
       v0.5.0 起對外 release identity 固定顯示 Product、Decision Engine 與 active Rule Package；
       舊 <code>libraryVersion</code> 只作相容欄位，不再獨立進版。
@@ -1289,7 +1289,7 @@
     <div class="findings">
       <div class="finding ok">
         <h4>Phase 0–1　發行與產品驗證</h4>
-        <p>先發布 v0.5.0，再完成 pacevera.com：真實 from → to demo、三種 privacy mode、版本透明、安裝入口與 3–5 位目標使用者訪談。</p>
+        <p>先發布 v0.5.0，再完成 pacevera.com：真實訓練變更 demo、三種 privacy mode、版本透明、安裝入口與 3–5 位目標使用者訪談。</p>
       </div>
       <div class="finding ok">
         <h4>Phase 2　Local private engine</h4>
