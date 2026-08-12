@@ -36,6 +36,7 @@
     "harness:plan": "node harness/plan-runner.js",
     "test": "node --test",
     "serve:http": "node apps/mcp-server/src/http.js",
+    "spike:chatgpt:mcp": "node scripts/spike-chatgpt-mcp.js",
     "serve:local": "node apps/local-engine/src/stdio.js",
     "smoke:release-install": "node scripts/smoke-release-install.js",
     "release:gate": "npm run pack && node scripts/release-gate.js --build-remote && npm run review:release && npm run smoke:release-install -- --skip-online --skip-claude",
