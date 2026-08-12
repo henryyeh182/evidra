@@ -41,6 +41,7 @@ import {
   attachDecisionCommit,
   submitOutcome
 } from "./decisionRecords.js";
+import { RELEASE_IDENTITY } from "../../../packages/release/src/index.js";
 
 /**
  * What a caller has to send before any of this can compute anything.
@@ -293,7 +294,11 @@ export async function getEvidenceCoverageTool(args = {}) {
   return jsonContent({
     userId: args.userId || null,
     ...getEvidenceCoverage(args.evidence),
-    provenance: { evidenceSource: "provided", ...describeEvidence(args.evidence) }
+    provenance: {
+      evidenceSource: "provided",
+      ...describeEvidence(args.evidence),
+      runtimeIdentity: RELEASE_IDENTITY
+    }
   });
 }
 
@@ -328,6 +333,7 @@ export async function submitOutcomeTool(args = {}) {
   return jsonContent({
     caseId: args.caseId,
     ...submitOutcome(args.caseId, args.outcome),
+    runtimeIdentity: RELEASE_IDENTITY,
     note: "Process-local MVP only. Persist the returned event in the caller or private engine Outcome DB."
   });
 }

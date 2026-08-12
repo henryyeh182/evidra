@@ -1,0 +1,12 @@
+.git
+.mcpbignore
+node_modules
+dist
+data/private
+docs
+eval
+harness
+data/private
+*.mcpb
+*.log
+.env*

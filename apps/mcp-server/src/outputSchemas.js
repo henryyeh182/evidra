@@ -1040,6 +1040,7 @@ export const outputSchemas = {
       event: { type: "object" },
       totalForCase: { type: "number" },
       persistence: { type: "string", enum: ["process_local"] },
+      runtimeIdentity: { type: "object" },
       note: { type: "string" }
     },
     required: ["caseId", "event", "totalForCase", "persistence"]

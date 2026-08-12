@@ -26,6 +26,7 @@ import { dirname, join, relative } from "node:path";
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outfile = join(rootDir, "dist/evidra-server.mjs");
+const entryPoint = process.env.BUNDLE_ENTRY || "apps/mcp-server/src/stdio.js";
 
 /**
  * Swap the two modules whose behaviour depends on the layout they run in.
@@ -114,7 +115,7 @@ const layoutShims = {
 rmSync(join(rootDir, "dist"), { recursive: true, force: true });
 
 const result = await build({
-  entryPoints: [join(rootDir, "apps/mcp-server/src/stdio.js")],
+  entryPoints: [join(rootDir, entryPoint)],
   outfile,
   bundle: true,
   minify: true,
