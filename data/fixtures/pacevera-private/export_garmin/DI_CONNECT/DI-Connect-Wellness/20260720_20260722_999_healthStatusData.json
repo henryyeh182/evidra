@@ -1,0 +1,15 @@
+[
+  {
+    "calendarDate": "2026-07-21",
+    "metrics": [
+      { "type": "HRV", "value": 45.0, "status": "ONBOARDING" },
+      { "type": "HR", "value": 55.0, "status": "ONBOARDING" }
+    ]
+  },
+  {
+    "calendarDate": "2026-07-22",
+    "metrics": [
+      { "type": "HRV", "value": 41.0, "status": "ONBOARDING" }
+    ]
+  }
+]

@@ -1,7 +1,6 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
-import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 
 import {
@@ -10,8 +9,9 @@ import {
   mapSemanticStateToRow,
   mapUserContextToRows
 } from "./mappers.js";
+import { sqliteSchemaSql } from "./sqliteSchemaSource.js";
 
-const SQLITE_SCHEMA = readFileSync(new URL("../schema/sqlite.sql", import.meta.url), "utf8");
+const SQLITE_SCHEMA = sqliteSchemaSql;
 
 function json(value, fallback) {
   if (value === null || value === undefined) return fallback;

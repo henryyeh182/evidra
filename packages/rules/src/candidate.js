@@ -1,9 +1,6 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { ruleCandidateSchemaJson } from "./ruleCandidateSchemaSource.js";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../rule-packages");
-const SCHEMA = JSON.parse(readFileSync(join(ROOT, "schemas/rule-candidate.schema.json"), "utf8"));
+const SCHEMA = JSON.parse(ruleCandidateSchemaJson);
 function typeOf(value) { if (value === null) return "null"; if (Array.isArray(value)) return "array"; return typeof value; }
 function fail(message) { throw new Error(`Rule candidate invariant violated: ${message}`); }
 function validate(value, schema, path = "$") {

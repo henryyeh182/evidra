@@ -27,6 +27,15 @@
     "hrv",
     "wearables"
   ],
+  "user_config": {
+    "private_data_dir": {
+      "type": "directory",
+      "title": "Your exported health data folder",
+      "description": "Optional. Pick a folder holding Apple Health / Garmin / Strava / Google Health exports (subfolders export_apple_health, export_garmin/DI_CONNECT, export_strava, export_google_health/raw) and assess_fitness_state / decide_session / generate_plan / generate_workout will read it automatically whenever you don't type your own numbers. Nothing here is read unless you select a folder; you can still just describe your training in words instead.",
+      "required": false,
+      "default": "${HOME}/Pacevera"
+    }
+  },
   "server": {
     "type": "node",
     "entry_point": "dist/evidra-server.mjs",
@@ -34,17 +43,20 @@
       "command": "node",
       "args": [
         "${__dirname}/dist/evidra-server.mjs"
-      ]
+      ],
+      "env": {
+        "PACEVERA_PRIVATE_DIR": "${user_config.private_data_dir}"
+      }
     }
   },
   "tools": [
     {
       "name": "assess_fitness_state",
-      "description": "Read today's recovery and training state from submitted evidence. Reports state only; never says what to train."
+      "description": "Read today's recovery and training state from submitted evidence, or from your local export folder when you don't supply any. Reports state only; never says what to train."
     },
     {
       "name": "decide_session",
-      "description": "Decide what today's scheduled session should become — keep it, ease it, or change it — with the evidence behind the change."
+      "description": "Decide what today's scheduled session should become — keep it, ease it, or change it — with the evidence behind the change. Reads your local export folder when you don't supply evidence yourself."
     },
     {
       "name": "decide_exercise_substitution",
@@ -52,7 +64,7 @@
     },
     {
       "name": "generate_plan",
-      "description": "Build a training plan when the user has no plan in hand."
+      "description": "Build a training plan when the user has no plan in hand. Reads your local export folder when you don't supply evidence yourself."
     },
     {
       "name": "preview_adjust_plan",
@@ -76,7 +88,11 @@
     },
     {
       "name": "generate_workout",
-      "description": "Generate one picker-sized workout and adapt it through the decision engine."
+      "description": "Generate one picker-sized workout and adapt it through the decision engine. Reads your local export folder when you don't supply evidence yourself."
+    },
+    {
+      "name": "evidra_local_decide_today",
+      "description": "Decide what today's already-scheduled local plan should become, read from this machine's local SQLite store. No hosted MCP or provider token is involved."
     }
   ],
   "compatibility": {

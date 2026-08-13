@@ -13,8 +13,17 @@ import { createLocalMcpHandler } from "./server.js";
 const configuredDbPath = process.env.PACEVERA_DB_PATH || resolve("data/private/pacevera.sqlite");
 if (configuredDbPath !== ":memory:") mkdirSync(dirname(configuredDbPath), { recursive: true });
 
+// Set by the packaged .mcpb from the user_config directory picker
+// (manifest.json's private_data_dir); undefined here falls back to
+// localEvidence.js's own default (${HOME}/Pacevera) for anyone running this
+// entry point directly.
+const localEvidenceDir = process.env.PACEVERA_PRIVATE_DIR || undefined;
+
 const repository = new SQLiteFitnessRepository({ filename: configuredDbPath });
-const handleMessage = createLocalMcpHandler({ engine: new LocalPrivateEngine({ repository }) });
+const handleMessage = createLocalMcpHandler({
+  engine: new LocalPrivateEngine({ repository }),
+  ...(localEvidenceDir ? { localEvidenceDir } : {})
+});
 
 const lines = createInterface({ input: stdin, crlfDelay: Infinity });
 for await (const line of lines) {

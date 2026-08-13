@@ -1,0 +1,19 @@
+[
+  {
+    "summarizedActivitiesExport": [
+      {
+        "activityId": 1000000001,
+        "name": "Morning Run",
+        "activityType": "running",
+        "beginTimestamp": 1784716200000,
+        "duration": 2040000,
+        "distance": 6200,
+        "avgHr": 148,
+        "maxHr": 165,
+        "activityTrainingLoad": 62.5,
+        "aerobicTrainingEffect": 2.8,
+        "anaerobicTrainingEffect": 0.4
+      }
+    ]
+  }
+]

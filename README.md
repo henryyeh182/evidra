@@ -78,9 +78,17 @@ Decision intent and resulting action are separate fields. The same intent may pr
 | `submit_outcome` | Accepts an observed outcome for a prior case; durable storage remains the caller's responsibility. |
 | `generate_workout` | Generates one picker-sized workout and adapts it to the supplied evidence. |
 
+### Local-only tool
+
+| Tool | Description |
+|---|---|
+| `evidra_local_decide_today` | Decides an already-scheduled session from this machine's local SQLite store. Only in the packaged desktop `.mcpb`; the hosted server never advertises it. |
+
 ## Evidence and output
 
 Evidence is supplied by the calling host. It may include recovery measurements, vendor-computed assessments, completed workouts, scheduled sessions, goals, and constraints.
+
+**Packaged desktop `.mcpb` only**: `assess_fitness_state`, `decide_session`, `generate_plan` and `generate_workout` also read a local export folder (Apple Health / Garmin / Strava / Google Health) when the caller supplies no evidence of its own — the folder picked at install time (default `~/Pacevera`). Evidence the caller does supply is never overridden. This does not apply to the hosted server, which never reads local files.
 
 Important input rules:
 

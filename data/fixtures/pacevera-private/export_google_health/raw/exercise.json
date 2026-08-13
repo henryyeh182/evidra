@@ -1,0 +1,21 @@
+{
+  "_note": "De-identified SYNTHETIC Google Health API v4 sample for tests only. Field shape matches the real dialect (see packages/connectors/src/local/googleHealthApiLocal.js); the numbers do not.",
+  "dataPoints": [
+    {
+      "name": "users/me/dataSources/x/dataPointChanges/synthetic-1",
+      "displayName": "Run",
+      "dataSource": { "application": { "packageName": "com.garmin.connect.mobile" }, "platform": "HEALTH_KIT" },
+      "exercise": {
+        "exerciseType": "RUNNING",
+        "interval": { "startTime": "2026-07-21T10:05:00Z", "endTime": "2026-07-21T10:39:00Z" },
+        "activeDuration": "2040s",
+        "metricsSummary": {
+          "caloriesKcal": "410",
+          "averageHeartRateBeatsPerMinute": "148",
+          "steps": "7200",
+          "distanceMillimeters": "6200000"
+        }
+      }
+    }
+  ]
+}

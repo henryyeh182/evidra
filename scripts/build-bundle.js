@@ -26,7 +26,14 @@ import { dirname, join, relative } from "node:path";
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outfile = join(rootDir, "dist/evidra-server.mjs");
-const entryPoint = process.env.BUNDLE_ENTRY || "apps/mcp-server/src/stdio.js";
+// The packaged .mcpb ships the local engine by default from v0.6.0: same
+// tool names as the hosted server, but assess_fitness_state/decide_session/
+// generate_plan/generate_workout read the user's local export folder when no
+// `evidence` argument is supplied (apps/local-engine/src/localEvidence.js).
+// BUNDLE_ENTRY overrides this for the hosted-only stdio build and for the
+// Remote HTTP image (apps/mcp-server/src/http-entry.js), neither of which
+// this default touches.
+const entryPoint = process.env.BUNDLE_ENTRY || "apps/local-engine/src/stdio.js";
 
 /**
  * Swap the two modules whose behaviour depends on the layout they run in.
@@ -73,6 +80,32 @@ const layoutShims = {
       const compact = JSON.stringify(JSON.parse(json));
       return {
         contents: `export const parameterSourceJson = ${JSON.stringify(compact)};`,
+        loader: "js"
+      };
+    });
+
+    pluginBuild.onResolve({ filter: /(^|\/)ruleCandidateSchemaSource\.js$/ }, () => ({
+      path: "evidra:rule-candidate-schema",
+      namespace: "evidra-inline"
+    }));
+
+    pluginBuild.onLoad({ filter: /^evidra:rule-candidate-schema$/, namespace: "evidra-inline" }, () => {
+      const json = readFileSync(join(rootDir, "rule-packages/schemas/rule-candidate.schema.json"), "utf8");
+      return {
+        contents: `export const ruleCandidateSchemaJson = ${JSON.stringify(json)};`,
+        loader: "js"
+      };
+    });
+
+    pluginBuild.onResolve({ filter: /(^|\/)sqliteSchemaSource\.js$/ }, () => ({
+      path: "evidra:sqlite-schema",
+      namespace: "evidra-inline"
+    }));
+
+    pluginBuild.onLoad({ filter: /^evidra:sqlite-schema$/, namespace: "evidra-inline" }, () => {
+      const sql = readFileSync(join(rootDir, "packages/db/schema/sqlite.sql"), "utf8");
+      return {
+        contents: `export const sqliteSchemaSql = ${JSON.stringify(sql)};`,
         loader: "js"
       };
     });

@@ -226,6 +226,15 @@ history, and persistence; this server retains neither plan nor preview.
 | `submit_outcome` | Normalizes an outcome event; durable outcome storage remains caller-controlled. |
 | `generate_workout` | Builds one picker-sized session and runs it through the decision path. |
 
+### `evidra_local_decide_today` — local-only
+
+Only advertised by the packaged `.mcpb` (`apps/local-engine`), never by the
+hosted server. Reads an existing plan and today's evidence from this
+machine's local SQLite store — set with `PACEVERA_DB_PATH`, populated by
+`scripts/import-local-evidence.js` or the per-source `import:*` scripts — and
+decides what the already-scheduled session should become. No hosted MCP or
+provider token is involved.
+
 ## Evidence
 
 Decision tools take an `evidence` object for new activity and read the durable
@@ -234,6 +243,18 @@ layer still holds vendor authorization and passes normalized evidence in; this
 server does not fetch Apple Health, Garmin, Strava, Oura or Whoop. Every
 response carries `provenance` naming whether provided evidence or the shared
 record was used.
+
+**Packaged `.mcpb` only**: `assess_fitness_state`, `decide_session`,
+`generate_plan` and `generate_workout` also read a local export folder when
+the caller supplies no `evidence` (or an empty one) — the folder the user
+picked during install (`manifest.json`'s `private_data_dir`, default
+`${HOME}/Pacevera`), read by `packages/connectors/src/local/` and
+`apps/local-engine/src/localEvidence.js`. Expected subfolders:
+`export_apple_health`, `export_garmin/DI_CONNECT`, `export_strava`,
+`export_google_health/raw`. A caller that does supply `evidence` — even a
+single data point — is never overridden. The hosted server never reads local
+files; this is exclusively the local `.mcpb` process reading disk on the same
+machine it runs on.
 
 Sources are normalized into one vocabulary by
 [`packages/evidence/src/schemaRegistry.js`](../packages/evidence/src/schemaRegistry.js).

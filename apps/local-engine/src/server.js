@@ -4,6 +4,7 @@
 import { handleJsonRpcMessage as handleHostedJsonRpcMessage } from "../../mcp-server/src/server.js";
 import { parseJsonRpcMessage, jsonRpcError, jsonRpcResult } from "../../mcp-server/src/jsonRpc.js";
 import { jsonContent } from "../../mcp-server/src/content.js";
+import { callAcceptsLocalEvidence, hasUsableEvidence, loadLocalEvidence, DEFAULT_PRIVATE_DIR } from "./localEvidence.js";
 
 export const LOCAL_DECISION_TOOL = {
   name: "evidra_local_decide_today",
@@ -24,9 +25,9 @@ export const LOCAL_DECISION_TOOL = {
 };
 
 const LOCAL_INSTRUCTIONS =
-  "This is Pacevera's user-controlled private engine. SQLite context and plans stay in the local environment; use evidra_local_decide_today for an existing local plan. Provider OAuth tokens are connector-bound and are never sent to MCP.";
+  "This is Pacevera's user-controlled private engine. SQLite context and plans stay in the local environment; use evidra_local_decide_today for an existing local plan. assess_fitness_state, decide_session, generate_plan and generate_workout read the user's local export folder automatically when no `evidence` argument is supplied — pass `evidence` yourself only to report something not yet exported. Provider OAuth tokens are connector-bound and are never sent to MCP.";
 
-export function createLocalMcpHandler({ engine } = {}) {
+export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVATE_DIR } = {}) {
   if (!engine) throw new Error("createLocalMcpHandler requires a local engine.");
 
   return async function handleLocalMcpMessage(rawMessage) {
@@ -38,9 +39,14 @@ export function createLocalMcpHandler({ engine } = {}) {
     if (method === "tools/list") {
       if (notification) return null;
       const response = await handleHostedJsonRpcMessage(rawMessage);
+      // Carries the same toolset/engine/rule-package identity the hosted
+      // tools were just stamped with (apps/mcp-server/src/toolDefinitions.js's
+      // listedToolDefinitions) — read off the response rather than
+      // recomputed here, so the two can never quietly drift apart.
+      const sharedMeta = response.result.tools[0]?._meta || {};
       return jsonRpcResult(id, {
         ...response.result,
-        tools: [...response.result.tools, LOCAL_DECISION_TOOL]
+        tools: [...response.result.tools, { ...LOCAL_DECISION_TOOL, _meta: sharedMeta }]
       });
     }
 
@@ -61,6 +67,35 @@ export function createLocalMcpHandler({ engine } = {}) {
         return jsonRpcResult(id, textOnly);
       } catch (error) {
         return jsonRpcError(id, -32000, error.message);
+      }
+    }
+
+    if (
+      method === "tools/call" &&
+      callAcceptsLocalEvidence(params.name) &&
+      !hasUsableEvidence(params.arguments?.evidence)
+    ) {
+      // A caller-supplied `evidence` (even a single data point) is never
+      // overridden — this only fills a gap the caller left, from the same
+      // local machine the export folder lives on. Failure here (unreadable
+      // folder, malformed export) falls through to the tool's normal
+      // "evidence required" response rather than breaking the call — a local
+      // read that did not work is the same as one that was never attempted.
+      let local;
+      try {
+        local = await loadLocalEvidence({ baseDir: localEvidenceDir, asOf: params.arguments?.date });
+      } catch {
+        local = { evidence: null };
+      }
+      if (local.evidence) {
+        const augmented = {
+          ...parsed.message,
+          params: { ...params, arguments: { ...(params.arguments || {}), evidence: local.evidence } }
+        };
+        return handleHostedJsonRpcMessage(JSON.stringify(augmented), {
+          outcomeRepository: engine.repository,
+          decisionRepository: engine.repository
+        });
       }
     }
 

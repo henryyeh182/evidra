@@ -150,7 +150,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 - 對外 **7 個決策 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` ·
   `generate_workout` · `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
   （**v0.4.1 起拿掉 `evidra_` 前綴**，改回 v0.1.1 那組名字——見發布章節）
-- **7 個對外決策 tool + 3 個 bounded trace/coverage/outcome support tool**、**534 個 tests 通過**（2026-08-13 在可監聽 localhost 的環境重跑 `npm test` 實測，含先前受 sandbox 權限限制的 HTTP tests，以及同日完成的 Evidence Flow Story 1／2／3／5 新增 17 個 tests；權限受限的環境可能再次卡住部分 HTTP tests，屆時以當次實測為準）、eval 20 golden cases，全綠
+- **7 個對外決策 tool + 3 個 bounded trace/coverage/outcome support tool**（跨 hosted／remote／MCPB 都有）**＋ 1 個 MCPB 專屬 `evidra_local_decide_today`**（2026-08-13 起，只在打包的 `.mcpb` 出現，hosted 不廣播）、**544 個 tests 通過**（2026-08-13 在可監聽 localhost 的環境重跑 `npm test` 實測，含先前受 sandbox 權限限制的 HTTP tests，以及同日完成的 Evidence Flow Story 1～6（含 Story 4）新增 27 個 tests；權限受限的環境可能再次卡住部分 HTTP tests，屆時以當次實測為準）、eval 20 golden cases，全綠
 - parser 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP；
   Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 個平台。
   **前四家照真實匯出檔寫；Oura 與 WHOOP 照兩家自己的 OpenAPI 寫（2026-08-07），
@@ -175,7 +175,18 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
   正確；`Intensity = round(NP/FTP×100)` 5/5 完全吻合；`Training Load` 是 TSS 公式取 floor。
   該匯出的 `maxHeartRateIsAgeEstimate` 為 **true**（171 ＝ 220−49），所以整條負荷序列
   站在 220−age 這個經驗法則上
-- **Phase 2：一行程式都沒有**（remote readiness skeleton 不等於 user-controlled deployment）
+- **Phase 2 不再是零**（2026-08-13 起）：Evidence Flow Story 1～6 全部完成——`packages/connectors/src/local/`
+  掃 Apple Health／Garmin／Strava／Google Health 本機匯出檔、`apps/local-engine` 在
+  `assess_fitness_state`／`decide_session`／`generate_plan`／`generate_workout` 這四個帶 `evidence`
+  欄位的 tool 上，呼叫端沒給 `evidence` 時自動用本機資料夾補上（呼叫端自己給的一律不覆蓋）；
+  `.mcpb` 打包進入點（`scripts/build-bundle.js` 的 `BUNDLE_ENTRY` 預設）從 v0.5.0 的
+  `apps/mcp-server/src/stdio.js` 換成 `apps/local-engine/src/stdio.js`，資料夾路徑用 MCPB manifest
+  的 `user_config`（`type: "directory"`，裝的時候跳原生選擇器，預設 `${HOME}/Pacevera`）。
+  **hosted／remote 完全沒被這次改動碰到**——只有本機執行的 `.mcpb` 這層會讀磁碟。
+  完整過程與實測見 [implementation plan §5「Phase 2 - Story 2 詳細分解」](fitness-mcp-implementation-plan.md)
+  的「Story 4」段落。仍未做的：Story 1（Phase 2 - Story 1，durable repository 的 backup／export／
+  delete）、Story 2（Google Health API OAuth connector 本身）、Story 3～4（continuity、private-engine
+  acceptance）——remote readiness skeleton 仍不等於完整 user-controlled deployment。
 
 ## 未決（不得自行改寫）
 
