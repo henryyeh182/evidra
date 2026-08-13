@@ -168,3 +168,17 @@ The current public release is `v0.5.0`, using Decision Engine `1.6.0` and `base_
 ## License
 
 Pacevera is proprietary software. See [LICENSE](LICENSE) for the applicable terms.
+
+## Pacevera v0.5.1
+
+The v0.5.1 Claude Desktop extension includes Today’s Brief, evidence-first local export reading, and plain-language tool titles. During installation, choose **Your exported health data folder** and select the parent folder containing any of these optional subfolders:
+
+```text
+Your exported health data folder/
+├── export_apple_health/        # Apple Health export.xml
+├── export_garmin/              # Garmin Export Your Data / DI_CONNECT
+├── export_strava/              # Strava activities.csv
+└── export_google_health/raw/   # Google Health API JSON
+```
+
+Pacevera reads the selected folder locally; missing sources are reported as unavailable rather than guessed. The v0.5.1 MCPB checksum is published in the release notes.
