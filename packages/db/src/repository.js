@@ -23,6 +23,19 @@ function nullable(value) {
   return value === undefined ? null : value;
 }
 
+/**
+ * `CREATE TABLE IF NOT EXISTS` does not add columns to a table that already
+ * exists — a database file created before a schema change stays on the old
+ * shape forever. This SQLite build also has no `ADD COLUMN IF NOT EXISTS`
+ * (added upstream in 3.35, not in Node's bundled version), so the existence
+ * check has to happen in JS.
+ */
+function ensureColumn(db, table, column, type) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (columns.some((row) => row.name === column)) return;
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+}
+
 function contextFromRows(user, rows) {
   return {
     user: {
@@ -71,7 +84,8 @@ function contextFromRows(user, rows) {
       trainingLoad: nullable(row.training_load),
       muscleGroups: json(row.muscle_groups_json, []),
       source: row.source,
-      sourceRecordId: row.source_record_id || undefined
+      sourceRecordId: row.source_record_id || undefined,
+      ...(row.metadata_json ? { metadata: json(row.metadata_json, undefined) } : {})
     })),
     healthMetrics: rows.healthMetrics.map((row) => ({
       id: row.id,
@@ -82,7 +96,8 @@ function contextFromRows(user, rows) {
       source: row.source,
       sourceRecordId: row.source_record_id || undefined,
       confidence: row.confidence,
-      ...(row.basis ? { basis: row.basis } : {})
+      ...(row.basis ? { basis: row.basis } : {}),
+      ...(row.metadata_json ? { metadata: json(row.metadata_json, undefined) } : {})
     }))
   };
 }
@@ -195,6 +210,8 @@ export class SQLiteFitnessRepository extends FitnessRepository {
     super();
     this.db = database || new DatabaseSync(filename);
     this.db.exec(SQLITE_SCHEMA);
+    ensureColumn(this.db, "workouts", "metadata_json", "TEXT");
+    ensureColumn(this.db, "health_metrics", "metadata_json", "TEXT");
   }
 
   close() {
@@ -232,17 +249,17 @@ export class SQLiteFitnessRepository extends FitnessRepository {
       const insertEquipment = this.db.prepare("INSERT INTO equipment (id, user_id, type, location, available) VALUES (?, ?, ?, ?, ?)");
       for (const row of rows.equipment) insertEquipment.run(row.id, row.user_id, row.type, row.location, row.available ? 1 : 0);
 
-      const insertWorkout = this.db.prepare("INSERT INTO workouts (id, user_id, type, name, started_at, duration_minutes, rpe, training_load, muscle_groups_json, source, source_record_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      const insertWorkout = this.db.prepare("INSERT INTO workouts (id, user_id, type, name, started_at, duration_minutes, rpe, training_load, muscle_groups_json, source, source_record_id, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
       for (const row of rows.workouts) insertWorkout.run(
         row.id, row.user_id, row.type, row.name, row.started_at, row.duration_minutes,
         nullable(row.rpe), nullable(row.training_load), JSON.stringify(row.muscle_groups || []),
-        row.source, row.source_record_id
+        row.source, row.source_record_id, row.metadata ? JSON.stringify(row.metadata) : null
       );
 
-      const insertMetric = this.db.prepare("INSERT INTO health_metrics (id, user_id, type, value, unit, recorded_at, source, source_record_id, confidence, basis) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      const insertMetric = this.db.prepare("INSERT INTO health_metrics (id, user_id, type, value, unit, recorded_at, source, source_record_id, confidence, basis, metadata_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
       for (const row of rows.health_metrics) insertMetric.run(
         row.id, row.user_id, row.type, row.value, row.unit || "", row.recorded_at,
-        row.source, row.source_record_id, row.confidence ?? 1, null
+        row.source, row.source_record_id, row.confidence ?? 1, null, row.metadata ? JSON.stringify(row.metadata) : null
       );
       this.db.exec("COMMIT");
     } catch (error) {

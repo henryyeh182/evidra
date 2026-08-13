@@ -9,10 +9,11 @@
 // column names, the API ships typed dataPoints under
 // https://health.googleapis.com/v4/users/me/dataTypes/<kebab-name>/dataPoints.
 //
-// It reads whatever raw responses are already in data/private/google-health/raw/
-// (put there by Codelab.http or by curl), converts, writes evidence.json, and
-// prints a Semantic Fitness State computed from it. Nothing here is committed;
-// nothing here is on the server's import path.
+// It reads whatever raw responses are already in data/private/export_google_health/raw/
+// (put there by Codelab.http or by curl), converts, writes evidence.json,
+// merges it into the local SQLite user context so evidra_local_decide_today
+// can use it, and prints a Semantic Fitness State computed from it. Nothing
+// here is committed; nothing here is on the hosted server's import path.
 //
 // Measured on one real account, 2026-08-06 (Garmin watch → Garmin Connect →
 // Apple HealthKit → Google Health → API, `platform: HEALTH_KIT`):
@@ -34,17 +35,18 @@ import { readFile, writeFile, readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { applyNormalizedEventsToContext } from "../packages/connectors/src/index.js";
 import { generateSemanticFitnessState } from "../packages/semantic-engine/src/index.js";
-import { stableId } from "../packages/db/src/id.js";
+import { stableId } from "../packages/db/src/index.js";
+import { persistLocalEvidence } from "./lib/persistLocalEvidence.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, "..");
-const baseDir = join(rootDir, "data/private/google-health");
+const baseDir = join(rootDir, "data/private/export_google_health");
 const rawDir = join(baseDir, "raw");
 const outputPath = join(baseDir, "evidence.json");
 const privateProfilePath = join(rootDir, "data/private/my-user-context.json");
 const demoProfilePath = join(rootDir, "data/seeds/sample-user-context.json");
+const dbPath = process.env.PACEVERA_DB_PATH || join(rootDir, "data/private/pacevera.sqlite");
 
 const MINUTE = 60000;
 const SOURCE = "google_health_api";
@@ -205,6 +207,39 @@ function normalizeRestingHeartRate(dataPoints) {
   return events;
 }
 
+// --- daily heart rate variability ------------------------------------------
+
+/**
+ * Per the API reference, a dailyHeartRateVariability point sets at least one
+ * of averageHeartRateVariabilityMilliseconds, nonRemHeartRateBeatsPerMinute,
+ * entropy, or deepSleepRootMeanSquareOfSuccessiveDifferencesMilliseconds.
+ * Only averageHeartRateVariabilityMilliseconds maps to Evidra's hrv_ms — the
+ * other three have no defined mapping, so a point that sets only those stays
+ * absent rather than being guessed at.
+ */
+function normalizeHeartRateVariability(dataPoints) {
+  const events = [];
+  const covered = new Set();
+  for (const point of dataPoints) {
+    const row = point.dailyHeartRateVariability;
+    const ms = positive(row?.averageHeartRateVariabilityMilliseconds);
+    const day = civilDay(row?.date);
+    if (ms === null || !day || covered.has(day)) continue;
+    covered.add(day);
+    events.push({
+      kind: "health_metric",
+      id: stableId(SOURCE, "hrv_ms", day),
+      type: "hrv_ms",
+      value: ms,
+      unit: "ms",
+      recordedAt: dayRecordedAt(day),
+      source: SOURCE,
+      metadata: { writer: point.dataSource?.application?.packageName ?? null }
+    });
+  }
+  return events;
+}
+
 // --- sleep ----------------------------------------------------------------
 
 /**
@@ -264,6 +299,7 @@ function buildEvidence(raw) {
   const workouts = normalizeExercises(raw.exercise);
   const healthMetrics = [
     ...normalizeRestingHeartRate(raw.restingHeartRate),
+    ...normalizeHeartRateVariability(raw.heartRateVariability),
     ...normalizeSleeps(raw.sleep)
   ].sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
 
@@ -277,6 +313,7 @@ function buildEvidence(raw) {
 const RAW_FILES = {
   exercise: ["exercise.json"],
   restingHeartRate: ["resting-hr.json", "daily-resting-heart-rate.json"],
+  heartRateVariability: ["daily-heart-rate-variability.json", "r-daily-heart-rate-variability.json"],
   sleep: ["sleep-nofilter.json", "sleep.json"]
 };
 
@@ -296,7 +333,7 @@ async function main() {
     present = new Set(await readdir(rawDir));
   } catch {
     console.log(`No raw responses at:\n  ${rawDir}\n`);
-    console.log("Run the requests in data/private/google-health/Codelab.http first.");
+    console.log("Run the requests in data/private/export_google_health/Codelab.http first.");
     process.exitCode = 1;
     return;
   }
@@ -334,7 +371,12 @@ async function main() {
   console.log(`  profile: ${usingRealProfile ? "data/private/my-user-context.json (yours)" : "demo seed"}`);
 
   const events = [...evidence.healthMetrics, ...evidence.workouts];
-  const merged = applyNormalizedEventsToContext(context, events);
+
+  // Merges into whatever is already saved for this user (other sources'
+  // workouts and health metrics included), not just this run's events on top
+  // of the blank profile — see scripts/lib/persistLocalEvidence.js.
+  const merged = await persistLocalEvidence({ dbPath, profileContext: context, events });
+  console.log(`  saved user context to ${dbPath} (userId: ${merged.user.id}, ${merged.workouts.length} workouts total, ${merged.healthMetrics.length} health metrics total)`);
 
   const latest = events.map((e) => e.recordedAt ?? e.startedAt).sort().at(-1);
   if (!latest) {

@@ -1,15 +1,30 @@
 # data/private — local-only personal data (never committed)
 
-This directory holds **real** personal data — Apple Health exports and anything
-derived from them. Everything here except this README is git-ignored (see the
-`data/private/*` rule in [`.gitignore`](../../.gitignore)). This is deliberate:
-the repository is public, and raw health data (HRV, resting HR, sleep, body
-mass…) must never enter git history.
+This directory holds **real** personal data — health platform exports and
+anything derived from them. Everything here except this README is git-ignored
+(see the `data/private/*` rule in [`.gitignore`](../../.gitignore)). This is
+deliberate: the repository is public, and raw health data (HRV, resting HR,
+sleep, body mass…) must never enter git history.
 
 The MCP server's continuity store is `data/private/athletes/` by default. It
 contains one hashed-identity JSON record per identified athlete and is written
 only when a request has an OAuth subject or explicit `userId`. Anonymous tool
 calls remain stateless. Set `EVIDRA_STATE_DIR` to place these records elsewhere.
+
+## Evidence source folder naming
+
+The MCPB currently supports four manually-imported evidence sources. Each
+lives in its own `data/private/export_<platform>/` folder:
+
+```
+data/private/export_apple_health/
+data/private/export_garmin/
+data/private/export_google_health/
+data/private/export_strava/
+```
+
+`export_<platform>` is the fixed naming convention — every importer script and
+local connector that reads from `data/private/` targets this pattern.
 
 ## How to load your Apple Health data
 
@@ -18,7 +33,7 @@ calls remain stateless. Set `EVIDRA_STATE_DIR` to place these records elsewhere.
 2. Copy that file to:
 
    ```
-   data/private/apple-health/export.xml
+   data/private/export_apple_health/export.xml
    ```
 
 3. Run the importer:
@@ -28,8 +43,8 @@ calls remain stateless. Set `EVIDRA_STATE_DIR` to place these records elsewhere.
    ```
 
    It parses and normalizes the export into
-   `data/private/apple-health/normalized.json` (also git-ignored) and prints a
-   real Semantic Fitness State computed from your data.
+   `data/private/export_apple_health/normalized.json` (also git-ignored) and
+   prints a real Semantic Fitness State computed from your data.
 
 ## What is safe to commit
 

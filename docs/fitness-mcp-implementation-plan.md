@@ -1,6 +1,6 @@
 # Pacevera — Product & Implementation Plan
 
-> 更新：2026-08-12
+> 更新：2026-08-13
 >
 > 本文件是 Pacevera 的產品終局、發行現況與開工順序正本。
 > 歷史判斷、舊代號與已淘汰方案保留在
@@ -403,6 +403,30 @@ Decision Engine
 Evidence 必須區分 `ingestionSource`（Google Health API）與 `originalWriter`（例如 Garmin Connect 或 Apple Watch／HealthKit）。Garmin → Apple Health 的同步是單向資料路徑，且目前實測 Garmin chain 沒有 HRV；HRV 缺失時必須保留為 `missing`，不得推測或補值。Apple Watch HRV 將由後續 HealthKit connector 驗證，不把 Google Health 的聚合結果自動標成 Apple Watch 資料。
 
 `Sign in with Google` 不應在 Phase 0.5 public preview 中獨立上線；若進入 mobile／private-engine product，應與 `Connect Google Health` 一起設計，但使用不同 consent、token scope、撤銷與刪除流程。Hosted Google OAuth、mobile access 與 hosted retention／DPA 仍屬 **Phase 3 - Story 4**，目前維持 `Blocked`。
+
+### Phase 2 - Story 2 詳細分解：本機匯出檔 Evidence Data Flow
+
+Phase 2 - Story 2「Private connector boundary」目前寫的完成條件只涵蓋 Google Health API
+OAuth 這一條即時路徑（帳號登入 → 連接 Google Health → API token → importer → Evidence →
+Decision Engine，見上一節）。以下拆出另一條平行路徑：不經任何 API，直接讀使用者已經用
+Apple Health、Garmin、Strava、Google Health 匯出、放在本機資料夾（例如 `data/private/`）
+裡的檔案。兩條路徑都屬於 Story 2 的範圍，差別只在證據怎麼進來——一個是即時 API，
+一個是離線檔案。
+
+`packages/connectors` 的 4 家 provider parser（Apple Health、Garmin、Strava、Google
+Health）已用真實匯出檔驗證正確（見 2.1），但目前只被 `demoData.js` 用來產生展示假資料，
+`apps/mcp-server` 沒有任何路徑會主動掃本機資料夾、把這些 parser 的輸出餵進決策工具。
+`packages/connectors/src/local.js` 已定義 `LocalConnectorAdapter` 介面（`pullNormalizedEvents()`），
+但除了測試用的 `FixtureConnectorAdapter`，沒有任何 provider 有具體實作。
+
+| Story | 交付結果 | 完成條件 | 狀態 |
+|---|---|---|---|
+| Evidence Flow - Story 1 | Local connector 具體實作。 | 為 Apple Health／Garmin／Strava 各寫一個 `LocalConnectorAdapter` 子類，實作 `pullNormalizedEvents()`：掃對應資料夾、挑最新匯出檔、呼叫既有 normalize 函式。Google Health 沿用既有 `scripts/import-google-health-api.js` 的 importer／normalizer，不重寫。「最新」的判斷依據（檔案時間戳／匯出內容裡的日期）要附出處，無出處不准進 repo。 | 待開始 |
+| Evidence Flow - Story 2 | 多來源 Evidence 組裝。 | 用既有 `applyNormalizedEventsToContext` 把 4 家輸出合併成單一 context；沒資料或資料過期的來源要反映在 `signalCoverage.recovery.missing`／`training.missing`，不得假裝有值。 | 待開始 |
+| Evidence Flow - Story 3 | 接進本機決策路徑。 | 組裝好的 Evidence 在本機引擎內部直接餵進 `assess_fitness_state`／`decide_session`，不透過 Claude 傳 `evidence` 參數；同一批檔案重跑兩次，決策結果要一致。 | 待開始 |
+| Evidence Flow - Story 4 | 對外介面決定。 | 要不要曝露成一個可被 Claude 觸發的 tool；若要，回傳只給摘要與決策結果，不吐 HRV／心率等原始數值——比照既有 Google Health sync 定案原則。 | 待開始（需使用者先決定方向） |
+| Evidence Flow - Story 5 | Harness 驗證與文件收尾。 | 建 Decision Harness scenario 覆蓋「檔案齊全／缺檔／格式過期／髒資料」；本文件與 `CLAUDE.md` 現況段同步更新。 | 待開始 |
+| Evidence Flow - Story 6 | Today's Brief UI 接真資料。 | `docs/pacevera-home.html` 的 Evidence／Decision／Reason 區塊改讀 Story 3 產出的真實決策輸出，取代目前寫死在 `<script>` 裡的 fixture 物件（`keep`／`adjust` 等常數）；`prototype-note` 與 fixture 免責句拿掉或改寫成反映真實資料狀態。 | 待開始 |
 
 ### Phase 3 — 受控手機與跨 AI host 體驗
 

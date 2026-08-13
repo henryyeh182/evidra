@@ -70,7 +70,8 @@ export function mapWorkoutToRow(userId, workout) {
     training_load: workout.trainingLoad,
     muscle_groups: workout.muscleGroups,
     source: workout.source,
-    source_record_id: workout.sourceRecordId || null
+    source_record_id: workout.sourceRecordId || null,
+    metadata: workout.metadata || null
   };
 }
 
@@ -84,7 +85,8 @@ export function mapHealthMetricToRow(userId, metric) {
     recorded_at: metric.recordedAt,
     source: metric.source,
     source_record_id: metric.sourceRecordId || null,
-    confidence: metric.confidence ?? 1
+    confidence: metric.confidence ?? 1,
+    metadata: metric.metadata || null
   };
 }
 

@@ -2,25 +2,28 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 // Import a real Apple Health export from data/private/ (git-ignored), normalize
-// it, write the normalized dataset back into data/private/, and print a Semantic
-// Fitness State computed from the real data. Nothing here is committed.
+// it, write the normalized dataset back into data/private/, merge it into the
+// local SQLite user context so evidra_local_decide_today can use it, and print
+// a Semantic Fitness State computed from the real data. Nothing here is
+// committed; nothing here is on the hosted server's import path.
 import { readFile, writeFile, access } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 import {
   parseAppleHealthExport,
-  normalizeAppleHealthExport,
-  applyNormalizedEventsToContext
+  normalizeAppleHealthExport
 } from "../packages/connectors/src/index.js";
 import { generateSemanticFitnessState } from "../packages/semantic-engine/src/index.js";
+import { persistLocalEvidence } from "./lib/persistLocalEvidence.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, "..");
-const exportPath = join(rootDir, "data/private/apple-health/export.xml");
-const outputPath = join(rootDir, "data/private/apple-health/normalized.json");
+const exportPath = join(rootDir, "data/private/export_apple_health/export.xml");
+const outputPath = join(rootDir, "data/private/export_apple_health/normalized.json");
 const privateProfilePath = join(rootDir, "data/private/my-user-context.json");
 const demoProfilePath = join(rootDir, "data/seeds/sample-user-context.json");
+const dbPath = process.env.PACEVERA_DB_PATH || join(rootDir, "data/private/pacevera.sqlite");
 
 async function exists(path) {
   try {
@@ -57,7 +60,12 @@ async function main() {
   const profilePath = usingRealProfile ? privateProfilePath : demoProfilePath;
   const context = JSON.parse(await readFile(profilePath, "utf8"));
   console.log(`  profile: ${usingRealProfile ? "data/private/my-user-context.json (yours)" : "demo seed"}`);
-  const merged = applyNormalizedEventsToContext(context, events);
+
+  // Merges into whatever is already saved for this user (other sources'
+  // workouts and health metrics included), not just this run's events on top
+  // of the blank profile — see scripts/lib/persistLocalEvidence.js.
+  const merged = await persistLocalEvidence({ dbPath, profileContext: context, events });
+  console.log(`  saved user context to ${dbPath} (userId: ${merged.user.id}, ${merged.workouts.length} workouts total, ${merged.healthMetrics.length} health metrics total)`);
 
   const latest = metrics.map((m) => m.recordedAt).sort().at(-1);
   const date = (latest || "2026-07-22").slice(0, 10);

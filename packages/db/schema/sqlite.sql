@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS workouts (
   muscle_groups_json TEXT NOT NULL,
   source TEXT NOT NULL,
   source_record_id TEXT,
+  metadata_json TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -84,6 +85,7 @@ CREATE TABLE IF NOT EXISTS health_metrics (
   source_record_id TEXT,
   confidence REAL NOT NULL DEFAULT 1,
   basis TEXT,
+  metadata_json TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
