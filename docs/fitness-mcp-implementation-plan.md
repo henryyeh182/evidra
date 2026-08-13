@@ -155,6 +155,7 @@ v0.5.0 已於 2026-08-11 發行，是目前公開可安裝的 Desktop MCPB 基�
 - 公開 privacy URL、release review 與 MCPB archive／published review 仍需收尾；`docs/privacy-deployment-contract.md` 是目前的 canonical implementation contract，不等同於已完成 hosted privacy policy。
 - Outcome repository 已接入 user-controlled local engine：SQLite `outcome_records`、migration `0004`、`saveOutcome`／`listOutcomes` 與 local MCP injection 已完成；hosted MCP 仍維持 process-local/stateless，且尚未形成自動 Rule learning loop。
 - Durable decision trace 已接入同一個 user-controlled SQLite：`decision_records`、local `explain_decision` restart recovery 與 user scope test 已完成；backup、export、delete 尚待補齊。
+- Evidence Flow 的本機匯出檔路徑已在 main 完成：`8e19191` 完成 Evidence Flow Story 1／2／3／5／6，`d233377` 完成 Evidence Flow Story 4 的 `.mcpb` 對外介面，`ce8c030` 接上 Today Brief MCP App UI。這些是 Phase 2 的可交付切片，不等同於下方 top-level Phase 2 - Story 1～4 的全部 acceptance criteria。
 
 ### 2.4 已發布的 v0.5.0 與 main 的落差
 
@@ -369,8 +370,8 @@ Evidence → current state → decision intent → scheduled workout (from)
 | Story | 交付結果 | 完成條件 | 狀態 |
 |---|---|---|---|
 | Phase 2 - Story 1 | Durable local repository。 | SQLite 優先的 state／plan／decision／outcome repository；process restart 後仍可讀；有 migration、backup、export 與 delete。 | 進行中（decision／outcome records、migration 與 local restart recovery 已完成；backup、export、delete 尚待補齊） |
-| Phase 2 - Story 2 | Private connector boundary。 | 第一批只完成經驗證的 local Evidence workflow；Google Health API local connector 重用既有 importer／normalizer；connector token 加密、最小 scope、撤銷與刪除；Oura／WHOOP 先補真實去識別化 fixture，不以平台數量充當完成。 | 待開始 |
-| Phase 2 - Story 3 | Evidence continuity。 | 每次 Decision 帶 state ID、evidence window、Product／Engine／Rule Package identity；保留 ingestion source、original writer、platform 與 signal provenance；新對話或新 host 只讀最小化 bootstrap，不重新取得完整健康歷史。 | 待開始 |
+| Phase 2 - Story 2 | Private connector boundary。 | 第一批只完成經驗證的 local Evidence workflow；Google Health API local connector 重用既有 importer／normalizer；connector token 加密、最小 scope、撤銷與刪除；Oura／WHOOP 先補真實去識別化 fixture，不以平台數量充當完成。 | 進行中（Apple Health／Garmin／Strava／Google Health 本機匯出 Evidence flow 已完成；Google Health API OAuth、token scope／撤銷／刪除與 Oura／WHOOP 真實 fixture 尚待補齊） |
+| Phase 2 - Story 3 | Evidence continuity。 | 每次 Decision 帶 state ID、evidence window、Product／Engine／Rule Package identity；保留 ingestion source、original writer、platform 與 signal provenance；新對話或新 host 只讀最小化 bootstrap，不重新取得完整健康歷史。 | 進行中（本機決策 wiring、state ID／evidence window 與 source-aware summary 基礎已完成；跨對話 bootstrap、完整 provenance 與 HRV missing acceptance 尚待補齊） |
 | Phase 2 - Story 4 | Private-engine acceptance。 | 無 hosted service 時，Google Health API → Evidence → Decision、今日課表調整、低恢復降載、傷病替代、單次 workout 五個情境端到端通過；privacy boundary tests 證明 raw Evidence 與 token 未離開 user-controlled environment，且 Garmin chain 缺少 HRV 時明確回報 missing。 | 待開始 |
 
 ### Phase 2 entry decision — Google Health ingestion
@@ -414,10 +415,11 @@ Apple Health、Garmin、Strava、Google Health 匯出、放在本機資料夾（
 一個是離線檔案。
 
 `packages/connectors` 的 4 家 provider parser（Apple Health、Garmin、Strava、Google
-Health）已用真實匯出檔驗證正確（見 2.1），但目前只被 `demoData.js` 用來產生展示假資料，
-`apps/mcp-server` 沒有任何路徑會主動掃本機資料夾、把這些 parser 的輸出餵進決策工具。
-`packages/connectors/src/local.js` 已定義 `LocalConnectorAdapter` 介面（`pullNormalizedEvents()`），
-但除了測試用的 `FixtureConnectorAdapter`，沒有任何 provider 有具體實作。
+Health）已用真實匯出檔驗證正確（見 2.1），並已在 `8e19191` 接上本機 connector adapters、
+多來源 Evidence 組裝與本機決策路徑。`d233377` 再將這條路徑接入 packaged `.mcpb`：使用者未明確
+提供 `evidence` 時，由 local engine 掃描使用者選定的資料夾；hosted `apps/mcp-server` 不讀本機磁碟。
+因此本節的 Evidence Flow Story 1～6 已完成；Google Health API OAuth 的即時路徑仍是 top-level
+Phase 2 - Story 2 的未完成部分。
 
 | Story | 交付結果 | 完成條件 | 狀態 |
 |---|---|---|---|
@@ -430,12 +432,12 @@ Health）已用真實匯出檔驗證正確（見 2.1），但目前只被 `demoD
 
 #### Evidence Flow completion evidence — 2026-08-13
 
-- **Story 1**：`packages/connectors/src/local/`（`appleHealthLocal.js`／`garminLocal.js`／`stravaLocal.js`／`googleHealthApiLocal.js`）。「最新」一律用 `fs.stat().mtimeMs`（`latestExportFile.js`），Google Health 沿用既有 script 的 reader／normalizer（搬到 `googleHealthApiLocal.js`，`scripts/import-google-health-api.js` 改為呼叫它，行為不變）。
+- **Story 1**（commit `8e19191`）：`packages/connectors/src/local/`（`appleHealthLocal.js`／`garminLocal.js`／`stravaLocal.js`／`googleHealthApiLocal.js`）。「最新」一律用 `fs.stat().mtimeMs`（`latestExportFile.js`），Google Health 沿用既有 script 的 reader／normalizer（搬到 `googleHealthApiLocal.js`，`scripts/import-google-health-api.js` 改為呼叫它，行為不變）。
   **實測發現、非文件既有假設**：Garmin 的 GDPR bulk export（`DI_CONNECT/`）與 `schemas/sources/garmin.export.json`／既有 `normalizeGarminSleep`／`normalizeGarminDailySummary` 假設的欄位形狀不同——真實匯出檔的 `sleepData.json` 完全沒有 `sleepTimeSeconds` 欄位（改用 `deepSleepSeconds+lightSleepSeconds+remSleepSeconds`），`sleepScores.overallScore` 不是巢狀 `.overall.value`；`UDSFile` 的 `averageStressLevel` 巢狀在 `allDayStress.aggregatorList`（`type: "TOTAL"` 那筆）不是攤平欄位。這兩個轉換寫在 `garminLocal.js`（`flattenSleep`／`flattenDailySummary`），不改動既有 `normalizeGarmin*` 函式本身。另外把 `normalizeGarminDailySummary`／`normalizeGarminSleep`／vendor_assessment 事件補上 `stableId`（先前缺失，多檔合併時會用 `id: undefined` 互相覆蓋）。
-- **Story 2**：`assembleLocalEvidence.js` 跑 4 個來源、單一來源失敗只記 `sources[name].status`，不中斷其他三個。`applyNormalizedEventsToContext` 新增 `vendor_assessment` 合併（先前被靜默丟棄——Garmin 的 `recoveryTime`／Body Battery 最可靠的訊號正是這個 kind）。
-- **Story 3**：`scripts/import-local-evidence.js`；`LocalPrivateEngine.decideToday` 新增 `context` 覆寫參數——因為 repository 的 SQLite schema 不存 `vendor_assessment`，若照舊從 repository 重讀會把 Garmin 這組訊號重新丟掉，所以決策改吃組裝後留在記憶體裡的完整 context。對同一批真實私有匯出檔跑兩次，stdout byte-for-byte 相同（僅 SQLite experimental-warning 那行的 PID 不同）。
-- **Story 5**：`packages/connectors/test/local/harnessScenarios.test.js` 覆蓋 complete／stale（超過 `stalenessSleepDays`/`stalenessAutonomicDays`/`stalenessRestingHrDays`/`stalenessVendorCompositeDays` 視窗後轉 missing）／dirty（壞掉的 JSON 檔、缺欄位記錄、欄位改版的 Strava CSV）；missing 由 `assembleLocalEvidence.test.js` 既有兩個案例覆蓋。新增 fixture：`data/fixtures/garmin/di-connect-export{,-dirty}/`、`data/fixtures/google-health-api/raw/`、`data/fixtures/strava/export-dirty/`。
-- **Story 6**：`scripts/generate-home-scenario-fixtures.js` 跑 `harness/scenarios/01,02,03`（既有、已審查過的合成情境）經真實 `generateSemanticFitnessState`+`decideSession`，寫出 `docs/pacevera-home-scenarios.js`（machine-generated，取代原本手寫在 inline `<script>` 裡的 `keep`／`adjust`／`defer` 物件）；同步更新頁面上與舊 fixture 數字綁定的靜態文案（trace drawer、decision-layer 區塊）避免與新數字矛盾。原本的趨勢箭頭（↑/↓）沒有對應的時間序列比較基準，本來就是裝飾性數字，這次移除而非保留。
+- **Story 2**（commit `8e19191`）：`assembleLocalEvidence.js` 跑 4 個來源、單一來源失敗只記 `sources[name].status`，不中斷其他三個。`applyNormalizedEventsToContext` 新增 `vendor_assessment` 合併（先前被靜默丟棄——Garmin 的 `recoveryTime`／Body Battery 最可靠的訊號正是這個 kind）。
+- **Story 3**（commit `8e19191`）：`scripts/import-local-evidence.js`；`LocalPrivateEngine.decideToday` 新增 `context` 覆寫參數——因為 repository 的 SQLite schema 不存 `vendor_assessment`，若照舊從 repository 重讀會把 Garmin 這組訊號重新丟掉，所以決策改吃組裝後留在記憶體裡的完整 context。對同一批真實私有匯出檔跑兩次，stdout byte-for-byte 相同（僅 SQLite experimental-warning 那行的 PID 不同）。
+- **Story 5**（commit `8e19191`）：`packages/connectors/test/local/harnessScenarios.test.js` 覆蓋 complete／stale（超過 `stalenessSleepDays`/`stalenessAutonomicDays`/`stalenessRestingHrDays`/`stalenessVendorCompositeDays` 視窗後轉 missing）／dirty（壞掉的 JSON 檔、缺欄位記錄、欄位改版的 Strava CSV）；missing 由 `assembleLocalEvidence.test.js` 既有兩個案例覆蓋。新增 fixture：`data/fixtures/garmin/di-connect-export{,-dirty}/`、`data/fixtures/google-health-api/raw/`、`data/fixtures/strava/export-dirty/`。
+- **Story 6**（commit `ce8c030`，依賴 `8e19191`）：`scripts/generate-home-scenario-fixtures.js` 跑 `harness/scenarios/01,02,03`（既有、已審查過的合成情境）經真實 `generateSemanticFitnessState`+`decideSession`，寫出 `docs/pacevera-home-scenarios.js`（machine-generated，取代原本手寫在 inline `<script>` 裡的 `keep`／`adjust`／`defer` 物件）；Today Brief MCP App UI 已在 `apps/local-engine/src/todayBriefApp.js` 與 `server.json` 接入。同步更新頁面上與舊 fixture 數字綁定的靜態文案（trace drawer、decision-layer 區塊）避免與新數字矛盾。原本的趨勢箭頭（↑/↓）沒有對應的時間序列比較基準，本來就是裝飾性數字，這次移除而非保留。
 - **Story 4**（2026-08-13 補做，使用者定案「下一版 mcpb 要能真的體驗這條流程」）：不新開一個要 Claude 特地去叫的 tool——`assess_fitness_state`／`decide_session`／`generate_plan`／`generate_workout`（唯四個 input schema 有 `evidence` 欄位的 tool）在 `apps/local-engine/src/localEvidence.js` 這層攔截：呼叫端沒帶 `evidence`（或帶了空的）時才用 `assembleLocalEvidence` 掃使用者選的資料夾補上，呼叫端自己給的 evidence（哪怕只有一筆）一律不覆蓋。`apps/mcp-server`（hosted）完全沒改，只有 `apps/local-engine` 這層動。回傳沿用既有 `decide_session` 輸出契約——查過那份契約本來就只回算好的分數（readiness／acwr 這類），從沒回過原始 HRV ms／心率數字，所以「不吐原始數值」這條不用另外寫防護，沿用既有契約就成立。folder 路徑改用 MCPB manifest 的 `user_config`（`type: "directory"`，裝的時候跳原生資料夾選擇器，預設 `${HOME}/Pacevera`），過 `${user_config.private_data_dir}` 樣板注入 `PACEVERA_PRIVATE_DIR` 環境變數——不是猜的語法，用官方 `@anthropic-ai/mcpb` 套件本地的 `mcpb-manifest-v0.3.schema.json` 核對過，manifest 也跑過 `npx @anthropic-ai/mcpb validate` 通過。`.mcpb` 打包進入點（`scripts/build-bundle.js` 的 `BUNDLE_ENTRY` 預設值）從 `apps/mcp-server/src/stdio.js` 換成 `apps/local-engine/src/stdio.js`；Remote image 的 `BUNDLE_ENTRY=apps/mcp-server/src/http-entry.js` 覆寫不受影響。
   **過程中發現三個既有檔案的路徑在打包後會壞掉**（`packages/db/src/repository.js` 讀 `../schema/sqlite.sql`、`packages/rules/src/candidate.js` 讀 `../../../rule-packages/schemas/rule-candidate.schema.json`——這兩個都是先前從沒被 `apps/mcp-server` 那條進入點載入過，這次換成 local-engine 進入點才第一次被打包進去、第一次暴露）：兩個都比照既有 `librarySource.js`／`parameterSource.js` 的模式各自拆一個 `*Source.js` 間接模組，`scripts/build-bundle.js` 的 `layoutShims` 各補一條內嵌規則，不改動兩邊原本的商業邏輯。
   **實測**：`npm run pack` 打包、`node scripts/smoke-release-install.js --skip-online --skip-claude` 全綠；額外把打包出來的 `.mcpb` 解壓、直接跑裡面的 `dist/evidra-server.mjs`，用真實 fixture 資料夾當 `PACEVERA_PRIVATE_DIR`，對 `decide_session` 打「VO2max Intervals 60min」且不帶 `evidence` 參數，收到 `evidenceSource: "provided"` 與真實決策（`adjust` → `Moderate run`），不是空跑。
