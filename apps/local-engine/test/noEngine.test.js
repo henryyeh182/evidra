@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 
 import { createLocalMcpHandler, LOCAL_DECISION_TOOL, LOCAL_PREVIEW_TOOL } from "../src/server.js";
+import { TODAY_BRIEF_RESOURCE_URI } from "../src/todayBriefApp.js";
 
 const PRIVATE_DIR = fileURLToPath(new URL("../../../data/fixtures/pacevera-private", import.meta.url));
 
@@ -37,6 +38,15 @@ test("the local evidence preview returns evidence without running a decision", a
   assert.equal(payload.evidenceBrief.available, true);
   assert.ok(payload.evidenceBrief.signalCounts.healthMetrics > 0);
   assert.equal(payload.nextStep.includes("wait for confirmation"), true);
+});
+
+test("the local server exposes the Today's Brief MCP App resource", async () => {
+  const handle = createLocalMcpHandler({ localEvidenceDir: PRIVATE_DIR });
+  const listed = await call(handle, "resources/list", {}, 20);
+  assert.equal(listed.result.resources[0].uri, TODAY_BRIEF_RESOURCE_URI);
+  const read = await call(handle, "resources/read", { uri: TODAY_BRIEF_RESOURCE_URI }, 21);
+  assert.equal(read.result.contents[0].mimeType, "text/html;profile=mcp-app");
+  assert.match(read.result.contents[0].text, /Pacevera Today's Brief/);
 });
 
 test("without an engine, decide_session still answers from the local export folder", async () => {

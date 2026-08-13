@@ -5,6 +5,7 @@ import { handleJsonRpcMessage as handleHostedJsonRpcMessage } from "../../mcp-se
 import { parseJsonRpcMessage, jsonRpcError, jsonRpcResult } from "../../mcp-server/src/jsonRpc.js";
 import { jsonContent } from "../../mcp-server/src/content.js";
 import { callAcceptsLocalEvidence, hasUsableEvidence, loadLocalEvidence, DEFAULT_PRIVATE_DIR } from "./localEvidence.js";
+import { TODAY_BRIEF_RESOURCE, TODAY_BRIEF_APP_HTML, TODAY_BRIEF_RESOURCE_URI } from "./todayBriefApp.js";
 
 export const LOCAL_DECISION_TOOL = {
   name: "evidra_local_decide_today",
@@ -41,6 +42,7 @@ export const LOCAL_PREVIEW_TOOL = {
   },
   description:
     "Read the selected local health export folder and return the evidence preview only. This must be shown to the user before deciding today's workout.",
+  _meta: { ui: { resourceUri: TODAY_BRIEF_RESOURCE_URI } },
   inputSchema: {
     type: "object",
     properties: {
@@ -74,7 +76,12 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
     if (method === "tools/list") {
       if (notification) return null;
       const response = await handleHostedJsonRpcMessage(rawMessage);
-      const tools = [...response.result.tools, LOCAL_PREVIEW_TOOL];
+      const tools = response.result.tools.map((tool) =>
+        tool.name === "decide_session"
+          ? { ...tool, _meta: { ...(tool._meta || {}), ui: { resourceUri: TODAY_BRIEF_RESOURCE_URI } } }
+          : tool
+      );
+      tools.push(LOCAL_PREVIEW_TOOL);
       if (!engine) return jsonRpcResult(id, { ...response.result, tools });
       // Carries the same toolset/engine/rule-package identity the hosted
       // tools were just stamped with (apps/mcp-server/src/toolDefinitions.js's
@@ -87,11 +94,32 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
       });
     }
 
+    if (method === "resources/list") {
+      if (notification) return null;
+      return jsonRpcResult(id, { resources: [TODAY_BRIEF_RESOURCE] });
+    }
+
+    if (method === "resources/read") {
+      if (notification) return null;
+      if (params.uri !== TODAY_BRIEF_RESOURCE_URI) {
+        return jsonRpcError(id, -32602, `Unknown resource: ${params.uri}`);
+      }
+      return jsonRpcResult(id, {
+        contents: [{
+          uri: TODAY_BRIEF_RESOURCE_URI,
+          mimeType: TODAY_BRIEF_RESOURCE.mimeType,
+          text: TODAY_BRIEF_APP_HTML,
+          _meta: TODAY_BRIEF_RESOURCE._meta
+        }]
+      });
+    }
+
     if (method === "initialize") {
       if (notification) return null;
       const response = await handleHostedJsonRpcMessage(rawMessage);
       return jsonRpcResult(id, {
         ...response.result,
+        capabilities: { ...response.result.capabilities, resources: { subscribe: false, listChanged: false } },
         instructions: engine ? LOCAL_INSTRUCTIONS : NO_ENGINE_INSTRUCTIONS
       });
     }
