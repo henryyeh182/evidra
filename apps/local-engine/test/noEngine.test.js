@@ -40,6 +40,17 @@ test("the local evidence preview returns evidence without running a decision", a
   assert.equal(payload.nextStep.includes("wait for confirmation"), true);
 });
 
+test("UI-enabled tools advertise both current and legacy resource metadata", async () => {
+  const handle = createLocalMcpHandler({ localEvidenceDir: PRIVATE_DIR });
+  const response = await call(handle, "tools/list", {}, 19);
+  const preview = response.result.tools.find((tool) => tool.name === LOCAL_PREVIEW_TOOL.name);
+  const decision = response.result.tools.find((tool) => tool.name === "decide_session");
+  for (const tool of [preview, decision]) {
+    assert.equal(tool._meta.ui.resourceUri, TODAY_BRIEF_RESOURCE_URI);
+    assert.equal(tool._meta["ui/resourceUri"], TODAY_BRIEF_RESOURCE_URI);
+  }
+});
+
 test("the local server exposes the Today's Brief MCP App resource", async () => {
   const handle = createLocalMcpHandler({ localEvidenceDir: PRIVATE_DIR });
   const listed = await call(handle, "resources/list", {}, 20);

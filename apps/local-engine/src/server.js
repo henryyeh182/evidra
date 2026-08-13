@@ -31,6 +31,14 @@ export const LOCAL_DECISION_TOOL = {
   }
 };
 
+const TODAY_BRIEF_TOOL_META = {
+  ui: { resourceUri: TODAY_BRIEF_RESOURCE_URI },
+  // Claude Desktop versions that predate the nested MCP Apps metadata still
+  // look for this flat key. Keep it alongside the current form so an
+  // installed .mcpb remains renderable across host versions.
+  "ui/resourceUri": TODAY_BRIEF_RESOURCE_URI
+};
+
 export const LOCAL_PREVIEW_TOOL = {
   name: "evidra_preview_today",
   title: "Preview Today's Evidence",
@@ -42,7 +50,7 @@ export const LOCAL_PREVIEW_TOOL = {
   },
   description:
     "Read the selected local health export folder and return the evidence preview only. This must be shown to the user before deciding today's workout.",
-  _meta: { ui: { resourceUri: TODAY_BRIEF_RESOURCE_URI } },
+  _meta: TODAY_BRIEF_TOOL_META,
   inputSchema: {
     type: "object",
     properties: {
@@ -78,7 +86,7 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
       const response = await handleHostedJsonRpcMessage(rawMessage);
       const tools = response.result.tools.map((tool) =>
         tool.name === "decide_session"
-          ? { ...tool, _meta: { ...(tool._meta || {}), ui: { resourceUri: TODAY_BRIEF_RESOURCE_URI } } }
+          ? { ...tool, _meta: { ...(tool._meta || {}), ...TODAY_BRIEF_TOOL_META } }
           : tool
       );
       tools.push(LOCAL_PREVIEW_TOOL);
@@ -90,7 +98,7 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
       const sharedMeta = response.result.tools[0]?._meta || {};
       return jsonRpcResult(id, {
         ...response.result,
-        tools: [...tools, { ...LOCAL_DECISION_TOOL, _meta: sharedMeta }]
+        tools: [...tools, { ...LOCAL_DECISION_TOOL, _meta: { ...sharedMeta, ...TODAY_BRIEF_TOOL_META } }]
       });
     }
 

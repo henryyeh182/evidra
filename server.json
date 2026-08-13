@@ -13,7 +13,7 @@
     {
       "registryType": "mcpb",
       "identifier": "https://github.com/henryyeh182/evidra/releases/download/v0.5.0/pacevera.mcpb",
-      "fileSha256": "b96bb3dec7faf2d07871dc43c5a120f185f5e103ff7c21d496122d4ab1826ef8",
+      "fileSha256": "583f530ae907c2b2525394bee157c39163f39277f529c5f35d7ec1e8a4065683",
       "transport": {
         "type": "stdio"
       }
