@@ -30,11 +30,30 @@ export const LOCAL_DECISION_TOOL = {
   }
 };
 
+export const LOCAL_PREVIEW_TOOL = {
+  name: "evidra_preview_today",
+  title: "Preview Today's Evidence",
+  annotations: {
+    title: "Preview Today's Evidence",
+    readOnlyHint: true,
+    idempotentHint: true,
+    openWorldHint: false
+  },
+  description:
+    "Read the selected local health export folder and return the evidence preview only. This must be shown to the user before deciding today's workout.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      date: { type: "string", description: "Optional YYYY-MM-DD used as the evidence cutoff." }
+    }
+  }
+};
+
 const LOCAL_INSTRUCTIONS =
-  "This is Pacevera's user-controlled private engine. SQLite context and plans stay in the local environment; use evidra_local_decide_today for an existing local plan. assess_fitness_state, decide_session, generate_plan and generate_workout read the user's local export folder automatically when no `evidence` argument is supplied — pass `evidence` yourself only to report something not yet exported. Provider OAuth tokens are connector-bound and are never sent to MCP.";
+  "This is Pacevera's user-controlled private engine. For a question about today's workout using local health exports, first call evidra_preview_today, show the returned evidenceBrief and sources to the user, and wait for the user's confirmation before calling decide_session or another decision tool. Do not silently chain the preview and decision in one turn. SQLite context and plans stay in the local environment; use evidra_local_decide_today for an existing local plan. assess_fitness_state, decide_session, generate_plan and generate_workout can read the user's local export folder automatically when no `evidence` argument is supplied. Provider OAuth tokens are connector-bound and are never sent to MCP.";
 
 const NO_ENGINE_INSTRUCTIONS =
-  "This is Pacevera's user-controlled private engine. The local SQLite store is unavailable on this runtime (see the error this process printed to stderr at startup), so evidra_local_decide_today and outcome/decision-trace persistence are disabled — assess_fitness_state, decide_session, generate_plan and generate_workout still work and still read the user's local export folder automatically when no `evidence` argument is supplied.";
+  "This is Pacevera's user-controlled private engine. For a question about today's workout using local health exports, first call evidra_preview_today, show the returned evidenceBrief and sources to the user, and wait for the user's confirmation before calling decide_session or another decision tool. Do not silently chain the preview and decision in one turn. The local SQLite store is unavailable on this runtime, so evidra_local_decide_today and outcome/decision-trace persistence are disabled; the evidence preview and four evidence-accepting tools still work.";
 
 /**
  * `engine` is optional: `packages/db`'s `node:sqlite` dependency does not
@@ -55,7 +74,8 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
     if (method === "tools/list") {
       if (notification) return null;
       const response = await handleHostedJsonRpcMessage(rawMessage);
-      if (!engine) return jsonRpcResult(id, response.result);
+      const tools = [...response.result.tools, LOCAL_PREVIEW_TOOL];
+      if (!engine) return jsonRpcResult(id, { ...response.result, tools });
       // Carries the same toolset/engine/rule-package identity the hosted
       // tools were just stamped with (apps/mcp-server/src/toolDefinitions.js's
       // listedToolDefinitions) — read off the response rather than
@@ -63,7 +83,7 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
       const sharedMeta = response.result.tools[0]?._meta || {};
       return jsonRpcResult(id, {
         ...response.result,
-        tools: [...response.result.tools, { ...LOCAL_DECISION_TOOL, _meta: sharedMeta }]
+        tools: [...tools, { ...LOCAL_DECISION_TOOL, _meta: sharedMeta }]
       });
     }
 
@@ -87,6 +107,39 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
         return jsonRpcResult(id, textOnly);
       } catch (error) {
         return jsonRpcError(id, -32000, error.message);
+      }
+    }
+
+    if (method === "tools/call" && params.name === LOCAL_PREVIEW_TOOL.name) {
+      if (notification) return null;
+      try {
+        const local = await loadLocalEvidence({ baseDir: localEvidenceDir, asOf: params.arguments?.date });
+        const evidence = local.evidence;
+        return jsonRpcResult(id, jsonContent({
+          evidenceBrief: {
+            date: params.arguments?.date || new Date().toISOString().slice(0, 10),
+            available: Boolean(evidence),
+            sources: local.sources,
+            signalCounts: evidence
+              ? {
+                workouts: evidence.workouts?.length || 0,
+                healthMetrics: evidence.healthMetrics?.length || 0,
+                vendorAssessments: evidence.vendorAssessments?.length || 0
+              }
+              : null
+          },
+          evidence,
+          nextStep: evidence
+            ? "Show this evidence to the user and wait for confirmation before calling a decision tool."
+            : "No local export evidence was found; ask the user for the missing numbers before deciding."
+        }));
+      } catch (error) {
+        return jsonRpcResult(id, jsonContent({
+          evidenceBrief: { available: false, sources: {} },
+          evidence: null,
+          nextStep: "The local export could not be read; ask the user for the missing numbers before deciding.",
+          error: error.message
+        }));
       }
     }
 

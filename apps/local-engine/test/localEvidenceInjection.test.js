@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 
 import { createLocalMcpHandler } from "../src/server.js";
+import { DEFAULT_PRIVATE_DIR, normalizePrivateDir } from "../src/localEvidence.js";
 import { LocalPrivateEngine } from "../../../packages/private-engine/src/index.js";
 import { SQLiteFitnessRepository } from "../../../packages/db/src/index.js";
 
@@ -14,6 +15,13 @@ import { SQLiteFitnessRepository } from "../../../packages/db/src/index.js";
 // exercises the same path loadLocalEvidence's default takes, not just the
 // per-source overrides packages/connectors/test already covers.
 const PRIVATE_DIR = fileURLToPath(new URL("../../../data/fixtures/pacevera-private", import.meta.url));
+
+test("an unexpanded or relative private-data env value falls back to the home-directory default", () => {
+  assert.equal(normalizePrivateDir("${HOME}/Pacevera"), DEFAULT_PRIVATE_DIR);
+  assert.equal(normalizePrivateDir("Pacevera"), DEFAULT_PRIVATE_DIR);
+  assert.equal(normalizePrivateDir(undefined), DEFAULT_PRIVATE_DIR);
+  assert.equal(normalizePrivateDir(PRIVATE_DIR), PRIVATE_DIR);
+});
 
 async function callTool(handle, name, args, id = 1) {
   return handle(JSON.stringify({ jsonrpc: "2.0", id, method: "tools/call", params: { name, arguments: args } }));

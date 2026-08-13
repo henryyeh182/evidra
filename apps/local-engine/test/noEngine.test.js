@@ -10,7 +10,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 
-import { createLocalMcpHandler, LOCAL_DECISION_TOOL } from "../src/server.js";
+import { createLocalMcpHandler, LOCAL_DECISION_TOOL, LOCAL_PREVIEW_TOOL } from "../src/server.js";
 
 const PRIVATE_DIR = fileURLToPath(new URL("../../../data/fixtures/pacevera-private", import.meta.url));
 
@@ -26,6 +26,17 @@ test("without an engine, tools/list omits evidra_local_decide_today", async () =
   const handle = createLocalMcpHandler({ localEvidenceDir: PRIVATE_DIR });
   const response = await call(handle, "tools/list", {}, 1);
   assert.equal(response.result.tools.some((t) => t.name === LOCAL_DECISION_TOOL.name), false);
+  assert.equal(response.result.tools.some((t) => t.name === LOCAL_PREVIEW_TOOL.name), true);
+});
+
+test("the local evidence preview returns evidence without running a decision", async () => {
+  const handle = createLocalMcpHandler({ localEvidenceDir: PRIVATE_DIR });
+  const response = await call(handle, "tools/call", { name: LOCAL_PREVIEW_TOOL.name, arguments: { date: "2026-07-22" } });
+  assert.equal(response.error, undefined);
+  const payload = JSON.parse(response.result.content[0].text);
+  assert.equal(payload.evidenceBrief.available, true);
+  assert.ok(payload.evidenceBrief.signalCounts.healthMetrics > 0);
+  assert.equal(payload.nextStep.includes("wait for confirmation"), true);
 });
 
 test("without an engine, decide_session still answers from the local export folder", async () => {

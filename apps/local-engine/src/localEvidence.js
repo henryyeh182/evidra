@@ -9,12 +9,23 @@
 // exported data instead of requiring them to retype it every time. A caller
 // that DOES supply `evidence` is never overridden.
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 
 import { assembleLocalEvidence } from "../../../packages/connectors/src/local/assembleLocalEvidence.js";
 import { resolveToolName } from "../../mcp-server/src/toolDefinitions.js";
 
 export const DEFAULT_PRIVATE_DIR = join(homedir(), "Pacevera");
+
+/**
+ * Claude Desktop may leave an unexpanded manifest placeholder in the env
+ * value. Never pass that literal (or a cwd-relative path) to the connectors.
+ */
+export function normalizePrivateDir(value) {
+  if (typeof value !== "string" || !value.trim()) return DEFAULT_PRIVATE_DIR;
+  const candidate = value.trim();
+  if (/\$\{[^}]+\}/.test(candidate) || !isAbsolute(candidate)) return DEFAULT_PRIVATE_DIR;
+  return candidate;
+}
 
 /** 90 days matches the window packages/connectors already uses for Garmin
  * (eval/scenarios/run.js: `buildGarminEvidence(rawExport, { sinceDays: 90 })`)
