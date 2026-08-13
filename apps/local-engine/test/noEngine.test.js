@@ -37,6 +37,8 @@ test("the local evidence preview returns evidence without running a decision", a
   const payload = JSON.parse(response.result.content[0].text);
   assert.equal(payload.evidenceBrief.available, true);
   assert.ok(payload.evidenceBrief.signalCounts.healthMetrics > 0);
+  assert.equal(payload.evidence, undefined);
+  assert.equal(payload._security, undefined);
   assert.equal(payload.nextStep.includes("wait for confirmation"), true);
 });
 

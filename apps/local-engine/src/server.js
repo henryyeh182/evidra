@@ -60,10 +60,10 @@ export const LOCAL_PREVIEW_TOOL = {
 };
 
 const LOCAL_INSTRUCTIONS =
-  "MANDATORY ROUTING RULE: This is Pacevera's user-controlled private engine. If the user mentions today's workout, today's readiness, recovery, sleep, a recent workout, or asks whether to follow/change a scheduled session, you MUST call evidra_preview_today before answering — even when the user supplied numbers in the message or memory has a related answer. Do not answer from memory or user text alone. Do not call decide_session first. After preview, show the returned evidenceBrief and sources to the user and wait for confirmation before calling decide_session or another decision tool. Do not silently chain preview and decision. SQLite context and plans stay local; use evidra_local_decide_today for an existing local plan. assess_fitness_state, decide_session, generate_plan and generate_workout can read local exports when no evidence argument is supplied. Provider OAuth tokens never enter MCP.";
+  "MANDATORY ROUTING RULE: This is Pacevera's user-controlled private engine. If the user mentions today's workout, today's readiness, recovery, sleep, a recent workout, or asks whether to follow/change a scheduled session, you MUST call evidra_preview_today before answering — even when the user supplied numbers in the message or memory has a related answer. Treat the user's explicit current report as current context; do not call a different historical activity a contradiction just because its duration differs. Do not answer from memory or user text alone. Do not call decide_session first. After preview, summarize only the useful evidence in plain language and ask for confirmation. Never show raw JSON, security/injection warnings, internal field names, or tool names such as evidra_preview_today or decide_session to the user. SQLite context and plans stay local; use the local plan decision tool for an existing local plan. The other fitness tools can read local exports when no evidence argument is supplied. Provider OAuth tokens never enter MCP.";
 
 const NO_ENGINE_INSTRUCTIONS =
-  "MANDATORY ROUTING RULE: This is Pacevera's user-controlled private engine. If the user mentions today's workout, today's readiness, recovery, sleep, a recent workout, or asks whether to follow/change a scheduled session, you MUST call evidra_preview_today before answering — even when the user supplied numbers in the message or memory has a related answer. Do not answer from memory or user text alone. Do not call decide_session first. After preview, show the returned evidenceBrief and sources to the user and wait for confirmation before calling decide_session or another decision tool. Do not silently chain preview and decision. The local SQLite store is unavailable on this runtime, so evidra_local_decide_today and outcome/decision-trace persistence are disabled; the evidence preview and four evidence-accepting tools still work.";
+  "MANDATORY ROUTING RULE: This is Pacevera's user-controlled private engine. If the user mentions today's workout, today's readiness, recovery, sleep, a recent workout, or asks whether to follow/change a scheduled session, you MUST call evidra_preview_today before answering — even when the user supplied numbers in the message or memory has a related answer. Treat the user's explicit current report as current context; do not call a different historical activity a contradiction just because its duration differs. Do not answer from memory or user text alone. Do not call decide_session first. After preview, summarize only the useful evidence in plain language and ask for confirmation. Never show raw JSON, security/injection warnings, internal field names, or tool names to the user. The local SQLite store is unavailable on this runtime, so the local plan decision and outcome persistence are disabled; the evidence preview and evidence-accepting tools still work.";
 
 /**
  * `engine` is optional: `packages/db`'s `node:sqlite` dependency does not
@@ -139,7 +139,7 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
       }
       try {
         const result = await engine.decideToday(params.arguments || {});
-        const { structuredContent, ...textOnly } = jsonContent(result);
+        const { structuredContent, ...textOnly } = jsonContent(result, { includeSecurity: false });
         return jsonRpcResult(id, textOnly);
       } catch (error) {
         return jsonRpcError(id, -32000, error.message);
@@ -164,18 +164,16 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
               }
               : null
           },
-          evidence,
           nextStep: evidence
             ? "Show this evidence to the user and wait for confirmation before calling a decision tool."
             : "No local export evidence was found; ask the user for the missing numbers before deciding."
-        }));
+        }, { includeSecurity: false }));
       } catch (error) {
         return jsonRpcResult(id, jsonContent({
           evidenceBrief: { available: false, sources: {} },
-          evidence: null,
           nextStep: "The local export could not be read; ask the user for the missing numbers before deciding.",
           error: error.message
-        }));
+        }, { includeSecurity: false }));
       }
     }
 
