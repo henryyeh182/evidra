@@ -12,7 +12,7 @@ Prove this chain:
 ChatGPT -> Secure MCP Tunnel -> local Evidra HTTP MCP -> 6 tools scan and call
 ```
 
-The spike is complete only when ChatGPT can scan the six public `evidra_*`
+The spike is complete only when ChatGPT can scan the six core public decision
 tools and at least one decision call returns `decisionBasis` with the expected
 rule trace.
 
@@ -49,14 +49,20 @@ https://help.openai.com/en/articles/12584461-developer-mode-and-full-mcp-connect
 - `npm run serve:http` starts on loopback.
 - `GET /health` returns status ok.
 - MCP `initialize` succeeds over HTTP.
-- MCP `tools/list` returns exactly these six tools:
-  - `evidra_assess_fitness_state`
-  - `evidra_decide_session`
-  - `evidra_decide_exercise_substitution`
-  - `evidra_generate_plan`
-  - `evidra_preview_adjust_plan`
-  - `evidra_commit_adjust_plan`
-- A call to `evidra_decide_session` with `examples/evidence-garmin-hard-day.json`
+- MCP `tools/list` includes these six core decision tools, with no deprecated
+  `evidra_`-prefixed names (v0.4.1+ dropped the prefix from the public
+  surface; canonical internal names are unaffected):
+  - `assess_fitness_state`
+  - `decide_session`
+  - `decide_exercise_substitution`
+  - `generate_plan`
+  - `preview_adjust_plan`
+  - `commit_adjust_plan`
+  The server currently advertises 10 public tools in total — the six above
+  plus 4 bounded support tools (`explain_decision`, `generate_workout`,
+  `get_evidence_coverage`, `submit_outcome`) added after this spike doc was
+  first written. This spike only exercises the six core decision tools.
+- A call to `decide_session` with `examples/evidence-garmin-hard-day.json`
   and `examples/scheduled-session.json` returns:
   - `decision.type = adjust`
   - `confidence = high`
@@ -84,7 +90,8 @@ http://127.0.0.1:8787/mcp
 
 - In ChatGPT developer mode, create a custom MCP app using the tunnel URL.
 - Click Scan Tools.
-- Scan finds the same six `evidra_*` tools and no deprecated aliases.
+- Scan finds the same six core decision tools (unprefixed names) and no
+  deprecated `evidra_*` aliases.
 
 ### C. ChatGPT Tool Call
 
@@ -100,7 +107,7 @@ and the scheduled session shape from `examples/scheduled-session.json`.
 
 Expected evidence of success:
 
-- ChatGPT calls `evidra_decide_session`.
+- ChatGPT calls `decide_session`.
 - The structured result contains `decisionBasis`.
 - The governing rule is `EVD-R-002`.
 - ChatGPT's final answer does not override the returned intensity, duration or
@@ -125,16 +132,27 @@ MCP_TOKEN="$(openssl rand -hex 24)" npm run serve:http
 Record the spike result in the implementation plan or a follow-up note:
 
 ```text
-Date:
-ChatGPT plan/surface:
-Tunnel URL kind:
-Local endpoint:
-Scan tools result:
-Decision call result:
-decisionBasis rule:
-Host respected returned action? yes/no
-Blockers:
-Next decision:
+Date: 2026-08-13
+ChatGPT plan/surface: not tested — Section B/C need a live ChatGPT developer-mode
+  session and Secure MCP Tunnel, neither of which this run had access to.
+Tunnel URL kind: not tested
+Local endpoint: http://127.0.0.1:<ephemeral>/mcp (in-process, via `npm run spike:chatgpt:mcp`)
+Scan tools result: N/A (no ChatGPT scan run) — local tools/list confirmed:
+  10 public tools total, includes the 6 core decision tools unprefixed, no
+  evidra_-prefixed names present.
+Decision call result: PASS (Section A only) — decide_session with
+  examples/evidence-garmin-hard-day.json + scheduled-session.json returned
+  decision.type=adjust, confidence=high.
+decisionBasis rule: EVD-R-002
+Host respected returned action? N/A (no ChatGPT host involved in this run)
+Blockers: Section A originally failed before this fix — the script and this
+  doc's acceptance criteria still expected the pre-v0.4.1 tool list
+  (6 tools, evidra_ prefix, exact-match tools/list). Fixed 2026-08-13:
+  script now checks for the 6 unprefixed core tools as a subset of the
+  current 10, and rejects any evidra_-prefixed name. Sections B and C are
+  still unrun and need a real OpenAI developer-mode account + tunnel.
+Next decision: run Sections B and C against a real ChatGPT developer-mode
+  tunnel before claiming the chain in the Goal section is proven.
 ```
 
 ## Decision After Spike

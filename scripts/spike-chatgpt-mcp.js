@@ -6,13 +6,18 @@ import { join } from "node:path";
 
 import { createHttpServer } from "../apps/mcp-server/src/http.js";
 
+// The 6 core decision tools this spike exercises, out of the 10 public tools
+// the server currently advertises (v0.4.1+ dropped the evidra_ prefix from
+// tools/list; the other 4 — explain_decision, generate_workout,
+// get_evidence_coverage, submit_outcome — are bounded support tools not
+// needed to prove the ChatGPT scan/call path).
 const EXPECTED_TOOLS = [
-  "evidra_assess_fitness_state",
-  "evidra_decide_session",
-  "evidra_decide_exercise_substitution",
-  "evidra_generate_plan",
-  "evidra_preview_adjust_plan",
-  "evidra_commit_adjust_plan"
+  "assess_fitness_state",
+  "decide_session",
+  "decide_exercise_substitution",
+  "generate_plan",
+  "preview_adjust_plan",
+  "commit_adjust_plan"
 ];
 
 const endpointFromEnv = process.env.MCP_ENDPOINT || "";
@@ -94,9 +99,13 @@ await withEndpoint(async (endpoint) => {
 
   const listed = await postJsonRpc(endpoint, 2, "tools/list");
   const toolNames = listed.tools.map((tool) => tool.name).sort();
-  const expected = [...EXPECTED_TOOLS].sort();
-  if (JSON.stringify(toolNames) !== JSON.stringify(expected)) {
-    fail(`tools/list mismatch:\nexpected ${expected.join(", ")}\nactual   ${toolNames.join(", ")}`);
+  const missing = EXPECTED_TOOLS.filter((name) => !toolNames.includes(name));
+  if (missing.length > 0) {
+    fail(`tools/list missing expected core decision tools:\nmissing  ${missing.join(", ")}\nactual   ${toolNames.join(", ")}`);
+  }
+  const deprecatedAliases = toolNames.filter((name) => name.startsWith("evidra_"));
+  if (deprecatedAliases.length > 0) {
+    fail(`tools/list still advertises deprecated evidra_ prefixed names: ${deprecatedAliases.join(", ")}`);
   }
 
   const evidence = await loadExample("evidence-garmin-hard-day.json");
@@ -107,7 +116,7 @@ await withEndpoint(async (endpoint) => {
   };
 
   const decisionResult = await postJsonRpc(endpoint, 3, "tools/call", {
-    name: "evidra_decide_session",
+    name: "decide_session",
     arguments: {
       date: "2026-08-06",
       evidence,
@@ -115,7 +124,7 @@ await withEndpoint(async (endpoint) => {
     }
   });
 
-  const decision = structuredPayload(decisionResult, "evidra_decide_session");
+  const decision = structuredPayload(decisionResult, "decide_session");
   if (decision.decision?.type !== "adjust") {
     fail(`expected decision.type adjust, got ${decision.decision?.type}`);
   }
