@@ -44,6 +44,7 @@ test("the local evidence preview returns evidence without running a decision", a
 
 test("UI-enabled tools advertise both current and legacy resource metadata", async () => {
   const handle = createLocalMcpHandler({ localEvidenceDir: PRIVATE_DIR });
+  await call(handle, "initialize", { capabilities: { extensions: { "io.modelcontextprotocol/ui": {} } } }, 18);
   const response = await call(handle, "tools/list", {}, 19);
   const preview = response.result.tools.find((tool) => tool.name === LOCAL_PREVIEW_TOOL.name);
   const decision = response.result.tools.find((tool) => tool.name === "decide_session");
@@ -51,6 +52,16 @@ test("UI-enabled tools advertise both current and legacy resource metadata", asy
     assert.equal(tool._meta.ui.resourceUri, TODAY_BRIEF_RESOURCE_URI);
     assert.equal(tool._meta["ui/resourceUri"], TODAY_BRIEF_RESOURCE_URI);
   }
+});
+
+test("clients without MCP Apps support do not receive connector-bound UI metadata", async () => {
+  const handle = createLocalMcpHandler({ localEvidenceDir: PRIVATE_DIR });
+  await call(handle, "initialize", { capabilities: {} }, 24);
+  const response = await call(handle, "tools/list", {}, 25);
+  const preview = response.result.tools.find((tool) => tool.name === LOCAL_PREVIEW_TOOL.name);
+  const decision = response.result.tools.find((tool) => tool.name === "decide_session");
+  assert.equal(preview._meta, undefined);
+  assert.equal(decision._meta?.ui, undefined);
 });
 
 test("local initialize and preview tool expose mandatory evidence-first routing", async () => {

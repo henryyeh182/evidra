@@ -75,6 +75,10 @@ const NO_ENGINE_INSTRUCTIONS =
  * `engine`; the four evidence-accepting tools (via localEvidence.js) do not.
  */
 export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVATE_DIR } = {}) {
+  // Keep MCP App metadata out of clients that did not advertise the UI
+  // extension. This matters for mobile clients: a synced tool result must not
+  // make them try to load a connector that only exists in desktop Claude.
+  let clientSupportsApps;
   return async function handleLocalMcpMessage(rawMessage) {
     const parsed = parseJsonRpcMessage(rawMessage);
     if (!parsed.ok) return parsed.error;
@@ -84,12 +88,13 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
     if (method === "tools/list") {
       if (notification) return null;
       const response = await handleHostedJsonRpcMessage(rawMessage);
+      const uiMeta = clientSupportsApps === false ? {} : TODAY_BRIEF_TOOL_META;
       const tools = response.result.tools.map((tool) =>
         tool.name === "decide_session"
-          ? { ...tool, _meta: { ...(tool._meta || {}), ...TODAY_BRIEF_TOOL_META } }
+          ? { ...tool, ...(Object.keys(uiMeta).length ? { _meta: { ...(tool._meta || {}), ...uiMeta } } : {}) }
           : tool
       );
-      tools.push(LOCAL_PREVIEW_TOOL);
+      tools.push(clientSupportsApps === false ? { ...LOCAL_PREVIEW_TOOL, _meta: undefined } : LOCAL_PREVIEW_TOOL);
       if (!engine) return jsonRpcResult(id, { ...response.result, tools });
       // Carries the same toolset/engine/rule-package identity the hosted
       // tools were just stamped with (apps/mcp-server/src/toolDefinitions.js's
@@ -98,7 +103,7 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
       const sharedMeta = response.result.tools[0]?._meta || {};
       return jsonRpcResult(id, {
         ...response.result,
-        tools: [...tools, { ...LOCAL_DECISION_TOOL, _meta: { ...sharedMeta, ...TODAY_BRIEF_TOOL_META } }]
+        tools: [...tools, { ...LOCAL_DECISION_TOOL, ...(Object.keys(uiMeta).length ? { _meta: { ...sharedMeta, ...uiMeta } } : {}) }]
       });
     }
 
@@ -124,6 +129,8 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
 
     if (method === "initialize") {
       if (notification) return null;
+      const extensions = params.capabilities?.extensions || {};
+      clientSupportsApps = Boolean(extensions["io.modelcontextprotocol/ui"] || params.capabilities?.["io.modelcontextprotocol/ui"]);
       const response = await handleHostedJsonRpcMessage(rawMessage);
       return jsonRpcResult(id, {
         ...response.result,

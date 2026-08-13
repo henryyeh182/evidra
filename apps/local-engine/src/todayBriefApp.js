@@ -1,6 +1,8 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
+import { TODAY_BRIEF_APP_SDK } from "./todayBriefAppSdk.js";
+
 export const TODAY_BRIEF_RESOURCE_URI = "ui://pacevera/today-brief";
 
 // A single-file MCP App. The host pushes the tool result through App.ontoolresult.
@@ -18,7 +20,7 @@ export const TODAY_BRIEF_APP_HTML = `<!doctype html>
 </head>
 <body><main id="app" aria-live="polite"><div class="top"><span>Today's Brief</span><span class="live">Waiting for evidence</span></div><div class="card"><div class="empty">Loading Pacevera decision…</div></div></main>
 <script type="module">
-import { App } from "https://esm.sh/@modelcontextprotocol/ext-apps@1.7.5";
+${TODAY_BRIEF_APP_SDK}
 const root=document.getElementById("app");
 const esc=value=>String(value??"—").replace(/[&<>\"]/g,c=>c===String.fromCharCode(34)?"&quot;":{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]);
 const textOf=value=>Array.isArray(value)?value.join(", "):value;
@@ -49,5 +51,5 @@ export const TODAY_BRIEF_RESOURCE = Object.freeze({
   title: "Pacevera Today's Brief",
   description: "Visual Today’s Brief card for Pacevera decision results.",
   mimeType: "text/html;profile=mcp-app",
-  _meta: { ui: { prefersBorder: true, csp: { resourceDomains: ["https://esm.sh"] } } }
+  _meta: { ui: { prefersBorder: true, csp: { resourceDomains: [] } } }
 });
