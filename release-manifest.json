@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "0.5.0",
+  "releaseVersion": "0.5.1",
   "engineVersion": "1.6.0",
   "libraryVersion": "1.5.0",
   "libraryChecksum": "sha256:b6b3247b81d1ae62bd664f376e11d2881063d69203ed2d974c8673dfaf4ff250",
@@ -15,6 +15,6 @@
       }
     }
   ],
-  "gitCommit": "0fb8b3be49e5e408d4390dbd7a75076f7014c11b",
+  "gitCommit": "40c32c91812ea686701c84638ecef2a5e9460156",
   "imageDigest": null
 }
