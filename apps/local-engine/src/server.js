@@ -9,9 +9,9 @@ import { TODAY_BRIEF_RESOURCE, TODAY_BRIEF_APP_HTML, TODAY_BRIEF_RESOURCE_URI } 
 
 export const LOCAL_DECISION_TOOL = {
   name: "evidra_local_decide_today",
-  title: "Decide Today's Local Session",
+  title: "Today's Training Recommendation",
   annotations: {
-    title: "Decide Today's Local Session",
+    title: "Today's Training Recommendation",
     readOnlyHint: true,
     idempotentHint: true,
     openWorldHint: false
@@ -41,9 +41,9 @@ const TODAY_BRIEF_TOOL_META = {
 
 export const LOCAL_PREVIEW_TOOL = {
   name: "evidra_preview_today",
-  title: "Preview Today's Evidence",
+  title: "Today's Health Data Summary",
   annotations: {
-    title: "Preview Today's Evidence",
+    title: "Today's Health Data Summary",
     readOnlyHint: true,
     idempotentHint: true,
     openWorldHint: false

@@ -212,9 +212,9 @@ export const toolDefinitions = [
   },
   {
     name: "evidra_decide_session",
-    title: "Decide Today's Session",
+    title: "Today's Training Recommendation",
     annotations: {
-      title: "Decide Today's Session",
+      title: "Today's Training Recommendation",
       readOnlyHint: true,
       idempotentHint: true,
       openWorldHint: false
