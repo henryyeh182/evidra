@@ -59,9 +59,10 @@ https://help.openai.com/en/articles/12584461-developer-mode-and-full-mcp-connect
   - `preview_adjust_plan`
   - `commit_adjust_plan`
   The server currently advertises 10 public tools in total — the six above
-  plus 4 bounded support tools (`explain_decision`, `generate_workout`,
-  `get_evidence_coverage`, `submit_outcome`) added after this spike doc was
-  first written. This spike only exercises the six core decision tools.
+  plus `generate_workout` (a seventh decision tool) and 3 bounded support
+  tools (`explain_decision`, `get_evidence_coverage`, `submit_outcome`) added
+  after this spike doc was first written. This spike only exercises the six
+  core decision tools.
 - A call to `decide_session` with `examples/evidence-garmin-hard-day.json`
   and `examples/scheduled-session.json` returns:
   - `decision.type = adjust`

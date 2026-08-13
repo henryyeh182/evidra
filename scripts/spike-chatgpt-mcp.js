@@ -8,9 +8,10 @@ import { createHttpServer } from "../apps/mcp-server/src/http.js";
 
 // The 6 core decision tools this spike exercises, out of the 10 public tools
 // the server currently advertises (v0.4.1+ dropped the evidra_ prefix from
-// tools/list; the other 4 — explain_decision, generate_workout,
-// get_evidence_coverage, submit_outcome — are bounded support tools not
-// needed to prove the ChatGPT scan/call path).
+// tools/list; the other 4 are the support and single-workout tools not needed
+// to prove the ChatGPT scan/call path. `generate_workout` is a decision tool;
+// the bounded support tools are explain_decision, get_evidence_coverage and
+// submit_outcome.
 const EXPECTED_TOOLS = [
   "assess_fitness_state",
   "decide_session",

@@ -713,7 +713,8 @@ gate(
     const findings = [];
     const journey = read("docs/user-journey.html");
 
-    const CORE = "Pacevera is a <b>Fitness Decision Engine</b>";
+    const CORE =
+      "Pacevera is a Fitness Decision Engine, not a fitness data connector and not an AI coach.";
     if (!journey.includes(CORE)) {
       findings.push(
         "產品核心那句不見了或被改寫。固定文案：" +
