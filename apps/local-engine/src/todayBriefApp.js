@@ -24,12 +24,18 @@ ${TODAY_BRIEF_APP_SDK}
 const root=document.getElementById("app");
 const esc=value=>String(value??"—").replace(/[&<>\"]/g,c=>c===String.fromCharCode(34)?"&quot;":{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]);
 const textOf=value=>Array.isArray(value)?value.join(", "):value;
+const sourceText=value=>{if(!value)return "local evidence";if(typeof value==="string")return value;return Object.entries(value).filter(([,item])=>item?.status==="present").map(([name,item])=>name+" ("+(item.eventCount||0)+" records)").join(", ")||"local evidence"};
 function render(raw){
   let payload=raw;
   if(typeof raw==="string"){try{payload=JSON.parse(raw)}catch{payload=null}}
   if(!payload){root.querySelector(".card").innerHTML='<div class="empty error">Pacevera returned an unreadable result.</div>';return}
   const brief=payload.todayBrief||payload.evidenceBrief;
   if(!brief){root.querySelector(".card").innerHTML='<div class="empty">Evidence preview received. Confirm it in the conversation before asking for a decision.</div>';return}
+  if(payload.evidenceBrief && !payload.todayBrief && !payload.decision){
+    const sources=sourceText(brief.sources),counts=brief.signalCounts||{};
+    root.innerHTML='<div class="top"><span>Today\\'s Brief · '+esc(brief.date||payload.date)+'</span><span class="live">Evidence checked</span></div><div class="card"><div class="heading"><h1>Today\\'s<br>Brief</h1><span class="status">● Evidence checked</span></div><dl><dt>Workouts</dt><dd>'+esc(counts.workouts||0)+'</dd><dt>Health readings</dt><dd>'+esc(counts.healthMetrics||0)+'</dd><dt>Recovery readings</dt><dd>'+esc(counts.vendorAssessments||0)+'</dd></dl><p class="reason">已讀取你的健康資料：'+esc(sources)+'。接下來會直接根據你剛才提到的課表與這些資料給出建議。</p><div class="meta"><span>Source: '+esc(sources)+'</span></div></div></div>';
+    return;
+  }
   const decision=brief.decision||payload.decision||{};
   const state=brief.state||{};
   const from=brief.action?.from||payload.action?.from||{};
@@ -38,9 +44,9 @@ function render(raw){
   const status=type==="keep"?"Ready to train":type==="defer"?"Recovery first":type==="preview"?"Evidence checked":"Adjust today";
   const cls=type==="defer"?"defer":type==="keep"?"":"adjust";
   const metrics=[['Readiness',state.readinessScore],['Recovery',state.recoveryScore],['Fatigue',state.fatigueScore],['Confidence',brief.confidence||payload.confidence]];
-  root.innerHTML='<div class="top"><span>Today\\'s Brief · '+esc(brief.date||payload.date)+'</span><span class="live">Evidence checked</span></div><div class="card"><div class="heading"><h1>Today\\'s<br>Brief</h1><span class="status '+cls+'">● '+esc(status)+'</span></div><dl>'+metrics.map(([k,v])=>'<dt>'+k+'</dt><dd>'+esc(v)+'</dd>').join('')+'</dl><div class="decision"><div class="label">Today\\'s decision</div><div class="fromto"><div class="workout"><small>Planned session</small><b>'+esc(from.focus||from.name||"Scheduled session")+'</b><span>'+esc(from.durationMinutes?from.durationMinutes+" min · ":"")+esc(from.intensity||"")+'</span></div><div class="arrow">→</div><div class="workout"><small>Today\\'s session</small><b>'+esc(to.focus||to.name||"No session")+'</b><span>'+esc(to.durationMinutes?to.durationMinutes+" min · ":"")+esc(to.intensity||"")+'</span></div></div></div><p class="reason"><strong>Why this changed:</strong> '+esc(textOf(brief.reason||payload.reason)||"Evidence checked; no additional reason returned.")+'</p><div class="meta"><span>Source: '+esc(brief.evidence?.sources||payload.evidenceBrief?.sources||"local evidence")+'</span><span>'+esc(brief.evidence?.stateId||"")+'</span></div></div></div>';
+  root.innerHTML='<div class="top"><span>Today\\'s Brief · '+esc(brief.date||payload.date)+'</span><span class="live">Evidence checked</span></div><div class="card"><div class="heading"><h1>Today\\'s<br>Brief</h1><span class="status '+cls+'">● '+esc(status)+'</span></div><dl>'+metrics.map(([k,v])=>'<dt>'+k+'</dt><dd>'+esc(v)+'</dd>').join('')+'</dl><div class="decision"><div class="label">Today\\'s decision</div><div class="fromto"><div class="workout"><small>Planned session</small><b>'+esc(from.focus||from.name||"Scheduled session")+'</b><span>'+esc(from.durationMinutes?from.durationMinutes+" min · ":"")+esc(from.intensity||"")+'</span></div><div class="arrow">→</div><div class="workout"><small>Today\\'s session</small><b>'+esc(to.focus||to.name||"No session")+'</b><span>'+esc(to.durationMinutes?to.durationMinutes+" min · ":"")+esc(to.intensity||"")+'</span></div></div></div><p class="reason"><strong>Why this changed:</strong> '+esc(textOf(brief.reason||payload.reason)||"Evidence checked; no additional reason returned.")+'</p><div class="meta"><span>Source: '+esc(sourceText(brief.evidence?.sources||payload.evidenceBrief?.sources))+'</span><span>'+esc(brief.evidence?.stateId||"")+'</span></div></div></div>';
 }
-const app=new App({name:"Pacevera Today's Brief",version:"0.5.0"});
+const app=new App({name:"Pacevera Today's Brief",version:"0.5.1"});
 app.ontoolresult=result=>{const text=result?.content?.find(item=>item.type==="text")?.text;render(text)};
 app.connect();
 </script></body></html>`;

@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "Pacevera",
   "display_name": "Pacevera",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Turns the training evidence you already have into a decision about today's session.",
   "long_description": "Ask your assistant whether today's planned session still makes sense, and Pacevera answers from your own recent training and whatever recovery readings you have: keep the session, ease it, swap a movement, or move it — with the reading and the rule behind the answer. It is a deterministic fitness decision engine. Local/private continuity may store a hashed-identity athlete record on infrastructure you control until you delete it; hosted remote is no-go and, when eventually enabled, must remain transient and stateless. Pacevera calls no AI model of its own. A reading nobody gave it is reported as missing rather than guessed at, and the confidence it reports drops to match.",
   "icon": "icon.png",

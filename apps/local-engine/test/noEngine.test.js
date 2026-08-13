@@ -39,7 +39,7 @@ test("the local evidence preview returns evidence without running a decision", a
   assert.ok(payload.evidenceBrief.signalCounts.healthMetrics > 0);
   assert.equal(payload.evidence, undefined);
   assert.equal(payload._security, undefined);
-  assert.equal(payload.nextStep.includes("wait for confirmation"), true);
+  assert.equal(payload.nextStep.includes("continue directly"), true);
 });
 
 test("UI-enabled tools advertise both current and legacy resource metadata", async () => {
@@ -71,9 +71,10 @@ test("local initialize and preview tool expose mandatory evidence-first routing"
   const preview = listed.result.tools.find((tool) => tool.name === LOCAL_PREVIEW_TOOL.name);
   assert.match(initialized.result.instructions, /MANDATORY ROUTING RULE/);
   assert.match(initialized.result.instructions, /must call evidra_preview_today/i);
-  assert.match(initialized.result.instructions, /可以照原定計畫進行/);
-  assert.match(initialized.result.instructions, /go\/no-go/);
-  assert.match(initialized.result.instructions, /Threshold Repeats/);
+  assert.match(initialized.result.instructions, /final recommendation in plain language/);
+  assert.doesNotMatch(initialized.result.instructions, /go\/no-go/);
+  assert.doesNotMatch(initialized.result.instructions, /Threshold Repeats/);
+  assert.doesNotMatch(initialized.result.instructions, /ask for confirmation/i);
   assert.match(preview.description, /MANDATORY FIRST STEP/);
   assert.match(preview.description, /Do not answer from memory/i);
 });
