@@ -1,15 +1,40 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
-import { join } from "node:path";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 import { applyNormalizedEventsToContext } from "../normalization.js";
 import { AppleHealthLocalConnector } from "./appleHealthLocal.js";
 import { GarminLocalConnector } from "./garminLocal.js";
 import { StravaLocalConnector } from "./stravaLocal.js";
 import { GoogleHealthApiLocalConnector } from "./googleHealthApiLocal.js";
+import { findAllExportFiles } from "./latestExportFile.js";
 
 const EMPTY_CONTEXT = { workouts: [], healthMetrics: [], vendorAssessments: [] };
+
+function firstExisting(...candidates) {
+  return candidates.find((candidate) => existsSync(candidate)) || candidates[0];
+}
+
+async function findMatchingDirectory(baseDir, pattern, maxDepth = 6) {
+  const [match] = await findAllExportFiles(baseDir, pattern, { maxDepth });
+  return match ? dirname(match) : null;
+}
+
+async function discoverSourceDirectories(baseDir) {
+  const [appleHealth, strava, googleHealth] = await Promise.all([
+    findMatchingDirectory(baseDir, /^export.*\.xml$/i),
+    findMatchingDirectory(baseDir, /^activities\.csv$/i),
+    findMatchingDirectory(baseDir, /^(exercise|resting-hr|sleep-nofilter)\.json$/i)
+  ]);
+
+  return {
+    appleHealth,
+    strava,
+    googleHealth
+  };
+}
 
 /**
  * Runs every local connector this user could plausibly have exported to
@@ -28,16 +53,28 @@ const EMPTY_CONTEXT = { workouts: [], healthMetrics: [], vendorAssessments: [] }
 export async function assembleLocalEvidence({
   baseDir = "data/private",
   context = EMPTY_CONTEXT,
-  appleHealthDir = join(baseDir, "export_apple_health"),
-  garminDir = join(baseDir, "export_garmin/DI_CONNECT"),
-  stravaDir = join(baseDir, "export_strava"),
-  googleHealthRawDir = join(baseDir, "export_google_health/raw")
+  appleHealthDir,
+  garminDir,
+  stravaDir,
+  googleHealthRawDir
 } = {}) {
+  const discovered = await discoverSourceDirectories(baseDir);
   const connectors = {
-    appleHealth: new AppleHealthLocalConnector({ baseDir: appleHealthDir }),
-    garmin: new GarminLocalConnector({ baseDir: garminDir }),
-    strava: new StravaLocalConnector({ baseDir: stravaDir }),
-    googleHealth: new GoogleHealthApiLocalConnector({ rawDir: googleHealthRawDir })
+    appleHealth: new AppleHealthLocalConnector({
+      baseDir: appleHealthDir || discovered.appleHealth || firstExisting(join(baseDir, "export_apple_health"), join(baseDir, "apple-health"))
+    }),
+    // Garmin exports contain stable file signatures, but their enclosing
+    // folder is not stable. Let the connector scan the selected root when no
+    // conventional subfolder exists.
+    garmin: new GarminLocalConnector({
+      baseDir: garminDir || firstExisting(join(baseDir, "export_garmin/DI_CONNECT"), join(baseDir, "garmin/DI_CONNECT"), baseDir)
+    }),
+    strava: new StravaLocalConnector({
+      baseDir: stravaDir || discovered.strava || firstExisting(join(baseDir, "export_strava"), join(baseDir, "strava"))
+    }),
+    googleHealth: new GoogleHealthApiLocalConnector({
+      rawDir: googleHealthRawDir || discovered.googleHealth || firstExisting(join(baseDir, "export_google_health/raw"), join(baseDir, "google-health/raw"), join(baseDir, "google-health"))
+    })
   };
 
   const events = [];

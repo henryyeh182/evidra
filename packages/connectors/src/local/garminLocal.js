@@ -88,11 +88,11 @@ function dedupeByCalendarDate(records) {
 
 async function readGarminExportFolder(baseDir) {
   const [readinessFiles, udsFiles, sleepFiles, healthStatusFiles, activityFiles] = await Promise.all([
-    findAllExportFiles(baseDir, /^TrainingReadinessDTO_.*\.json$/i),
-    findAllExportFiles(baseDir, /^UDSFile_.*\.json$/i),
-    findAllExportFiles(baseDir, /_sleepData\.json$/i),
-    findAllExportFiles(baseDir, /_healthStatusData\.json$/i),
-    findAllExportFiles(baseDir, /_summarizedActivities\.json$/i)
+    findAllExportFiles(baseDir, /^TrainingReadinessDTO_.*\.json$/i, { maxDepth: 8 }),
+    findAllExportFiles(baseDir, /^UDSFile_.*\.json$/i, { maxDepth: 8 }),
+    findAllExportFiles(baseDir, /_sleepData\.json$/i, { maxDepth: 8 }),
+    findAllExportFiles(baseDir, /_healthStatusData\.json$/i, { maxDepth: 8 }),
+    findAllExportFiles(baseDir, /_summarizedActivities\.json$/i, { maxDepth: 8 })
   ]);
 
   const readiness = dedupeByCalendarDate((await readJsonFiles(readinessFiles)).flat());
