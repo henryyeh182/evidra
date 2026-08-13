@@ -96,7 +96,7 @@
     },
     {
       "name": "evidra_preview_today",
-      "description": "MANDATORY FIRST STEP for today's workout, readiness, recovery, sleep, recent exercise, or whether to follow/change a scheduled session. Read the selected local health export folder before answering; do not answer from memory alone or call decide_session first."
+      "description": "MANDATORY FIRST STEP before answering any question about today's workout, readiness, recovery, sleep, recent exercise, or whether to follow/change a scheduled session. Call Pacevera's local evidence preview before any other tool, including memory or recall. Do not answer from prior context. After the preview, call the decision tool directly using the user's stated session; never ask the user to repeat the question."
     }
   ],
   "compatibility": {

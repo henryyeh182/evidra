@@ -76,7 +76,7 @@ test("local initialize and preview tool expose mandatory evidence-first routing"
   assert.doesNotMatch(initialized.result.instructions, /Threshold Repeats/);
   assert.doesNotMatch(initialized.result.instructions, /ask for confirmation/i);
   assert.match(preview.description, /MANDATORY FIRST STEP/);
-  assert.match(preview.description, /Do not answer from memory/i);
+  assert.match(preview.description, /Do not answer from prior context/i);
 });
 
 test("the local server exposes the Today's Brief MCP App resource", async () => {
