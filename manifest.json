@@ -93,6 +93,10 @@
     {
       "name": "evidra_local_decide_today",
       "description": "Decide what today's already-scheduled local plan should become, read from this machine's local SQLite store. No hosted MCP or provider token is involved."
+    },
+    {
+      "name": "evidra_preview_today",
+      "description": "MANDATORY FIRST STEP for today's workout, readiness, recovery, sleep, recent exercise, or whether to follow/change a scheduled session. Read the selected local health export folder before answering; do not answer from memory alone or call decide_session first."
     }
   ],
   "compatibility": {
