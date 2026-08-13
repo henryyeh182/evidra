@@ -60,7 +60,8 @@ test("clients without MCP Apps support do not receive connector-bound UI metadat
   const response = await call(handle, "tools/list", {}, 25);
   const preview = response.result.tools.find((tool) => tool.name === LOCAL_PREVIEW_TOOL.name);
   const decision = response.result.tools.find((tool) => tool.name === "decide_session");
-  assert.equal(preview._meta, undefined);
+  assert.equal(preview._meta.ui, undefined);
+  assert.equal(preview._meta["io.github.henryyeh182/evidra/toolsetVersion"], "0.5.1");
   assert.equal(decision._meta?.ui, undefined);
 });
 

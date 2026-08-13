@@ -112,7 +112,7 @@ test("local MCP explains a decision after the in-process trace is cleared", asyn
     }));
     const explanation = JSON.parse(explanationResponse.result.content[0].text);
     assert.equal(explanation.decisionId, decision.decisionId);
-    assert.equal(explanation.trace.versions.release, "0.5.0");
+    assert.equal(explanation.trace.versions.release, "0.5.1");
   } finally {
     repository.close();
     clearDecisionRecordsForTests();

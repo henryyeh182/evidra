@@ -40,7 +40,7 @@
     },
     {
       "productVersion": "0.5.1",
-      "status": "candidate",
+      "status": "released",
       "releasedOn": "2026-08-13",
       "baseRulesPackageVersion": "1.1.0",
       "baseRulesContentChecksum": "sha256:b6b3247b81d1ae62bd664f376e11d2881063d69203ed2d974c8673dfaf4ff250",

@@ -2,6 +2,8 @@
 // Evidra — proprietary. See LICENSE at the repository root.
 
 import { handleJsonRpcMessage as handleHostedJsonRpcMessage } from "../../mcp-server/src/server.js";
+import { ENGINE_VERSION } from "../../../packages/decision-engine/src/version.js";
+import { BASE_RULE_PACKAGE_IDENTITY } from "../../../packages/rules/src/basePackageIdentity.js";
 import { parseJsonRpcMessage, jsonRpcError, jsonRpcResult } from "../../mcp-server/src/jsonRpc.js";
 import { jsonContent } from "../../mcp-server/src/content.js";
 import { callAcceptsLocalEvidence, hasUsableEvidence, loadLocalEvidence, DEFAULT_PRIVATE_DIR } from "./localEvidence.js";
@@ -30,6 +32,11 @@ export const LOCAL_DECISION_TOOL = {
     required: ["userId"]
   }
 };
+
+const TOOLSET_META_KEY = "io.github.henryyeh182/evidra/toolsetVersion";
+const ENGINE_META_KEY = "io.github.henryyeh182/evidra/decisionEngineVersion";
+const RULE_PACKAGES_META_KEY = "io.github.henryyeh182/evidra/rulePackages";
+const PRODUCT_VERSION = "0.5.1";
 
 const TODAY_BRIEF_TOOL_META = {
   ui: { resourceUri: TODAY_BRIEF_RESOURCE_URI },
@@ -90,14 +97,19 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
       const response = await handleHostedJsonRpcMessage(rawMessage);
       const uiMeta = clientSupportsApps === false ? {} : TODAY_BRIEF_TOOL_META;
       const sharedMeta = response.result.tools[0]?._meta || {};
+      const identityMeta = {
+        [TOOLSET_META_KEY]: response.result.serverInfo?.version || PRODUCT_VERSION,
+        [ENGINE_META_KEY]: sharedMeta[ENGINE_META_KEY] || ENGINE_VERSION,
+        [RULE_PACKAGES_META_KEY]: sharedMeta[RULE_PACKAGES_META_KEY] || [BASE_RULE_PACKAGE_IDENTITY]
+      };
       const tools = response.result.tools.map((tool) =>
         tool.name === "decide_session"
           ? { ...tool, ...(Object.keys(uiMeta).length ? { _meta: { ...(tool._meta || {}), ...uiMeta } } : {}) }
           : tool
       );
       tools.push(clientSupportsApps === false
-        ? { ...LOCAL_PREVIEW_TOOL, _meta: undefined }
-        : { ...LOCAL_PREVIEW_TOOL, _meta: { ...sharedMeta, ...uiMeta } });
+        ? { ...LOCAL_PREVIEW_TOOL, _meta: identityMeta }
+        : { ...LOCAL_PREVIEW_TOOL, _meta: { ...identityMeta, ...uiMeta } });
       if (!engine) return jsonRpcResult(id, { ...response.result, tools });
       // Carries the same toolset/engine/rule-package identity the hosted
       // tools were just stamped with (apps/mcp-server/src/toolDefinitions.js's
@@ -105,7 +117,7 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
       // recomputed here, so the two can never quietly drift apart.
       return jsonRpcResult(id, {
         ...response.result,
-        tools: [...tools, { ...LOCAL_DECISION_TOOL, ...(Object.keys(uiMeta).length ? { _meta: { ...sharedMeta, ...uiMeta } } : {}) }]
+        tools: [...tools, { ...LOCAL_DECISION_TOOL, _meta: { ...identityMeta, ...uiMeta } }]
       });
     }
 

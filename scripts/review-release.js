@@ -228,7 +228,7 @@ check(
   "MCPB 沒有沙箱，行程拿的是使用者的完整權限。平台不會替我們擋任何一件。",
   () => {
     const findings = [];
-    if (/\bexec\(|execSync|\bspawn\(|child_process/.test(compiled)) {
+    if (/\b(?:execFile|execFileSync|execSync|spawn|fork)\s*\(|node:child_process|from["']node:child_process/.test(compiled)) {
       findings.push("已編譯檔具備另起行程的能力（exec／spawn／child_process）");
     }
     if (/\beval\(|new Function\(/.test(compiled)) {
