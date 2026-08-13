@@ -37,6 +37,15 @@
       "baseRulesContentChecksum": "sha256:b6b3247b81d1ae62bd664f376e11d2881063d69203ed2d974c8673dfaf4ff250",
       "decisionEngineVersion": "1.6.0",
       "note": "Released as the v0.5.0 MCPB. User-facing identity is Pacevera 0.5.0 with Decision Engine 1.6.0 and base_rules 1.1.0. The legacy Rule Library version is no longer an independent release line."
+    },
+    {
+      "productVersion": "0.5.1",
+      "status": "candidate",
+      "releasedOn": "2026-08-13",
+      "baseRulesPackageVersion": "1.1.0",
+      "baseRulesContentChecksum": "sha256:b6b3247b81d1ae62bd664f376e11d2881063d69203ed2d974c8673dfaf4ff250",
+      "decisionEngineVersion": "1.6.0",
+      "note": "Release candidate for the MCPB with Today’s Brief UI, local export-folder evidence flow, plain-language tool titles, and evidence-first routing."
     }
   ]
 }

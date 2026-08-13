@@ -158,6 +158,26 @@ Pacevera is distributed as a Claude Desktop extension (`.mcpb`).
 3. In Claude Desktop, open **Settings -> Extensions** and install the file.
 4. Restart Claude Desktop after installing or upgrading the extension.
 
+During installation Claude asks for **Your exported health data folder**. Select
+the folder that contains your Apple Health, Garmin, Strava, or Google Health
+exports. Pacevera reads that folder locally when you ask about today's workout;
+it does not upload the files. The folder can contain these optional subfolders:
+
+```text
+Your exported health data folder/
+├── export_apple_health/        # Apple Health export.xml (or a nested export.xml)
+├── export_garmin/              # Garmin Export Your Data / DI_CONNECT files
+├── export_strava/              # Strava activities.csv export
+└── export_google_health/raw/   # Google Health API JSON exports
+```
+
+You may select the parent folder even when only one or two sources are present;
+missing sources are reported as unavailable rather than guessed. To change the
+folder later, edit the Pacevera extension settings and restart Claude Desktop.
+
+This release is **v0.5.1**. Its MCPB SHA-256 is published in the GitHub release
+notes and in `server.json`.
+
 The extension requires Node.js 20 or newer.
 
 Claude Desktop and other local MCP hosts are supported through the desktop extension. Mobile and hosted remote use cases require a remote deployment, which is not currently available for public use.

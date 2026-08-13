@@ -89,18 +89,20 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
       if (notification) return null;
       const response = await handleHostedJsonRpcMessage(rawMessage);
       const uiMeta = clientSupportsApps === false ? {} : TODAY_BRIEF_TOOL_META;
+      const sharedMeta = response.result.tools[0]?._meta || {};
       const tools = response.result.tools.map((tool) =>
         tool.name === "decide_session"
           ? { ...tool, ...(Object.keys(uiMeta).length ? { _meta: { ...(tool._meta || {}), ...uiMeta } } : {}) }
           : tool
       );
-      tools.push(clientSupportsApps === false ? { ...LOCAL_PREVIEW_TOOL, _meta: undefined } : LOCAL_PREVIEW_TOOL);
+      tools.push(clientSupportsApps === false
+        ? { ...LOCAL_PREVIEW_TOOL, _meta: undefined }
+        : { ...LOCAL_PREVIEW_TOOL, _meta: { ...sharedMeta, ...uiMeta } });
       if (!engine) return jsonRpcResult(id, { ...response.result, tools });
       // Carries the same toolset/engine/rule-package identity the hosted
       // tools were just stamped with (apps/mcp-server/src/toolDefinitions.js's
       // listedToolDefinitions) — read off the response rather than
       // recomputed here, so the two can never quietly drift apart.
-      const sharedMeta = response.result.tools[0]?._meta || {};
       return jsonRpcResult(id, {
         ...response.result,
         tools: [...tools, { ...LOCAL_DECISION_TOOL, ...(Object.keys(uiMeta).length ? { _meta: { ...sharedMeta, ...uiMeta } } : {}) }]
