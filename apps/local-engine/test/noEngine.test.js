@@ -85,6 +85,8 @@ test("the local server exposes the Today's Brief MCP App resource", async () => 
   const read = await call(handle, "resources/read", { uri: TODAY_BRIEF_RESOURCE_URI }, 21);
   assert.equal(read.result.contents[0].mimeType, "text/html;profile=mcp-app");
   assert.match(read.result.contents[0].text, /Pacevera Today's Brief/);
+  assert.match(read.result.contents[0].text, /const App = PaceveraSdk\.App/);
+  assert.doesNotMatch(read.result.contents[0].text, /https:\/\/esm\.sh\/\@modelcontextprotocol\/ext-apps/);
 });
 
 test("without an engine, decide_session still answers from the local export folder", async () => {
