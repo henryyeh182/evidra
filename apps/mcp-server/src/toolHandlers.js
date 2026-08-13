@@ -777,10 +777,12 @@ export async function decideSessionTool(args = {}) {
     rpeBasisCounts: provenance.rpeBasis
   });
 
-  const continuity = buildDecisionContinuity({ userId: context.user.id, date, state, context });
+  const continuity = buildDecisionContinuity({ userId: context.user.id, date, timezone: context.user.timezone, state, context });
   const decisionProvenance = {
     ...provenance,
     ...continuity,
+    earliest: continuity.evidenceWindow.earliest,
+    latest: continuity.evidenceWindow.latest,
     scheduledSessionSource: args.scheduledSession ? "provided" : "missing",
     proposedSessionSource: args.proposedSession ? "provided" : "none"
   };

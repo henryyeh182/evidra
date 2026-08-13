@@ -65,7 +65,7 @@ export class LocalPrivateEngine {
       availableMinutes
     });
 
-    const continuity = buildDecisionContinuity({ userId, date: resolvedDate, state, context });
+    const continuity = buildDecisionContinuity({ userId, date: resolvedDate, timezone: context.user.timezone, state, context });
 
     return {
       userId,

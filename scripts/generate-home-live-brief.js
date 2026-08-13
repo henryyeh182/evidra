@@ -31,9 +31,16 @@ try {
       }
     }
   }));
-  const payload = JSON.parse(response.result?.content?.[0]?.text || "{}");
+  if (response.error) {
+    throw new Error(`local decision failed (${response.error.code ?? "unknown"}): ${response.error.message || JSON.stringify(response.error.data || {})}`);
+  }
+  const rawText = response.result?.content?.[0]?.text;
+  if (!rawText) {
+    throw new Error(`local decision returned no text content: ${JSON.stringify(response)}`);
+  }
+  const payload = JSON.parse(rawText);
   if (payload.todayBrief === undefined) {
-    throw new Error("local decision did not return todayBrief");
+    throw new Error(`local decision did not return todayBrief: ${rawText}`);
   }
   await writeFile(
     output,

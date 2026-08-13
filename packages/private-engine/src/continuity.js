@@ -4,9 +4,31 @@
 import { createHash } from "node:crypto";
 
 import { RELEASE_IDENTITY } from "../../release/src/index.js";
+import { calendarDayInTimezone } from "../../domain/src/dates.js";
 
-function datesIn(context, asOf) {
-  const cutoff = new Date(`${asOf}T23:59:59.999Z`).getTime();
+function timezoneOffsetMs(instantMs, timezone) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone || "UTC",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date(instantMs));
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day), Number(values.hour), Number(values.minute), Number(values.second)) - instantMs;
+}
+
+function endOfLocalDay(asOf, timezone) {
+  const day = calendarDayInTimezone(asOf, timezone);
+  const wallMs = Date.parse(`${day}T23:59:59.999Z`);
+  let instantMs = wallMs;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    instantMs = wallMs - timezoneOffsetMs(instantMs, timezone);
+  }
+  return instantMs;
+}
+
+function datesIn(context, asOf, timezone) {
+  const cutoff = endOfLocalDay(asOf, timezone);
   return [
     ...(context.workouts || []).map((item) => item.startedAt),
     ...(context.healthMetrics || []).map((item) => item.recordedAt),
@@ -17,8 +39,8 @@ function datesIn(context, asOf) {
   }).sort();
 }
 
-export function buildDecisionContinuity({ userId, date, state, context }) {
-  const dates = datesIn(context, date);
+export function buildDecisionContinuity({ userId, date, timezone, state, context }) {
+  const dates = datesIn(context, date, timezone);
   const stateId = `state_${createHash("sha256")
     .update(JSON.stringify({ userId, date, state }))
     .digest("hex")

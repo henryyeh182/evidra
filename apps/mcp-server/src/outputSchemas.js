@@ -480,6 +480,16 @@ export const outputSchemas = {
               "server_durable_record"
             ]
           },
+          "stateId": { "type": "string" },
+          "evidenceWindow": {
+            "type": "object",
+            "properties": {
+              "asOf": { "type": "string" },
+              "earliest": { "type": ["string", "null"] },
+              "latest": { "type": ["string", "null"] }
+            }
+          },
+          "runtimeIdentity": { "type": "object" },
           "signalWriters": {
             "type": "object",
             "description": "Where each signal came from and who wrote it, and when it was last written. Keyed by canonical signal name. A signal being listed does not make it current: compare its `latest` against the others to see a device that stopped writing.",

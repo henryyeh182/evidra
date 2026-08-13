@@ -227,7 +227,7 @@
     </main>
     <footer><span>© 2026 Pacevera · Fitness decision infrastructure · public preview</span><nav><a href="#about">About</a><a href="https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md">Privacy</a><a href="mailto:evidramcp@icloud.com">Contact</a><a href="user-journey.html">Product journey</a></nav></footer>
   </div>
-  <div class="drawer-backdrop" id="traceDrawer" role="dialog" aria-modal="true" aria-labelledby="traceTitle" aria-hidden="true"><aside class="trace-drawer"><div class="drawer-head"><div><p class="trace-kicker">Decision Graph · local engine output</p><h2 id="traceTitle">Threshold Intervals → Moderate run</h2></div><button class="drawer-close" id="traceClose" type="button" aria-label="Close Decision Trace">×</button></div><p class="body-copy">The engine compared the planned session with the available evidence, then kept the highest-priority applicable rule.</p><div class="graph" aria-label="Decision Graph"><div class="graph-node"><div><b>Evidence</b><small id="traceEvidence">Readiness 52 · recovery signals checked</small></div><em>input</em></div><div class="graph-node"><div><b id="traceRule">Decision rule</b><small id="traceRuleReason">Resolved by the local Decision Engine</small></div><em>triggered</em></div><div class="graph-node arbitrated"><div><b>Rule selection → <span id="traceDecision">adjust</span></b><small id="traceConfidence">Confidence high</small></div><em>governing</em></div><div class="graph-node arbitrated"><div><b>Today’s session · <span id="traceOutput">Moderate run</span></b><small id="traceWindow">Evidence window available in the decision payload</small></div><em>output</em></div></div><table class="trace-table"><thead><tr><th>Trace</th><th>Resolved value</th></tr></thead><tbody><tr><td>Rule</td><td id="traceRuleRow">—</td></tr><tr><td>Evidence</td><td id="traceEvidenceRow">—</td></tr><tr><td>Source</td><td id="traceSourceRow">—</td></tr><tr><td>Version</td><td id="traceVersionRow">—</td></tr></tbody></table><p class="prototype-note" id="traceSourceNote">This trace is rendered from the selected decision payload.</p></aside></div>
+  <div class="drawer-backdrop" id="traceDrawer" role="dialog" aria-modal="true" aria-labelledby="traceTitle" aria-hidden="true"><aside class="trace-drawer"><div class="drawer-head"><div><p class="trace-kicker">Decision Graph · local engine output</p><h2 id="traceTitle">Threshold Intervals → Moderate run</h2></div><button class="drawer-close" id="traceClose" type="button" aria-label="Close Decision Trace">×</button></div><p class="body-copy">The engine compared the planned session with the available evidence, then kept the highest-priority applicable rule.</p><div class="graph" aria-label="Decision Graph"><div class="graph-node"><div><b>Evidence</b><small id="traceEvidence">Readiness 52 · recovery signals checked</small></div><em>input</em></div><div class="graph-node"><div><b id="traceRule">Decision rule</b><small id="traceRuleReason">Resolved by the local Decision Engine</small></div><em>triggered</em></div><div class="graph-node suppressed"><div><b>Suppressed rules</b><small id="traceSuppressed">None</small></div><em>suppressed</em></div><div class="graph-node arbitrated"><div><b>Rule selection → <span id="traceDecision">adjust</span></b><small id="traceConfidence">Confidence high</small></div><em>governing</em></div><div class="graph-node arbitrated"><div><b>Today’s session · <span id="traceOutput">Moderate run</span></b><small id="traceWindow">Evidence window available in the decision payload</small></div><em>output</em></div></div><table class="trace-table"><thead><tr><th>Trace</th><th>Resolved value</th></tr></thead><tbody><tr><td>Rule</td><td id="traceRuleRow">—</td></tr><tr><td>Suppressed</td><td id="traceSuppressedRow">—</td></tr><tr><td>Evidence</td><td id="traceEvidenceRow">—</td></tr><tr><td>Source</td><td id="traceSourceRow">—</td></tr><tr><td>Version</td><td id="traceVersionRow">—</td></tr></tbody></table><p class="prototype-note" id="traceSourceNote">This trace is rendered from the selected decision payload.</p></aside></div>
   <script src="pacevera-home-live.js"></script>
   <script src="pacevera-home-scenarios.js"></script>
   <script>
@@ -241,7 +241,6 @@
     const briefScenario = brief => {
       const from = brief.action?.from || {};
       const to = brief.action?.to || from;
-      const rule = brief.trace?.governingRule;
       const source = brief.evidence?.sources?.join(', ') || 'local evidence';
       return {
         status: brief.decision?.type === 'keep' ? 'Ready to train' : brief.decision?.type === 'defer' ? 'Recovery first' : 'Adjust today',
@@ -279,6 +278,10 @@
       $('traceSourceRow').textContent = b.evidence?.sources?.join(', ') || 'none';
       $('traceVersionRow').textContent = `${b.trace?.engineVersion || '—'} · ${b.trace?.libraryVersion || '—'}`;
       $('traceSourceNote').textContent = `Rendered from local state ${b.evidence?.stateId || '—'}; this is not a hosted history view.`;
+      const applied = b.trace?.appliedRules || [];
+      const suppressed = applied.filter(item => item.applied === false).map(item => item.ruleId).join(', ') || 'None';
+      $('traceSuppressed').textContent = suppressed;
+      $('traceSuppressedRow').textContent = suppressed;
     };
     document.querySelectorAll('[data-case]').forEach(button => button.addEventListener('click', () => {
       const s = scenarios[button.dataset.case];
