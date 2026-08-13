@@ -519,7 +519,7 @@ Phase 2 - Story 2 的未完成部分。
 
 - 未完成工作只使用 `Phase N - Story N`。
 - 發行只使用 Product、Decision Engine、Rule Package identity。
-- 歷史代號只留在 [fitness-mcp-implementation-plan-history.md](fitness-mcp-implementation-plan-history.md) 與舊 handoff，供稽核，不再拿來排新工作。
+- 歷史代號只留在 [fitness-mcp-implementation-plan-history.md](fitness-mcp-implementation-plan-history.md) 與歷史交接紀錄，供稽核，不再拿來排新工作；目前交接見 [handoff-2026-08-13.md](handoff-2026-08-13.md)。
 
 ---
 
