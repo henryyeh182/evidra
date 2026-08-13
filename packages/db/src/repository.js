@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Henry Yeh. All rights reserved.
 // Evidra — proprietary. See LICENSE at the repository root.
 
-import { DatabaseSync } from "node:sqlite";
+import { createRequire } from "node:module";
 
 import {
   mapPlanToRow,
@@ -10,6 +10,30 @@ import {
   mapUserContextToRows
 } from "./mappers.js";
 import { sqliteSchemaSql } from "./sqliteSchemaSource.js";
+
+const require = createRequire(import.meta.url);
+
+// `node:sqlite` is experimental as of Node 22.5 and does not exist at all
+// before that — a static `import { DatabaseSync } from "node:sqlite"` fails
+// during ESM module *linking*, before any module in the graph runs a single
+// line, which is unrecoverable and (worse) silent to a caller whose own
+// diagnostics haven't attached yet. Loading it lazily through `require` at
+// construction time turns the same failure into an ordinary, catchable
+// Error instead — verified against a real Node 20.20.2 install, where the
+// static form crashes the whole process before any of that process's own
+// code can run, and this form throws a normal Error the constructor's
+// caller can catch.
+function loadDatabaseSync() {
+  try {
+    return require("node:sqlite").DatabaseSync;
+  } catch (error) {
+    throw new Error(
+      "SQLiteFitnessRepository requires node:sqlite (Node >=22.5, still experimental there). " +
+        `This runtime does not have it (${error.message}). Pass an already-open database instead, ` +
+        "or run this process on Node >=22.5."
+    );
+  }
+}
 
 const SQLITE_SCHEMA = sqliteSchemaSql;
 
@@ -208,7 +232,7 @@ export class FitnessRepository {
 export class SQLiteFitnessRepository extends FitnessRepository {
   constructor({ filename = ":memory:", database } = {}) {
     super();
-    this.db = database || new DatabaseSync(filename);
+    this.db = database || new (loadDatabaseSync())(filename);
     this.db.exec(SQLITE_SCHEMA);
     ensureColumn(this.db, "workouts", "metadata_json", "TEXT");
     ensureColumn(this.db, "health_metrics", "metadata_json", "TEXT");

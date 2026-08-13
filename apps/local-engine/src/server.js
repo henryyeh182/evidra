@@ -9,6 +9,12 @@ import { callAcceptsLocalEvidence, hasUsableEvidence, loadLocalEvidence, DEFAULT
 export const LOCAL_DECISION_TOOL = {
   name: "evidra_local_decide_today",
   title: "Decide Today's Local Session",
+  annotations: {
+    title: "Decide Today's Local Session",
+    readOnlyHint: true,
+    idempotentHint: true,
+    openWorldHint: false
+  },
   description:
     "Read the user-controlled local plan and SQLite context, then decide what today's planned workout should become. No hosted MCP or provider token is involved.",
   inputSchema: {
@@ -27,9 +33,19 @@ export const LOCAL_DECISION_TOOL = {
 const LOCAL_INSTRUCTIONS =
   "This is Pacevera's user-controlled private engine. SQLite context and plans stay in the local environment; use evidra_local_decide_today for an existing local plan. assess_fitness_state, decide_session, generate_plan and generate_workout read the user's local export folder automatically when no `evidence` argument is supplied — pass `evidence` yourself only to report something not yet exported. Provider OAuth tokens are connector-bound and are never sent to MCP.";
 
-export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVATE_DIR } = {}) {
-  if (!engine) throw new Error("createLocalMcpHandler requires a local engine.");
+const NO_ENGINE_INSTRUCTIONS =
+  "This is Pacevera's user-controlled private engine. The local SQLite store is unavailable on this runtime (see the error this process printed to stderr at startup), so evidra_local_decide_today and outcome/decision-trace persistence are disabled — assess_fitness_state, decide_session, generate_plan and generate_workout still work and still read the user's local export folder automatically when no `evidence` argument is supplied.";
 
+/**
+ * `engine` is optional: `packages/db`'s `node:sqlite` dependency does not
+ * exist before Node 22.5 (still experimental there), and this runtime's
+ * actual Node version is outside this process's control — a caller that
+ * failed to construct a repository passes `engine: undefined` here rather
+ * than letting that failure crash the whole server. Only
+ * evidra_local_decide_today and outcome/decision-trace persistence need
+ * `engine`; the four evidence-accepting tools (via localEvidence.js) do not.
+ */
+export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVATE_DIR } = {}) {
   return async function handleLocalMcpMessage(rawMessage) {
     const parsed = parseJsonRpcMessage(rawMessage);
     if (!parsed.ok) return parsed.error;
@@ -39,6 +55,7 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
     if (method === "tools/list") {
       if (notification) return null;
       const response = await handleHostedJsonRpcMessage(rawMessage);
+      if (!engine) return jsonRpcResult(id, response.result);
       // Carries the same toolset/engine/rule-package identity the hosted
       // tools were just stamped with (apps/mcp-server/src/toolDefinitions.js's
       // listedToolDefinitions) — read off the response rather than
@@ -55,12 +72,15 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
       const response = await handleHostedJsonRpcMessage(rawMessage);
       return jsonRpcResult(id, {
         ...response.result,
-        instructions: LOCAL_INSTRUCTIONS
+        instructions: engine ? LOCAL_INSTRUCTIONS : NO_ENGINE_INSTRUCTIONS
       });
     }
 
     if (method === "tools/call" && params.name === LOCAL_DECISION_TOOL.name) {
       if (notification) return null;
+      if (!engine) {
+        return jsonRpcError(id, -32000, "evidra_local_decide_today is unavailable: this runtime has no local SQLite store (see startup stderr).");
+      }
       try {
         const result = await engine.decideToday(params.arguments || {});
         const { structuredContent, ...textOnly } = jsonContent(result);
@@ -93,12 +113,12 @@ export function createLocalMcpHandler({ engine, localEvidenceDir = DEFAULT_PRIVA
           params: { ...params, arguments: { ...(params.arguments || {}), evidence: local.evidence } }
         };
         return handleHostedJsonRpcMessage(JSON.stringify(augmented), {
-          outcomeRepository: engine.repository,
-          decisionRepository: engine.repository
+          outcomeRepository: engine?.repository,
+          decisionRepository: engine?.repository
         });
       }
     }
 
-    return handleHostedJsonRpcMessage(rawMessage, { outcomeRepository: engine.repository, decisionRepository: engine.repository });
+    return handleHostedJsonRpcMessage(rawMessage, { outcomeRepository: engine?.repository, decisionRepository: engine?.repository });
   };
 }

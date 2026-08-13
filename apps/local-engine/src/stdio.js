@@ -19,9 +19,20 @@ if (configuredDbPath !== ":memory:") mkdirSync(dirname(configuredDbPath), { recu
 // entry point directly.
 const localEvidenceDir = process.env.PACEVERA_PRIVATE_DIR || undefined;
 
-const repository = new SQLiteFitnessRepository({ filename: configuredDbPath });
+// A repository failure here (most likely: this runtime's Node predates 22.5
+// and lacks node:sqlite — see packages/db/src/repository.js) must not take
+// the whole process down. evidra_local_decide_today and outcome/decision
+// persistence become unavailable; the four evidence-accepting tools do not
+// need a repository and keep working (apps/local-engine/src/server.js).
+let repository;
+try {
+  repository = new SQLiteFitnessRepository({ filename: configuredDbPath });
+} catch (error) {
+  console.error(`[pacevera] local SQLite store unavailable, continuing without it: ${error.message}`);
+}
+
 const handleMessage = createLocalMcpHandler({
-  engine: new LocalPrivateEngine({ repository }),
+  engine: repository ? new LocalPrivateEngine({ repository }) : undefined,
   ...(localEvidenceDir ? { localEvidenceDir } : {})
 });
 
@@ -32,4 +43,4 @@ for await (const line of lines) {
   if (response !== null) stdout.write(`${JSON.stringify(response)}\n`);
 }
 
-repository.close();
+repository?.close();

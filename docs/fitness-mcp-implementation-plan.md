@@ -151,7 +151,7 @@ v0.5.0 已於 2026-08-11 發行，是目前公開可安裝的 Desktop MCPB 基�
 - `single_workout_rules@0.1.0` 仍是 draft；EVD-R-013～015 尚未接 runtime。`generate_workout` 目前沿用 Decision Engine `1.6.0` 與 active `base_rules` 做個人化，因此不得宣稱 draft package 已啟用。
 - Remote image build／smoke 尚未在本機完成，因 Docker daemon 不可用；local release gate 只能以 `--skip-remote` 執行。
 - `review:phase` 的 G2／G2b／G9 已修正並通過；目前機械 gate 13/13 全綠。
-- 2026-08-13 在可監聽 localhost 的環境重跑完整 `npm test`：544 tests 全數執行、0 fail、0 skip，含先前受 sandbox EPERM 限制的 HTTP／authorization／privacy integration tests，以及同日完成的 Evidence Flow Story 1～6（含 Story 4）新增 27 個 tests（見 §5「Phase 2 - Story 2 詳細分解」）。舊版本紀錄的「5 個未能執行、其餘 512 通過」是特定 sandbox 權限下的結果，不是固定上限；之後若在權限受限的環境重跑，數字可能再次不同，屆時應以當次實測為準，不沿用本行舊數字。
+- 2026-08-13 在可監聽 localhost 的環境重跑完整 `npm test`：548 tests 全數執行、0 fail、0 skip，含先前受 sandbox EPERM 限制的 HTTP／authorization／privacy integration tests，以及同日完成的 Evidence Flow Story 1～6（含 Story 4）新增 31 個 tests（見 §5「Phase 2 - Story 2 詳細分解」）。舊版本紀錄的「5 個未能執行、其餘 512 通過」是特定 sandbox 權限下的結果，不是固定上限；之後若在權限受限的環境重跑，數字可能再次不同，屆時應以當次實測為準，不沿用本行舊數字。
 - 公開 privacy URL、release review 與 MCPB archive／published review 仍需收尾；`docs/privacy-deployment-contract.md` 是目前的 canonical implementation contract，不等同於已完成 hosted privacy policy。
 - Outcome repository 已接入 user-controlled local engine：SQLite `outcome_records`、migration `0004`、`saveOutcome`／`listOutcomes` 與 local MCP injection 已完成；hosted MCP 仍維持 process-local/stateless，且尚未形成自動 Rule learning loop。
 - Durable decision trace 已接入同一個 user-controlled SQLite：`decision_records`、local `explain_decision` restart recovery 與 user scope test 已完成；backup、export、delete 尚待補齊。
@@ -440,7 +440,30 @@ Health）已用真實匯出檔驗證正確（見 2.1），但目前只被 `demoD
   **過程中發現三個既有檔案的路徑在打包後會壞掉**（`packages/db/src/repository.js` 讀 `../schema/sqlite.sql`、`packages/rules/src/candidate.js` 讀 `../../../rule-packages/schemas/rule-candidate.schema.json`——這兩個都是先前從沒被 `apps/mcp-server` 那條進入點載入過，這次換成 local-engine 進入點才第一次被打包進去、第一次暴露）：兩個都比照既有 `librarySource.js`／`parameterSource.js` 的模式各自拆一個 `*Source.js` 間接模組，`scripts/build-bundle.js` 的 `layoutShims` 各補一條內嵌規則，不改動兩邊原本的商業邏輯。
   **實測**：`npm run pack` 打包、`node scripts/smoke-release-install.js --skip-online --skip-claude` 全綠；額外把打包出來的 `.mcpb` 解壓、直接跑裡面的 `dist/evidra-server.mjs`，用真實 fixture 資料夾當 `PACEVERA_PRIVATE_DIR`，對 `decide_session` 打「VO2max Intervals 60min」且不帶 `evidence` 參數，收到 `evidenceSource: "provided"` 與真實決策（`adjust` → `Moderate run`），不是空跑。
   新增 `manifest.json` 的 `evidra_local_decide_today`（先前只在 `apps/local-engine` 程式碼裡存在、從沒寫進 manifest／README／`docs/mcp-server.md`，`apps/mcp-server/test/publicContract.test.js` 原本的斷言只比對 hosted 10 個 tool，沒把這個本機專屬 tool 算進去，這次一併補上並修正該測試的假設）。
-- 全部 27 個新 tests（`packages/connectors/test/local/*` 8+3+4、`apps/local-engine/test/importLocalEvidence.test.js` 2、`apps/local-engine/test/localEvidence.test.js` 6、`apps/local-engine/test/localEvidenceInjection.test.js` 4）與既有 517 個一起跑：`npm test` 544/544 通過。
+- 全部 31 個新 tests（`packages/connectors/test/local/*` 8+3+4、`apps/local-engine/test/importLocalEvidence.test.js` 2、`apps/local-engine/test/localEvidence.test.js` 6、`apps/local-engine/test/localEvidenceInjection.test.js` 4、`apps/local-engine/test/noEngine.test.js` 4）與既有 517 個一起跑：`npm test` 548/548 通過。
+
+#### 已裝機實測抓到的 regression：`node:sqlite` 在 Node <22.5 完全不存在（2026-08-13）
+
+上面 Story 4 的東西打包裝進 Claude Desktop 之後，使用者實際裝上去是 `failed` / `Server disconnected`，log
+（`~/Library/Logs/Claude/mcp-server-Pacevera.log`）顯示 process 一收到 `initialize` 就死掉，**沒有任何 stderr**。
+
+**查證過程**：用 `nvm install 20` 裝一份真的 Node 20.20.2 直接跑打包出來的 `dist/evidra-server.mjs`，
+重現出一模一樣的崩潰特徵：`Error [ERR_UNKNOWN_BUILTIN_MODULE]: No such built-in module: node:sqlite`。
+`node:sqlite` 是 Node 22.5 才加的 experimental 模組，`manifest.json` 宣告的相容下限卻是 `"node": ">=20"`——
+這次把打包進入點從完全不碰 SQLite 的 `apps/mcp-server` 換成用到 `packages/db`（進而用到 `node:sqlite`）的
+`apps/local-engine`，才第一次讓這個落差變成實際會發生的崩潰。**沒有 stderr 的原因**：ESM 的 `import` 是整個
+依賴圖一起解析完才開始執行任何一行程式碼，`node:sqlite` 這個 import 解析失敗時，連同一支檔案裡寫在它
+前面的診斷程式碼都輪不到執行——這點也是實際塞了診斷程式碼進已安裝的檔案、看它完全不印才確認的，
+不是憑經驗猜的。
+
+**怎麼修的**：`packages/db/src/repository.js` 改用 `createRequire(import.meta.url)` 在 constructor 裡才去
+`require("node:sqlite")`，把「整個依賴圖解析失敗」變成一個可以被 catch 的普通 `Error`（用同一份 Node 20
+驗證過兩種寫法的差異：static import 直接讓 process 死掉、`require` 版本乾淨拋出可 catch 的錯誤）。
+`apps/local-engine/src/stdio.js`／`server.js` 對應改成：repository 建立失敗時不讓整個 process 死掉，
+只讓 `evidra_local_decide_today` 與 outcome/decision trace 續存這兩個真的需要 SQLite 的功能不可用，
+本次 Story 4 真正要交付的「四個帶 `evidence` 的 tool 自動讀本機資料夾」完全不需要 SQLite，在 Node 20 一樣
+正常運作。**用打包出來的實際 archive（不是原始碼）在真 Node 20 上重新驗證過一次**：`tools/list` 正確變成
+10 個（少了本機專屬那顆）、`decide_session` 不帶 `evidence` 照樣讀本機資料夾算出正確決策。
 
 ### Phase 3 — 受控手機與跨 AI host 體驗
 
