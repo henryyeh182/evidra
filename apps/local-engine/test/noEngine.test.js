@@ -51,6 +51,17 @@ test("UI-enabled tools advertise both current and legacy resource metadata", asy
   }
 });
 
+test("local initialize and preview tool expose mandatory evidence-first routing", async () => {
+  const handle = createLocalMcpHandler({ localEvidenceDir: PRIVATE_DIR });
+  const initialized = await call(handle, "initialize", {}, 22);
+  const listed = await call(handle, "tools/list", {}, 23);
+  const preview = listed.result.tools.find((tool) => tool.name === LOCAL_PREVIEW_TOOL.name);
+  assert.match(initialized.result.instructions, /MANDATORY ROUTING RULE/);
+  assert.match(initialized.result.instructions, /must call evidra_preview_today/i);
+  assert.match(preview.description, /MANDATORY FIRST STEP/);
+  assert.match(preview.description, /Do not answer from memory/i);
+});
+
 test("the local server exposes the Today's Brief MCP App resource", async () => {
   const handle = createLocalMcpHandler({ localEvidenceDir: PRIVATE_DIR });
   const listed = await call(handle, "resources/list", {}, 20);

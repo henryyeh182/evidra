@@ -49,7 +49,7 @@ export const LOCAL_PREVIEW_TOOL = {
     openWorldHint: false
   },
   description:
-    "Read the selected local health export folder and return the evidence preview only. This must be shown to the user before deciding today's workout.",
+    "MANDATORY FIRST STEP for any question about today's workout, today's readiness, recovery, sleep, recent exercise, or whether to follow or change a scheduled session: call this tool before answering. Read the selected local health export folder and return the evidence preview only. Do not answer from memory or user text alone, and do not call decide_session first. Show the returned evidenceBrief and sources to the user, then wait for confirmation before calling a decision tool.",
   _meta: TODAY_BRIEF_TOOL_META,
   inputSchema: {
     type: "object",
@@ -60,10 +60,10 @@ export const LOCAL_PREVIEW_TOOL = {
 };
 
 const LOCAL_INSTRUCTIONS =
-  "This is Pacevera's user-controlled private engine. For a question about today's workout using local health exports, first call evidra_preview_today, show the returned evidenceBrief and sources to the user, and wait for the user's confirmation before calling decide_session or another decision tool. Do not silently chain the preview and decision in one turn. SQLite context and plans stay in the local environment; use evidra_local_decide_today for an existing local plan. assess_fitness_state, decide_session, generate_plan and generate_workout can read the user's local export folder automatically when no `evidence` argument is supplied. Provider OAuth tokens are connector-bound and are never sent to MCP.";
+  "MANDATORY ROUTING RULE: This is Pacevera's user-controlled private engine. If the user mentions today's workout, today's readiness, recovery, sleep, a recent workout, or asks whether to follow/change a scheduled session, you MUST call evidra_preview_today before answering — even when the user supplied numbers in the message or memory has a related answer. Do not answer from memory or user text alone. Do not call decide_session first. After preview, show the returned evidenceBrief and sources to the user and wait for confirmation before calling decide_session or another decision tool. Do not silently chain preview and decision. SQLite context and plans stay local; use evidra_local_decide_today for an existing local plan. assess_fitness_state, decide_session, generate_plan and generate_workout can read local exports when no evidence argument is supplied. Provider OAuth tokens never enter MCP.";
 
 const NO_ENGINE_INSTRUCTIONS =
-  "This is Pacevera's user-controlled private engine. For a question about today's workout using local health exports, first call evidra_preview_today, show the returned evidenceBrief and sources to the user, and wait for the user's confirmation before calling decide_session or another decision tool. Do not silently chain the preview and decision in one turn. The local SQLite store is unavailable on this runtime, so evidra_local_decide_today and outcome/decision-trace persistence are disabled; the evidence preview and four evidence-accepting tools still work.";
+  "MANDATORY ROUTING RULE: This is Pacevera's user-controlled private engine. If the user mentions today's workout, today's readiness, recovery, sleep, a recent workout, or asks whether to follow/change a scheduled session, you MUST call evidra_preview_today before answering — even when the user supplied numbers in the message or memory has a related answer. Do not answer from memory or user text alone. Do not call decide_session first. After preview, show the returned evidenceBrief and sources to the user and wait for confirmation before calling decide_session or another decision tool. Do not silently chain preview and decision. The local SQLite store is unavailable on this runtime, so evidra_local_decide_today and outcome/decision-trace persistence are disabled; the evidence preview and four evidence-accepting tools still work.";
 
 /**
  * `engine` is optional: `packages/db`'s `node:sqlite` dependency does not
