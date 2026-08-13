@@ -1,0 +1,13 @@
+[
+  { "retro": false },
+  {
+    "calendarDate": "2026-07-22",
+    "sleepStartTimestampGMT": "2026-07-21T15:30:00.0",
+    "sleepEndTimestampGMT": "2026-07-21T22:50:00.0",
+    "deepSleepSeconds": 3600,
+    "lightSleepSeconds": 10800,
+    "remSleepSeconds": 7200,
+    "awakeSleepSeconds": 120,
+    "sleepScores": { "overallScore": 81 }
+  }
+]

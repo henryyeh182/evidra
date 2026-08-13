@@ -1,0 +1,11 @@
+[
+  { "retro": false },
+  "not an object",
+  {
+    "calendarDate": "2026-07-21",
+    "deepSleepSeconds": 3000,
+    "lightSleepSeconds": 9000,
+    "remSleepSeconds": 6000,
+    "sleepScores": { "overallScore": 70 }
+  }
+]

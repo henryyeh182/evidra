@@ -20,9 +20,21 @@ export class LocalPrivateEngine {
     this.displayNameFor = displayNameFor;
   }
 
-  async decideToday({ userId, date, planId, availableMinutes, proposedSession } = {}) {
+  /**
+   * `context`, when passed, is used in place of a repository read — the path
+   * a freshly assembled local evidence import takes (see
+   * packages/connectors/src/local/assembleLocalEvidence.js and
+   * scripts/import-local-evidence.js). This matters beyond convenience: the
+   * repository only persists workouts and health metrics, not
+   * vendor_assessment evidence (Garmin's recoveryTime, Body Battery — its
+   * most reliable signals), so re-reading via `getUserContext` after a save
+   * would silently drop them. Passing the freshly merged in-memory context
+   * straight through keeps them in the decision. Either way this never goes
+   * through an MCP `evidence` argument — it is read or assembled locally.
+   */
+  async decideToday({ userId, date, planId, availableMinutes, proposedSession, context: suppliedContext } = {}) {
     if (!userId) throw new Error("LocalPrivateEngine.decideToday requires userId.");
-    const context = await this.repository.getUserContext(userId);
+    const context = suppliedContext || (await this.repository.getUserContext(userId));
     if (!context) throw new Error(`No local user context found for ${userId}.`);
 
     const resolvedDate = date || todayInTimezone(context.user.timezone);
@@ -62,7 +74,7 @@ export class LocalPrivateEngine {
       provenance: {
         deploymentMode: "user-controlled-private",
         repository: "sqlite",
-        evidenceSource: "local-user-context",
+        evidenceSource: suppliedContext ? "local-file-import" : "local-user-context",
         hostedMcp: false
       }
     };

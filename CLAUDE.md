@@ -150,7 +150,7 @@ RPE 仍當證據收進來，但不參與任何計算——所以不供 RPE 的�
 - 對外 **7 個決策 tool**：`assess_fitness_state` · `decide_session` · `decide_exercise_substitution` ·
   `generate_workout` · `generate_plan` · `preview_adjust_plan` · `commit_adjust_plan`
   （**v0.4.1 起拿掉 `evidra_` 前綴**，改回 v0.1.1 那組名字——見發布章節）
-- **7 個對外決策 tool + 3 個 bounded trace/coverage/outcome support tool**、**517 個 tests 通過**（2026-08-13 在可監聽 localhost 的環境重跑 `npm test` 實測，含先前受 sandbox 權限限制的 HTTP tests；權限受限的環境可能再次卡住部分 HTTP tests，屆時以當次實測為準）、eval 20 golden cases，全綠
+- **7 個對外決策 tool + 3 個 bounded trace/coverage/outcome support tool**、**534 個 tests 通過**（2026-08-13 在可監聽 localhost 的環境重跑 `npm test` 實測，含先前受 sandbox 權限限制的 HTTP tests，以及同日完成的 Evidence Flow Story 1／2／3／5 新增 17 個 tests；權限受限的環境可能再次卡住部分 HTTP tests，屆時以當次實測為準）、eval 20 golden cases，全綠
 - parser 實作 6 家（Apple Health／Garmin／Strava／Google Health Takeout／Oura／WHOOP；
   Strava 含 API 與 bulk export 兩種方言）；schema registry 涵蓋 6 個平台。
   **前四家照真實匯出檔寫；Oura 與 WHOOP 照兩家自己的 OpenAPI 寫（2026-08-07），

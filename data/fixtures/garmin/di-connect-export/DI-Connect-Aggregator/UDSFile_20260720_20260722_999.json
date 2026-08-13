@@ -1,0 +1,48 @@
+[
+  {
+    "userProfilePK": 999,
+    "calendarDate": "2026-07-21",
+    "totalSteps": 8200,
+    "restingHeartRate": 55,
+    "allDayStress": {
+      "userProfilePK": 999,
+      "calendarDate": "2026-07-21",
+      "aggregatorList": [
+        { "type": "ASLEEP", "averageStressLevel": 10 },
+        { "type": "AWAKE", "averageStressLevel": 28 },
+        { "type": "TOTAL", "averageStressLevel": 22 }
+      ]
+    },
+    "bodyBattery": {
+      "userProfilePK": 999,
+      "calendarDate": "2026-07-21",
+      "bodyBatteryStatList": [
+        { "bodyBatteryStatType": "HIGHEST", "statsValue": 88 },
+        { "bodyBatteryStatType": "LOWEST", "statsValue": 40 }
+      ]
+    }
+  },
+  {
+    "userProfilePK": 999,
+    "calendarDate": "2026-07-22",
+    "totalSteps": 6100,
+    "restingHeartRate": 0,
+    "allDayStress": {
+      "userProfilePK": 999,
+      "calendarDate": "2026-07-22",
+      "aggregatorList": [
+        { "type": "ASLEEP", "averageStressLevel": 12 },
+        { "type": "AWAKE", "averageStressLevel": -1 },
+        { "type": "TOTAL", "averageStressLevel": -1 }
+      ]
+    },
+    "bodyBattery": {
+      "userProfilePK": 999,
+      "calendarDate": "2026-07-22",
+      "bodyBatteryStatList": [
+        { "bodyBatteryStatType": "HIGHEST", "statsValue": 70 },
+        { "bodyBatteryStatType": "LOWEST", "statsValue": 25 }
+      ]
+    }
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "_note": "De-identified SYNTHETIC Garmin 'Export Your Data' sample for tests only. Field names and nesting match a real archive (see packages/connectors/src/local/garminLocal.js header); the numbers do not.",
+    "userProfilePK": 999,
+    "calendarDate": "2026-07-21",
+    "timestamp": "2026-07-21T22:00:00.0",
+    "level": "NONE",
+    "recoveryTime": 420,
+    "acuteLoad": 180,
+    "hrvWeeklyAverage": 511.0
+  },
+  {
+    "userProfilePK": 999,
+    "calendarDate": "2026-07-22",
+    "timestamp": "2026-07-22T22:00:00.0",
+    "level": "MODERATE",
+    "score": 62,
+    "recoveryTime": 300,
+    "acuteLoad": 190,
+    "hrvWeeklyAverage": 511.0
+  }
+]

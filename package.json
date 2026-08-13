@@ -20,6 +20,8 @@
     "harness:substitution": "node harness/substitution-runner.js",
     "import:apple-health": "node scripts/import-apple-health.js",
     "import:google-health-api": "node scripts/import-google-health-api.js",
+    "import:local-evidence": "node scripts/import-local-evidence.js",
+    "generate:home-scenarios": "node scripts/generate-home-scenario-fixtures.js",
     "build:bundle": "node scripts/build-bundle.js",
     "release:manifest": "node scripts/generate-release-manifest.js",
     "release:validate": "node scripts/validate-release-manifest.js",

@@ -47,7 +47,15 @@
  * @property {Object} metadata
  */
 
-export const CONNECTOR_PROVIDERS = ["apple_health", "garmin", "strava", "oura", "whoop", "manual"];
+export const CONNECTOR_PROVIDERS = [
+  "apple_health",
+  "garmin",
+  "strava",
+  "oura",
+  "whoop",
+  "google_health_api",
+  "manual"
+];
 
 export function assertRawProviderEvent(event) {
   if (!event || typeof event !== "object") {

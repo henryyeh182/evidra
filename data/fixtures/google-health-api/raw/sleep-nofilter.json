@@ -1,0 +1,20 @@
+{
+  "dataPoints": [
+    {
+      "dataSource": { "application": { "packageName": "com.garmin.connect.mobile" } },
+      "sleep": {
+        "interval": { "endTime": "2026-07-21T23:10:00Z", "endUtcOffset": "28800s" },
+        "summary": {
+          "minutesAsleep": 415,
+          "minutesAwake": 20,
+          "stagesSummary": [
+            { "type": "DEEP", "minutes": 60 },
+            { "type": "LIGHT", "minutes": 240 },
+            { "type": "REM", "minutes": 115 }
+          ]
+        },
+        "metadata": { "mainSleep": true }
+      }
+    }
+  ]
+}

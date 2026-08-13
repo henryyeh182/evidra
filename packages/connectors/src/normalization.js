@@ -48,9 +48,21 @@ export function normalizedHealthMetricToHealthMetric(event) {
   };
 }
 
+/** vendor_assessment carries no dedicated conversion — unlike workouts and
+ * health metrics, it has no separate "wire shape" contract, so it is applied
+ * as emitted (kind stripped, same as the other two). */
+function normalizedVendorAssessmentToVendorAssessment(event) {
+  if (event.kind !== "vendor_assessment") {
+    throw new Error(`Expected vendor_assessment event, received ${event.kind}.`);
+  }
+  const { kind: _kind, ...rest } = event;
+  return rest;
+}
+
 export function applyNormalizedEventsToContext(context, events) {
   const workouts = [...context.workouts];
   const healthMetrics = [...context.healthMetrics];
+  const vendorAssessments = [...(context.vendorAssessments || [])];
 
   for (const event of events) {
     if (event.kind === "workout") {
@@ -72,11 +84,24 @@ export function applyNormalizedEventsToContext(context, events) {
         healthMetrics.push(metric);
       }
     }
+
+    if (event.kind === "vendor_assessment") {
+      const assessment = normalizedVendorAssessmentToVendorAssessment(event);
+      const existingIndex = assessment.id
+        ? vendorAssessments.findIndex((item) => item.id === assessment.id)
+        : -1;
+      if (existingIndex >= 0) {
+        vendorAssessments[existingIndex] = assessment;
+      } else {
+        vendorAssessments.push(assessment);
+      }
+    }
   }
 
   return {
     ...context,
     workouts: workouts.sort((a, b) => new Date(a.startedAt) - new Date(b.startedAt)),
-    healthMetrics: healthMetrics.sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt))
+    healthMetrics: healthMetrics.sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt)),
+    vendorAssessments: vendorAssessments.sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt))
   };
 }

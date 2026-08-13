@@ -1,0 +1,13 @@
+[
+  {
+    "totalSteps": 5000,
+    "restingHeartRate": 60,
+    "allDayStress": { "aggregatorList": [{ "type": "TOTAL", "averageStressLevel": 20 }] }
+  },
+  {
+    "calendarDate": "2026-07-21",
+    "totalSteps": 8000,
+    "restingHeartRate": 55,
+    "allDayStress": { "aggregatorList": [{ "type": "TOTAL", "averageStressLevel": 18 }] }
+  }
+]

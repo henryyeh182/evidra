@@ -3,6 +3,18 @@
 
 export { assertRawProviderEvent, CONNECTOR_PROVIDERS } from "./models.js";
 export { LocalConnectorAdapter, FixtureConnectorAdapter } from "./local.js";
+export {
+  findLatestExportFile,
+  findAllExportFiles,
+  AppleHealthLocalConnector,
+  GarminLocalConnector,
+  readGarminExportFolder,
+  StravaLocalConnector,
+  GoogleHealthApiLocalConnector,
+  readGoogleHealthApiRawFolder,
+  buildGoogleHealthApiEvidence,
+  assembleLocalEvidence
+} from "./local/index.js";
 export { computeTimeInZone, assertValidHeartRateZones } from "./timeInZone.js";
 export {
   normalizedWorkoutToWorkout,

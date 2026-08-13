@@ -1,0 +1,15 @@
+[
+  {
+    "summarizedActivitiesExport": [
+      { "activityId": 555, "name": "Corrupt row, no start time", "activityType": "running" },
+      {
+        "activityId": 556,
+        "name": "Evening Ride",
+        "activityType": "cycling",
+        "beginTimestamp": 1784744400000,
+        "duration": 1800000,
+        "activityTrainingLoad": 30
+      }
+    ]
+  }
+]

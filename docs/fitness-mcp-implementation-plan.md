@@ -151,7 +151,7 @@ v0.5.0 已於 2026-08-11 發行，是目前公開可安裝的 Desktop MCPB 基�
 - `single_workout_rules@0.1.0` 仍是 draft；EVD-R-013～015 尚未接 runtime。`generate_workout` 目前沿用 Decision Engine `1.6.0` 與 active `base_rules` 做個人化，因此不得宣稱 draft package 已啟用。
 - Remote image build／smoke 尚未在本機完成，因 Docker daemon 不可用；local release gate 只能以 `--skip-remote` 執行。
 - `review:phase` 的 G2／G2b／G9 已修正並通過；目前機械 gate 13/13 全綠。
-- 2026-08-13 在可監聽 localhost 的環境重跑完整 `npm test`：517 tests 全數執行、0 fail、0 skip，含先前受 sandbox EPERM 限制的 HTTP／authorization／privacy integration tests。舊版本紀錄的「5 個未能執行、其餘 512 通過」是特定 sandbox 權限下的結果，不是固定上限；之後若在權限受限的環境重跑，數字可能再次不同，屆時應以當次實測為準，不沿用本行舊數字。
+- 2026-08-13 在可監聽 localhost 的環境重跑完整 `npm test`：534 tests 全數執行、0 fail、0 skip，含先前受 sandbox EPERM 限制的 HTTP／authorization／privacy integration tests，以及同日稍後完成的 Evidence Flow Story 1／2／3／5 新增 17 個 tests（見 §5「Phase 2 - Story 2 詳細分解」）。舊版本紀錄的「5 個未能執行、其餘 512 通過」是特定 sandbox 權限下的結果，不是固定上限；之後若在權限受限的環境重跑，數字可能再次不同，屆時應以當次實測為準，不沿用本行舊數字。
 - 公開 privacy URL、release review 與 MCPB archive／published review 仍需收尾；`docs/privacy-deployment-contract.md` 是目前的 canonical implementation contract，不等同於已完成 hosted privacy policy。
 - Outcome repository 已接入 user-controlled local engine：SQLite `outcome_records`、migration `0004`、`saveOutcome`／`listOutcomes` 與 local MCP injection 已完成；hosted MCP 仍維持 process-local/stateless，且尚未形成自動 Rule learning loop。
 - Durable decision trace 已接入同一個 user-controlled SQLite：`decision_records`、local `explain_decision` restart recovery 與 user scope test 已完成；backup、export、delete 尚待補齊。
@@ -421,12 +421,22 @@ Health）已用真實匯出檔驗證正確（見 2.1），但目前只被 `demoD
 
 | Story | 交付結果 | 完成條件 | 狀態 |
 |---|---|---|---|
-| Evidence Flow - Story 1 | Local connector 具體實作。 | 為 Apple Health／Garmin／Strava 各寫一個 `LocalConnectorAdapter` 子類，實作 `pullNormalizedEvents()`：掃對應資料夾、挑最新匯出檔、呼叫既有 normalize 函式。Google Health 沿用既有 `scripts/import-google-health-api.js` 的 importer／normalizer，不重寫。「最新」的判斷依據（檔案時間戳／匯出內容裡的日期）要附出處，無出處不准進 repo。 | 待開始 |
-| Evidence Flow - Story 2 | 多來源 Evidence 組裝。 | 用既有 `applyNormalizedEventsToContext` 把 4 家輸出合併成單一 context；沒資料或資料過期的來源要反映在 `signalCoverage.recovery.missing`／`training.missing`，不得假裝有值。 | 待開始 |
-| Evidence Flow - Story 3 | 接進本機決策路徑。 | 組裝好的 Evidence 在本機引擎內部直接餵進 `assess_fitness_state`／`decide_session`，不透過 Claude 傳 `evidence` 參數；同一批檔案重跑兩次，決策結果要一致。 | 待開始 |
+| Evidence Flow - Story 1 | Local connector 具體實作。 | 為 Apple Health／Garmin／Strava 各寫一個 `LocalConnectorAdapter` 子類，實作 `pullNormalizedEvents()`：掃對應資料夾、挑最新匯出檔、呼叫既有 normalize 函式。Google Health 沿用既有 `scripts/import-google-health-api.js` 的 importer／normalizer，不重寫。「最新」的判斷依據（檔案時間戳／匯出內容裡的日期）要附出處，無出處不准進 repo。 | 完成 |
+| Evidence Flow - Story 2 | 多來源 Evidence 組裝。 | 用既有 `applyNormalizedEventsToContext` 把 4 家輸出合併成單一 context；沒資料或資料過期的來源要反映在 `signalCoverage.recovery.missing`／`training.missing`，不得假裝有值。 | 完成 |
+| Evidence Flow - Story 3 | 接進本機決策路徑。 | 組裝好的 Evidence 在本機引擎內部直接餵進 `assess_fitness_state`／`decide_session`，不透過 Claude 傳 `evidence` 參數；同一批檔案重跑兩次，決策結果要一致。 | 完成 |
 | Evidence Flow - Story 4 | 對外介面決定。 | 要不要曝露成一個可被 Claude 觸發的 tool；若要，回傳只給摘要與決策結果，不吐 HRV／心率等原始數值——比照既有 Google Health sync 定案原則。 | 待開始（需使用者先決定方向） |
-| Evidence Flow - Story 5 | Harness 驗證與文件收尾。 | 建 Decision Harness scenario 覆蓋「檔案齊全／缺檔／格式過期／髒資料」；本文件與 `CLAUDE.md` 現況段同步更新。 | 待開始 |
-| Evidence Flow - Story 6 | Today's Brief UI 接真資料。 | `docs/pacevera-home.html` 的 Evidence／Decision／Reason 區塊改讀 Story 3 產出的真實決策輸出，取代目前寫死在 `<script>` 裡的 fixture 物件（`keep`／`adjust` 等常數）；`prototype-note` 與 fixture 免責句拿掉或改寫成反映真實資料狀態。 | 待開始 |
+| Evidence Flow - Story 5 | Harness 驗證與文件收尾。 | 建 Decision Harness scenario 覆蓋「檔案齊全／缺檔／格式過期／髒資料」；本文件與 `CLAUDE.md` 現況段同步更新。 | 完成 |
+| Evidence Flow - Story 6 | Today's Brief UI 接真資料。 | `docs/pacevera-home.html` 的 Evidence／Decision／Reason 區塊改讀 Story 3 產出的真實決策輸出，取代目前寫死在 `<script>` 裡的 fixture 物件（`keep`／`adjust` 等常數）；`prototype-note` 與 fixture 免責句拿掉或改寫成反映真實資料狀態。 | 完成 |
+
+#### Evidence Flow completion evidence — 2026-08-13
+
+- **Story 1**：`packages/connectors/src/local/`（`appleHealthLocal.js`／`garminLocal.js`／`stravaLocal.js`／`googleHealthApiLocal.js`）。「最新」一律用 `fs.stat().mtimeMs`（`latestExportFile.js`），Google Health 沿用既有 script 的 reader／normalizer（搬到 `googleHealthApiLocal.js`，`scripts/import-google-health-api.js` 改為呼叫它，行為不變）。
+  **實測發現、非文件既有假設**：Garmin 的 GDPR bulk export（`DI_CONNECT/`）與 `schemas/sources/garmin.export.json`／既有 `normalizeGarminSleep`／`normalizeGarminDailySummary` 假設的欄位形狀不同——真實匯出檔的 `sleepData.json` 完全沒有 `sleepTimeSeconds` 欄位（改用 `deepSleepSeconds+lightSleepSeconds+remSleepSeconds`），`sleepScores.overallScore` 不是巢狀 `.overall.value`；`UDSFile` 的 `averageStressLevel` 巢狀在 `allDayStress.aggregatorList`（`type: "TOTAL"` 那筆）不是攤平欄位。這兩個轉換寫在 `garminLocal.js`（`flattenSleep`／`flattenDailySummary`），不改動既有 `normalizeGarmin*` 函式本身。另外把 `normalizeGarminDailySummary`／`normalizeGarminSleep`／vendor_assessment 事件補上 `stableId`（先前缺失，多檔合併時會用 `id: undefined` 互相覆蓋）。
+- **Story 2**：`assembleLocalEvidence.js` 跑 4 個來源、單一來源失敗只記 `sources[name].status`，不中斷其他三個。`applyNormalizedEventsToContext` 新增 `vendor_assessment` 合併（先前被靜默丟棄——Garmin 的 `recoveryTime`／Body Battery 最可靠的訊號正是這個 kind）。
+- **Story 3**：`scripts/import-local-evidence.js`；`LocalPrivateEngine.decideToday` 新增 `context` 覆寫參數——因為 repository 的 SQLite schema 不存 `vendor_assessment`，若照舊從 repository 重讀會把 Garmin 這組訊號重新丟掉，所以決策改吃組裝後留在記憶體裡的完整 context。對同一批真實私有匯出檔跑兩次，stdout byte-for-byte 相同（僅 SQLite experimental-warning 那行的 PID 不同）。
+- **Story 5**：`packages/connectors/test/local/harnessScenarios.test.js` 覆蓋 complete／stale（超過 `stalenessSleepDays`/`stalenessAutonomicDays`/`stalenessRestingHrDays`/`stalenessVendorCompositeDays` 視窗後轉 missing）／dirty（壞掉的 JSON 檔、缺欄位記錄、欄位改版的 Strava CSV）；missing 由 `assembleLocalEvidence.test.js` 既有兩個案例覆蓋。新增 fixture：`data/fixtures/garmin/di-connect-export{,-dirty}/`、`data/fixtures/google-health-api/raw/`、`data/fixtures/strava/export-dirty/`。
+- **Story 6**：`scripts/generate-home-scenario-fixtures.js` 跑 `harness/scenarios/01,02,03`（既有、已審查過的合成情境）經真實 `generateSemanticFitnessState`+`decideSession`，寫出 `docs/pacevera-home-scenarios.js`（machine-generated，取代原本手寫在 inline `<script>` 裡的 `keep`／`adjust`／`defer` 物件）；同步更新頁面上與舊 fixture 數字綁定的靜態文案（trace drawer、decision-layer 區塊）避免與新數字矛盾。原本的趨勢箭頭（↑/↓）沒有對應的時間序列比較基準，本來就是裝飾性數字，這次移除而非保留。
+- 全部 17 個新 tests（`packages/connectors/test/local/*` 8+3+4、`apps/local-engine/test/importLocalEvidence.test.js` 2）與既有 517 個一起跑：`npm test` 534/534 通過。
 
 ### Phase 3 — 受控手機與跨 AI host 體驗
 

@@ -51,6 +51,7 @@ export function normalizeGarminReadiness(records = []) {
     if (typeof record.recoveryTime === "number" && record.recoveryTime > 0) {
       events.push({
         kind: "vendor_assessment",
+        id: stableId("garmin", "recovery_time_minutes", record.calendarDate ?? recordedAt),
         source: "garmin",
         type: "recovery_time_minutes",
         value: record.recoveryTime,
@@ -65,6 +66,7 @@ export function normalizeGarminReadiness(records = []) {
     if (typeof record.score === "number" && record.level && record.level !== "NONE") {
       events.push({
         kind: "vendor_assessment",
+        id: stableId("garmin", "vendor_readiness", record.calendarDate ?? recordedAt),
         source: "garmin",
         type: "vendor_readiness",
         value: record.score,
@@ -77,6 +79,7 @@ export function normalizeGarminReadiness(records = []) {
     if (typeof record.acuteLoad === "number" && record.acuteLoad > 0) {
       events.push({
         kind: "vendor_assessment",
+        id: stableId("garmin", "vendor_acute_load", record.calendarDate ?? recordedAt),
         source: "garmin",
         type: "vendor_acute_load",
         value: record.acuteLoad,
@@ -146,6 +149,7 @@ export function normalizeGarminSleep(records = []) {
     if (typeof record.sleepTimeSeconds === "number" && record.sleepTimeSeconds > 0) {
       events.push({
         kind: "health_metric",
+        id: stableId("garmin", "sleep_duration_hours", record.calendarDate ?? recordedAt),
         type: "sleep_duration_hours",
         value: Number((record.sleepTimeSeconds / 3600).toFixed(2)),
         unit: "hours",
@@ -158,6 +162,7 @@ export function normalizeGarminSleep(records = []) {
     if (typeof overall === "number" && overall > 0) {
       events.push({
         kind: "health_metric",
+        id: stableId("garmin", "sleep_quality", record.calendarDate ?? recordedAt),
         type: "sleep_quality",
         value: overall,
         unit: "score_0_100",
@@ -179,6 +184,7 @@ export function normalizeGarminDailySummary(records = []) {
     if (typeof record.restingHeartRate === "number" && record.restingHeartRate > 0) {
       events.push({
         kind: "health_metric",
+        id: stableId("garmin", "resting_hr_bpm", record.calendarDate ?? recordedAt),
         type: "resting_hr_bpm",
         value: record.restingHeartRate,
         unit: "bpm",
@@ -190,6 +196,7 @@ export function normalizeGarminDailySummary(records = []) {
     if (typeof record.totalSteps === "number" && record.totalSteps > 0) {
       events.push({
         kind: "health_metric",
+        id: stableId("garmin", "steps", record.calendarDate ?? recordedAt),
         type: "steps",
         value: record.totalSteps,
         unit: "count",
@@ -204,6 +211,7 @@ export function normalizeGarminDailySummary(records = []) {
     if (typeof record.averageStressLevel === "number" && record.averageStressLevel >= 0) {
       events.push({
         kind: "health_metric",
+        id: stableId("garmin", "stress", record.calendarDate ?? recordedAt),
         type: "stress",
         value: record.averageStressLevel,
         unit: "score_0_100",
@@ -221,6 +229,7 @@ export function normalizeGarminDailySummary(records = []) {
       if (typeof highest === "number") {
         events.push({
           kind: "vendor_assessment",
+          id: stableId("garmin", "body_battery", record.calendarDate ?? recordedAt),
           source: "garmin",
           type: "body_battery",
           value: highest,
