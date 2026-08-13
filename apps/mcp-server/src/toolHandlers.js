@@ -42,6 +42,7 @@ import {
   submitOutcome
 } from "./decisionRecords.js";
 import { RELEASE_IDENTITY } from "../../../packages/release/src/index.js";
+import { buildDecisionContinuity, buildTodayBrief } from "../../../packages/private-engine/src/continuity.js";
 
 /**
  * What a caller has to send before any of this can compute anything.
@@ -776,15 +777,27 @@ export async function decideSessionTool(args = {}) {
     rpeBasisCounts: provenance.rpeBasis
   });
 
+  const continuity = buildDecisionContinuity({ userId: context.user.id, date, state, context });
+  const decisionProvenance = {
+    ...provenance,
+    ...continuity,
+    scheduledSessionSource: args.scheduledSession ? "provided" : "missing",
+    proposedSessionSource: args.proposedSession ? "provided" : "none"
+  };
+
   return jsonContent(recordDecision({
     userId: context.user.id,
     date,
     planId,
     ...decision,
-    provenance: {
-      ...provenance,
-      scheduledSessionSource: args.scheduledSession ? "provided" : "missing",
-      proposedSessionSource: args.proposedSession ? "provided" : "none"
-    }
+    provenance: decisionProvenance,
+    todayBrief: buildTodayBrief({
+      userId: context.user.id,
+      date,
+      decision,
+      state,
+      context,
+      provenance: continuity
+    })
   }, { userId: context.user.id, evidenceSource: provenance.evidenceSource, decisionRepository: args.__decisionRepository }));
 }

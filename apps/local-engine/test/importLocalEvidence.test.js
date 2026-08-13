@@ -47,6 +47,9 @@ test("importing the same local export files twice produces the same decision and
 
     assert.equal(first.provenance.evidenceSource, "local-file-import");
     assert.equal(first.provenance.hostedMcp, false);
+    assert.match(first.provenance.stateId, /^state_/);
+    assert.equal(first.todayBrief.evidence.stateId, first.provenance.stateId);
+    assert.equal(first.todayBrief.evidence.window.asOf, "2026-07-22");
     assert.equal(first.decision.type, second.decision.type);
     assert.equal(first.decision.intent, second.decision.intent);
     assert.equal(first.confidence, second.confidence);

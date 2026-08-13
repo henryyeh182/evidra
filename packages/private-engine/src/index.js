@@ -5,6 +5,7 @@ import { todayInTimezone } from "../../domain/src/dates.js";
 import { generateSemanticFitnessState } from "../../semantic-engine/src/index.js";
 import { computeTrainingLoad } from "../../training-load/src/index.js";
 import { decideSession } from "../../decision-engine/src/index.js";
+import { buildDecisionContinuity, buildTodayBrief } from "./continuity.js";
 
 const identity = (id) => id;
 
@@ -64,6 +65,8 @@ export class LocalPrivateEngine {
       availableMinutes
     });
 
+    const continuity = buildDecisionContinuity({ userId, date: resolvedDate, state, context });
+
     return {
       userId,
       date: resolvedDate,
@@ -72,11 +75,20 @@ export class LocalPrivateEngine {
       plannedWorkoutId: planned?.id || null,
       ...decision,
       provenance: {
+        ...continuity,
         deploymentMode: "user-controlled-private",
         repository: "sqlite",
         evidenceSource: suppliedContext ? "local-file-import" : "local-user-context",
         hostedMcp: false
-      }
+      },
+      todayBrief: buildTodayBrief({
+        userId,
+        date: resolvedDate,
+        decision,
+        state,
+        context,
+        provenance: continuity
+      })
     };
   }
 }

@@ -220,16 +220,21 @@ export function evidenceToUserContext(evidence, options = {}) {
       trainingLoad: workout.trainingLoad ?? null,
       muscleGroups: workout.muscleGroups || [],
       source: workout.source || "manual",
+      ...(workout.sourceRecordId ? { sourceRecordId: workout.sourceRecordId } : {}),
+      ...(workout.metadata ? { metadata: workout.metadata } : {}),
       // Absent stays absent. There is no sensible default for "how long was
       // this person between 140 and 152 bpm", so nothing is filled in.
       intensityDistribution: workout.intensityDistribution ?? null
     })),
     vendorAssessments: (evidence.vendorAssessments || []).map((item) => ({
+      ...(item.id ? { id: item.id } : {}),
       source: item.source || "unknown",
+      ...(item.sourceRecordId ? { sourceRecordId: item.sourceRecordId } : {}),
       type: item.type,
       value: item.value,
       unit: item.unit || "",
-      recordedAt: item.recordedAt
+      recordedAt: item.recordedAt,
+      ...(item.metadata ? { metadata: item.metadata } : {})
     })),
     healthMetrics: (evidence.healthMetrics || []).map((metric) => ({
       type: metric.type,

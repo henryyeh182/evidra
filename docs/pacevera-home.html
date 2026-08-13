@@ -196,8 +196,8 @@
             <p class="brief-reason" id="reason"><strong>Why this changed:</strong> Readiness 52 is below 60, so intensity comes down. At moderate intensity the session is no longer "Threshold Intervals"; it becomes "Moderate run". <code>RULE EVD-R-002</code></p>
           </div>
           <button class="trace-trigger" id="traceTrigger" type="button" aria-controls="traceDrawer" aria-expanded="false"><span>Why this changed · open Decision Trace</span><span>↗</span></button>
-          <p class="prototype-note">Interactive preview · these three examples run synthetic evidence (harness/scenarios/, not a connected account) through the real Decision Engine — the numbers and rule id shown are its actual output.</p>
-          <div class="brief-tabs" aria-label="Decision examples"><button data-case="keep">Keep</button><button class="active" data-case="adjust">Adjust</button><button data-case="defer">Defer</button></div>
+          <p class="prototype-note" id="briefSource">Live local Decision output when <code>pacevera-home-live.js</code> is present; otherwise this page shows reviewed engine scenarios.</p>
+          <div class="brief-tabs" aria-label="Decision examples"><button data-case="keep">Keep</button><button class="active" data-case="adjust">Adjust</button><button data-case="defer">Defer</button><button data-case="live">Live local</button></div>
           </div>
         </div>
       </section>
@@ -227,7 +227,8 @@
     </main>
     <footer><span>© 2026 Pacevera · Fitness decision infrastructure · public preview</span><nav><a href="#about">About</a><a href="https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md">Privacy</a><a href="mailto:evidramcp@icloud.com">Contact</a><a href="user-journey.html">Product journey</a></nav></footer>
   </div>
-  <div class="drawer-backdrop" id="traceDrawer" role="dialog" aria-modal="true" aria-labelledby="traceTitle" aria-hidden="true"><aside class="trace-drawer"><div class="drawer-head"><div><p class="trace-kicker">Decision Graph · real engine output, synthetic evidence</p><h2 id="traceTitle">Threshold Intervals → Moderate run</h2></div><button class="drawer-close" id="traceClose" type="button" aria-label="Close Decision Trace">×</button></div><p class="body-copy">The engine compared the planned session with the available evidence, then kept the highest-priority applicable rule.</p><div class="graph" aria-label="Decision Graph"><div class="graph-node"><div><b>Evidence</b><small>Readiness 52 · leg fatigue 8 · sleep 5h</small></div><em>input</em></div><div class="graph-node"><div><b>EVD-R-002 · reduce today intensity</b><small>Readiness 52 is below the 60 threshold</small></div><em>triggered</em></div><div class="graph-node suppressed"><div><b>EVD-R-000 · keep as planned</b><small>Evidence is not fully in range, so this candidate is suppressed</small></div><em>suppressed</em></div><div class="graph-node arbitrated"><div><b>Rule selection → adjust</b><small>EVD-R-002 is the highest-ranked applicable rule</small></div><em>governing</em></div><div class="graph-node arbitrated"><div><b>Today’s session · Moderate run</b><small>Same duration · lower intensity · high confidence</small></div><em>output</em></div></div><table class="trace-table"><thead><tr><th>Trace</th><th>Resolved value</th></tr></thead><tbody><tr><td>Rule</td><td><code>EVD-R-002</code> · reduce_today_intensity</td></tr><tr><td>Evidence</td><td>readiness 52; leg fatigue 8; sleep 5h</td></tr><tr><td>Source</td><td>harness/scenarios/02-low-readiness-takes-a-step-off.json (synthetic, run through the real Decision Engine)</td></tr><tr><td>Version</td><td>Engine 1.6.0 · base_rules 1.1.0</td></tr></tbody></table><p class="prototype-note">This trace is this page's own generated fixture (scripts/generate-home-scenario-fixtures.js), not a hosted history view, and does not imply a connected Garmin account.</p></aside></div>
+  <div class="drawer-backdrop" id="traceDrawer" role="dialog" aria-modal="true" aria-labelledby="traceTitle" aria-hidden="true"><aside class="trace-drawer"><div class="drawer-head"><div><p class="trace-kicker">Decision Graph · local engine output</p><h2 id="traceTitle">Threshold Intervals → Moderate run</h2></div><button class="drawer-close" id="traceClose" type="button" aria-label="Close Decision Trace">×</button></div><p class="body-copy">The engine compared the planned session with the available evidence, then kept the highest-priority applicable rule.</p><div class="graph" aria-label="Decision Graph"><div class="graph-node"><div><b>Evidence</b><small id="traceEvidence">Readiness 52 · recovery signals checked</small></div><em>input</em></div><div class="graph-node"><div><b id="traceRule">Decision rule</b><small id="traceRuleReason">Resolved by the local Decision Engine</small></div><em>triggered</em></div><div class="graph-node arbitrated"><div><b>Rule selection → <span id="traceDecision">adjust</span></b><small id="traceConfidence">Confidence high</small></div><em>governing</em></div><div class="graph-node arbitrated"><div><b>Today’s session · <span id="traceOutput">Moderate run</span></b><small id="traceWindow">Evidence window available in the decision payload</small></div><em>output</em></div></div><table class="trace-table"><thead><tr><th>Trace</th><th>Resolved value</th></tr></thead><tbody><tr><td>Rule</td><td id="traceRuleRow">—</td></tr><tr><td>Evidence</td><td id="traceEvidenceRow">—</td></tr><tr><td>Source</td><td id="traceSourceRow">—</td></tr><tr><td>Version</td><td id="traceVersionRow">—</td></tr></tbody></table><p class="prototype-note" id="traceSourceNote">This trace is rendered from the selected decision payload.</p></aside></div>
+  <script src="pacevera-home-live.js"></script>
   <script src="pacevera-home-scenarios.js"></script>
   <script>
     const $ = id => document.getElementById(id);
@@ -237,14 +238,58 @@
     const feedbackStatus = $('feedbackStatus');
     document.querySelectorAll('[data-outcome]').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('[data-outcome]').forEach(b => b.classList.toggle('selected', b === button)); feedbackStatus.textContent = `Prototype only · ${button.dataset.outcome} selected · not saved.`; }));
     $('effort').addEventListener('input', event => { $('effortValue').textContent = `${event.target.value} / 10`; });
+    const briefScenario = brief => {
+      const from = brief.action?.from || {};
+      const to = brief.action?.to || from;
+      const rule = brief.trace?.governingRule;
+      const source = brief.evidence?.sources?.join(', ') || 'local evidence';
+      return {
+        status: brief.decision?.type === 'keep' ? 'Ready to train' : brief.decision?.type === 'defer' ? 'Recovery first' : 'Adjust today',
+        statusClass: brief.decision?.type === 'defer' ? 'defer' : brief.decision?.type === 'keep' ? '' : 'adjust',
+        metrics: [['Readiness', String(brief.state?.readinessScore ?? '—')], ['Recovery', String(brief.state?.recoveryScore ?? '—')], ['Fatigue', String(brief.state?.fatigueScore ?? '—')], ['Confidence', String(brief.confidence ?? '—')]],
+        from: [from.focus || 'Scheduled session', `${from.durationMinutes ?? '—'} min · ${from.intensity || ''}`],
+        to: [to.focus || 'No session', `${to.durationMinutes ?? '—'} min · ${to.intensity || ''}`],
+        evidence: `Readiness ${brief.state?.readinessScore ?? '—'} · ${source}`,
+        attachment: `state ${brief.evidence?.stateId || '—'} · ${brief.date || '—'}`,
+        prompt: 'Should I keep today’s planned session?',
+        handoff: 'Pacevera returned this decision from the local engine.',
+        reason: `<strong>Why this changed:</strong> ${(brief.reason || []).join(' ') || 'No reason returned.'}`,
+        brief
+      };
+    };
+    if (globalThis.PACEVERA_TODAY_BRIEF) {
+      scenarios.live = briefScenario(globalThis.PACEVERA_TODAY_BRIEF);
+      $('briefSource').textContent = 'Live local Decision output · loaded from pacevera-home-live.js';
+      document.querySelectorAll('[data-case]').forEach(button => button.classList.toggle('active', button.dataset.case === 'live'));
+    }
+    const renderTrace = s => {
+      const b = s.brief;
+      if (!b) return;
+      const rule = b.trace?.governingRule;
+      $('traceTitle').textContent = `${s.from[0]} → ${s.to[0]}`;
+      $('traceEvidence').textContent = s.evidence;
+      $('traceRule').textContent = rule?.ruleId || 'No governing rule';
+      $('traceRuleReason').textContent = rule?.measured ? JSON.stringify(rule.measured) : 'No rule applied';
+      $('traceDecision').textContent = b.decision?.type || '—';
+      $('traceConfidence').textContent = `Confidence ${b.confidence || '—'}`;
+      $('traceOutput').textContent = s.to[0];
+      $('traceWindow').textContent = `${b.evidence?.window?.earliest || '—'} → ${b.evidence?.window?.latest || '—'}`;
+      $('traceRuleRow').textContent = rule?.ruleId || 'none';
+      $('traceEvidenceRow').textContent = s.evidence;
+      $('traceSourceRow').textContent = b.evidence?.sources?.join(', ') || 'none';
+      $('traceVersionRow').textContent = `${b.trace?.engineVersion || '—'} · ${b.trace?.libraryVersion || '—'}`;
+      $('traceSourceNote').textContent = `Rendered from local state ${b.evidence?.stateId || '—'}; this is not a hosted history view.`;
+    };
     document.querySelectorAll('[data-case]').forEach(button => button.addEventListener('click', () => {
       const s = scenarios[button.dataset.case];
       document.querySelectorAll('[data-case]').forEach(b => b.classList.toggle('active', b === button));
       $('status').textContent = s.status; $('status').className = `status ${s.statusClass}`;
       $('metrics').innerHTML = s.metrics.map(([label,value]) => `<dt>${label}</dt><dd>${value}</dd>`).join('');
       $('fromTitle').textContent=s.from[0]; $('fromMeta').textContent=s.from[1]; $('toTitle').textContent=s.to[0]; $('toMeta').textContent=s.to[1]; $('reason').innerHTML=s.reason;
-      $('evidenceText').textContent=s.evidence; $('attachment').textContent=s.attachment; $('chatPrompt').textContent=s.prompt; $('chatHandoff').textContent=s.handoff;
+      $('evidenceText').textContent=s.evidence; $('attachment').textContent=s.attachment; $('chatPrompt').textContent=s.prompt; $('chatHandoff').textContent=s.handoff; renderTrace(s);
     }));
+    if (scenarios.live) document.querySelector('[data-case="live"]').click();
+    else renderTrace(scenarios.adjust);
   </script>
 </body>
 </html>

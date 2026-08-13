@@ -22,6 +22,7 @@
     "import:google-health-api": "node scripts/import-google-health-api.js",
     "import:local-evidence": "node scripts/import-local-evidence.js",
     "generate:home-scenarios": "node scripts/generate-home-scenario-fixtures.js",
+    "generate:home-live": "node scripts/generate-home-live-brief.js",
     "build:bundle": "node scripts/build-bundle.js",
     "release:manifest": "node scripts/generate-release-manifest.js",
     "release:validate": "node scripts/validate-release-manifest.js",

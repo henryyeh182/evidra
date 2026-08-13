@@ -35,6 +35,9 @@ test("decide_session with no evidence argument answers from the local export fol
     assert.equal(response.error, undefined);
     const payload = JSON.parse(response.result.content[0].text);
     assert.equal(payload.provenance.evidenceSource, "provided");
+    assert.match(payload.provenance.stateId, /^state_/);
+    assert.equal(payload.todayBrief.evidence.stateId, payload.provenance.stateId);
+    assert.equal(payload.todayBrief.date, "2026-07-22");
     assert.ok(["keep", "adjust", "substitute", "defer", "advance"].includes(payload.decision.type));
     assert.ok(payload.action.from);
     assert.ok(payload.signalCoverage);

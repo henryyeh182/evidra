@@ -252,6 +252,18 @@ test("provenance says what each session's load stood on", () => {
   });
 });
 
+test("workout and vendor provenance survives the evidence-to-context boundary", () => {
+  const recordedAt = "2026-07-27T06:00:00Z";
+  const context = evidenceToUserContext({
+    workouts: [{ id: "w1", type: "run", startedAt: recordedAt, durationMinutes: 30, trainingLoad: 12, source: "google_health_api", sourceRecordId: "dp1", metadata: { writer: "garmin", platform: "HEALTH_KIT" } }],
+    vendorAssessments: [{ id: "v1", source: "garmin", sourceRecordId: "dto1", type: "body_battery", value: 44, recordedAt, metadata: { writer: "garmin_connect" } }]
+  });
+  assert.equal(context.workouts[0].sourceRecordId, "dp1");
+  assert.equal(context.workouts[0].metadata.platform, "HEALTH_KIT");
+  assert.equal(context.vendorAssessments[0].sourceRecordId, "dto1");
+  assert.equal(context.vendorAssessments[0].metadata.writer, "garmin_connect");
+});
+
 test("a source that said nothing is not folded into one that said 'none'", () => {
   const summary = describeEvidence({
     workouts: [

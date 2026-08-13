@@ -281,6 +281,22 @@
         "evidenceSource"
       ]
     },
+    "todayBrief": {
+      "type": "object",
+      "description": "Compact UI-ready Today's Brief derived from this Decision, including state, action, evidence window and trace.",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "evidence": { "type": "object" },
+        "state": { "type": "object" },
+        "decision": { "type": "object" },
+        "action": { "type": "object" },
+        "reason": { "type": "array", "items": { "type": "string" } },
+        "confidence": { "type": "string" },
+        "trace": { "type": "object" }
+      },
+      "required": ["userId", "date", "evidence", "state", "decision", "action", "reason", "confidence", "trace"]
+    },
     "proposal": {
       "type": "object",
       "nullable": true,
