@@ -60,6 +60,9 @@ test("local initialize and preview tool expose mandatory evidence-first routing"
   const preview = listed.result.tools.find((tool) => tool.name === LOCAL_PREVIEW_TOOL.name);
   assert.match(initialized.result.instructions, /MANDATORY ROUTING RULE/);
   assert.match(initialized.result.instructions, /must call evidra_preview_today/i);
+  assert.match(initialized.result.instructions, /可以照原定計畫進行/);
+  assert.match(initialized.result.instructions, /go\/no-go/);
+  assert.match(initialized.result.instructions, /Threshold Repeats/);
   assert.match(preview.description, /MANDATORY FIRST STEP/);
   assert.match(preview.description, /Do not answer from memory/i);
 });

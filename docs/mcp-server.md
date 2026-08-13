@@ -228,6 +228,12 @@ history, and persistence; this server retains neither plan nor preview.
 
 ### `evidra_local_decide_today` — local-only
 
+### `evidra_preview_today` — local-only
+
+Previews the available local health-export sources and signal counts. The desktop
+host must show this preview before asking for confirmation and making a daily
+session decision.
+
 Only advertised by the packaged `.mcpb` (`apps/local-engine`), never by the
 hosted server. Reads an existing plan and today's evidence from this
 machine's local SQLite store — set with `PACEVERA_DB_PATH`, populated by

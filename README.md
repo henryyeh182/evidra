@@ -83,6 +83,7 @@ Decision intent and resulting action are separate fields. The same intent may pr
 | Tool | Description |
 |---|---|
 | `evidra_local_decide_today` | Decides an already-scheduled session from this machine's local SQLite store. Only in the packaged desktop `.mcpb`; the hosted server never advertises it. |
+| `evidra_preview_today` | Previews the selected local health-export evidence before a daily workout decision. Only in the packaged desktop `.mcpb`. |
 
 ## Evidence and output
 
