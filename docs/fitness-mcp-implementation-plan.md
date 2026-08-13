@@ -151,7 +151,7 @@ v0.5.0 已於 2026-08-11 發行，是目前公開可安裝的 Desktop MCPB 基�
 - `single_workout_rules@0.1.0` 仍是 draft；EVD-R-013～015 尚未接 runtime。`generate_workout` 目前沿用 Decision Engine `1.6.0` 與 active `base_rules` 做個人化，因此不得宣稱 draft package 已啟用。
 - Remote image build／smoke 尚未在本機完成，因 Docker daemon 不可用；local release gate 只能以 `--skip-remote` 執行。
 - `review:phase` 的 G2／G2b／G9 已修正並通過；目前機械 gate 13/13 全綠。
-- 2026-08-13 在可監聽 localhost 的環境重跑完整 `npm test`：548 tests 全數執行、0 fail、0 skip，含先前受 sandbox EPERM 限制的 HTTP／authorization／privacy integration tests，以及同日完成的 Evidence Flow Story 1～6（含 Story 4）新增 31 個 tests（見 §5「Phase 2 - Story 2 詳細分解」）。舊版本紀錄的「5 個未能執行、其餘 512 通過」是特定 sandbox 權限下的結果，不是固定上限；之後若在權限受限的環境重跑，數字可能再次不同，屆時應以當次實測為準，不沿用本行舊數字。
+- 2026-08-13 在可監聽 localhost 的環境重跑完整 `npm test`：550 tests 全數執行、0 fail、0 skip，含先前受 sandbox EPERM 限制的 HTTP／authorization／privacy integration tests、同日完成的 Evidence Flow Story 1～6（含 Story 4）新增 31 個 tests（見 §5「Phase 2 - Story 2 詳細分解」），以及之後 `agent/today-brief-continuity` 分支合併進 main 帶來的 2 個 tests。舊版本紀錄的「5 個未能執行、其餘 512 通過」是特定 sandbox 權限下的結果，不是固定上限；之後若在權限受限的環境重跑，數字可能再次不同，屆時應以當次實測為準，不沿用本行舊數字。
 - 公開 privacy URL、release review 與 MCPB archive／published review 仍需收尾；`docs/privacy-deployment-contract.md` 是目前的 canonical implementation contract，不等同於已完成 hosted privacy policy。
 - Outcome repository 已接入 user-controlled local engine：SQLite `outcome_records`、migration `0004`、`saveOutcome`／`listOutcomes` 與 local MCP injection 已完成；hosted MCP 仍維持 process-local/stateless，且尚未形成自動 Rule learning loop。
 - Durable decision trace 已接入同一個 user-controlled SQLite：`decision_records`、local `explain_decision` restart recovery 與 user scope test 已完成；backup、export、delete 尚待補齊。
