@@ -152,13 +152,13 @@ Pacevera is distributed as a Claude Desktop extension (`.mcpb`).
 3. In Claude Desktop, open **Settings -> Extensions** and install the file.
 4. Restart Claude Desktop after installing or upgrading the extension.
 
-The extension requires Node.js 20 or newer.
+The extension requires Node.js 20 or newer. Two capabilities need Node.js 22.5 or newer, which is where `node:sqlite` exists: the local plan decision (`evidra_local_decide_today`) and local persistence of decision traces and outcomes. On Node 20 or 21 the extension installs and runs, that tool is simply not offered, and reading your selected export folder for a decision is unaffected.
 
 Claude Desktop and other local MCP hosts are supported through the desktop extension. Mobile and hosted remote use cases require a remote deployment, which is not currently available for public use.
 
 ## Release status
 
-The current public release is `v0.5.0`, using Decision Engine `1.6.0` and `base_rules@1.1.0`. It includes ten public tools, bounded local continuity, personalized single-workout generation, decision traces, and package validation／dry-run／rollback. The Oura and WHOOP readers were implemented from their published API specifications and have not yet been validated against real responses; Apple Health, Garmin, Google Health, and Strava readers were developed from real export files.
+The current public release is `v0.5.2`, using Decision Engine `1.6.0` and `base_rules@1.1.0`. It includes ten public tools, bounded local continuity, personalized single-workout generation, decision traces, and package validation／dry-run／rollback. The Oura and WHOOP readers were implemented from their published API specifications and have not yet been validated against real responses; Apple Health, Garmin, Google Health, and Strava readers were developed from real export files.
 
 ## Support
 
@@ -169,9 +169,9 @@ The current public release is `v0.5.0`, using Decision Engine `1.6.0` and `base_
 
 Pacevera is proprietary software. See [LICENSE](LICENSE) for the applicable terms.
 
-## Pacevera v0.5.1
+## Pacevera v0.5.2
 
-The v0.5.1 Claude Desktop extension includes Today’s Brief, evidence-first local export reading, and plain-language tool titles. During installation, choose **Your exported health data folder** and select the parent folder containing any of these optional subfolders:
+The Claude Desktop extension includes Today’s Brief, evidence-first local export reading, and plain-language tool titles. During installation, choose **Your exported health data folder** and select the parent folder containing any of these optional subfolders:
 
 ```text
 Your exported health data folder/
@@ -181,4 +181,6 @@ Your exported health data folder/
 └── export_google_health/raw/   # Google Health API JSON
 ```
 
-Pacevera reads the selected folder locally; missing sources are reported as unavailable rather than guessed. The v0.5.1 MCPB checksum is published in the release notes.
+Pacevera reads the selected folder locally; missing sources are reported as unavailable rather than guessed. The MCPB checksum is published in the release notes.
+
+v0.5.2 adds the source chain to every reading — where Pacevera read it, and which app wrote it, so a Garmin figure synced into Apple Health is not reported as Apple Health's own. A reading whose writer the export does not name is reported as unnamed rather than guessed. Decisions also carry a small continuity record that a later conversation can hand back; Pacevera checks whether it still describes your current state and says so when it does not. It is checked, never merged: the decision always comes from the evidence held now.
