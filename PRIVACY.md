@@ -3,6 +3,11 @@
 **Effective date:** 2026-08-11
 **Applies to:** the Pacevera Fitness desktop extension, an MCP server that runs locally on the user's computer.
 
+> **The canonical privacy policy is <https://pacevera.com/privacy>.** That is the
+> address the extension's manifest points to and the one published for review.
+> This file is kept for readers who arrive through the repository; where the two
+> differ, the page on the site is the one that governs.
+
 ## Summary
 
 Pacevera receives health-related Evidence supplied by the calling AI host, computes the requested fitness decision, returns the result, and performs bounded local continuity when the caller supplies an identity. Raw Evidence is not retained as a health-history database.
