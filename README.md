@@ -132,9 +132,9 @@ The desktop extension has no runtime dependencies beyond the Node.js standard li
 
 The desktop extension processes the minimum health-related Evidence supplied by the caller for the requested fitness decision. It does not retain, sell, use for model training, or use Evidence for unrelated purposes.
 
-The extension does not make outbound network requests or persist Evidence. The AI host, operating system, imported files, and any host conversation history are outside the extension's control and are governed by their respective policies.
+The extension makes no outbound network requests and sends Evidence nowhere. On the user's own computer it does keep durable records: a bounded continuity record, and a local SQLite store holding the decisions it produced, the outcomes the user reports back, and the derived state behind them. Both are the user's to export or delete. The AI host, operating system, imported files, and any host conversation history are outside the extension's control and are governed by their respective policies.
 
-See [PRIVACY.md](PRIVACY.md) for the complete policy and deployment scope.
+See [PRIVACY.md](PRIVACY.md) for the complete policy and deployment scope, and [TERMS.md](TERMS.md) for the terms of use. The canonical versions are published at <https://pacevera.com/privacy> and <https://pacevera.com/terms>.
 
 Pacevera is not a medical device and does not provide medical advice. It is intended for general fitness and training purposes only.
 

@@ -1,83 +1,101 @@
-# Privacy Policy — Pacevera
+# Pacevera Privacy Policy
 
-**Effective date:** 2026-08-17
-**Applies to:** the Pacevera Fitness desktop extension, an MCP server that runs locally on the user's computer.
+This file is the GitHub public mirror of the canonical policy:
 
-> **The canonical privacy policy is <https://pacevera.com/privacy>.** That is the
-> address the extension's manifest points to and the one published for review.
-> This file is kept for readers who arrive through the repository; where the two
-> differ, the page on the site is the one that governs.
+`docs/privacy-policy.md` in the Pacevera source repository
 
-## Summary
+Canonical URL: https://pacevera.com/privacy  
+Version: 0.5.3-P0-1  
+Effective date: 2026-08-17
 
-Pacevera receives health-related Evidence supplied by the calling AI host, computes the requested fitness decision, and returns the result. No Pacevera server holds that Evidence; there is no Pacevera-operated database anywhere in this product. On the user's own computer the extension does keep two durable records — a bounded continuity record and a local store of the decisions it made, the outcomes the user reports back, and the derived state behind them. Both are described below, and both are the user's to export or delete.
+The mirror must remain byte-for-byte synchronized with `docs/privacy-policy.md` in the source repository. Run:
 
-## Evidence received
+```text
+npm run check:public-policy-sync
+```
 
-Pacevera does not retrieve data from health or training providers. It receives only the content that the calling AI host includes in an MCP tool call. This may include:
+The canonical policy is reproduced below.
 
-- Current recovery measurements, including sleep, heart-rate variability, resting heart rate, stress, and vendor-computed assessments such as readiness or Body Battery.
-- Recent training sessions, including session type, duration, and training load.
-- A scheduled session or caller-held training plan.
-- User-provided context, including injuries, available equipment, training goals, and available time.
+---
 
-These inputs are referred to as Evidence. The calling host determines what Evidence to submit for each request.
+# Pacevera Privacy Policy
 
-## Processing purpose and legal basis
+**Version:** 0.5.3-P0-1  
+**Effective date:** 2026-08-17  
+**Canonical URL:** https://pacevera.com/privacy  
+**GitHub mirror:** https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md
 
-Pacevera processes the minimum health-related Evidence required to compute the requested fitness decision. It does not retain, sell, use Evidence for model training, or use Evidence for unrelated purposes.
+This policy describes the Pacevera public preview and the planned local and remote deployment boundaries. B and C are not available public services until their release gates are complete.
 
-Receiving and computing on Evidence constitutes processing. The legal basis is performance of the computation initiated by the user. Where the submitted Evidence concerns health, the user provides consent by choosing to submit it for that computation. The user may withdraw consent by discontinuing submission of Evidence or removing the extension. There is no Pacevera-side record to erase after withdrawal, because Pacevera operates no service that received it; what remains is on the user's own computer, and the deletion routes for it are described under Retention and deletion.
+## Who is responsible
 
-## Desktop extension behavior
+Pacevera is operated by Henry Yeh. For privacy questions or requests, contact **evidramcp@icloud.com**. The final legal-entity and EU-representative details must be confirmed before a GDPR-facing production launch.
 
-The desktop extension is distributed as a compiled JavaScript bundle and runs locally. The following statements describe the behavior of the Pacevera process itself; they do not describe the AI host, operating system, imported files, backups, or other software on the user's computer.
+For the local desktop preview, Pacevera operates no server that receives your health data. You control the computer, files, backups, AI host, and operating-system services that may hold copies. For a future remote service, the controller/processor allocation, subprocessors, transfer safeguards, and DPA will be published before launch.
 
-- **No outbound network requests.** The desktop extension does not make HTTP, fetch, socket, or DNS requests and does not transmit Evidence to a provider or third party.
-- **Two local stores, both on the user's disk.** When a caller supplies an identity, the extension uses `writeFile` and `mkdir` to maintain a bounded, hashed-identity continuity record containing the minimum state needed for continuity. Separately, it opens a local SQLite store at `~/.pacevera/pacevera.sqlite` on first start, and records there the decisions it produced, the outcomes the user submits, and the derived state behind them — readiness, fatigue and training load, rather than the raw readings a device took. Its schema also has room for profile, injury, workout and health-metric records used by the local engine. Neither store holds provider tokens, and neither is transmitted anywhere.
-- **The SQLite store depends on the runtime.** `node:sqlite` exists from Node.js 22.5. On an older runtime that store cannot be opened, the extension continues without it, and nothing is written there.
-- **No runtime third-party dependencies.** The extension uses the Node.js standard library and does not include analytics, telemetry, crash reporting, or external SDKs.
-- **No model calls.** Decisions are produced by deterministic calculations and explicit rules. The extension does not send Evidence to an AI model provider.
-- **No accounts or provider tokens.** The extension does not provide Pacevera accounts, sign-in, or provider OAuth token storage. It does not authenticate to Apple Health, Garmin, Strava, Oura, WHOOP, or another provider.
+## What Pacevera does
 
-The repository also contains an HTTP transport for local or future remote deployments. That transport is separate from the desktop extension and is not covered by the desktop-specific statements above.
+Pacevera is a fitness decision-support engine. It normalizes activity and recovery evidence, computes derived fitness state, applies deterministic rules, and returns a decision such as keep, adjust, substitute, or defer. It is not a medical device and does not diagnose, treat, prevent, or clear a medical condition.
 
-## Retention and deletion
+## Deployment modes
 
-Pacevera operates no service that retains Evidence. The two local stores described above are retained on the user's own computer until the user deletes them: there is no hidden expiry and no background purge. Both are exportable — the continuity record in full, the SQLite store as a readable backup — and both support deleting one identity's complete data. Removing the files has the same effect. Deleting them does not delete copies held by the AI host, the provider, the operating system, imported files, or backups; those are deleted where they live.
+### Local desktop preview — v0.5.2, available now
 
-The AI host may retain the conversation containing the submitted Evidence and the returned decision under its own policy. The operating system, imported files, backups, and other local software may also retain copies outside Pacevera's control.
+The AI host sends a tool request over stdio. The bundle processes the supplied Evidence locally and does not fetch Apple Health, Google Health, Garmin, Strava, or other provider data. It does not send health Evidence to a Pacevera server or call an AI model of its own.
 
-If you believe Pacevera holds personal information about you, contact us using the address below. We will review the request and respond based on the information actually held.
+The local process may write:
 
-## Sharing
+- a hashed-identity continuity record under the configured local state directory; and
+- a SQLite store at `~/.pacevera/pacevera.sqlite` (or `PACEVERA_DB_PATH`) containing derived state, decision traces, outcomes, and schema capacity for user context and health-related records.
 
-The desktop extension does not share Evidence with third parties. It does not sell Evidence, use Evidence for advertising, provide Evidence to data brokers, or use Evidence for model training.
+These records remain on the user-controlled device until the owner exports or deletes them. Host conversations, imported files, operating-system backups, and copies held by the AI host or providers are outside Pacevera's control and must be deleted where they live.
 
-## Children
+### B — local Google Health connector — planned for v0.5.3
 
-Pacevera is not directed to children under 13. The desktop extension does not knowingly collect personal information from children.
+The user authorizes Google in their own browser. The local connector calls only the approved Google Health endpoints, normalizes the response into Evidence, and keeps the provider grant, encrypted token vault, fetched data, and local derived records on the user's device. Pacevera-operated servers are not in this path.
 
-## Medical disclaimer
+The connector will request only read scopes required for activity/fitness, sleep, resting heart rate, and HRV. Access and refresh tokens will not be returned to the AI host or written to logs. Disconnect, provider revoke, unlink, local deletion, export, and failed-sync behavior must be verified before B ships.
 
-Pacevera is intended for general fitness and training purposes. It is not a medical device and does not diagnose, treat, or provide medical advice. Consult a qualified professional regarding symptoms, injuries, or medical conditions.
+### C — remote MCP — planned and currently no-go
 
-## Future deployments
+In the planned remote path, the AI host or an authorized provider connector obtains data and sends the minimum Evidence needed for a decision to Pacevera over HTTPS MCP. Pacevera does not connect directly to Apple Health, Google Health, Garmin, or Strava in this path and must not receive provider refresh tokens.
 
-This policy applies to the local desktop extension only. A future hosted or remote deployment will require a separate published policy describing its data flows, retention, authorization infrastructure, and deletion procedures before that deployment is made available for public use.
+Remote retention, logs, traces, queues, backups, subprocessors, authorization-server records, international transfers, and deletion must be verified before C becomes public. The local preview's “nothing leaves your computer” statement does not apply to C.
 
-The minimum processing commitment stated above—minimum Evidence for the requested computation, no sale, no model training, and no unrelated use—will apply to future deployments unless a more protective policy is published.
+### User-controlled private / Enterprise deployment — future
 
-## Verifiable bundle boundary
+The user or organization controls the device, private network, NAS, or VPC. That operator controls retention, access, backups, deletion, provider credentials, DPA obligations, and data-subject request handling. A separate deployment policy and DPA are required.
 
-The shipped bundle contains no provider connector credentials or outbound data path. Searching the compiled bundle for `node:http`, `node:net`, `node:dgram`, or `fetch(` must find no outbound provider call, while `writeFile` and `mkdir` may appear because they implement the bounded local continuity record described above. `node:sqlite` appears exactly once — the single place the local store is opened, on the user's own disk.
+## Data categories, purposes, and recipients
+
+Depending on the deployment mode and the user's request, data may include:
+
+- activity and workout history, training load, sleep, HRV, resting heart rate, stress, and vendor assessments;
+- goals, planned workouts, injuries, constraints, and the user's natural-language question;
+- normalized Evidence, provenance, freshness, coverage, semantic fitness state, confidence, decision, rule basis, and reported outcome;
+- local OAuth credentials for B, stored only in the user-controlled credential boundary; and
+- operational metadata needed to provide or secure a remote service, if C is ever launched.
+
+Pacevera uses this information only to provide, secure, test, and improve the requested fitness decision service. It does not sell health data, use it for advertising, or use provider health data to train an AI model.
+
+Recipients depend on the mode: the user's AI host and operating system in local mode; the authorized Google endpoint in B; and the user's AI host, authorized infrastructure providers, and documented subprocessors in C. Provider copies remain governed by the provider's own policy.
+
+## AI host and provider boundaries
+
+Claude, ChatGPT, and other AI hosts may select data, retain conversations, create prompts, and apply their own account, model, training, and deletion policies. Pacevera does not control those copies. Review the AI host's policy before sending health data.
+
+Pacevera is not affiliated with, sponsored by, or a representative of Strava, Google, Apple, Garmin, Claude, ChatGPT, or any other provider. The Strava official MCP is a provider/host path; Pacevera does not copy the Strava connector or store Strava tokens.
+
+## Retention, export, deletion, and withdrawal
+
+Local records are retained until the user deletes them, unless a shorter product-specific period is stated. The user can export or delete owner-scoped local records and remove local files. Provider authorization must also be revoked at the provider; deleting a local token does not delete a provider's copy, and provider revocation does not automatically delete local files or AI-host conversations.
+
+For a future remote service, the published policy will identify each application, log, trace, queue, backup, authorization-server, and subprocessor retention period and deletion route. No remote service is currently authorized to claim that this has been completed.
+
+## Rights and requests
+
+Where GDPR applies, users may have rights of access, rectification, erasure, restriction, portability, and objection, subject to applicable exceptions. Send requests to **evidramcp@icloud.com** with enough information to identify the relevant deployment, without sending health data unnecessarily. Requests concerning an AI host, provider, operating-system backup, or user-controlled private deployment must be directed to that operator as well.
 
 ## Changes
 
-Material changes will be published in this file with a new effective date. The public repository commit history records previous versions of this policy.
-
-## Contact
-
-Privacy questions and requests: **evidramcp@icloud.com**
-
-You may also [open a GitHub issue](https://github.com/henryyeh182/evidra/issues), but issues are public. Use email for private requests.
+The canonical policy is maintained in the Pacevera source repository at `docs/privacy-policy.md`. `PRIVACY.md` is a synchronized GitHub mirror, and `docs/privacy.html` is the website rendering. The version and effective date must be updated together; the policy-sync check must pass before release.
