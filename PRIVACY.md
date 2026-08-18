@@ -5,8 +5,8 @@ This file is the GitHub public mirror of the canonical policy:
 `docs/privacy-policy.md` in the Pacevera source repository
 
 Canonical URL: https://pacevera.com/privacy  
-Version: 0.5.3-P0-2
-Effective date: 2026-08-18
+Version: 0.5.3-P0-3  
+Effective date: 2026-08-18  
 
 The mirror must remain byte-for-byte synchronized with `docs/privacy-policy.md` in the source repository. Run:
 
@@ -20,8 +20,8 @@ The canonical policy is reproduced below.
 
 # Pacevera Privacy Policy
 
-**Version:** 0.5.3-P0-2
-**Effective date:** 2026-08-18
+**Version:** 0.5.3-P0-3  
+**Effective date:** 2026-08-18  
 **Canonical URL:** https://pacevera.com/privacy  
 **GitHub mirror:** https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md
 
@@ -57,6 +57,13 @@ fitness state, decision traces, and reported outcomes as applicable; they do not
 hosted service into a health-data store. The user controls export and deletion of these
 local records, including operating-system backups and other copies outside Pacevera.
 
+Three further tables are defined in the repository's migrations but are **not created by
+any shipped release**: `connector_accounts` (connector authorization state and scope),
+`raw_provider_events` (raw provider payloads), and `normalized_events` (normalized
+events). The shipped desktop engine creates only the twelve tables listed above. These
+three are disclosed here in advance so that the release which first creates them cannot
+do so silently; until then, no Pacevera release writes a raw provider payload to disk.
+
 These records remain on the user-controlled device until the owner exports or deletes them. Host conversations, imported files, operating-system backups, and copies held by the AI host or providers are outside Pacevera's control and must be deleted where they live.
 
 ### B — local Google Health connector — planned for v0.5.3
@@ -65,11 +72,13 @@ The user authorizes Google in their own browser. The local connector calls only 
 
 The connector will request only read scopes required for activity/fitness, sleep, resting heart rate, and HRV. Access and refresh tokens will not be returned to the AI host or written to logs. Disconnect, provider revoke, unlink, local deletion, export, and failed-sync behavior must be verified before B ships.
 
-### C — remote MCP — planned and currently no-go
+### C — user-controlled mobile path — planned
 
-In the planned remote path, the AI host or an authorized provider connector obtains data and sends the minimum Evidence needed for a decision to Pacevera over HTTPS MCP. Pacevera does not connect directly to Apple Health, Google Health, Garmin, or Strava in this path and must not receive provider refresh tokens.
+The planned mobile path reaches a Pacevera engine running on the user's own machine through a reviewed pairing and transport channel. The plan, continuity, outcomes, provider credentials, and Evidence remain in that user-controlled environment; the machine must be running. Pacevera does not connect directly to Apple Health, Google Health, Garmin, or Strava in this path and must not receive provider refresh tokens.
 
-Remote retention, logs, traces, queues, backups, subprocessors, authorization-server records, international transfers, and deletion must be verified before C becomes public. The local preview's “nothing leaves your computer” statement does not apply to C.
+The statement that the operator receives nothing is conditional on the selected channel preserving end-to-end confidentiality. If a tunnel, relay, reverse proxy, or other third party terminates TLS and can read Evidence, that party is a recipient and its controller/processor role, retention, access, transfers, and deletion must be disclosed and reviewed. Mobile AI-host compatibility and the exact TLS termination point remain unverified. A Pacevera-operated hosted remote service remains no-go; if introduced later, it requires a separate retention, logging, subprocessor, transfer, and deletion release gate.
+
+If `hosted-remote` is later activated, this policy will be amended before launch to identify the authorization server, client-registration records, identifiers and any per-MAU activity records, subprocessors, international transfers, and retention/deletion periods for Evidence, logs, traces, queues, backups, and authorization records. That activation also requires a hosted DPIA and an independent remote-image/outbound release gate; the current no-go status must not be read as an available hosted service.
 
 ### User-controlled private / Enterprise deployment — future
 
