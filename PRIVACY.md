@@ -112,7 +112,7 @@ For a future remote service, the published policy will identify each application
 
 ## Rights and requests
 
-Where GDPR applies, users may have rights of access, rectification, erasure, restriction, portability, and objection, subject to applicable exceptions. Send requests to **evidramcp@icloud.com** with enough information to identify the relevant deployment, without sending health data unnecessarily. Requests concerning an AI host, provider, operating-system backup, or user-controlled private deployment must be directed to that operator as well.
+Where GDPR applies, users may have rights of access, rectification, erasure, restriction, portability, and objection, subject to applicable exceptions. Send requests to **support@pacevera.com** with enough information to identify the relevant deployment, without sending health data unnecessarily. Requests concerning an AI host, provider, operating-system backup, or user-controlled private deployment must be directed to that operator as well.
 
 ## Changes
 
