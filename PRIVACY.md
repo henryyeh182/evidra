@@ -5,8 +5,8 @@ This file is the GitHub public mirror of the canonical policy:
 `docs/privacy-policy.md` in the Pacevera source repository
 
 Canonical URL: https://pacevera.com/privacy  
-Version: 0.5.3-P0-1  
-Effective date: 2026-08-17
+Version: 0.5.3-P0-2
+Effective date: 2026-08-18
 
 The mirror must remain byte-for-byte synchronized with `docs/privacy-policy.md` in the source repository. Run:
 
@@ -20,8 +20,8 @@ The canonical policy is reproduced below.
 
 # Pacevera Privacy Policy
 
-**Version:** 0.5.3-P0-1  
-**Effective date:** 2026-08-17  
+**Version:** 0.5.3-P0-2
+**Effective date:** 2026-08-18
 **Canonical URL:** https://pacevera.com/privacy  
 **GitHub mirror:** https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md
 
@@ -47,6 +47,15 @@ The local process may write:
 
 - a hashed-identity continuity record under the configured local state directory; and
 - a SQLite store at `~/.pacevera/pacevera.sqlite` (or `PACEVERA_DB_PATH`) containing derived state, decision traces, outcomes, and schema capacity for user context and health-related records.
+
+The local SQLite store is opened through `node:sqlite` and is durable user-controlled state.
+Its current schema discloses these tables explicitly: `users`, `goals`, `preferences`,
+`injuries`, `equipment`, `workouts`, `health_metrics`, `semantic_fitness_states`, `plans`,
+`planned_workouts`, `decision_records`, and `outcome_records`. These tables contain user
+context, constraints, planned and completed workouts, health-related metrics, derived
+fitness state, decision traces, and reported outcomes as applicable; they do not turn the
+hosted service into a health-data store. The user controls export and deletion of these
+local records, including operating-system backups and other copies outside Pacevera.
 
 These records remain on the user-controlled device until the owner exports or deletes them. Host conversations, imported files, operating-system backups, and copies held by the AI host or providers are outside Pacevera's control and must be deleted where they live.
 
