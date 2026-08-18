@@ -5,8 +5,8 @@ This file is the GitHub public mirror of the canonical Terms:
 `docs/terms-of-use.md` in the Pacevera source repository
 
 Canonical URL: https://pacevera.com/terms  
-Version: 0.5.3-P0-1  
-Effective date: 2026-08-17
+Version: 0.5.3-P0-2
+Effective date: 2026-08-18
 
 The mirror must remain byte-for-byte synchronized with `docs/terms-of-use.md` in the source repository. Run:
 
@@ -20,14 +20,14 @@ The canonical Terms are reproduced below.
 
 # Pacevera Terms of Use
 
-**Version:** 0.5.3-P0-1  
-**Effective date:** 2026-08-17  
+**Version:** 0.5.3-P0-2
+**Effective date:** 2026-08-18
 **Canonical URL:** https://pacevera.com/terms  
 **GitHub mirror:** https://github.com/henryyeh182/evidra/blob/main/TERMS.md
 
 These Terms govern use of the Pacevera public preview and any future Pacevera deployment that expressly adopts them. B and C are not public services until their release gates are complete.
 
-These Terms are an agreement between you and **Henry Yeh, who operates Pacevera** (the "Service"). There is no separate legal entity, no account, and no charge for the public preview. Contact for these Terms: **evidramcp@icloud.com**.
+These Terms are an agreement between you and **Henry Yeh, an individual operator based in Taiwan, operating under the Pacevera name** (the "Service"). Pacevera is not a separate incorporated legal entity. There is no account and no charge for the public preview. Contact for these Terms: **evidramcp@icloud.com**. A registered service address and any successor legal entity will be published before a paid or production launch.
 
 ## 1. What Pacevera provides
 

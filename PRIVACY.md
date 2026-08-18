@@ -29,7 +29,7 @@ This policy describes the Pacevera public preview and the planned local and remo
 
 ## Who is responsible
 
-Pacevera is operated by Henry Yeh. For privacy questions or requests, contact **evidramcp@icloud.com**. The final legal-entity and EU-representative details must be confirmed before a GDPR-facing production launch.
+For the current public preview, the controller/operator is **Henry Yeh, an individual operator based in Taiwan**, operating under the Pacevera name. Pacevera is not a separate incorporated legal entity. For privacy questions or requests, contact **evidramcp@icloud.com**. A registered service address and any successor legal entity will be published before a paid or production launch.
 
 For the local desktop preview, Pacevera operates no server that receives your health data. You control the computer, files, backups, AI host, and operating-system services that may hold copies. For a future remote service, the controller/processor allocation, subprocessors, transfer safeguards, and DPA will be published before launch.
 
