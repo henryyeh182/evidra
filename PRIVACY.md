@@ -68,7 +68,7 @@ These records remain on the user-controlled device until the owner exports or de
 
 ### B — local Google Health connector — planned for v0.5.3
 
-The user authorizes Google in their own browser. The local connector calls only the approved Google Health endpoints, normalizes the response into Evidence, and keeps the provider grant, encrypted token vault, fetched data, and local derived records on the user's device. Pacevera-operated servers are not in this path.
+The user authorizes Google in their own browser. The local connector calls only the approved Google Health endpoints, normalizes the response into Evidence, and keeps the provider grant, encrypted token vault, fetched data, and local derived records on the user's device. The planned QR-assisted path may use an authorization-only relay for the phone handoff; that relay will handle only a short-lived transaction, OAuth state, and authorization code until the local client claims it, and will not receive Evidence, raw Google Health responses, health fields, tokens, or the PKCE verifier. The QR path is not available until its separate deployment, privacy, and end-to-end gates pass.
 
 The connector will request only read scopes required for activity/fitness, sleep, resting heart rate, and HRV. Access and refresh tokens will not be returned to the AI host or written to logs. Disconnect, provider revoke, unlink, local deletion, export, and failed-sync behavior must be verified before B ships.
 
