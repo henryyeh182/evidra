@@ -152,7 +152,7 @@ Pacevera is distributed as a Claude Desktop extension (`.mcpb`).
 3. In Claude Desktop, open **Settings -> Extensions** and install the file.
 4. Restart Claude Desktop after installing or upgrading the extension.
 
-The extension requires Node.js 20 or newer. Two capabilities need Node.js 22.5 or newer, which is where `node:sqlite` exists: the local plan decision (`evidra_local_decide_today`) and local persistence of decision traces and outcomes. On Node 20 or 21 the extension installs and runs, that tool is simply not offered, and reading your selected export folder for a decision is unaffected.
+The extension requires Node.js 20 or newer. Local persistence of decision traces and outcomes needs Node.js 22.5 or newer, which is where `node:sqlite` exists; on Node 20 or 21 the extension installs and runs without it, and reading your selected export folder for a decision is unaffected. The local plan decision is offered only once this machine holds a plan and its context, so a fresh installation does not list it — that depends on what is stored, not on the Node version.
 
 Claude Desktop and other local MCP hosts are supported through the desktop extension. Mobile and hosted remote use cases require a remote deployment, which is not currently available for public use.
 
