@@ -191,11 +191,13 @@ authorization handoff — never your health data, your tokens, or the PKCE secre
 that completes the exchange on your machine. Whichever route you finish cancels
 the other.
 
-**This connection is currently limited to invited test accounts.** Pacevera's
-Google app is still in Google's `Testing` status, so Google itself refuses the
-connection for anyone not on the project's test-user list. Reading your own
-exported folders, supplying evidence through your AI host, and every decision
-tool are unaffected. Lifting the limit requires Google's verification review for
-the health scopes, which is not complete.
+**This connection is capped at 100 accounts, and Google will warn you that it
+has not verified the app.** Pacevera's Google app moved out of `Testing` into
+`Production` on 2026-08-20, so an invitation is no longer required — but
+Google's verification review for the health scopes is not complete. Until it is,
+Google shows its own "Google hasn't verified this app" screen before you can
+consent, and at most 100 accounts can authorize the connection, counted over the
+app's entire lifetime. Reading your own exported folders, supplying evidence
+through your AI host, and every decision tool are unaffected.
 
 v0.5.2 added the source chain to every reading — where Pacevera read it, and which app wrote it, so a Garmin figure synced into Apple Health is not reported as Apple Health's own. A reading whose writer the export does not name is reported as unnamed rather than guessed. Decisions also carry a small continuity record that a later conversation can hand back; Pacevera checks whether it still describes your current state and says so when it does not. It is checked, never merged: the decision always comes from the evidence held now.
