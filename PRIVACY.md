@@ -5,8 +5,8 @@ This file is the GitHub public mirror of the canonical policy:
 `docs/privacy-policy.md` in the Pacevera source repository
 
 Canonical URL: https://pacevera.com/privacy  
-Version: 0.5.3-P0-7  
-Effective date: 2026-08-19  
+Version: 0.5.3-P0-8  
+Effective date: 2026-08-20  
 
 The mirror must remain byte-for-byte synchronized with `docs/privacy-policy.md` in the source repository. Run:
 
@@ -20,8 +20,8 @@ The canonical policy is reproduced below.
 
 # Pacevera Privacy Policy
 
-**Version:** 0.5.3-P0-7
-**Effective date:** 2026-08-19
+**Version:** 0.5.3-P0-8
+**Effective date:** 2026-08-20
 **Canonical URL:** https://pacevera.com/privacy  
 **GitHub mirror:** https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md
 
@@ -77,6 +77,8 @@ The refresh token is held in an encrypted vault on the user's device, and that v
 The connector release carries two Google OAuth client registrations, because the two entrances require different ones, and each carries its client secret. For the browser/loopback client this is Google's documented model for an installed application, where the secret is expressly not treated as confidential. Google gives no such assurance for the QR client, so Pacevera states it plainly: that secret is readable by anyone who downloads the release and must be assumed public. It is not what protects the connection. Every authorization uses a fresh PKCE verifier that never leaves the user's computer, and the QR client accepts exactly one redirect address, so a copy of the secret cannot send an authorization anywhere else. The risk it does carry is that someone could use these identifiers to present a Google consent screen bearing Pacevera's name; start a connection only from Pacevera itself.
 
 The connector requests only read scopes required for activity/fitness, sleep, resting heart rate, and HRV. Access and refresh tokens are not returned to the AI host or written to logs. Disconnect, provider revoke, unlink, local deletion, export, and failed-sync behavior are covered by the local connector contract and tests.
+
+Pacevera's use and transfer of information received from Google APIs to any other app will adhere to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements. Google Health data is used only to provide the training-decision features the user asked for; it is not sold, not used for advertising, not used to train any model, and not transferred to anyone except at the user's direction or as required by law. No human reads it: it is fetched by the user's own machine, normalized there, and stored in a folder the user chose.
 
 ### C — user-controlled mobile path — planned
 
