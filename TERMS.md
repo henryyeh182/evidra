@@ -5,8 +5,8 @@ This file is the GitHub public mirror of the canonical Terms:
 `docs/terms-of-use.md` in the Pacevera source repository
 
 Canonical URL: https://pacevera.com/terms  
-Version: 0.5.3-P0-2
-Effective date: 2026-08-18
+Version: 0.5.4-P0-3
+Effective date: 2026-08-20
 
 The mirror must remain byte-for-byte synchronized with `docs/terms-of-use.md` in the source repository. Run:
 
@@ -20,14 +20,14 @@ The canonical Terms are reproduced below.
 
 # Pacevera Terms of Use
 
-**Version:** 0.5.3-P0-2
-**Effective date:** 2026-08-18
+**Version:** 0.5.4-P0-3
+**Effective date:** 2026-08-20
 **Canonical URL:** https://pacevera.com/terms  
 **GitHub mirror:** https://github.com/henryyeh182/evidra/blob/main/TERMS.md
 
 These Terms govern use of the Pacevera public preview and any future Pacevera deployment that expressly adopts them. B and C are not public services until their release gates are complete.
 
-These Terms are an agreement between you and **Henry Yeh, an individual operator based in Taiwan, operating under the Pacevera name** (the "Service"). Pacevera is not a separate incorporated legal entity. There is no account and no charge for the public preview. Contact for these Terms: **evidramcp@icloud.com**. A registered service address and any successor legal entity will be published before a paid or production launch.
+These Terms are an agreement between you and **Henry Yeh, an individual operator based in Taiwan, operating under the Pacevera name** (the "Service"). Pacevera is not a separate incorporated legal entity. There is no account and no charge for the public preview. Contact for these Terms: **support@pacevera.com**. A registered service address and any successor legal entity will be published before a paid or production launch.
 
 ## 1. What Pacevera provides
 
@@ -99,6 +99,6 @@ We may update these Terms with a new version and effective date; the public repo
 
 We may transfer these Terms to a successor entity that takes over the Service, including a company later formed to operate it.
 
-Questions about these Terms: **evidramcp@icloud.com**. Issues opened on GitHub are public — use email for anything private, and do not send health data.
+Questions about these Terms: **support@pacevera.com**. Issues opened on GitHub are public — use email for anything private, and do not send health data.
 
 These Terms are a product document, not legal advice. The liability language, the age threshold, the EU/EEA/UK exclusion, and the governing-law clause require legal review before a commercial launch.

@@ -5,7 +5,7 @@ This file is the GitHub public mirror of the canonical policy:
 `docs/privacy-policy.md` in the Pacevera source repository
 
 Canonical URL: https://pacevera.com/privacy  
-Version: 0.5.3-P0-8  
+Version: 0.5.4-P0-9  
 Effective date: 2026-08-20  
 
 The mirror must remain byte-for-byte synchronized with `docs/privacy-policy.md` in the source repository. Run:
@@ -20,12 +20,12 @@ The canonical policy is reproduced below.
 
 # Pacevera Privacy Policy
 
-**Version:** 0.5.3-P0-8
+**Version:** 0.5.4-P0-9
 **Effective date:** 2026-08-20
 **Canonical URL:** https://pacevera.com/privacy  
 **GitHub mirror:** https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md
 
-This policy describes the Pacevera public preview, the v0.5.3 local Google Health connector, and the planned remote deployment boundary. C is not an available public service until its separate release gates are complete.
+This policy describes the Pacevera public preview, the v0.5.4 local Google Health connector, and the planned remote deployment boundary. C is not an available public service until its separate release gates are complete.
 
 ## Who is responsible
 
@@ -39,7 +39,7 @@ Pacevera is a fitness decision-support engine. It normalizes activity and recove
 
 ## Deployment modes
 
-### Local desktop preview — v0.5.3, available in the connector release
+### Local desktop preview — v0.5.4, available in the connector release
 
 The AI host sends a tool request over stdio. The bundle processes the supplied Evidence locally. When the user has not connected Google Health, it does not fetch Apple Health, Google Health, Garmin, Strava, or other provider data. It does not send health Evidence to a Pacevera server or call an AI model of its own.
 
@@ -66,7 +66,7 @@ do so silently; until then, no Pacevera release writes a raw provider payload to
 
 These records remain on the user-controlled device until the owner exports or deletes them. Host conversations, imported files, operating-system backups, and copies held by the AI host or providers are outside Pacevera's control and must be deleted where they live.
 
-### B — local Google Health connector — v0.5.3
+### B — local Google Health connector — v0.5.4
 
 The user authorizes Google in their own browser. The same-device path uses a one-shot loopback callback on `127.0.0.1`, calls only `accounts.google.com`, `oauth2.googleapis.com`, and `health.googleapis.com`, normalizes the response into Evidence, and keeps the provider grant, encrypted token vault, fetched data, and local derived records on the user's device. The optional QR-assisted path uses an authorization-only Pacevera relay to let a phone complete the same Google consent: that relay handles only a short-lived transaction, OAuth state, and authorization code until the local client claims it. It does not receive Evidence, raw Google Health responses, health fields, access or refresh tokens, or the PKCE verifier; token exchange remains on the user's computer. Relay transactions are memory-only, TTL-bounded, deleted after claim/denial/expiry/restart, and excluded from request-body and query logging.
 

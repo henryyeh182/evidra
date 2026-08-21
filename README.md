@@ -163,7 +163,7 @@ The current public release is `v0.5.4`, using Decision Engine `1.8.0` and `base_
 ## Support
 
 - Bug reports and technical questions: [GitHub Issues](../../issues)
-- Privacy requests: **evidramcp@icloud.com**
+- Privacy requests: **support@pacevera.com**
 
 ## License
 
