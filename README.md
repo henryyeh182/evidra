@@ -158,7 +158,7 @@ Claude Desktop and other local MCP hosts are supported through the desktop exten
 
 ## Release status
 
-The current public release is `v0.5.4`, using Decision Engine `1.8.0` and `base_rules@1.2.0`. It includes ten public tools, bounded local continuity, personalized single-workout generation, decision traces, package validation／dry-run／rollback, and an optional local Google Health connection. The Oura and WHOOP readers were implemented from their published API specifications and have not yet been validated against real responses; Apple Health, Garmin, Google Health, and Strava readers were developed from real export files.
+The current public release is `v0.5.5`, using Decision Engine `1.8.0` and `base_rules@1.3.0`. It includes ten public tools, bounded local continuity, personalized single-workout generation, decision traces, package validation／dry-run／rollback, and an optional local Google Health connection. The Oura and WHOOP readers were implemented from their published API specifications and have not yet been validated against real responses; Apple Health, Garmin, Google Health, and Strava readers were developed from real export files.
 
 ## Support
 
@@ -169,7 +169,7 @@ The current public release is `v0.5.4`, using Decision Engine `1.8.0` and `base_
 
 Pacevera is proprietary software. See [LICENSE](LICENSE) for the applicable terms.
 
-## Pacevera v0.5.4
+## Pacevera v0.5.5
 
 The Claude Desktop extension includes Today’s Brief, evidence-first local export reading, and plain-language tool titles. During installation, choose **Your exported health data folder** and select the parent folder containing any of these optional subfolders:
 
@@ -178,18 +178,27 @@ Your exported health data folder/
 ├── export_apple_health/        # Apple Health export.xml
 ├── export_garmin/              # Garmin Export Your Data / DI_CONNECT
 ├── export_strava/              # Strava activities.csv
-└── export_google_health/raw/   # Google Health API JSON
+└── export_google_health/       # raw/ for JSON you pulled yourself,
+                                # normalized/ for what the connection wrote
 ```
 
 Pacevera reads the selected folder locally; missing sources are reported as unavailable rather than guessed. The MCPB checksum is published in the release notes.
 
-v0.5.4 includes an optional Google Health connection that runs on your computer. You
+v0.5.5 includes an optional Google Health connection that runs on your computer. You
 approve it in your own browser, or by scanning a QR code with a phone; the
 browser route reaches Google with no Pacevera server anywhere in its path, and
 the QR route passes through a Pacevera relay that handles only a short-lived
 authorization handoff — never your health data, your tokens, or the PKCE secret
 that completes the exchange on your machine. Whichever route you finish cancels
 the other.
+
+In v0.5.5 the connection normalizes each Google Health response in memory and
+writes only the resulting evidence; the provider response itself is never
+written to disk. You can also disconnect from inside the app: it revokes the
+grant at Google, deletes the stored credential, deletes the evidence earlier
+syncs wrote, and clears the derived records from the local store. Files you
+placed in the folder yourself are reported back for you to delete, never
+removed for you.
 
 **This connection is capped at 100 accounts, and Google will warn you that it
 has not verified the app.** Pacevera's Google app moved out of `Testing` into

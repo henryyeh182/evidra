@@ -5,8 +5,8 @@ This file is the GitHub public mirror of the canonical policy:
 `docs/privacy-policy.md` in the Pacevera source repository
 
 Canonical URL: https://pacevera.com/privacy  
-Version: 0.5.4-P0-9  
-Effective date: 2026-08-20  
+Version: 0.5.5-P0-1  
+Effective date: 2026-08-23  
 
 The mirror must remain byte-for-byte synchronized with `docs/privacy-policy.md` in the source repository. Run:
 
@@ -20,12 +20,12 @@ The canonical policy is reproduced below.
 
 # Pacevera Privacy Policy
 
-**Version:** 0.5.4-P0-9
-**Effective date:** 2026-08-20
+**Version:** 0.5.5-P0-1
+**Effective date:** 2026-08-23
 **Canonical URL:** https://pacevera.com/privacy  
 **GitHub mirror:** https://github.com/henryyeh182/evidra/blob/main/PRIVACY.md
 
-This policy describes the Pacevera public preview, the v0.5.4 local Google Health connector, and the planned remote deployment boundary. C is not an available public service until its separate release gates are complete.
+This policy describes the Pacevera public preview, the v0.5.5 local Google Health connector, and the planned remote deployment boundary. C is not an available public service until its separate release gates are complete.
 
 ## Who is responsible
 
@@ -39,7 +39,7 @@ Pacevera is a fitness decision-support engine. It normalizes activity and recove
 
 ## Deployment modes
 
-### Local desktop preview — v0.5.4, available in the connector release
+### Local desktop preview — v0.5.5, available in the connector release
 
 The AI host sends a tool request over stdio. The bundle processes the supplied Evidence locally. When the user has not connected Google Health, it does not fetch Apple Health, Google Health, Garmin, Strava, or other provider data. It does not send health Evidence to a Pacevera server or call an AI model of its own.
 
@@ -66,13 +66,15 @@ do so silently; until then, no Pacevera release writes a raw provider payload to
 
 These records remain on the user-controlled device until the owner exports or deletes them. Host conversations, imported files, operating-system backups, and copies held by the AI host or providers are outside Pacevera's control and must be deleted where they live.
 
-### B — local Google Health connector — v0.5.4
+### B — local Google Health connector — v0.5.5
 
-The user authorizes Google in their own browser. The same-device path uses a one-shot loopback callback on `127.0.0.1`, calls only `accounts.google.com`, `oauth2.googleapis.com`, and `health.googleapis.com`, normalizes the response into Evidence, and keeps the provider grant, encrypted token vault, fetched data, and local derived records on the user's device. The optional QR-assisted path uses an authorization-only Pacevera relay to let a phone complete the same Google consent: that relay handles only a short-lived transaction, OAuth state, and authorization code until the local client claims it. It does not receive Evidence, raw Google Health responses, health fields, access or refresh tokens, or the PKCE verifier; token exchange remains on the user's computer. Relay transactions are memory-only, TTL-bounded, deleted after claim/denial/expiry/restart, and excluded from request-body and query logging.
+The user authorizes Google in their own browser. The same-device path uses a one-shot loopback callback on `127.0.0.1`, calls only `accounts.google.com`, `oauth2.googleapis.com`, and `health.googleapis.com`, normalizes the response into Evidence before anything is written, and keeps the provider grant, encrypted token vault, normalized evidence, and local derived records on the user's device. The Google Health response itself is not written to disk: it is normalized in memory and only the resulting evidence is stored, in a folder that therefore holds nothing but files Pacevera wrote. Files the user placed in that folder themselves are read but never rewritten or deleted by Pacevera. The optional QR-assisted path uses an authorization-only Pacevera relay to let a phone complete the same Google consent: that relay handles only a short-lived transaction, OAuth state, and authorization code until the local client claims it. It does not receive Evidence, raw Google Health responses, health fields, access or refresh tokens, or the PKCE verifier; token exchange remains on the user's computer. Relay transactions are memory-only, TTL-bounded, deleted after claim/denial/expiry/restart, and excluded from request-body and query logging.
 
 Both entrances are offered at the same time and the user chooses: a link this computer opens in its own browser, and, in releases that include it, a QR code for a phone. The browser link uses the loopback callback and has no Pacevera-operated server anywhere in its path. The QR code uses the authorization-only relay described above. Completing either one finishes the connection and cancels the other, and a relay that is unavailable costs only the QR convenience.
 
 The refresh token is held in an encrypted vault on the user's device, and that vault's key is held by the operating system's own credential store — Keychain on macOS, the Secret Service on Linux, Credential Manager on Windows. Reaching those stores requires Pacevera to run the operating system's credential tool as a short, fixed command with no caller-supplied arguments. This happens only during connect, sync, and disconnect; it exchanges only the vault key; and neither the key nor any health Evidence is written to a log or leaves the machine. A release without the Google connector cannot start a process at all, which is checkable in the shipped file.
+
+Disconnecting is offered in the product, not only at Google. It revokes the grant at Google, deletes the stored credential, deletes the evidence previous syncs wrote, and clears the derived Google records from the local store. Two things it cannot do are stated rather than implied: files the user placed in the export folder themselves cannot be told apart from ones a sync wrote and are reported for the user to delete, and an installation running without the local store is told so rather than being told records were cleared. Host conversations, provider copies, and operating-system backups remain outside Pacevera's control.
 
 The connector release carries two Google OAuth client registrations, because the two entrances require different ones, and each carries its client secret. For the browser/loopback client this is Google's documented model for an installed application, where the secret is expressly not treated as confidential. Google gives no such assurance for the QR client, so Pacevera states it plainly: that secret is readable by anyone who downloads the release and must be assumed public. It is not what protects the connection. Every authorization uses a fresh PKCE verifier that never leaves the user's computer, and the QR client accepts exactly one redirect address, so a copy of the secret cannot send an authorization anywhere else. The risk it does carry is that someone could use these identifiers to present a Google consent screen bearing Pacevera's name; start a connection only from Pacevera itself.
 
