@@ -158,7 +158,7 @@ Claude Desktop and other local MCP hosts are supported through the desktop exten
 
 ## Release status
 
-The current public release is `v0.5.6`, using Decision Engine `1.9.0` and `base_rules@1.4.0`. It includes ten public tools, bounded local continuity, personalized single-workout generation, decision traces, package validation／dry-run／rollback, and an optional local Google Health connection. The Oura and WHOOP readers were implemented from their published API specifications and have not yet been validated against real responses; Apple Health, Garmin, Google Health, and Strava readers were developed from real export files.
+The current public release is `v0.5.7`, using Decision Engine `1.10.0` and `base_rules@1.5.0`. It includes ten public tools, bounded local continuity, personalized single-workout generation, decision traces, package validation／dry-run／rollback, and an optional local Google Health connection. The Oura and WHOOP readers were implemented from their published API specifications and have not yet been validated against real responses; Apple Health, Garmin, Google Health, and Strava readers were developed from real export files.
 
 ## Support
 
@@ -169,7 +169,7 @@ The current public release is `v0.5.6`, using Decision Engine `1.9.0` and `base_
 
 Pacevera is proprietary software. See [LICENSE](LICENSE) for the applicable terms.
 
-## Pacevera v0.5.6
+## Pacevera v0.5.7
 
 The Claude Desktop extension includes Today’s Brief, evidence-first local export reading, and plain-language tool titles. During installation, choose **Your exported health data folder** and select the parent folder containing any of these optional subfolders:
 
@@ -184,7 +184,7 @@ Your exported health data folder/
 
 Pacevera reads the selected folder locally; missing sources are reported as unavailable rather than guessed. The MCPB checksum is published in the release notes.
 
-v0.5.6 includes an optional Google Health connection that runs on your computer. You
+v0.5.7 includes an optional Google Health connection that runs on your computer. You
 approve it in your own browser, or by scanning a QR code with a phone; the
 browser route reaches Google with no Pacevera server anywhere in its path, and
 the QR route passes through a Pacevera relay that handles only a short-lived
@@ -192,7 +192,7 @@ authorization handoff — never your health data, your tokens, or the PKCE secre
 that completes the exchange on your machine. Whichever route you finish cancels
 the other.
 
-In v0.5.6 the connection normalizes each Google Health response in memory and
+In v0.5.7 the connection normalizes each Google Health response in memory and
 writes only the resulting evidence; the provider response itself is never
 written to disk. You can also disconnect from inside the app: it revokes the
 grant at Google, deletes the stored credential, deletes the evidence earlier
@@ -208,6 +208,8 @@ Google shows its own "Google hasn't verified this app" screen before you can
 consent, and at most 100 accounts can authorize the connection, counted over the
 app's entire lifetime. Reading your own exported folders, supplying evidence
 through your AI host, and every decision tool are unaffected.
+
+v0.5.7 fixes two ways the extension could stop answering, both of them present in v0.5.6. On a day when no fresh recovery reading arrived — the day a decision is most worth asking for — asking for today's decision from a stored plan returned nothing at all, because the local store refused to record the empty readiness the engine deliberately reports. Existing stores are repaired in place, with your rows intact. And a single very large, deeply nested request could end the extension outright, which looks from the outside like the whole connector vanishing; one bad request now fails on its own and the extension keeps running. The one rule that raises a session's intensity no longer raises it while confidence is low: thin evidence may hold a session or lower it, not add load. Coverage is also reported more plainly — the vendor scores that were actually used are named, and the coverage figure is a fraction of five kinds of evidence rather than a number that could run past its own maximum. Today's Brief now follows the language you are speaking in, and the folder reading records what it imported from Garmin without handing your folder path or file fingerprints to your AI host.
 
 v0.5.6 reads your HRV against your own recent nights rather than a fixed reference, and where your device already computed a readiness or HRV score, that score is used instead of scoring the raw reading a second time. The raw reading is kept and reported as superseded, named alongside what replaced it, so a decision can no longer say a reading is missing when you supplied one. Connecting Google Health, syncing it, and asking for today's decision from a stored plan no longer ask you for an account identifier: Pacevera never issued one, and being asked for it again in a later conversation is what made a working connection look expired. Where this machine holds more than one profile, Pacevera asks which one by name rather than guessing.
 
