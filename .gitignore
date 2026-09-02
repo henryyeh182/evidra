@@ -1,0 +1,12 @@
+# 這個 repo 是公開的。fitness-mcp 是私有的。
+#
+# 2026-08-26 的「安裝共用 AI harness」把開發用的規則檔與 1425 行內部工作記憶
+# 一起裝進這裡並推上 GitHub，公開了本機路徑、使用者名稱、當日交接筆記，以及
+# 一個當時已上架但還沒修好的當機缺陷。2026-09-02 移除。
+#
+# 這幾條擋的是「再裝一次就又推上去」。這個 repo 只放對外的四個檔：
+# README.md、PRIVACY.md、TERMS.md、LICENSE。
+.ai-harness/
+AGENTS.md
+CLAUDE.md
+CODEX.md
